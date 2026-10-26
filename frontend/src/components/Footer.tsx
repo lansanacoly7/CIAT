@@ -8,7 +8,7 @@ import { MODULES } from "@/lib/modules";
 export default function Footer() {
   const pathname = usePathname();
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
-  const isAppPage = pathname.startsWith("/incubateur") || pathname === "/compte";
+  const isAppPage = pathname.startsWith("/incubateur") || pathname.startsWith("/compte") || pathname.startsWith("/documents");
 
   if (isAuthPage || isAppPage) {
     return null;

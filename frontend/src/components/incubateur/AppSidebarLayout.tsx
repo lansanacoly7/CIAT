@@ -99,7 +99,6 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
     { href: "/incubateur", label: "Dépôt de candidature", exact: true, icon: IconDocument },
     { href: "/incubateur/projets", label: "Suivi de mes projets", icon: IconFolder },
     { href: "/compte", label: "Mon profil & Compte", icon: IconUser },
-    { href: "/documents", label: "Générateur documents", icon: IconFileText },
   ];
 
   const coordoLinks: NavItem[] = [
