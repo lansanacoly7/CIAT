@@ -131,25 +131,25 @@ function DepotDossier() {
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
       <div className="mb-6 flex flex-wrap gap-2 border-b border-[#EFE4D6] pb-3">
         <span className="rounded-lg bg-[#612D10] px-4 py-2 text-xs font-bold text-white shadow-xs">
-          📝 Dépôt de dossier
+          Dépôt de dossier
         </span>
         <Link
           href="/incubateur/projets"
           className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
         >
-          🎯 Suivi des projets
+          Suivi des projets
         </Link>
         <Link
           href="/incubateur/alertes"
           className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
         >
-          🚨 Alertes de retard
+          Alertes de retard
         </Link>
         <Link
           href="/incubateur/evaluation"
           className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
         >
-          ⚖️ Évaluations comité
+          Évaluations comité
         </Link>
       </div>
 

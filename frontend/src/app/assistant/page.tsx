@@ -367,8 +367,7 @@ function AssistantApp() {
                   : "text-texte-doux hover:text-brun"
               }`}
             >
-              <span>📖</span>
-              <span className="hidden sm:inline">Documents CIAT</span>
+              <span>Documents CIAT</span>
             </button>
             <button
               type="button"
@@ -379,8 +378,7 @@ function AssistantApp() {
                   : "text-texte-doux hover:text-brun"
               }`}
             >
-              <span>✍️</span>
-              <span className="hidden sm:inline">Atelier Rédaction</span>
+              <span>Atelier Rédaction</span>
             </button>
           </div>
         </header>
