@@ -1,6 +1,8 @@
 import datetime
+from unittest.mock import patch
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import connection, transaction
+from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -1350,6 +1352,374 @@ class IncubateurPhase2SuiviAndExportTests(TestCase):
         self.client.force_authenticate(user=self.mentor2)
         res_m2 = self.client.get(url_export)
         self.assertEqual(res_m2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_excel_neutralisation_injection_formules(self):
+        """Vérifie que les chaînes malveillantes (=, +, -, @) sont neutralisées et ne deviennent jamais des formules Excel (data_type != 'f')."""
+        projet_piege = Projet.objects.create(
+            titre="=1+1",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        AffectationMentor.objects.create(projet=projet_piege, mentor=self.mentor1, affecte_par=self.coordo)
+
+        # Bloc 2 : Objectifs avec =HYPERLINK(...), +123, -123
+        Objectif.objects.create(
+            projet=projet_piege,
+            libelle='=HYPERLINK("http://evil.com", "Lien")',
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        Objectif.objects.create(
+            projet=projet_piege,
+            libelle="+123",
+            echeance=None,
+            cree_par=self.mentor1,
+        )
+        Objectif.objects.create(
+            projet=projet_piege,
+            libelle="-123",
+            echeance=None,
+            cree_par=self.mentor1,
+        )
+
+        # Bloc 3 : Jalons avec @SUM, texte ordinaire et espace avant formule
+        Jalon.objects.create(
+            projet=projet_piege,
+            titre="@SUM(A1:A10)",
+            echeance=datetime.date(2026, 12, 15),
+            cree_par=self.mentor1,
+        )
+        Jalon.objects.create(
+            projet=projet_piege,
+            titre="   =CMD|'/C calc'!A0",
+            echeance=datetime.date(2026, 12, 20),
+            cree_par=self.mentor1,
+        )
+        Jalon.objects.create(
+            projet=projet_piege,
+            titre="Texte ordinaire légitime",
+            echeance=datetime.date(2026, 12, 25),
+            cree_par=self.mentor1,
+        )
+
+        # Bloc 4 : Bilan avec chaîne formule et indicateurs
+        SuiviProjet.objects.create(
+            projet=projet_piege,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="=cmd|' /C notepad'!'A1'",
+            indicateurs={"score": "+123", "note": "@SUM(1,2)"},
+            redige_par=self.mentor1,
+        )
+
+        url_export = reverse("incubator:projet-compte-rendu", kwargs={"pk": projet_piege.id})
+        self.client.force_authenticate(user=self.porteur1)
+        res = self.client.get(url_export)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        wb = openpyxl.load_workbook(io.BytesIO(res.content))
+        ws = wb.active
+
+        formules_trouvees = []
+        valeurs_trouvees = []
+        types_trouves = {}
+
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell.value is not None:
+                    valeurs_trouvees.append(str(cell.value))
+                    types_trouves[cell.data_type] = types_trouves.get(cell.data_type, 0) + 1
+                    if cell.data_type == "f":
+                        formules_trouvees.append((cell.coordinate, cell.value))
+
+        # 1. AUCUNE cellule ne doit avoir le type formule 'f'
+        self.assertEqual(len(formules_trouvees), 0, f"Formules non neutralisées détectées : {formules_trouvees}")
+
+        # 2. Les chaînes dangereuses ont bien été préservées
+        full_text = " ".join(valeurs_trouvees)
+        self.assertIn("=1+1", full_text)
+        self.assertIn("=HYPERLINK", full_text)
+        self.assertIn("+123", full_text)
+        self.assertIn("-123", full_text)
+        self.assertIn("@SUM", full_text)
+        self.assertIn("Texte ordinaire légitime", full_text)
+
+        # 3. Les nombres légitimes conservent le type 'n'
+        self.assertIn("n", types_trouves, "Les nombres légitimes doivent conserver le type 'n'")
+
+    def test_validation_indicateurs_json_strict(self):
+        """Vérifie la validation stricte du champ JSON indicateurs lors de la création d'un bilan."""
+        url = reverse("incubator:projet-suivis", kwargs={"pk": self.projet2.id})
+        self.client.force_authenticate(user=self.mentor2)
+
+        # 1. Rejet : liste à la racine
+        res_list = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test liste", "indicateurs": [1, 2, 3]},
+            format="json",
+        )
+        self.assertEqual(res_list.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("dictionnaire", str(res_list.data))
+
+        # 2. Rejet : chaîne à la racine
+        res_str = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test string", "indicateurs": "valeur brute"},
+            format="json",
+        )
+        self.assertEqual(res_str.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 3. Rejet : nombre à la racine
+        res_num = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test number", "indicateurs": 42},
+            format="json",
+        )
+        self.assertEqual(res_num.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 4. Rejet : booléen à la racine
+        res_bool = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test bool", "indicateurs": True},
+            format="json",
+        )
+        self.assertEqual(res_bool.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 5. Rejet : structure imbriquée (dictionnaire dans dictionnaire ou liste)
+        res_nested = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test nested", "indicateurs": {"metrics": {"deep": 1}}},
+            format="json",
+        )
+        self.assertEqual(res_nested.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("imbriquée", str(res_nested.data))
+
+        # 6. Rejet : clé vide
+        res_empty_key = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test cle vide", "indicateurs": {"   ": 10}},
+            format="json",
+        )
+        self.assertEqual(res_empty_key.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 7. Succès : indicateurs null (normalisé en {})
+        res_null = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Test indicateurs null", "indicateurs": None},
+            format="json",
+        )
+        self.assertEqual(res_null.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_null.data["indicateurs"], {})
+
+        # 8. Succès : objet vide {}
+        res_empty_obj = self.client.post(
+            url,
+            {"echeance": "6_mois", "bilan": "Test objet vide", "indicateurs": {}},
+            format="json",
+        )
+        self.assertEqual(res_empty_obj.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_empty_obj.data["indicateurs"], {})
+
+    def test_export_excel_resilience_donnees_historiques_invalides(self):
+        """Vérifie que l'export Excel ne lève pas d'erreur HTTP 500 sur des données historiques non conformes."""
+        projet_legacy = Projet.objects.create(
+            titre="Projet Legacy Indic",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        AffectationMentor.objects.create(projet=projet_legacy, mentor=self.mentor1, affecte_par=self.coordo)
+
+        # Création directe en base de données avec des indicateurs sous forme de liste et chaîne
+        SuiviProjet.objects.create(
+            projet=projet_legacy,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="Bilan avec liste historique",
+            indicateurs=["indicateur_a", "indicateur_b"],
+            redige_par=self.mentor1,
+        )
+        SuiviProjet.objects.create(
+            projet=projet_legacy,
+            echeance=EcheanceSuivi.SIX_MOIS,
+            bilan="Bilan avec chaine historique",
+            indicateurs="chaine brute historique",
+            redige_par=self.mentor1,
+        )
+
+        url_export = reverse("incubator:projet-compte-rendu", kwargs={"pk": projet_legacy.id})
+        self.client.force_authenticate(user=self.porteur1)
+        res = self.client.get(url_export)
+
+        # Vérifie qu'aucune erreur 500 n'est survenue
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        # Vérifie que le classeur s'ouvre correctement
+        wb = openpyxl.load_workbook(io.BytesIO(res.content))
+        ws = wb.active
+        all_text = " ".join(str(cell.value) for row in ws.iter_rows() for cell in row if cell.value is not None)
+        self.assertIn("indicateur_a", all_text)
+        self.assertIn("chaine brute historique", all_text)
+
+    def test_integrite_et_concurrence_bilans_suivi(self):
+        """Vérifie l'intégrité transactionnelle, l'unicité et la gestion de concurrence pour SuiviProjet."""
+        # 1. Création normale d'un bilan pour projet1 à 3 mois
+        url1 = reverse("incubator:projet-suivis", kwargs={"pk": self.projet1.id})
+        self.client.force_authenticate(user=self.mentor1)
+        res_create = self.client.post(
+            url1,
+            {"echeance": "3_mois", "bilan": "Premier bilan normal 3 mois"},
+            format="json",
+        )
+        self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SuiviProjet.objects.filter(projet=self.projet1, echeance="3_mois").count(), 1)
+
+        # 2. Rejet propre en doublon pour le même projet et la même échéance
+        res_dup = self.client.post(
+            url1,
+            {"echeance": "3_mois", "bilan": "Doublon ordinaire même échéance"},
+            format="json",
+        )
+        self.assertEqual(res_dup.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("déjà été enregistré", str(res_dup.data))
+        self.assertEqual(SuiviProjet.objects.filter(projet=self.projet1, echeance="3_mois").count(), 1)
+
+        # 3. Autorisation de deux échéances différentes pour un même projet
+        res_6m = self.client.post(
+            url1,
+            {"echeance": "6_mois", "bilan": "Bilan 6 mois même projet"},
+            format="json",
+        )
+        self.assertEqual(res_6m.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SuiviProjet.objects.filter(projet=self.projet1).count(), 2)
+
+        # 4. Autorisation de deux projets différents avec la même échéance
+        url2 = reverse("incubator:projet-suivis", kwargs={"pk": self.projet2.id})
+        self.client.force_authenticate(user=self.mentor2)
+        res_p2 = self.client.post(
+            url2,
+            {"echeance": "3_mois", "bilan": "Bilan 3 mois projet 2"},
+            format="json",
+        )
+        self.assertEqual(res_p2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SuiviProjet.objects.filter(projet=self.projet2, echeance="3_mois").count(), 1)
+
+        # 5. Contrainte d'unicité en base de données
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                SuiviProjet.objects.create(
+                    projet=self.projet1,
+                    echeance=EcheanceSuivi.TROIS_MOIS,
+                    bilan="Insertion brute doublon",
+                    redige_par=self.mentor1,
+                )
+
+        # 6. Conflit d'intégrité / concurrence pendant l'enregistrement via API
+        # Simule une requête concurrente qui insère la ligne après serializer.is_valid()
+        projet_concurrent = Projet.objects.create(
+            titre="Projet Concurrence",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        AffectationMentor.objects.create(projet=projet_concurrent, mentor=self.mentor1, affecte_par=self.coordo)
+        url_conc = reverse("incubator:projet-suivis", kwargs={"pk": projet_concurrent.id})
+        self.client.force_authenticate(user=self.mentor1)
+
+        # Simulation d'un conflit de concurrence : une requête concurrente a inséré la ligne
+        # entre le moment où serializer.is_valid() a vérifié et le moment où save() s'exécute
+        SuiviProjet.objects.create(
+            projet=projet_concurrent,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="Insertion concurrente préalable",
+            redige_par=self.mentor1,
+        )
+
+        def concurrent_insert_side_effect(*args, **kwargs):
+            raise IntegrityError("UNIQUE constraint failed: incubator_suiviprojet.projet_id, incubator_suiviprojet.echeance")
+
+        with patch.object(SuiviProjet.objects, "create", side_effect=concurrent_insert_side_effect):
+            res_concurrent = self.client.post(
+                url_conc,
+                {"echeance": "3_mois", "bilan": "Tentative post-validation"},
+                format="json",
+            )
+            # Ne doit JAMAIS renvoyer 500, mais un 400 documenté
+            self.assertEqual(res_concurrent.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("déjà été enregistré", str(res_concurrent.data))
+
+        # Vérification du maintien de l'intégrité : exactement 1 seul enregistrement existe
+        self.assertEqual(SuiviProjet.objects.filter(projet=projet_concurrent, echeance="3_mois").count(), 1)
+
+    def test_export_excel_format_query_param_validation(self):
+        """Vérifie la validation du paramètre de requête format sur l'export Excel."""
+        url_export = reverse("incubator:projet-compte-rendu", kwargs={"pk": self.projet1.id})
+        self.client.force_authenticate(user=self.porteur1)
+
+        # 1. format=xlsx valide
+        res_xlsx = self.client.get(f"{url_export}?format=xlsx")
+        self.assertEqual(res_xlsx.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_xlsx["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+        # 2. format non supporté (ex: pdf, csv) -> HTTP 400 documenté
+        res_bad_fmt = self.client.get(f"{url_export}?format=pdf")
+        self.assertEqual(res_bad_fmt.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("non supporté", res_bad_fmt.data["detail"])
+
+    def test_affectation_mentor_save_validation_strict(self):
+        """Vérifie qu'une tentative d'affectation d'un utilisateur non-mentor via ORM save() lève ValidationError."""
+        user_candidat = User.objects.create_user(
+            email="candidat_non_mentor@ciat.sn",
+            password="password123",
+            role=Role.PORTEUR,
+        )
+        projet_test = Projet.objects.create(
+            titre="Projet Test Mentor Save",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+
+        affectation = AffectationMentor(
+            projet=projet_test,
+            mentor=user_candidat,
+            affecte_par=self.coordo,
+        )
+        with self.assertRaises(DjangoValidationError):
+            affectation.save()
+
+    def test_jalon_transitions_et_rejet_statut_invalide(self):
+        """Vérifie le cycle des transitions d'un jalon (a_faire -> en_cours -> fait) et le rejet des statuts invalides."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon Transition Test",
+            echeance=datetime.date(2026, 12, 1),
+            statut=StatutJalon.A_FAIRE,
+            cree_par=self.mentor1,
+        )
+        url_jalon = reverse("incubator:jalon-detail", kwargs={"pk": jalon.id})
+        self.client.force_authenticate(user=self.mentor1)
+
+        # Transition 1 : a_faire -> en_cours
+        res_en_cours = self.client.patch(url_jalon, {"statut": "en_cours"}, format="json")
+        self.assertEqual(res_en_cours.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_en_cours.data["statut"], "en_cours")
+
+        # Transition 2 : en_cours -> fait
+        res_fait = self.client.patch(url_jalon, {"statut": "fait"}, format="json")
+        self.assertEqual(res_fait.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_fait.data["statut"], "fait")
+
+        # Rejet statut invalide
+        res_invalide = self.client.patch(url_jalon, {"statut": "statut_fantaisiste"}, format="json")
+        self.assertEqual(res_invalide.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 

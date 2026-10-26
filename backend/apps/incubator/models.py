@@ -366,8 +366,12 @@ class AffectationMentor(models.Model):
         return f"{self.mentor} -> {self.projet.titre}"
 
     def clean(self):
-        if self.mentor.role != Role.MENTOR:
+        if self.mentor_id and self.mentor.role != Role.MENTOR:
             raise ValidationError("L'utilisateur affecté doit avoir le rôle mentor.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class StatutObjectif(models.TextChoices):

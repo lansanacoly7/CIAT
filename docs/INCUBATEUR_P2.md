@@ -98,7 +98,6 @@ Le module **P2 (Gestion de l'incubateur)** est le cœur opérationnel de la plat
   - `a_faire` (par défaut)
   - `en_cours`
   - `atteint`
-  - `annule`
 - **Règles :**
   - Seul le mentor affecté au projet ou l'équipe CIAT peut créer (`POST`) ou modifier (`PATCH`) un objectif.
   - Le porteur du projet bénéficie d'un accès en lecture seule (`GET`) pour suivre sa feuille de route, tout refus d'écriture étant sanctuarisé (`HTTP 403`).

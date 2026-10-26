@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from apps.core.models import Role, User
 from .models import (
     AffectationMentor,
     CommentaireJalon,
@@ -72,6 +73,11 @@ class DecisionAdmin(admin.ModelAdmin):
 class AffectationMentorAdmin(admin.ModelAdmin):
     list_display = ["id", "projet", "mentor", "affecte_par", "affecte_le"]
     search_fields = ["projet__titre", "mentor__email", "mentor__last_name"]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "mentor":
+            kwargs["queryset"] = User.objects.filter(role=Role.MENTOR)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Objectif)

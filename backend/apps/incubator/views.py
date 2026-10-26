@@ -1,6 +1,7 @@
 """Vues DRF pour le module P2 - Gestion de l'incubateur."""
+import datetime
 import io
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Avg
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -8,7 +9,7 @@ from django.utils import timezone
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, renderers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -521,16 +522,75 @@ class ProjetSuiviListCreateView(APIView):
             context={"request": request, "projet": projet},
         )
         serializer.is_valid(raise_exception=True)
-        suivi = serializer.save()
+        try:
+            with transaction.atomic():
+                suivi = serializer.save()
+        except IntegrityError as exc:
+            echeance = serializer.validated_data.get("echeance", "")
+            err_msg = str(exc).lower()
+            if "unique" in err_msg or "duplicate" in err_msg or SuiviProjet.objects.filter(projet=projet, echeance=echeance).exists():
+                return Response(
+                    {"echeance": f"Un bilan de suivi pour l'échéance '{echeance}' a déjà été enregistré pour ce projet."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            raise exc
+
         return Response(SuiviProjetSerializer(suivi).data, status=status.HTTP_201_CREATED)
+
+
+def write_safe_cell(ws, row, col, value):
+    """Écrit de façon sécurisée une valeur dans une cellule Excel openpyxl.
+
+    Protège contre les attaques par injection de formules (CSV / Formula Injection) :
+    - Si la valeur est textuelle (str), vérifie si elle débute (même précédée d'espaces
+      ou de caractères d'échappement) par '=', '+', '-', '@', '\t', '\r'.
+      Si oui, la préfixe par une apostrophe simple (') et force data_type='s'.
+    - Si la valeur est numérique, date ou booléenne, conserve son type natif Excel.
+    """
+    cell = ws.cell(row=row, column=col)
+    if value is None:
+        cell.value = None
+        return cell
+
+    if isinstance(value, (int, float, bool, datetime.date, datetime.datetime)):
+        cell.value = value
+        return cell
+
+    val_str = str(value)
+    stripped = val_str.lstrip(" \t\r\n")
+    if stripped.startswith(("=", "+", "-", "@")):
+        cell.value = f"'{val_str}"
+        cell.data_type = "s"
+    else:
+        cell.value = val_str
+        cell.data_type = "s"
+    return cell
+
+
+class XLSXRenderer(renderers.BaseRenderer):
+    """Renderer DRF pour les flux binaires Excel (.xlsx)."""
+
+    media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    format = "xlsx"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
 
 
 class ProjetCompteRenduExportView(APIView):
     """Génération du compte rendu complet d'un projet incubé au format Excel (.xlsx)."""
 
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [XLSXRenderer, renderers.JSONRenderer]
 
-    def get(self, request, pk):
+    def perform_content_negotiation(self, request, force=False):
+        if not force:
+            fmt = request.query_params.get("format")
+            if fmt and fmt.lower() not in ("xlsx", "excel"):
+                raise ValidationError({"detail": f"Format '{fmt}' non supporté. Seul le format 'xlsx' est disponible."})
+        return super().perform_content_negotiation(request, force=force)
+
+    def get(self, request, pk, format=None):
         projet = get_object_or_404(
             Projet.objects.select_related("porteur", "domaine", "cohorte", "affectation_mentor__mentor"),
             pk=pk,
@@ -564,7 +624,7 @@ class ProjetCompteRenduExportView(APIView):
 
         # Titre général
         ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
-        cell_title = ws.cell(row=row_idx, column=1, value=f"CIAT — COMPTE RENDU D'INCUBATION : {projet.titre.upper()}")
+        cell_title = write_safe_cell(ws, row_idx, 1, f"CIAT — COMPTE RENDU D'INCUBATION : {projet.titre.upper()}")
         cell_title.font = font_titre_doc
         cell_title.alignment = Alignment(vertical="center")
         row_idx += 2
@@ -592,7 +652,7 @@ class ProjetCompteRenduExportView(APIView):
             c_lbl.font = font_label
             c_lbl.border = border_all
             ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
-            c_val = ws.cell(row=row_idx, column=2, value=val)
+            c_val = write_safe_cell(ws, row_idx, 2, val)
             c_val.font = font_data
             for col in range(2, 7):
                 ws.cell(row=row_idx, column=col).border = border_all
@@ -620,12 +680,18 @@ class ProjetCompteRenduExportView(APIView):
         objectifs = Objectif.objects.filter(projet=projet).select_related("cree_par").order_by("echeance", "cree_le")
         if objectifs.exists():
             for idx, obj in enumerate(objectifs, start=1):
-                ws.cell(row=row_idx, column=1, value=idx).border = border_all
-                ws.cell(row=row_idx, column=2, value=obj.libelle).border = border_all
-                ws.cell(row=row_idx, column=3, value=obj.echeance.strftime("%d/%m/%Y") if obj.echeance else "—").border = border_all
-                ws.cell(row=row_idx, column=4, value=obj.get_statut_display()).border = border_all
-                ws.cell(row=row_idx, column=5, value=obj.cree_par.get_full_name() or obj.cree_par.email).border = border_all
-                ws.cell(row=row_idx, column=6, value=obj.cree_le.strftime("%d/%m/%Y")).border = border_all
+                c1 = write_safe_cell(ws, row_idx, 1, idx)
+                c1.border = border_all
+                c2 = write_safe_cell(ws, row_idx, 2, obj.libelle)
+                c2.border = border_all
+                c3 = write_safe_cell(ws, row_idx, 3, obj.echeance.strftime("%d/%m/%Y") if obj.echeance else "—")
+                c3.border = border_all
+                c4 = write_safe_cell(ws, row_idx, 4, obj.get_statut_display())
+                c4.border = border_all
+                c5 = write_safe_cell(ws, row_idx, 5, obj.cree_par.get_full_name() or obj.cree_par.email)
+                c5.border = border_all
+                c6 = write_safe_cell(ws, row_idx, 6, obj.cree_le.strftime("%d/%m/%Y"))
+                c6.border = border_all
                 row_idx += 1
         else:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
@@ -657,12 +723,18 @@ class ProjetCompteRenduExportView(APIView):
         jalons = Jalon.objects.filter(projet=projet).prefetch_related("preuves").order_by("echeance", "cree_le")
         if jalons.exists():
             for idx, j in enumerate(jalons, start=1):
-                ws.cell(row=row_idx, column=1, value=idx).border = border_all
-                ws.cell(row=row_idx, column=2, value=j.titre).border = border_all
-                ws.cell(row=row_idx, column=3, value=j.echeance.strftime("%d/%m/%Y")).border = border_all
-                ws.cell(row=row_idx, column=4, value=j.get_statut_display()).border = border_all
-                ws.cell(row=row_idx, column=5, value="Oui" if j.en_retard else "Non").border = border_all
-                ws.cell(row=row_idx, column=6, value=j.preuves.count()).border = border_all
+                c1 = write_safe_cell(ws, row_idx, 1, idx)
+                c1.border = border_all
+                c2 = write_safe_cell(ws, row_idx, 2, j.titre)
+                c2.border = border_all
+                c3 = write_safe_cell(ws, row_idx, 3, j.echeance.strftime("%d/%m/%Y"))
+                c3.border = border_all
+                c4 = write_safe_cell(ws, row_idx, 4, j.get_statut_display())
+                c4.border = border_all
+                c5 = write_safe_cell(ws, row_idx, 5, "Oui" if j.en_retard else "Non")
+                c5.border = border_all
+                c6 = write_safe_cell(ws, row_idx, 6, j.preuves.count())
+                c6.border = border_all
                 row_idx += 1
         else:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
@@ -688,7 +760,7 @@ class ProjetCompteRenduExportView(APIView):
                 ws.cell(row=row_idx, column=1, value=f"Échéance : {s.get_echeance_display()}").font = font_label
                 ws.cell(row=row_idx, column=1).border = border_all
                 ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
-                c_s = ws.cell(row=row_idx, column=2, value=f"Rédigé par {s.redige_par.get_full_name()} le {s.cree_le.strftime('%d/%m/%Y')}")
+                c_s = write_safe_cell(ws, row_idx, 2, f"Rédigé par {s.redige_par.get_full_name()} le {s.cree_le.strftime('%d/%m/%Y')}")
                 c_s.font = font_data
                 for col in range(2, 7):
                     ws.cell(row=row_idx, column=col).border = border_all
@@ -697,7 +769,7 @@ class ProjetCompteRenduExportView(APIView):
                 ws.cell(row=row_idx, column=1, value="Bilan écrit").font = font_label
                 ws.cell(row=row_idx, column=1).border = border_all
                 ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
-                c_b = ws.cell(row=row_idx, column=2, value=s.bilan)
+                c_b = write_safe_cell(ws, row_idx, 2, s.bilan)
                 c_b.font = font_data
                 for col in range(2, 7):
                     ws.cell(row=row_idx, column=col).border = border_all
@@ -707,12 +779,18 @@ class ProjetCompteRenduExportView(APIView):
                     ws.cell(row=row_idx, column=1, value="Indicateurs").font = font_label
                     ws.cell(row=row_idx, column=1).border = border_all
                     ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
-                    ind_text = ", ".join(f"{k}: {v}" for k, v in s.indicateurs.items())
-                    c_i = ws.cell(row=row_idx, column=2, value=ind_text)
+                    if isinstance(s.indicateurs, dict):
+                        ind_text = ", ".join(f"{k}: {v}" for k, v in s.indicateurs.items())
+                    elif isinstance(s.indicateurs, list):
+                        ind_text = ", ".join(str(item) for item in s.indicateurs)
+                    else:
+                        ind_text = str(s.indicateurs)
+                    c_i = write_safe_cell(ws, row_idx, 2, ind_text)
                     c_i.font = font_data
                     for col in range(2, 7):
                         ws.cell(row=row_idx, column=col).border = border_all
                     row_idx += 1
+
                 row_idx += 1
         else:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
@@ -737,6 +815,7 @@ class ProjetCompteRenduExportView(APIView):
         )
         response["Content-Disposition"] = f'attachment; filename="compte_rendu_projet_{projet.id}.xlsx"'
         return response
+
 
 
 

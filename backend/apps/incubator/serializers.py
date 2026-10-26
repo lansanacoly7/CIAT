@@ -538,6 +538,7 @@ class AlerteJalonSerializer(serializers.ModelSerializer):
 
 class SuiviProjetSerializer(serializers.ModelSerializer):
     redige_par_nom = serializers.SerializerMethodField()
+    indicateurs = serializers.JSONField(required=False, allow_null=True)
 
     class Meta:
         model = SuiviProjet
@@ -563,6 +564,27 @@ class SuiviProjetSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError("Le bilan de suivi ne peut pas être vide.")
         return value.strip()
+
+    def validate_indicateurs(self, value):
+        """Validation stricte du format des indicateurs : objet JSON avec valeurs scalaires."""
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                "Le champ indicateurs doit être un objet JSON (dictionnaire clé/valeur). "
+                "Les listes, chaînes ou types primitifs ne sont pas autorisés à la racine."
+            )
+        for k, v in value.items():
+            if not isinstance(k, str) or not k.strip():
+                raise serializers.ValidationError(
+                    "Les clés du dictionnaire d'indicateurs doivent être des chaînes non vides."
+                )
+            if isinstance(v, (dict, list)):
+                raise serializers.ValidationError(
+                    f"La valeur de l'indicateur '{k}' ne doit pas être une structure imbriquée (objet ou liste)."
+                )
+        return value
+
 
     def validate(self, attrs):
         projet = self.context.get("projet")
