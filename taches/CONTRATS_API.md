@@ -165,3 +165,10 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `GET /partenariats/` | Liste filtrable : `{ id, projet, partenaire, type, date_debut, statut }` |
 | `GET /financements/` | Liste filtrable : `{ id, projet, source, montant, date, statut }` |
 | `GET /financements/resume/` | `{ total_finance, partenariats_actifs }` |
+
+### P6 — Filtres réservés de la liste des fiches (ajout de la Phase 2)
+
+| Requête | Effet |
+|---|---|
+| `GET /api/gallery/fiches/?mes_fiches=1` | Connecté : toutes les fiches de **ses** projets, quel que soit leur statut. Anonyme : ignoré (fiches publiées seulement). |
+| `GET /api/gallery/fiches/?en_validation=1` | Équipe CIAT (administrateur, coordonnateur) : les fiches « en validation ». Pour les autres : ignoré (fiches publiées seulement). |
