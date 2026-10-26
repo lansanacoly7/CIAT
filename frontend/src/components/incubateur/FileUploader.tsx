@@ -93,21 +93,32 @@ function PieceCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white p-4 shadow-sm transition-colors ${
-        provided && required ? "border-[#2E7D32]/40" : "border-[#EFE4D6]"
+      className={`rounded-xl border-2 bg-white p-4 shadow-sm transition-colors ${
+        provided && required ? "border-[#2E7D32]" : "border-[#E2D4C3]"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h4 className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
-            {PIECE_LABELS[type].label}
-          </h4>
-          <p className="mt-0.5 text-xs leading-relaxed text-[#6b5646]">{PIECE_LABELS[type].description}</p>
+        <div className="flex min-w-0 items-start gap-3">
+          {provided && required ? (
+            <span aria-hidden className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2E7D32] text-white">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+          ) : (
+            <span aria-hidden className="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#C99A68]" />
+          )}
+          <div className="min-w-0">
+            <h4 className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
+              {PIECE_LABELS[type].label}
+            </h4>
+            <p className="mt-0.5 text-xs leading-relaxed text-[#6b5646]">{PIECE_LABELS[type].description}</p>
+          </div>
         </div>
         {required ? (
           <span
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-              provided ? "bg-[#E3F1E9] text-[#2E7D32]" : "bg-[#F8EBD3] text-[#B7791F]"
+              provided ? "bg-[#E3F1E9] text-[#2E7D32]" : "bg-[#C99A68]/20 text-[#612D10]"
             }`}
           >
             {provided ? "Déposé" : "À fournir"}

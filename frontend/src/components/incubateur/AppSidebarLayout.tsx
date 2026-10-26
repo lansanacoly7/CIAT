@@ -169,11 +169,11 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
             </div>
           )}
 
-          {/* Vrai bouton Quitter avec bordure et survol rouge */}
+          {/* Bouton Quitter sobre avec survol noir-bordeaux profond et apaisé */}
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-[#D6C4B0] transition-all duration-200 hover:border-[#DC2626] hover:bg-[#DC2626] hover:text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-xs font-semibold text-[#A08F80] transition-all duration-200 hover:border-[#381616] hover:bg-[#150A0A] hover:text-[#EDE3D8]"
           >
             <IconLogout className="h-4 w-4" />
             <span>Quitter</span>
@@ -257,7 +257,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
                   setMobileOpen(false);
                   logout();
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-[#D6C4B0] hover:border-[#DC2626] hover:bg-[#DC2626] hover:text-white transition-all"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-xs font-semibold text-[#A08F80] hover:border-[#381616] hover:bg-[#150A0A] hover:text-[#EDE3D8] transition-all duration-200"
               >
                 <IconLogout className="h-4 w-4" />
                 <span>Quitter</span>
