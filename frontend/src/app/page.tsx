@@ -167,131 +167,82 @@ export default function Home() {
     <>
       {/* 1. HERO INSTITUTIONNEL HAUT DE GAMME : RESPECT STRICT DE LA CHARTE CIAT */}
       <section className="relative overflow-hidden border-b border-[#3d2315] bg-gradient-to-b from-[#24140D] via-[#2F170D] to-[#3D1D10] text-white">
-        {/* Arrière-plan photographique du campus avec overlay et flou subtil */}
-        <div className="absolute inset-0 pointer-events-none opacity-15 mix-blend-luminosity">
+        {/* Photographie officielle du campus ISEP Diamniadio en couverture intégrale */}
+        <div className="absolute inset-0 -z-0">
           <Image
             src="/images/campus-isep.png"
-            alt=""
+            alt="Campus officiel de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center filter blur-xs"
+            className="object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#24140D] via-[#2F170D]/90 to-[#24140D]/85" />
+          {/* Overlay sombre élégant avec les teintes CIAT pour garantir un contraste parfait */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1C0D06]/95 via-[#24140D]/88 to-[#1C0D06]/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1C0D06] via-transparent to-[#1C0D06]/60" />
         </div>
 
         {/* Glow atmosphérique chaleureux rappelant la terre de Diamniadio */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-beige/15 blur-3xl"
+          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-beige/10 blur-3xl"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-brun/40 blur-3xl"
+          className="pointer-events-none absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-brun/30 blur-3xl"
         />
 
-        <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24">
-          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
-            {/* Colonne Principale de Présentation */}
-            <div className="space-y-6 lg:col-span-7">
-              {/* Badge officiel de cadrage républicain & académique */}
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-beige/40 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-beige backdrop-blur-sm">
-                <span className="inline-block h-2 w-2 rounded-full bg-beige animate-pulse" />
-                <span>RÉPUBLIQUE DU SÉNÉGAL · ISEP AMADOU TRAORÉ DE DIAMNIADIO</span>
-              </div>
-
-              {/* Titre Institutionnel avec typographie Plus Jakarta Sans */}
-              <h1 className="text-3xl font-extrabold leading-[1.15] tracking-tight !text-white sm:text-5xl lg:text-5xl">
-                Centre d&apos;Innovation, d&apos;Application et de Transfert
-                <span className="block mt-2 bg-gradient-to-r from-beige via-[#ebd9c0] to-beige bg-clip-text text-transparent">
-                  L&apos;Incubateur Technologique d&apos;Excellence
-                </span>
-              </h1>
-
-              {/* Accroche claire et précise */}
-              <p className="max-w-2xl text-base leading-relaxed text-[#ebd9c0] md:text-lg">
-                Accompagner les apprenants, diplômés et créateurs de l&apos;idée brute jusqu&apos;au prototype industriel viable.
-                Une plateforme unifiée réunissant incubation méthodique, ateliers techniques, assistance IA et valorisation économique.
-              </p>
-
-              {/* Boutons d'Action Clés */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                <ButtonLink href="/portail/incubateur" variant="accent" className="px-6 py-3 font-bold text-sm shadow-md">
-                  Découvrir l&apos;Incubateur →
-                </ButtonLink>
-                <ButtonLink
-                  href="/portail/appels"
-                  variant="secondary"
-                  className="!border-beige/50 !text-white hover:!bg-white/10 px-5 py-3 text-sm"
-                >
-                  Appels à Projets Ouverts
-                </ButtonLink>
-                <ButtonLink
-                  href="/portail/projets"
-                  variant="secondary"
-                  className="!border-white/30 !text-white hover:!bg-white/10 px-5 py-3 text-sm"
-                >
-                  Annuaire des Projets
-                </ButtonLink>
-              </div>
+        <div className="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="max-w-3xl space-y-6">
+            {/* Badge officiel de cadrage républicain & académique */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-beige/40 bg-[#1C0D06]/75 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-beige backdrop-blur-md shadow-sm">
+              <span className="inline-block h-2 w-2 rounded-full bg-beige animate-pulse" />
+              <span>RÉPUBLIQUE DU SÉNÉGAL · ISEP AMADOU TRAORÉ DE DIAMNIADIO</span>
             </div>
 
-            {/* Colonne Latérale : Photographie Officielle du Campus & Ancrage ISEP */}
-            <div className="lg:col-span-5">
-              <div className="group relative overflow-hidden rounded-3xl border border-beige/35 bg-gradient-to-b from-white/12 to-white/5 p-3.5 backdrop-blur-md shadow-2xl transition-all duration-300 hover:border-beige/60">
-                {/* Cadre Photographique du Campus ISEP Diamniadio */}
-                <div className="relative h-56 sm:h-64 md:h-72 w-full overflow-hidden rounded-2xl border border-white/20">
-                  <Image
-                    src="/images/campus-isep.png"
-                    alt="Campus de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                  />
-                  {/* Dégradé pour lisibilité des badges */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#24140D] via-[#24140D]/30 to-transparent" />
+            {/* Titre Institutionnel avec typographie Plus Jakarta Sans */}
+            <h1 className="text-3xl font-extrabold leading-[1.15] tracking-tight !text-white sm:text-5xl lg:text-6xl drop-shadow-md">
+              Centre d&apos;Innovation, d&apos;Application et de Transfert
+              <span className="block mt-2 bg-gradient-to-r from-beige via-[#f3e5d3] to-beige bg-clip-text text-transparent">
+                L&apos;Incubateur Technologique d&apos;Excellence
+              </span>
+            </h1>
 
-                  {/* Badge en haut à gauche */}
-                  <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#24140D]/80 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-md">
-                    <span className="h-2 w-2 rounded-full bg-succes animate-pulse" />
-                    <span>Campus ISEP · Diamniadio</span>
-                  </div>
+            {/* Accroche claire et précise */}
+            <p className="max-w-2xl text-base leading-relaxed text-[#ebd9c0] md:text-lg drop-shadow-xs">
+              Accompagner les apprenants, diplômés et créateurs de l&apos;idée brute jusqu&apos;au prototype industriel viable.
+              Une plateforme unifiée réunissant incubation méthodique, ateliers techniques, assistance IA et valorisation économique.
+            </p>
 
-                  {/* Légende en bas de la photo */}
-                  <div className="absolute bottom-3 left-3 right-3 text-left">
-                    <span className="block text-[11px] font-bold uppercase tracking-wider text-beige">
-                      Ancrage Académique & Technologique
-                    </span>
-                    <h3 className="text-sm font-extrabold text-white leading-snug drop-shadow-sm">
-                      Institut Supérieur d&apos;Enseignement Professionnel
-                    </h3>
-                  </div>
-                </div>
+            {/* Boutons d'Action Clés */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-2">
+              <ButtonLink href="/portail/incubateur" variant="accent" className="px-6 py-3 font-bold text-sm shadow-lg">
+                Découvrir l&apos;Incubateur →
+              </ButtonLink>
+              <ButtonLink
+                href="/portail/appels"
+                variant="secondary"
+                className="!border-beige/50 !text-white hover:!bg-white/10 px-5 py-3 text-sm backdrop-blur-sm"
+              >
+                Appels à Projets Ouverts
+              </ButtonLink>
+              <ButtonLink
+                href="/portail/projets"
+                variant="secondary"
+                className="!border-white/30 !text-white hover:!bg-white/10 px-5 py-3 text-sm backdrop-blur-sm"
+              >
+                Annuaire des Projets
+              </ButtonLink>
+            </div>
 
-                {/* Métadonnées officielles sous la photo */}
-                <div className="mt-3.5 grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
-                    <span className="block text-[10px] font-semibold uppercase text-beige/80">Localisation</span>
-                    <span className="mt-0.5 block font-bold text-white text-[11px]">Pôle Urbain Diamniadio</span>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
-                    <span className="block text-[10px] font-semibold uppercase text-beige/80">Infrastructures</span>
-                    <span className="mt-0.5 block font-bold text-white text-[11px]">Ateliers & Labos CIAT</span>
-                  </div>
-                </div>
-
-                {/* Bouton de visite */}
-                <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-xs">
-                  <span className="text-[11px] text-[#ebd9c0]">Siège officiel de l&apos;incubateur</span>
-                  <Link
-                    href="/portail/ciat"
-                    className="inline-flex min-h-[44px] items-center font-bold text-beige hover:text-white transition-colors"
-                  >
-                    Visiter le centre →
-                  </Link>
-                </div>
-              </div>
+            {/* Repère d'ancrage territorial avec badge campus */}
+            <div className="flex flex-wrap items-center gap-3 pt-3 text-xs text-[#ebd9c0]">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 backdrop-blur-sm font-semibold">
+                <span className="inline-block h-2 w-2 rounded-full bg-succes" />
+                Campus ISEP Diamniadio
+              </span>
+              <span>·</span>
+              <span>Pôle Urbain de Diamniadio, Sénégal</span>
             </div>
           </div>
 
