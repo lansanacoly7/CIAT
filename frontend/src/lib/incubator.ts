@@ -403,8 +403,11 @@ export const getProjetSuivis = async (projetId: number) =>
 export const creerProjetSuivi = (projetId: number, data: SuiviProjetInput) =>
   api<SuiviProjet>(`/incubator/projets/${projetId}/suivis/`, { method: "POST", body: data });
 
-export const telechargerCompteRendu = (projetId: number) =>
-  apiBlob(`/incubator/projets/${projetId}/compte-rendu/?format=xlsx`);
+export const telechargerCompteRendu = (projetId: number, format: "xlsx" | "pdf" = "xlsx") =>
+  apiBlob(`/incubator/projets/${projetId}/compte-rendu/?format=${format}`);
+
+export const telechargerAccuseReception = (dossierId: number) =>
+  apiBlob(`/incubator/dossiers/${dossierId}/accuse/`);
 
 /** Message français lisible pour une erreur d'API (jamais de données de secours). */
 export function suiviErrorMessage(err: unknown, fallback: string): string {

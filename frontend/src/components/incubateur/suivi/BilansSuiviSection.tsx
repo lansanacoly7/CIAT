@@ -31,7 +31,7 @@ export default function BilansSuiviSection({
     { cle: "Progrès technique (%)", valeur: "" },
   ]);
   const [submitting, setSubmitting] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"xlsx" | "pdf" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -82,15 +82,15 @@ export default function BilansSuiviSection({
     }
   }
 
-  async function handleExportExcel() {
-    setExporting(true);
+  async function handleExport(format: "xlsx" | "pdf") {
+    setExporting(format);
     setExportError(null);
     try {
-      const blob = await telechargerCompteRendu(projetId);
+      const blob = await telechargerCompteRendu(projetId, format);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `compte_rendu_projet_${projetId}.xlsx`);
+      link.setAttribute("download", `compte_rendu_projet_${projetId}.${format}`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -103,7 +103,7 @@ export default function BilansSuiviSection({
         ),
       );
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   }
 
@@ -137,21 +137,38 @@ export default function BilansSuiviSection({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Bouton Export Excel officiel */}
+          {/* Bouton Export PDF */}
           <button
             type="button"
-            onClick={handleExportExcel}
-            disabled={exporting}
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-md border border-[#2E7D32]/40 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => handleExport("pdf")}
+            disabled={exporting !== null}
+            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-md border border-[#612D10]/30 bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#F2E7DC] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {exporting ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#2E7D32]/40 border-t-[#2E7D32]" />
+            {exporting === "pdf" ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
             ) : (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
             )}
-            <span>Télécharger le compte rendu (Excel)</span>
+            <span>Compte rendu (PDF)</span>
+          </button>
+
+          {/* Bouton Export Excel */}
+          <button
+            type="button"
+            onClick={() => handleExport("xlsx")}
+            disabled={exporting !== null}
+            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-md border border-[#2E7D32]/40 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting === "xlsx" ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#2E7D32]/40 border-t-[#2E7D32]" />
+            ) : (
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            )}
+            <span>Compte rendu (Excel)</span>
           </button>
 
           {/* Formulaire accessible uniquement au mentor affecté ou à l'équipe CIAT */}
