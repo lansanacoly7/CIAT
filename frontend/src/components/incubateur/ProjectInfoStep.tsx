@@ -87,76 +87,92 @@ export default function ProjectInfoStep({
         </div>
       )}
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <Label htmlFor="titre" required>Titre du projet</Label>
-          <input
-            id="titre"
-            maxLength={200}
-            value={form.titre}
-            onChange={set("titre")}
-            aria-invalid={Boolean(errors.titre)}
-            placeholder="Ex. : Irrigation solaire pour maraîchers"
-            className={`${CONTROL} min-h-12 ${errors.titre ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
-          />
-          {errors.titre && <p className="mt-1.5 text-sm text-[#DC2626]">{errors.titre}</p>}
+      {/* Section 1 : Identité du projet */}
+      <div className="space-y-4">
+        <div className="border-b border-[#EFE4D6]/70 pb-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#C99A68]">Section 1 sur 2</span>
+          <h3 className="text-base font-bold text-[#612D10]">Identité & Domaine</h3>
         </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <Label htmlFor="titre" required>Titre du projet</Label>
+            <input
+              id="titre"
+              maxLength={200}
+              value={form.titre}
+              onChange={set("titre")}
+              aria-invalid={Boolean(errors.titre)}
+              placeholder="Ex. : Irrigation solaire pour maraîchers"
+              className={`${CONTROL} min-h-11 ${errors.titre ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
+            />
+            {errors.titre && <p className="mt-1.5 text-xs text-[#DC2626]">{errors.titre}</p>}
+          </div>
+          <div>
+            <Label htmlFor="domaine" required>Domaine d&apos;activité</Label>
+            <select
+              id="domaine"
+              value={form.domaine ?? ""}
+              onChange={set("domaine")}
+              aria-invalid={Boolean(errors.domaine)}
+              className={`${CONTROL} min-h-11 ${errors.domaine ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
+            >
+              <option value="">Sélectionnez…</option>
+              {domaines.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nom}
+                </option>
+              ))}
+            </select>
+            {errors.domaine && <p className="mt-1.5 text-xs text-[#DC2626]">{errors.domaine}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2 : Votre démarche d'innovation */}
+      <div className="space-y-5 pt-2">
+        <div className="border-b border-[#EFE4D6]/70 pb-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#C99A68]">Section 2 sur 2</span>
+          <h3 className="text-base font-bold text-[#612D10]">Problématique & Solution</h3>
+        </div>
+
         <div>
-          <Label htmlFor="domaine" required>Domaine d&apos;activité</Label>
-          <select
-            id="domaine"
-            value={form.domaine ?? ""}
-            onChange={set("domaine")}
-            aria-invalid={Boolean(errors.domaine)}
-            className={`${CONTROL} min-h-12 ${errors.domaine ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
-          >
-            <option value="">Sélectionnez…</option>
-            {domaines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nom}
-              </option>
-            ))}
-          </select>
-          {errors.domaine && <p className="mt-1.5 text-sm text-[#DC2626]">{errors.domaine}</p>}
+          <Label htmlFor="probleme">Problème identifié</Label>
+          <Hint>Quel problème concret cherchez-vous à résoudre ? Qui en souffre (public cible), à quelle fréquence, avec quelles conséquences ?</Hint>
+          <textarea
+            id="probleme"
+            rows={4}
+            value={form.probleme}
+            onChange={set("probleme")}
+            placeholder="Décrivez la situation actuelle et ses limites…"
+            className={`${CONTROL} min-h-24 resize-y border-[#EFE4D6] py-2.5 leading-relaxed text-sm`}
+          />
         </div>
-      </div>
 
-      <div>
-        <Label htmlFor="probleme">Problème identifié</Label>
-        <Hint>Quel problème concret cherchez-vous à résoudre ? Qui en souffre (public cible), à quelle fréquence, avec quelles conséquences ?</Hint>
-        <textarea
-          id="probleme"
-          rows={6}
-          value={form.probleme}
-          onChange={set("probleme")}
-          placeholder="Décrivez la situation actuelle et ses limites…"
-          className={`${CONTROL} min-h-32 resize-y border-[#EFE4D6] py-3 leading-relaxed`}
-        />
-      </div>
+        <div>
+          <Label htmlFor="solution">Solution proposée</Label>
+          <Hint>Comment votre projet répond-il à ce problème ? Qu&apos;est-ce qui le distingue de ce qui existe déjà, et où en êtes-vous (idée, maquette, prototype) ?</Hint>
+          <textarea
+            id="solution"
+            rows={4}
+            value={form.solution}
+            onChange={set("solution")}
+            placeholder="Décrivez votre solution, son fonctionnement et son apport…"
+            className={`${CONTROL} min-h-24 resize-y border-[#EFE4D6] py-2.5 leading-relaxed text-sm`}
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="solution">Solution proposée</Label>
-        <Hint>Comment votre projet répond-il à ce problème ? Qu&apos;est-ce qui le distingue de ce qui existe déjà, et où en êtes-vous (idée, maquette, prototype) ?</Hint>
-        <textarea
-          id="solution"
-          rows={6}
-          value={form.solution}
-          onChange={set("solution")}
-          placeholder="Décrivez votre solution, son fonctionnement et son apport…"
-          className={`${CONTROL} min-h-32 resize-y border-[#EFE4D6] py-3 leading-relaxed`}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="resume" optional>Résumé court</Label>
-        <Hint>Deux ou trois phrases pour présenter le projet en un coup d&apos;œil.</Hint>
-        <textarea
-          id="resume"
-          rows={3}
-          value={form.resume}
-          onChange={set("resume")}
-          className={`${CONTROL} min-h-24 resize-y border-[#EFE4D6] py-3`}
-        />
+        <div>
+          <Label htmlFor="resume" optional>Résumé court</Label>
+          <Hint>Deux ou trois phrases pour présenter le projet en un coup d&apos;œil.</Hint>
+          <textarea
+            id="resume"
+            rows={2}
+            value={form.resume}
+            onChange={set("resume")}
+            placeholder="Synthèse claire pour le comité…"
+            className={`${CONTROL} min-h-20 resize-y border-[#EFE4D6] py-2.5 text-sm`}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end border-t border-[#EFE4D6] pt-5">
