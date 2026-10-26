@@ -9,6 +9,7 @@ Comprend :
 - L'orchestration des conversations en mode « documents » et « atelier »
 """
 import io
+import json
 import logging
 import re
 import unicodedata
@@ -62,6 +63,10 @@ class ServiceIANonConfigure(Exception):
 
 class ServiceIAIndisponible(Exception):
     """Le service IA externe n'est pas joignable ou a renvoyé une erreur."""
+
+
+class ReponseIAInvalide(Exception):
+    """Le modèle IA a renvoyé un format JSON invalide ou inexploitable après nouvelle tentative."""
 
 
 def normaliser_chaine(texte: str) -> str:
@@ -332,122 +337,6 @@ def rechercher_passages(question: str, top_k: int = 3) -> list[PassageDocument]:
     return [p for _, p in scores[:top_k]]
 
 
-def reponse_est_un_refus(reponse_texte: str) -> bool:
-    """Détecte si la réponse de l'assistant constitue un refus ou une absence d'information."""
-    if not reponse_texte:
-        return True
-
-    texte_clean = reponse_texte.lower().strip()
-    if texte_clean == MESSAGE_REFUS_DOCUMENTS.lower().strip():
-        return True
-
-    indicateurs_refus = [
-        "ne contiennent pas d'information",
-        "ne contient pas d'information",
-        "ne permettent pas de répondre",
-        "ne permet pas de répondre",
-        "ne permettent pas d'y répondre",
-        "ne permet pas d'y répondre",
-        "ne figure pas dans les extraits",
-        "ne figurent pas dans les extraits",
-        "ne se trouve pas dans les extraits",
-        "ne se trouvent pas dans les extraits",
-        "ne dispose pas d'informations",
-        "ne disposent pas d'informations",
-        "aucun extrait ne",
-        "aucun des extraits ne",
-        "pas d'information permettant de répondre",
-        "pas d'informations permettant de répondre",
-        "impossible de répondre à partir des extraits",
-        "les documents fournis ne mentionnent pas",
-        "les extraits fournis ne mentionnent pas",
-        "ne mentionnent pas d'information",
-        "ne mentionne pas d'information",
-    ]
-    for ind in indicateurs_refus:
-        if ind in texte_clean:
-            return True
-
-    if ("désolé" in texte_clean or "desole" in texte_clean) and (
-        "ne " in texte_clean or "pas d'information" in texte_clean or "aucun" in texte_clean
-    ):
-        return True
-
-    return False
-
-
-def passage_est_utilise(passage: PassageDocument, reponse_texte: str) -> bool:
-    """Détermine si un extrait documentaire a réellement été exploité dans la réponse."""
-    if not reponse_texte:
-        return False
-
-    reponse_lower = reponse_texte.lower()
-
-    # 1. Référence directe à l'identifiant du document dans la réponse
-    if f"document #{passage.document_id}".lower() in reponse_lower:
-        return True
-
-    # 2. Mention directe du titre du document (ou d'une portion significative du titre)
-    titre = passage.document.titre.lower().strip()
-    if len(titre) > 5 and titre in reponse_lower:
-        return True
-
-    mots_titre = [m for m in extraire_mots_cles(titre) if len(m) >= 4]
-    if len(mots_titre) >= 2:
-        mots_titre_trouves = sum(1 for m in mots_titre if m in reponse_lower)
-        if mots_titre_trouves >= max(2, len(mots_titre) - 1):
-            return True
-
-    # 3. Recoupement lexical significatif avec le texte du passage
-    mots_passage = [m for m in extraire_mots_cles(passage.texte) if len(m) >= 4]
-    if not mots_passage:
-        return False
-
-    mots_trouves = set(m for m in mots_passage if m in reponse_lower)
-    if len(mots_trouves) >= 2:
-        return True
-
-    # 4. Séquence exacte d'au moins 12 caractères consécutifs
-    texte_passage_clean = " ".join(passage.texte.lower().split())
-    reponse_clean = " ".join(reponse_lower.split())
-    for i in range(0, len(texte_passage_clean) - 15, 10):
-        sous_chaine = texte_passage_clean[i : i + 15]
-        if len(sous_chaine) >= 12 and sous_chaine in reponse_clean:
-            return True
-
-    return False
-
-
-def filtrer_sources_utilisees(passages: list[PassageDocument], reponse_texte: str) -> list[dict]:
-    """Ne conserve dans les sources que les passages réellement utilisés par le modèle."""
-    if not passages or reponse_est_un_refus(reponse_texte):
-        return []
-
-    sources_utilisees = []
-    vus = set()
-
-    for p in passages:
-        if passage_est_utilise(p, reponse_texte):
-            if p.document_id not in vus:
-                sources_utilisees.append({
-                    "document_id": p.document_id,
-                    "titre": p.document.titre,
-                    "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-                })
-                vus.add(p.document_id)
-
-    # Si un seul passage a été transmis et que la réponse n'est pas un refus
-    if not sources_utilisees and len(passages) == 1:
-        p = passages[0]
-        sources_utilisees.append({
-            "document_id": p.document_id,
-            "titre": p.document.titre,
-            "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-        })
-
-    return sources_utilisees
-
-
 # ==============================================================================
 # 4. Traitement conversationnel (mode documents & mode atelier)
 # ==============================================================================
@@ -529,20 +418,26 @@ def traiter_message_assistant(
             reponse_texte = MESSAGE_REFUS_DOCUMENTS
             sources = []
         else:
+            # Numérotation explicite des passages transmis [Passage 1], [Passage 2], ...
             extraits_contexte = "\n\n".join(
-                f"[Document #{p.document_id} — {p.document.titre}]\n{p.texte}"
-                for p in passages
+                f"[Passage {idx}] (Document #{p.document_id} — {p.document.titre})\n{p.texte}"
+                for idx, p in enumerate(passages, start=1)
             )
 
             system_prompt = (
-                "Tu es l'assistant virtuel du CIAT (Centre d'Innovation et d'Accélération "
+                "Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation et d'Accélération "
                 "Technologique). Tu réponds aux questions des utilisateurs en te basant "
                 "STRICTEMENT et UNIQUEMENT sur les extraits de documents officiels fournis "
                 "ci-dessous. Tu ne dois rien inventer ni extrapoler.\n"
-                "Consigne essentielle : réponds uniquement à partir de ces passages ; "
-                "si la réponse n'y est pas ou ne s'y trouve pas clairement, dis-le poliment "
-                "et refuse d'inventer.\n"
-                "Réponds en français dans un style clair, courtois et précis."
+                "Consigne essentielle : si la réponse n'y est pas ou ne s'y trouve pas clairement, "
+                "dis-le poliment et refuse d'inventer.\n"
+                "Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :\n"
+                "- \"reponse\" : ta réponse rédigée en français (chaîne de caractères). Si les informations "
+                "ne permettent pas de répondre, dis-le clairement ici.\n"
+                "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont "
+                "les extraits ont réellement été utilisés pour formuler ta réponse. Si aucun extrait ne contient "
+                "la réponse ou n'a été utilisé, renvoie obligatoirement une liste vide [].\n"
+                "Exemple : {\"reponse\": \"Le programme dure 6 mois renouvelable.\", \"passages_utilises\": [1]}"
             )
 
             prompt_utilisateur = (
@@ -554,15 +449,85 @@ def traiter_message_assistant(
                 {"role": "user", "content": prompt_utilisateur}
             ]
 
-            try:
-                reponse_texte = ai.chat(messages_payload, system=system_prompt)
-            except AINotConfigured as exc:
-                raise ServiceIANonConfigure(str(exc)) from exc
-            except AIError as exc:
-                raise ServiceIAIndisponible(str(exc)) from exc
+            reponse_texte = ""
+            numeros_utilises = []
+            derniere_erreur = None
 
-            # Filtrage strict : seules les sources réellement mobilisées par le modèle sont renvoyées
-            sources = filtrer_sources_utilisees(passages, reponse_texte)
+            # Maximum 2 tentatives en cas de JSON invalide ou inexploitable
+            for tentative in range(2):
+                try:
+                    raw_response = ai.chat(
+                        messages_payload,
+                        system=system_prompt,
+                        json_mode=True,
+                        temperature=0.2,
+                    )
+                except AINotConfigured as exc:
+                    raise ServiceIANonConfigure(str(exc)) from exc
+                except AIError as exc:
+                    raise ServiceIAIndisponible(str(exc)) from exc
+                except Exception as exc:
+                    raise ServiceIAIndisponible(f"Erreur inattendue du service IA : {exc}") from exc
+
+                try:
+                    data = json.loads(raw_response)
+                    if not isinstance(data, dict):
+                        raise ValueError("La réponse racine doit être un objet JSON.")
+
+                    rep = data.get("reponse") or data.get("response") or data.get("contenu") or data.get("message")
+                    if isinstance(rep, str):
+                        # Certains modèles échappent deux fois les caractères Unicode : on décode ces séquences.
+                        rep = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m_: chr(int(m_.group(1), 16)), rep)
+                        # ... et parfois une barre oblique inutile devant l'apostrophe ou les guillemets.
+                        rep = rep.replace("\\'", "'").replace('\\"', '"')
+                    if not rep or not isinstance(rep, str) or not rep.strip():
+                        raise ValueError("Le champ 'reponse' est manquant ou vide dans le JSON.")
+
+                    raw_nums = data.get("passages_utilises")
+                    if raw_nums is None:
+                        raw_nums = data.get("sources") or data.get("passages") or []
+
+                    if not isinstance(raw_nums, list):
+                        raise ValueError("Le champ 'passages_utilises' doit être une liste.")
+
+                    reponse_texte = rep.strip()
+                    numeros_utilises = raw_nums
+                    break  # Succès du parsing JSON
+                except (json.JSONDecodeError, ValueError, TypeError) as exc:
+                    derniere_erreur = str(exc)
+                    logger.warning(
+                        "Tentative %d : JSON invalide renvoyé par l'IA de l'assistant (%s)",
+                        tentative + 1,
+                        exc,
+                    )
+
+            if not reponse_texte:
+                raise ReponseIAInvalide(
+                    f"Le modèle IA a renvoyé une réponse invalide après nouvelle tentative ({derniere_erreur})."
+                )
+
+            # Validation stricte côté serveur : seuls les numéros existant parmi les passages transmis sont retenus
+            sources = []
+            vus_doc_ids = set()
+            passages_map = {idx: p for idx, p in enumerate(passages, start=1)}
+            doc_ids_map = {p.document_id: p for p in passages}
+
+            for item in numeros_utilises:
+                try:
+                    num = int(item)
+                except (ValueError, TypeError):
+                    continue  # Numéro non entier ignoré
+
+                # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
+                p = passages_map.get(num) or doc_ids_map.get(num)
+                # Un numéro inconnu est ignoré
+                if p and p.document_id not in vus_doc_ids:
+                    sources.append({
+                        "document_id": p.document_id,
+                        "titre": p.document.titre,
+                        "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+                    })
+                    vus_doc_ids.add(p.document_id)
 
     # Persistance de la réponse de l'assistant
     return MessageAssistant.objects.create(
