@@ -1,20 +1,20 @@
 """Services métier pour l'assistant IA du CIAT (P4).
 
 Comprend :
-- L'extraction de texte (PDF, Word, texte brut)
+- L'extraction de texte multi-formats (PDF, Word, texte brut)
 - Le découpage en passages (chunking)
-- L'indexation locale par mots-clés
-- Le moteur de recherche par pertinence lexicale
+- L'indexation locale des documents publics
+- Le moteur de recherche avec normalisation, suppression d'accents,
+  troncature à 5 lettres (mots de la même famille) et synonymes courants
 - L'orchestration des conversations en mode « documents » et « atelier »
 """
 import io
 import logging
 import re
+import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
 import zlib
-
-from django.db.models import Q
 
 from apps.core.ai import AIError, AINotConfigured, ai
 from apps.portal.models import DocumentPublic
@@ -42,6 +42,19 @@ STOP_WORDS_FR = {
     "ciat", "projet", "projets", "document", "documents",
 }
 
+SYNONYMES_COURANTS = {
+    "ou": ["situe", "situee", "localise", "localisee", "adresse", "lieu", "siege", "diamniadio"],
+    "trouve": ["situe", "situee", "localise", "localisee", "adresse", "lieu", "siege", "diamniadio"],
+    "trouver": ["situe", "situee", "localise", "localisee", "adresse", "lieu", "siege", "diamniadio"],
+    "localisation": ["situe", "trouve", "adresse", "lieu", "siege", "diamniadio"],
+    "situe": ["trouve", "localise", "adresse", "lieu", "siege", "diamniadio"],
+    "adresse": ["situe", "trouve", "localise", "lieu", "siege", "diamniadio"],
+    "duree": ["mois", "annee", "temps", "periode", "calendrier", "delai"],
+    "cout": ["prix", "tarif", "montant", "budget", "financement", "subvention"],
+    "financement": ["subvention", "aide", "montant", "budget", "fonds", "cout"],
+    "qui": ["porteur", "candidat", "equipe", "critere", "eligible", "fondateur"],
+}
+
 
 class ServiceIANonConfigure(Exception):
     """Aucune clé d'API IA n'est configurée."""
@@ -49,6 +62,15 @@ class ServiceIANonConfigure(Exception):
 
 class ServiceIAIndisponible(Exception):
     """Le service IA externe n'est pas joignable ou a renvoyé une erreur."""
+
+
+def normaliser_chaine(texte: str) -> str:
+    """Supprime les accents, la ponctuation superflue et convertit en minuscules."""
+    if not texte:
+        return ""
+    nfkd = unicodedata.normalize("NFKD", texte)
+    sans_accents = "".join(c for c in nfkd if not unicodedata.combining(c))
+    return sans_accents.lower().strip()
 
 
 # ==============================================================================
@@ -77,7 +99,6 @@ def extraire_texte_docx(donnees: bytes) -> str:
 
 def extraire_texte_pdf(donnees: bytes) -> str:
     """Extrait le texte d'un PDF via pypdf ou décodage standard des flux textuels."""
-    # 1. Tentative avec pypdf si la bibliothèque est installée
     try:
         import pypdf  # type: ignore
 
@@ -89,7 +110,6 @@ def extraire_texte_pdf(donnees: bytes) -> str:
     except Exception:
         pass
 
-    # 2. Cas des fichiers de test (ex: SimpleUploadedFile avec contenu texte brut)
     try:
         texte_brut = donnees.decode("utf-8")
         if not texte_brut.startswith("%PDF") and any(c.isalnum() for c in texte_brut):
@@ -97,7 +117,6 @@ def extraire_texte_pdf(donnees: bytes) -> str:
     except Exception:
         pass
 
-    # 3. Extraction par analyse des flux de compression (FlateDecode / streams)
     textes = []
     stream_pattern = re.compile(rb"stream[\r\n]+(.*?)[\r\n]+endstream", re.DOTALL)
     for match in stream_pattern.finditer(donnees):
@@ -130,7 +149,6 @@ def extraire_texte_pdf(donnees: bytes) -> str:
     if textes:
         return " ".join(textes).strip()
 
-    # Décodage de repli
     try:
         return donnees.decode("utf-8", errors="ignore").strip()
     except Exception:
@@ -155,19 +173,16 @@ def extraire_texte_fichier(fichier) -> str:
 
     nom = getattr(fichier, "name", "").lower()
 
-    # Format Word .docx
     if donnees.startswith(b"PK\x03\x04") or nom.endswith(".docx"):
         texte = extraire_texte_docx(donnees)
         if texte:
             return texte
 
-    # Format PDF
     if donnees.startswith(b"%PDF") or nom.endswith(".pdf"):
         texte = extraire_texte_pdf(donnees)
         if texte:
             return texte
 
-    # Formats texte brut (txt, md, csv, html, etc.)
     for enc in ("utf-8", "latin-1", "cp1252"):
         try:
             return donnees.decode(enc).strip()
@@ -220,7 +235,6 @@ def indexer_documents_publics() -> dict:
         if doc.fichier:
             texte = extraire_texte_fichier(doc.fichier)
 
-        # Si le fichier ne contient pas de texte ou est absent, on indexe les métadonnées
         contenu_complet = (
             f"Document CIAT : {doc.titre}. Catégorie : {doc.categorie}.\n{texte}".strip()
         )
@@ -243,66 +257,79 @@ def indexer_documents_publics() -> dict:
 
 
 # ==============================================================================
-# 3. Recherche lexicale par mots-clés
+# 3. Recherche élargie (accents ignorés, troncature 5 lettres, synonymes)
 # ==============================================================================
 
 def extraire_mots_cles(texte: str) -> list[str]:
-    """Extrait les lemmes/mots-clés pertinents d'une question en filtrant les mots vides."""
-    tokens = re.findall(r"\b[A-Za-zÀ-ÿ0-9_-]{3,}\b", texte.lower())
+    """Extrait les lemmes de la question en filtrant les mots vides."""
+    texte_norm = normaliser_chaine(texte)
+    tokens = re.findall(r"\b[a-z0-9_-]{2,}\b", texte_norm)
     mots = [t for t in tokens if t not in STOP_WORDS_FR]
     return mots if mots else tokens
 
 
-def rechercher_passages(question: str, top_k: int = 3, score_min: float = 2.0) -> list[PassageDocument]:
-    """Recherche et ordonne les passages les plus pertinents pour répondre à une question."""
+def rechercher_passages(question: str, top_k: int = 3) -> list[PassageDocument]:
+    """Recherche les passages pertinents avec élargissement lexical et phonétique/racine.
+
+    Si le score lexical est faible ou nul, renvoie quand même les passages les
+    plus proches (les 3 meilleurs, ou tous si le corpus est petit), en laissant
+    la décision finale au modèle IA via les consignes du prompt.
+    """
+    passages_qs = list(PassageDocument.objects.select_related("document").all())
+    if not passages_qs:
+        return []
+
     mots_cles = extraire_mots_cles(question)
-    if not mots_cles:
-        return []
 
-    # Filtrer les passages contenant au moins un mot-clé
-    q_filter = Q()
-    for kw in mots_cles:
-        q_filter |= Q(texte__icontains=kw) | Q(document__titre__icontains=kw)
-
-    candidats = list(
-        PassageDocument.objects.filter(q_filter)
-        .select_related("document")
-    )
-    if not candidats:
-        return []
+    # Élargissement des termes de recherche :
+    # 1. Termes originaux normalisés
+    # 2. Mots de la même famille (troncature à 5 lettres)
+    # 3. Synonymes courants (ex: "ou", "trouve" -> "situe", "localise", "adresse", "diamniadio")
+    termes_recherche = set()
+    for mot in mots_cles:
+        termes_recherche.add(mot)
+        if len(mot) >= 5:
+            termes_recherche.add(mot[:5])
+        if mot in SYNONYMES_COURANTS:
+            for syn in SYNONYMES_COURANTS[mot]:
+                termes_recherche.add(syn)
+                if len(syn) >= 5:
+                    termes_recherche.add(syn[:5])
 
     scores = []
-    question_lower = question.lower()
+    question_norm = normaliser_chaine(question)
 
-    for passage in candidats:
+    for passage in passages_qs:
         score = 0.0
-        texte_lower = passage.texte.lower()
-        titre_lower = passage.document.titre.lower()
+        texte_norm = normaliser_chaine(passage.texte)
+        titre_norm = normaliser_chaine(passage.document.titre)
 
-        mots_trouves = 0
-        for kw in mots_cles:
-            kw_lower = kw.lower()
-            if kw_lower in titre_lower:
+        for term in termes_recherche:
+            # Correspondance dans le titre
+            if term in titre_norm:
                 score += 5.0
-                mots_trouves += 1
 
-            occurrences = texte_lower.count(kw_lower)
+            # Correspondance dans le texte
+            occurrences = texte_norm.count(term)
             if occurrences > 0:
                 score += min(occurrences * 1.5, 6.0)
-                mots_trouves += 1
 
-        # Bonus pour la diversité des termes trouvés
-        score += mots_trouves * 2.0
-
-        # Bonus si une séquence exacte de la question apparaît
-        if len(question_lower) > 8 and question_lower in texte_lower:
+        # Bonus si une sous-chaîne significative de la question apparaît
+        if len(question_norm) > 8 and question_norm in texte_norm:
             score += 10.0
 
-        if score >= score_min:
-            scores.append((score, passage))
+        scores.append((score, passage))
 
+    # Tri par score décroissant
     scores.sort(key=lambda item: item[0], reverse=True)
-    return [passage for _, passage in scores[:top_k]]
+
+    # Si certains passages ont un score positif, on prend les meilleurs
+    meilleurs = [p for s, p in scores if s > 0][:top_k]
+    if meilleurs:
+        return meilleurs
+
+    # Sinon, on renvoie les passages les plus proches (les 3 premiers disponibles)
+    return [p for _, p in scores[:top_k]]
 
 
 # ==============================================================================
@@ -354,11 +381,17 @@ def traiter_message_assistant(
             "Tu es l'assistant atelier du CIAT (Centre d'Innovation et d'Accélération "
             "Technologique). Tu accompagnes les porteurs de projet et les équipes dans "
             "la rédaction de leurs documents de travail : fiches de projet, pitchs, "
-            "analyses SWOT, argumentaires ou plans d'action.\n"
-            "Tu apportes une aide structurée, claire, méthodologique et professionnelle.\n"
-            "RÈGLE ABSOLUE : tu ne dois jamais inventer de faits, chiffres, règles, "
-            "financements, clauses contractuelles ou informations internes inexistantes "
-            "sur le CIAT. Reste concentré sur la méthodologie et l'aide à la formulation."
+            "analyses SWOT, argumentaires ou plans d'action.\n\n"
+            "CONSIGNES STRICTES :\n"
+            "1. Il est strictement interdit d'inventer des chiffres, performances, dates, "
+            "noms, partenaires ou résultats concernant le projet de l'utilisateur.\n"
+            "2. Toute donnée manquante ou nécessaire doit obligatoirement être écrite sous "
+            "la forme « [À COMPLÉTER : ...] » au lieu d'être inventée.\n"
+            "3. Le pitch et l'ensemble de la rédaction doivent se limiter strictement aux "
+            "informations fournies par l'utilisateur dans sa demande.\n"
+            "4. Tu ne dois jamais inventer de règles, financements, clauses ou faits "
+            "inexistants sur le CIAT.\n"
+            "Reste constructif, méthodologique et structuré."
         )
         try:
             reponse_texte = ai.chat(historique_messages, system=system_prompt)
@@ -369,14 +402,14 @@ def traiter_message_assistant(
 
     else:
         # Mode documents : recherche documentaire stricte
-        # Auto-indexation initiale si aucune donnée n'a encore été indexée
+        # Auto-indexation initiale si les passages sont vides mais des documents publics existent
         if not PassageDocument.objects.exists() and DocumentPublic.objects.exists():
             indexer_documents_publics()
 
         passages = rechercher_passages(contenu_utilisateur)
 
+        # Le refus immédiat sans appel au modèle ne reste que si aucun passage n'existe du tout
         if not passages:
-            # Refus explicite si aucun extrait pertinent n'est trouvé
             reponse_texte = MESSAGE_REFUS_DOCUMENTS
             sources = []
         else:
@@ -399,9 +432,9 @@ def traiter_message_assistant(
                 "Technologique). Tu réponds aux questions des utilisateurs en te basant "
                 "STRICTEMENT et UNIQUEMENT sur les extraits de documents officiels fournis "
                 "ci-dessous. Tu ne dois rien inventer ni extrapoler.\n"
-                "Si l'information demandée ne figure pas clairement dans les extraits, "
-                "indique poliment que les documents publics disponibles ne permettent pas "
-                "d'y répondre.\n"
+                "Consigne essentielle : réponds uniquement à partir de ces passages ; "
+                "si la réponse n'y est pas ou ne s'y trouve pas clairement, dis-le poliment "
+                "et refuse d'inventer.\n"
                 "Réponds en français dans un style clair, courtois et précis."
             )
 

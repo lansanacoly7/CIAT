@@ -213,9 +213,54 @@ class AssistantAPITestCase(TestCase):
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")
-    def test_question_hors_sujet_refus_explicite_sources_vides(self, mock_chat, mock_configured):
-        """Une question hors sujet reçoit un refus explicite et sources vides sans halluciner."""
+    def test_question_ou_se_trouve_ciat_transmet_passage_situe_diamniadio(self, mock_chat, mock_configured):
+        """La question 'Où se trouve le CIAT ?' avec un passage contenant 'situé à Diamniadio'
+        doit transmettre ce passage au modèle via l'élargissement lexical / synonymes."""
         mock_configured.return_value = True
+        mock_chat.return_value = "Le CIAT est situé à Diamniadio, pôle urbain de l'innovation."
+
+        # Création d'un document spécifique sur la localisation
+        doc_loc = DocumentPublic.objects.create(
+            titre="Présentation et implantation du CIAT",
+            categorie="Présentation",
+            fichier=SimpleUploadedFile(
+                "implantation.txt",
+                "Le siège du CIAT est situé à Diamniadio, pôle technologique sénégalais.".encode("utf-8"),
+                content_type="text/plain",
+            ),
+        )
+        indexer_documents_publics()
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        resp = self.client.post(
+            f"/api/assistant/conversations/{conv.id}/messages/",
+            {"contenu": "Où se trouve le CIAT ?", "mode": "documents"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["role"], "assistant")
+        self.assertEqual(resp.data["contenu"], mock_chat.return_value)
+        mock_chat.assert_called_once()
+
+        # Vérifier que le passage contenant 'situé à Diamniadio' est transmis au modèle
+        messages_sent, _ = mock_chat.call_args
+        prompt_content = messages_sent[0][-1]["content"]
+        self.assertIn("Diamniadio", prompt_content)
+        self.assertIn("situé", prompt_content.lower())
+
+        # Vérifier la source
+        source_ids = [s["document_id"] for s in resp.data["sources"]]
+        self.assertIn(doc_loc.id, source_ids)
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_question_sans_aucun_passage_donne_refus_sans_appel_modele(self, mock_chat, mock_configured):
+        """Une question posée quand aucun passage n'existe du tout en base donne un refus
+        immédiat sans faire appel au modèle distant."""
+        mock_configured.return_value = True
+        PassageDocument.objects.all().delete()
+        DocumentPublic.objects.all().delete()
 
         self.client.force_authenticate(user=self.porteur1)
         conv = Conversation.objects.create(utilisateur=self.porteur1)
@@ -238,11 +283,11 @@ class AssistantAPITestCase(TestCase):
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")
     def test_mode_atelier_redaction_sans_sources_obligatoires(self, mock_chat, mock_configured):
-        """Le mode atelier assiste à la rédaction sans sources obligatoires avec interdiction d'inventer."""
+        """Le mode atelier assiste à la rédaction avec consigne [À COMPLÉTER] et interdiction d'inventer."""
         mock_configured.return_value = True
         mock_chat.return_value = (
             "Proposition de pitch : Notre solution solaire intelligente permet aux agriculteurs "
-            "d'optimiser l'arrosage de leurs cultures tout en réduisant de 40% leur consommation d'eau."
+            "d'optimiser l'arrosage. Partenaires : [À COMPLÉTER : Noms des partenaires]."
         )
 
         self.client.force_authenticate(user=self.porteur1)
@@ -260,11 +305,14 @@ class AssistantAPITestCase(TestCase):
         self.assertEqual(resp.data["sources"], [])
         self.assertTrue(len(resp.data["avertissement_ia"]) > 0)
 
-        # Vérifier que le prompt système contient l'interdiction stricte d'inventer sur le CIAT
+        # Vérifier que le prompt système contient la consigne [À COMPLÉTER] et les interdictions strictes
         mock_chat.assert_called_once()
         _, kwargs = mock_chat.call_args
-        self.assertIn("RÈGLE ABSOLUE", kwargs.get("system", ""))
-        self.assertIn("ne dois jamais inventer", kwargs.get("system", ""))
+        system_prompt = kwargs.get("system", "")
+        self.assertIn("[À COMPLÉTER", system_prompt)
+        self.assertIn("chiffres", system_prompt)
+        self.assertIn("partenaires", system_prompt)
+        self.assertIn("se limiter", system_prompt)
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     def test_sans_cle_ia_repond_503_avec_message_clair(self, mock_configured):

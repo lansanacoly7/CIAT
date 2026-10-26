@@ -1,6 +1,7 @@
 """Vues API pour la Galerie des innovations (P6)."""
 from django.db import models
 from django.db.models import F, Q, Sum
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -194,7 +195,7 @@ class FicheQRCodeView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-        url_fiche = f"https://ciat.sn/galerie/{fiche.slug}"
+        url_fiche = f"{settings.SITE_URL.rstrip('/')}/galerie/{fiche.slug}"
         png_bytes = generer_qr_code_png(url_fiche)
 
         response = HttpResponse(png_bytes, content_type="image/png")
