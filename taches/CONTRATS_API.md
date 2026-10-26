@@ -117,3 +117,29 @@ Jalon : `{ id, projet, titre, echeance, statut, en_retard, preuves: [...], comme
 | `GET/POST /projets/{id}/suivis/` | `{ echeance: "3_mois"\|"6_mois", bilan, indicateurs }` |
 | `GET /projets/{id}/compte-rendu/?format=xlsx` | Fichier Excel à télécharger |
 
+## P4 — Assistant (`/api/assistant/`)
+
+Authentification obligatoire.
+
+| Route | Description |
+|---|---|
+| `GET /conversations/` | Mes conversations : `[{ id, titre, cree_le }]` |
+| `POST /conversations/` | Crée une conversation |
+| `GET /conversations/{id}/messages/` | `[{ id, role: "user"\|"assistant", contenu, sources, cree_le }]` |
+| `POST /conversations/{id}/messages/` | `{ contenu, mode: "documents"\|"atelier" }` → message de l'assistant : `{ contenu, sources: [{ document_id, titre, extrait }], avertissement_ia }`. `sources` vide et refus explicite si rien de pertinent (mode `documents`). `503` sans clé IA. |
+| `POST /indexation/` | Administrateur : réindexe les documents publics |
+
+## P6 — Galerie (`/api/gallery/`)
+
+Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medias: [{ type: "photo"\|"video"\|"demo", url }], statut, vues }`. Statuts : `brouillon`, `en_validation`, `publie`, `refuse`.
+
+| Route | Description |
+|---|---|
+| `GET /fiches/` | Public : fiches publiées. Filtres `?domaine=&cohorte=&avancement=&search=` |
+| `GET /fiches/{slug}/` | Public : détail d'une fiche publiée (incrémente `vues`) |
+| `GET /fiches/{slug}/qr/` | Public : image PNG du QR code vers la fiche |
+| `POST /fiches/` | Porteur : crée une fiche pour son projet |
+| `POST /fiches/{id}/soumettre/` | Porteur : brouillon vers en validation |
+| `POST /fiches/{id}/valider/`, `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur |
+| `GET /statistiques/` | Équipe CIAT : `{ total_vues, par_fiche: [{ slug, titre, vues }] }` |
+
