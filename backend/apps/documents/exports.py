@@ -8,21 +8,9 @@ Charte graphique CIAT / ISEP :
 - Pagination et mentions du statut et de la version
 """
 import io
-try:
-    from docx import Document as DocxDocument
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.shared import Pt, RGBColor
-    COULEUR_BRUN_DOCX = RGBColor(97, 45, 16)
-    COULEUR_TEXTE_DOCX = RGBColor(36, 20, 13)
-    COULEUR_GRIS_DOCX = RGBColor(120, 120, 120)
-except ImportError:
-    DocxDocument = None
-    WD_ALIGN_PARAGRAPH = None
-    Pt = None
-    RGBColor = None
-    COULEUR_BRUN_DOCX = None
-    COULEUR_TEXTE_DOCX = None
-    COULEUR_GRIS_DOCX = None
+from docx import Document as DocxDocument
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt, RGBColor
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -33,6 +21,9 @@ from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 # Couleurs CIAT
 COULEUR_BRUN_HEX = "#612D10"
 COULEUR_TEXTE_HEX = "#24140D"
+COULEUR_BRUN_DOCX = RGBColor(97, 45, 16)
+COULEUR_TEXTE_DOCX = RGBColor(36, 20, 13)
+COULEUR_GRIS_DOCX = RGBColor(120, 120, 120)
 
 
 # ==============================================================================
