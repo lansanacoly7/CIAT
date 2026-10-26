@@ -8,7 +8,7 @@
  * Règle d'or : aucune fausse donnée affichée comme réelle.
  * Les données de secours ne sont activées QUE si NEXT_PUBLIC_MODE_DEMO=1.
  */
-import { API_URL, type Page } from "./api";
+import { api, API_URL, type Page } from "./api";
 
 export type MediaItem = {
   type: "photo" | "video" | "demo";
@@ -382,4 +382,130 @@ export async function getCohortesOptions(): Promise<CohorteOption[]> {
     { id: 3, nom: "Cohorte 2025", annee: 2025 },
     { id: 2, nom: "Cohorte 2024", annee: 2024 },
   ];
+}
+
+export type CreateFichePayload = {
+  projet: number;
+  titre: string;
+  probleme: string;
+  solution: string;
+  equipe: string;
+  avancement: string;
+  medias?: MediaItem[];
+};
+
+export type GalleryStats = {
+  total_vues: number;
+  par_fiche: {
+    slug: string;
+    titre: string;
+    vues: number;
+  }[];
+};
+
+export type ProjetOption = {
+  id: number;
+  titre: string;
+  statut: string;
+};
+
+/**
+ * Crée une nouvelle fiche d'innovation (Porteur de projet).
+ * La fiche démarre au statut 'brouillon'.
+ */
+export async function creerFiche(data: CreateFichePayload): Promise<FicheInnovation> {
+  return await api<FicheInnovation>("/gallery/fiches/", {
+    method: "POST",
+    body: data,
+    auth: true,
+  });
+}
+
+/**
+ * Soumet une fiche brouillon au comité pour validation (Porteur).
+ * Statut : 'brouillon' -> 'en_validation'.
+ */
+export async function soumettreFiche(id: number): Promise<FicheInnovation> {
+  return await api<FicheInnovation>(`/gallery/fiches/${id}/soumettre/`, {
+    method: "POST",
+    auth: true,
+  });
+}
+
+/**
+ * Valide et publie une fiche d'innovation (Coordonnateur ou Administrateur).
+ * Statut : 'en_validation' -> 'publie'.
+ */
+export async function validerFiche(id: number): Promise<FicheInnovation> {
+  return await api<FicheInnovation>(`/gallery/fiches/${id}/valider/`, {
+    method: "POST",
+    auth: true,
+  });
+}
+
+/**
+ * Refuse une fiche d'innovation (Coordonnateur ou Administrateur).
+ * Statut : 'en_validation' -> 'refuse'.
+ */
+export async function refuserFiche(id: number): Promise<FicheInnovation> {
+  return await api<FicheInnovation>(`/gallery/fiches/${id}/refuser/`, {
+    method: "POST",
+    auth: true,
+  });
+}
+
+/**
+ * Récupère les fiches du porteur connecté (tous statuts : brouillon, en_validation, publie, refuse).
+ */
+export async function getMesFiches(): Promise<FicheInnovation[]> {
+  const data = await api<Page<FicheInnovation> | FicheInnovation[]>("/gallery/fiches/?mes_fiches=1", {
+    method: "GET",
+    auth: true,
+  });
+  if (data && "results" in data && Array.isArray(data.results)) {
+    return data.results;
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+/**
+ * Récupère les fiches en attente de validation (Coordonnateur ou Administrateur).
+ */
+export async function getFichesEnValidation(): Promise<FicheInnovation[]> {
+  const data = await api<Page<FicheInnovation> | FicheInnovation[]>("/gallery/fiches/?en_validation=1", {
+    method: "GET",
+    auth: true,
+  });
+  if (data && "results" in data && Array.isArray(data.results)) {
+    return data.results;
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+/**
+ * Récupère les statistiques de consultation (Équipe CIAT).
+ */
+export async function getStatistiquesGallery(): Promise<GalleryStats> {
+  return await api<GalleryStats>("/gallery/statistiques/", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+/**
+ * Récupère les projets de l'utilisateur connecté pour l'associer à une nouvelle fiche.
+ */
+export async function getMesProjets(): Promise<ProjetOption[]> {
+  try {
+    const data = await api<Page<ProjetOption> | ProjetOption[]>("/projets/", {
+      method: "GET",
+      auth: true,
+    });
+    if (data && "results" in data && Array.isArray(data.results)) {
+      return data.results;
+    }
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
