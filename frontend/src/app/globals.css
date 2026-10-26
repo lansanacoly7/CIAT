@@ -1,18 +1,19 @@
 @import "tailwindcss";
 
-/* Charte graphique CIAT : voir Charte_Graphique_CIAT.pdf */
+/* Charte graphique CIAT : voir Charte_Graphique_CIAT_ISEP.pdf (Écosystème CIAT 360) */
 :root {
-  --color-primary: #602d10;
-  --color-primary-dark: #3f1d0a;
-  --color-accent: #c99a69;
-  --color-bg: #ffffff;
-  --color-bg-soft: #f8f1e7;
-  --color-text: #26160b;
-  --color-text-muted: #6b5646;
-  --color-border: #e6d8c6;
-  --color-success: #2e7d4f;
-  --color-warning: #b7791f;
-  --color-danger: #b3261e;
+  --color-primary: #612D10;       /* Brun CIAT - Rigueur & ancrage */
+  --color-primary-dark: #24140D;  /* Brun Nuit - Typo & Dark UI */
+  --color-accent: #C99A68;        /* Ocre Doré CIAT - Éclosion & mentorat */
+  --color-bg: #FFFFFF;            /* Blanc Pur */
+  --color-bg-soft: #FAF7F2;       /* Sable Doux - Cartes & sections */
+  --color-text: #24140D;          /* Brun Nuit - Typo courante */
+  --color-text-muted: #6B5646;    /* Texte secondaire & légendes */
+  --color-border: #EFE4D6;        /* Lin Bordure - Séparateurs & inputs */
+  --color-success: #2E7D32;       /* Vert succès / Validé */
+  --color-warning: #D97706;       /* Ocre alerte / Retard */
+  --color-danger: #DC2626;        /* Rouge rejet / Bloqué */
+  --color-info: #2563EB;          /* Bleu info / En cours */
 }
 
 @theme inline {
@@ -26,7 +27,8 @@
   --color-succes: var(--color-success);
   --color-alerte: var(--color-warning);
   --color-erreur: var(--color-danger);
-  --font-title: var(--font-montserrat), "Segoe UI", Arial, sans-serif;
+  --color-info: var(--color-info);
+  --font-title: var(--font-jakarta), "Segoe UI", Arial, sans-serif;
   --font-body: var(--font-inter), "Segoe UI", Arial, sans-serif;
   --radius-lg: 8px;
 }
