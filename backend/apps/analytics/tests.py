@@ -12,6 +12,7 @@ Vérifie :
 from datetime import date, timedelta
 from decimal import Decimal
 import io
+import json
 from unittest.mock import patch
 import openpyxl
 
@@ -1101,5 +1102,198 @@ class AnalyticsSeedAnalyticsCommandTests(TestCase):
 
         self.assertEqual(nb_part_1, nb_part_2)
         self.assertEqual(nb_fin_1, nb_fin_2)
+
+
+# ==============================================================================
+# TESTS PHASE 3 - T1 : Commande de Contrôle de la Qualité des Données
+# ==============================================================================
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class DataQualityControlCommandTests(TestCase):
+    """Tests unitaires vérifiant que chaque défaut introduit volontairement
+    est détecté par un contrôle précis, et qu'une base saine renvoie 0 anomalie."""
+
+    def setUp(self):
+        # Création d'un jeu minimal valide
+        self.domaine = Domaine.objects.create(nom="TIC & IA", slug="tic-ia")
+        self.cohorte = Cohorte.objects.create(
+            nom="Cohorte Qualité 2026",
+            annee=2026,
+            date_debut=date(2026, 1, 1),
+            date_fin=date(2026, 12, 31),
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.qualite@ciat.sn",
+            password="pwd",
+            role=Role.PORTEUR,
+            genre="F",
+        )
+        self.projet = Projet.objects.create(
+            titre="Solution Solaire Intelligente",
+            resume="Projet solaire innovant pour les zones rurales.",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+
+    def test_controle_qualite_base_saine_retourne_zero_anomalie(self):
+        """Une base de données conforme ne retourne aucune anomalie critique ni avertissement."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+
+        rapport = executer_audit_qualite()
+        self.assertEqual(rapport["statut"], "SUCCES")
+        self.assertEqual(rapport["total_anomalies"], 0)
+        self.assertEqual(rapport["nb_critiques"], 0)
+        self.assertEqual(rapport["nb_avertissements"], 0)
+
+    def test_detecte_valeurs_manquantes(self):
+        """Détecte les résumés vides, domaines ou cohortes absents et porteurs sans genre."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+
+        # Projet sans résumé
+        Projet.objects.create(
+            titre="Projet Sans Résumé",
+            resume="   ",  # espaces blancs
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+        # Porteur sans genre
+        User.objects.create_user(
+            email="sans.genre@ciat.sn",
+            password="pwd",
+            role=Role.PORTEUR,
+            genre="",
+        )
+
+        rapport = executer_audit_qualite()
+        codes = [a["code"] for a in rapport["anomalies"]]
+        self.assertIn("PROJET_RESUME_MANQUANT", codes)
+        self.assertIn("USER_GENRE_MANQUANT", codes)
+
+    def test_detecte_doublons(self):
+        """Détecte les projets de même titre normalisé et les utilisateurs au même email."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+
+        # Projet doublon (casse et espaces)
+        Projet.objects.create(
+            titre="  solution SOLAIRE intelligente  ",
+            resume="Description bis",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+
+        # Utilisateur doublon (email normalisé)
+        # En SQLite ou Django, on force deux utilisateurs avec même lower email
+        u2 = User(
+            email="PORTEUR.QUALITE@CIAT.SN",
+            role=Role.PORTEUR,
+            genre="H",
+        )
+        u2.set_password("pwd")
+        u2.save()
+
+        rapport = executer_audit_qualite()
+        codes = [a["code"] for a in rapport["anomalies"]]
+        self.assertIn("PROJET_TITRE_DOUBLON", codes)
+        self.assertIn("USER_EMAIL_DOUBLON", codes)
+
+    def test_detecte_incoherences_temporelles(self):
+        """Détecte les cohortes à dates inversées et les financements antérieurs au projet."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+
+        # Cohorte avec date_fin antérieure à date_debut
+        Cohorte.objects.create(
+            nom="Cohorte Inverse",
+            annee=2025,
+            date_debut=date(2025, 12, 1),
+            date_fin=date(2025, 1, 1),
+        )
+
+        # Financement antérieur à la création du projet
+        # projet.cree_le est la date actuelle, on met 2020
+        f = Financement(
+            projet=self.projet,
+            source="DER/FJ",
+            montant=Decimal("5000000"),
+            date=date(2020, 1, 1),
+            statut=StatutFinancement.DECAISSE,
+        )
+        # save direct sans full_clean pour bypasser la validation modèle et tester la commande d'audit
+        super(Financement, f).save()
+
+        rapport = executer_audit_qualite()
+        codes = [a["code"] for a in rapport["anomalies"]]
+        self.assertIn("COHORTE_DATES_INVERSEES", codes)
+        self.assertIn("FINANCEMENT_AVANT_PROJET", codes)
+
+    def test_detecte_statuts_incompatibles_intermodules(self):
+        """Détecte une fiche de galerie publiée pour un projet encore à l'état 'idée'."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+        from apps.gallery.models import FicheInnovation
+
+        projet_idee = Projet.objects.create(
+            titre="Simple Idée",
+            resume="Une idée préliminaire.",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+
+        FicheInnovation.objects.create(
+            projet=projet_idee,
+            titre="Fiche Illégitime",
+            probleme="Prob",
+            solution="Sol",
+            equipe="Équipe",
+            avancement="Idée",
+            statut=FicheInnovation.Statut.PUBLIE,
+        )
+
+        rapport = executer_audit_qualite()
+        codes = [a["code"] for a in rapport["anomalies"]]
+        self.assertIn("FICHE_PUBLIEE_NON_ELIGIBLE", codes)
+
+    def test_detecte_valeurs_hors_plage(self):
+        """Détecte les financements à montant non positif et les cohortes hors plage."""
+        from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
+
+        # Cohorte hors plage
+        Cohorte.objects.create(
+            nom="Cohorte Futuriste",
+            annee=2050,
+            date_debut=date(2050, 1, 1),
+            date_fin=date(2050, 12, 31),
+        )
+
+        # Financement à 0 FCFA (save direct)
+        f_invalide = Financement(
+            projet=self.projet,
+            source="Donateur",
+            montant=Decimal("0"),
+            date=date(2026, 6, 1),
+            statut=StatutFinancement.ACCORDE,
+        )
+        super(Financement, f_invalide).save()
+
+        rapport = executer_audit_qualite()
+        codes = [a["code"] for a in rapport["anomalies"]]
+        self.assertIn("COHORTE_ANNEE_HORS_PLAGE", codes)
+        self.assertIn("FINANCEMENT_MONTANT_INVALIDE", codes)
+
+    def test_commande_cli_json_et_strict(self):
+        """Vérifie l'exécution CLI de la commande avec sortie JSON valide."""
+        out = io.StringIO()
+        call_command("controle_qualite_donnees", "--json", stdout=out)
+        data = json.loads(out.getvalue())
+        self.assertIn("statut", data)
+        self.assertIn("par_categorie", data)
+        self.assertIn("statistiques", data)
+
 
 
