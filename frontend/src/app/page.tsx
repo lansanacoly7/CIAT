@@ -167,6 +167,19 @@ export default function Home() {
     <>
       {/* 1. HERO INSTITUTIONNEL HAUT DE GAMME : RESPECT STRICT DE LA CHARTE CIAT */}
       <section className="relative overflow-hidden border-b border-[#3d2315] bg-gradient-to-b from-[#24140D] via-[#2F170D] to-[#3D1D10] text-white">
+        {/* Arrière-plan photographique du campus avec overlay et flou subtil */}
+        <div className="absolute inset-0 pointer-events-none opacity-15 mix-blend-luminosity">
+          <Image
+            src="/images/campus-isep.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center filter blur-xs"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#24140D] via-[#2F170D]/90 to-[#24140D]/85" />
+        </div>
+
         {/* Glow atmosphérique chaleureux rappelant la terre de Diamniadio */}
         <div
           aria-hidden="true"
@@ -178,9 +191,9 @@ export default function Home() {
         />
 
         <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24">
-          <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
             {/* Colonne Principale de Présentation */}
-            <div className="space-y-6 lg:col-span-8">
+            <div className="space-y-6 lg:col-span-7">
               {/* Badge officiel de cadrage républicain & académique */}
               <div className="inline-flex items-center gap-2.5 rounded-full border border-beige/40 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-beige backdrop-blur-sm">
                 <span className="inline-block h-2 w-2 rounded-full bg-beige animate-pulse" />
@@ -218,60 +231,64 @@ export default function Home() {
                   variant="secondary"
                   className="!border-white/30 !text-white hover:!bg-white/10 px-5 py-3 text-sm"
                 >
-                  Annuaire des 62 Projets
+                  Annuaire des Projets
                 </ButtonLink>
               </div>
             </div>
 
-            {/* Colonne Latérale : Carte d'Identité & Ancrage Officiel */}
-            <div className="lg:col-span-4">
-              <div className="relative overflow-hidden rounded-2xl border border-beige/30 bg-gradient-to-b from-white/10 to-white/5 p-6 backdrop-blur-md shadow-2xl">
-                <div className="flex items-center gap-4 border-b border-white/15 pb-4">
+            {/* Colonne Latérale : Photographie Officielle du Campus & Ancrage ISEP */}
+            <div className="lg:col-span-5">
+              <div className="group relative overflow-hidden rounded-3xl border border-beige/35 bg-gradient-to-b from-white/12 to-white/5 p-3.5 backdrop-blur-md shadow-2xl transition-all duration-300 hover:border-beige/60">
+                {/* Cadre Photographique du Campus ISEP Diamniadio */}
+                <div className="relative h-56 sm:h-64 md:h-72 w-full overflow-hidden rounded-2xl border border-white/20">
                   <Image
-                    src="/brand/symbole_blanc.png"
-                    alt="Symbole CIAT"
-                    width={48}
-                    height={48}
-                    className="h-12 w-auto object-contain"
+                    src="/images/campus-isep.png"
+                    alt="Campus de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div>
-                    <span className="block text-xs font-bold uppercase tracking-wider text-beige">
-                      Plateforme CIAT 360
+                  {/* Dégradé pour lisibilité des badges */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#24140D] via-[#24140D]/30 to-transparent" />
+
+                  {/* Badge en haut à gauche */}
+                  <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-[#24140D]/80 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-md">
+                    <span className="h-2 w-2 rounded-full bg-succes animate-pulse" />
+                    <span>Campus ISEP · Diamniadio</span>
+                  </div>
+
+                  {/* Légende en bas de la photo */}
+                  <div className="absolute bottom-3 left-3 right-3 text-left">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-beige">
+                      Ancrage Académique & Technologique
                     </span>
-                    <span className="text-sm font-semibold text-white">
-                      Écosystème Intégré
-                    </span>
+                    <h3 className="text-sm font-extrabold text-white leading-snug drop-shadow-sm">
+                      Institut Supérieur d&apos;Enseignement Professionnel
+                    </h3>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-3 text-xs text-[#ebd9c0]">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                    <span className="text-white/70">Tutelle</span>
-                    <strong className="text-white">Ministère Enseignement Supérieur</strong>
+                {/* Métadonnées officielles sous la photo */}
+                <div className="mt-3.5 grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                    <span className="block text-[10px] font-semibold uppercase text-beige/80">Localisation</span>
+                    <span className="mt-0.5 block font-bold text-white text-[11px]">Pôle Urbain Diamniadio</span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                    <span className="text-white/70">Campus</span>
-                    <strong className="text-white">Diamniadio, Pôle Urbain</strong>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                    <span className="text-white/70">Filières</span>
-                    <strong className="text-white">7 Domaines Prioritaires</strong>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/70">Méthodologie</span>
-                    <strong className="text-white">5 Jalons Contractualisés</strong>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                    <span className="block text-[10px] font-semibold uppercase text-beige/80">Infrastructures</span>
+                    <span className="mt-0.5 block font-bold text-white text-[11px]">Ateliers & Labos CIAT</span>
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-lg bg-white/10 p-3 text-center">
-                  <p className="text-[11px] font-medium text-[#ebd9c0]">
-                    Appel à candidatures en cours pour la cohorte 2026.
-                  </p>
+                {/* Bouton de visite */}
+                <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-xs">
+                  <span className="text-[11px] text-[#ebd9c0]">Siège officiel de l&apos;incubateur</span>
                   <Link
-                    href="/connexion?next=/incubateur"
-                    className="mt-2 inline-flex items-center text-xs font-bold text-beige hover:underline"
+                    href="/portail/ciat"
+                    className="inline-flex min-h-[44px] items-center font-bold text-beige hover:text-white transition-colors"
                   >
-                    Déposer un dossier en ligne →
+                    Visiter le centre →
                   </Link>
                 </div>
               </div>
