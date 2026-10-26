@@ -83,6 +83,15 @@ DATABASES = {
     )
 }
 
+# Support PostgreSQL >= 12 en développement local (Django 5.2 exige PG 14+ par défaut)
+if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
+    try:
+        from django.db.backends.postgresql.base import DatabaseWrapper
+
+        DatabaseWrapper.check_database_version_supported = lambda self: None
+    except Exception:
+        pass
+
 AUTH_USER_MODEL = "core.User"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -133,7 +142,12 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ),
-    "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "300/min", "ai": "20/min"},
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/min",
+        "user": "300/min",
+        "ai": "20/min",
+        "auth": "5/min",
+    },
 }
 
 SIMPLE_JWT = {
