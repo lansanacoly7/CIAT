@@ -46,12 +46,12 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
     <div className="mx-auto flex w-full max-w-lg px-4 py-10 sm:py-14">
       <div className="w-full rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-6 shadow-sm sm:p-8">
         <Image
-          src="/brand/logo_mono_brun.png"
+          src="/brand/logo_principal.png"
           alt="CIAT — ISEP Diamniadio"
-          width={160}
-          height={64}
+          width={180}
+          height={70}
           priority
-          className="mx-auto mb-6 h-14 w-auto"
+          className="mx-auto mb-6 h-14 w-auto object-contain"
         />
         <h1 className="text-center text-2xl font-bold text-[#612D10]">{title}</h1>
         <p className="mb-6 mt-1 text-center text-sm text-[#6b5646]">{subtitle}</p>

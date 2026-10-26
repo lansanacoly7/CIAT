@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { MODULES } from "@/lib/modules";
 
@@ -16,6 +17,44 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function Header() {
   const { user, loading, logout } = useAuth();
+  const pathname = usePathname();
+
+  const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
+
+  if (isAuthPage) {
+    return (
+      <header className="border-b border-[#EFE4D6] bg-white px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <Link
+            href="/"
+            aria-label="CIAT, retour au portail"
+            className="flex items-center gap-2 text-xs font-semibold text-[#612D10] transition-colors hover:text-[#3F1D0A]"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <span>Retour au portail</span>
+          </Link>
+          <Link href="/" aria-label="CIAT" className="flex items-center">
+            <Image
+              src="/brand/logo_principal.png"
+              alt="CIAT"
+              width={110}
+              height={40}
+              priority
+              className="h-7 w-auto object-contain"
+            />
+          </Link>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="bg-brun-fonce text-white">
