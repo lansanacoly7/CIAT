@@ -90,8 +90,27 @@ from apps.core.ai import ai
 texte = ai.generate("Rédige une attestation ...", system="Tu rédiges des documents officiels de l'ISEP.")
 ```
 
+## Tests de bout en bout (E2E) — Parcours clés de démonstration
+
+La suite de tests E2E automatisée avec Playwright valide les 5 parcours critiques de l'application :
+1. Connexion refusée sur mot de passe erroné (message d'erreur, pas de token).
+2. Connexion d'un porteur de projet et accès immédiat à son espace incubateur (`/incubateur`).
+3. Contrôle d'accès : un porteur tentant d'accéder au tableau de bord décisionnel (`/tableau-de-bord`) est intercepté et redirigé.
+4. Parcours Coordonnateur : accès au tableau de bord décisionnel, chargement des indicateurs réels et question en langage naturel (autonome sans clé IA externe).
+5. Accès au référentiel méthodologique (`/tableau-de-bord/methodologie`) avec filtres et formules de calcul.
+6. Parcours public visiteur : consultation de la galerie des innovations (`/galerie`) et ouverture d'une fiche prototype détaillée.
+
+### Lancer les tests E2E :
+Prérequis : le backend Django tourne sur le port 8000 (`python manage.py runserver`) et le frontend sur le port 3000 (`npm run dev` ou `npm run start`).
+```bash
+cd frontend
+npm run test:e2e
+```
+*Temps d'exécution : ~40 secondes (objectif < 3 minutes garanti, 100% autonome sans clé IA externe).*
+
 ## Vérifier avant de proposer son travail
 ```bash
-cd backend && python manage.py check && python manage.py makemigrations --check
-cd frontend && npm run lint && npm run build
+cd backend && python manage.py check && python manage.py makemigrations --check && python manage.py test apps.analytics
+cd frontend && npm run lint && npm run build && npm run test:e2e
 ```
+
