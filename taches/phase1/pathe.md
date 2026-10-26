@@ -1,7 +1,7 @@
 # Pathé — Phase 1
 
 > Domaine : back-end. Module : **P1 Portail institutionnel** (priorité 2). Code dans `backend/apps/portal/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P1).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P1).
 
 Ordre conseillé : T1, puis T2, puis T3.
 
@@ -28,3 +28,15 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## Quand tu as fini
 Écris quelques tests (`python manage.py test apps.portal`), vérifie `python manage.py check` et `makemigrations --check`. Ouvre ta demande de fusion et préviens Lansana : la tâche suivante te sera donnée après validation.
+
+## À corriger : tests trop lents
+Les tests de ton module prennent environ 1 minute, à cause du hachage des mots de passe à chaque création d'utilisateur de test. Passe au hasheur rapide dans tes classes de test, sans toucher aux réglages de production :
+
+```python
+from django.test import override_settings
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class MesTests(TestCase):
+    ...
+```
+Vérifie ensuite que `python manage.py test apps.portal` passe en quelques secondes. Fais cette correction sur une branche à part (`fix/portal-tests-rapides`) et préviens Lansana.

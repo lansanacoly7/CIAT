@@ -71,7 +71,7 @@ Chaque module a son préfixe d'API : `/api/documents/`, `/api/incubator/`, `/api
 - **Appels à l'IA** : toujours via `from apps.core.ai import ai`. Jamais d'appel direct à un fournisseur.
 - **Apparence** : couleurs et polices viennent de la charte (variables dans `globals.css`, composants dans `components/ui.tsx`).
 - **Secrets** : les fichiers `.env` ne sont jamais publiés sur Git. Les clés d'API restent chez chacun.
-- **Git** : `main` ne se touche pas jusqu'à la fin du développement. On travaille depuis la branche `test`, avec une branche par tâche (`feature/<module>-<sujet>`). Quand tu as fini, tu préviens Lansana : il vérifie ta branche et la fusionne dans `test`. Le détail pas à pas est dans [docs/GUIDE_GIT.md](docs/GUIDE_GIT.md).
+- **Git** : `main` ne se touche pas jusqu'à la fin du développement. Chacun a une branche personnelle à son nom (créée depuis `test`) et crée ses branches de fonctionnalité (`feature/<module>-<sujet>`) à partir d'elle. Quand tu as fini une tâche, tu préviens Lansana : il vérifie, fusionne dans ta branche personnelle puis dans `test`. Le détail pas à pas est dans [docs/GUIDE_GIT.md](docs/GUIDE_GIT.md).
 
 ## Service IA (Groq et Gemini, gratuits)
 

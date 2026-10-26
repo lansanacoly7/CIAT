@@ -45,3 +45,7 @@ desktop.ini
 
 # Antigravity & Agent workspace artifacts
 .system_generated/
+
+# Uploaded media files
+media/
+backend/media/

@@ -1,7 +1,7 @@
 # Ibrahima — Phase 1
 
 > Domaine : back-end. Module : **P2 Gestion de l'incubateur** (priorité 1). Code dans `backend/apps/incubator/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P2).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P2).
 
 Ordre conseillé : T1, puis T2, puis T3.
 
@@ -14,7 +14,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## T2 — Grille d'évaluation et évaluations du comité
 - **Complexité :** Moyenne · **Importance :** Haute · **Durée estimée :** 3 h
-- **À faire :** modèles `Grille` et `Critere` (libellé, poids, note maximale), `Evaluation` et `Note`. Une grille actuelle par défaut avec 5 critères. Un membre du comité note un dossier une seule fois. Calcul du score pondéré et du `score_moyen`.
+- **À faire :** modèles `Grille` et `Critere` (libellé, poids, note maximale), `Evaluation` et `Note`. Une grille actuelle par défaut avec 5 critères. Un évaluateur (membre du comité, mentor, coordonnateur ou administrateur) note un dossier une seule fois. Calcul du score pondéré et du `score_moyen`.
 - **Tu attends :** T1 (dossiers). Branche : `feature/incubator-evaluation`.
 - **Attendu par :** Maimouna (écran d'évaluation du comité), Alioune (indicateurs).
 - **Terminé quand :** deux membres du comité notent un dossier, le score moyen est correct, une deuxième évaluation du même membre est refusée.
@@ -28,3 +28,15 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## Quand tu as fini
 Prévois dans chaque tâche quelques tests (`python manage.py test apps.incubator`) et vérifie `python manage.py check` et `makemigrations --check`. Ouvre ta demande de fusion et préviens Lansana : la tâche suivante te sera donnée après validation.
+
+## À corriger : tests trop lents
+Les tests de ton module prennent environ 2 minutes 35, à cause du hachage des mots de passe à chaque création d'utilisateur de test. Passe au hasheur rapide dans tes classes de test, sans toucher aux réglages de production :
+
+```python
+from django.test import override_settings
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class MesTests(TestCase):
+    ...
+```
+Vérifie ensuite que `python manage.py test apps.incubator` passe en quelques secondes. Fais cette correction sur une branche à part (`fix/incubator-tests-rapides`) et préviens Lansana.

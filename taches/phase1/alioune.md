@@ -1,7 +1,7 @@
 # Alioune — Phase 1
 
 > Domaine : front-end, grandes interfaces et données. Module : **P3 Tableau de bord décisionnel** (priorité 3). Code dans `frontend/src/app/tableau-de-bord/` et `backend/apps/analytics/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P3).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P3).
 
 Ordre conseillé : T1, puis T2, puis T3.
 
