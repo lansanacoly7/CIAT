@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
+/* Charte graphique CIAT : voir Charte_Graphique_CIAT.pdf */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #602d10;
+  --color-primary-dark: #3f1d0a;
+  --color-accent: #c99a69;
+  --color-bg: #ffffff;
+  --color-bg-soft: #f8f1e7;
+  --color-text: #26160b;
+  --color-text-muted: #6b5646;
+  --color-border: #e6d8c6;
+  --color-success: #2e7d4f;
+  --color-warning: #b7791f;
+  --color-danger: #b3261e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brun: var(--color-primary);
+  --color-brun-fonce: var(--color-primary-dark);
+  --color-beige: var(--color-accent);
+  --color-ivoire: var(--color-bg-soft);
+  --color-texte: var(--color-text);
+  --color-texte-doux: var(--color-text-muted);
+  --color-bordure: var(--color-border);
+  --color-succes: var(--color-success);
+  --color-alerte: var(--color-warning);
+  --color-erreur: var(--color-danger);
+  --font-title: var(--font-montserrat), "Segoe UI", Arial, sans-serif;
+  --font-body: var(--font-inter), "Segoe UI", Arial, sans-serif;
+  --radius-lg: 8px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+  color: var(--color-primary);
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
