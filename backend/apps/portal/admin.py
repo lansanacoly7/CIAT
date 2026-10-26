@@ -1,8 +1,19 @@
-"""Administration Django pour le module Portail."""
+"""Administration Django pour le module Portail (T1, T2)."""
 from django.contrib import admin
 
-from .models import Actualite, AppelProjet, Evenement
+from .models import (
+    Actualite,
+    AppelProjet,
+    DocumentPublic,
+    Evenement,
+    MessageContact,
+    Partenaire,
+)
 
+
+# ==============================================================================
+# T1
+# ==============================================================================
 
 @admin.register(Actualite)
 class ActualiteAdmin(admin.ModelAdmin):
@@ -34,3 +45,33 @@ class AppelProjetAdmin(admin.ModelAdmin):
     @admin.display(description="Statut")
     def get_statut(self, obj):
         return obj.statut
+
+
+# ==============================================================================
+# T2
+# ==============================================================================
+
+@admin.register(Partenaire)
+class PartenaireAdmin(admin.ModelAdmin):
+    list_display = ("nom", "site_web", "ordre", "cree_le")
+    search_fields = ("nom", "description")
+    list_editable = ("ordre",)
+    ordering = ("ordre", "nom")
+
+
+@admin.register(DocumentPublic)
+class DocumentPublicAdmin(admin.ModelAdmin):
+    list_display = ("titre", "categorie", "fichier", "cree_le")
+    search_fields = ("titre", "categorie")
+    list_filter = ("categorie", "cree_le")
+    ordering = ("categorie", "titre")
+
+
+@admin.register(MessageContact)
+class MessageContactAdmin(admin.ModelAdmin):
+    list_display = ("nom", "email", "sujet", "cree_le", "traite")
+    search_fields = ("nom", "email", "sujet", "message")
+    list_filter = ("traite", "cree_le")
+    list_editable = ("traite",)
+    readonly_fields = ("nom", "email", "sujet", "message", "cree_le")
+    ordering = ("-cree_le",)

@@ -1,11 +1,16 @@
-"""Modèles du module Portail (apps.portal) — Phase 1.
+"""Modèles du module Portail (apps.portal) — Phases 1 (T1, T2).
 
-Gère les actualités, événements et appels à projets du CIAT.
+Gère les actualités, événements, appels à projets, partenaires, documents publics
+et messages de contact du CIAT.
 """
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 
+
+# ==============================================================================
+# T1 — Contenus institutionnels
+# ==============================================================================
 
 class Actualite(models.Model):
     """Actualité publiée sur le portail institutionnel du CIAT."""
@@ -84,3 +89,65 @@ class AppelProjet(models.Model):
 
     def __str__(self):
         return self.titre
+
+
+# ==============================================================================
+# T2 — Partenaires, documents publics et formulaire de contact
+# ==============================================================================
+
+class Partenaire(models.Model):
+    """Partenaire institutionnel, académique ou financier du CIAT."""
+
+    nom = models.CharField(max_length=150)
+    logo = models.ImageField(upload_to="partenaires/", null=True, blank=True)
+    site_web = models.URLField(max_length=300, blank=True)
+    description = models.TextField(blank=True)
+    ordre = models.PositiveSmallIntegerField(default=0, help_text="Ordre d'affichage")
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["ordre", "nom"]
+        verbose_name = "Partenaire"
+        verbose_name_plural = "Partenaires"
+
+    def __str__(self):
+        return self.nom
+
+
+class DocumentPublic(models.Model):
+    """Document téléchargeable public (rapports, chartes, guides, etc.)."""
+
+    titre = models.CharField(max_length=200)
+    categorie = models.CharField(
+        max_length=100,
+        help_text="Ex: Rapports, Charte, Guides, Formulaires",
+    )
+    fichier = models.FileField(upload_to="documents_publics/")
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["categorie", "titre"]
+        verbose_name = "Document public"
+        verbose_name_plural = "Documents publics"
+
+    def __str__(self):
+        return f"[{self.categorie}] {self.titre}"
+
+
+class MessageContact(models.Model):
+    """Message envoyé via le formulaire de contact public."""
+
+    nom = models.CharField(max_length=150)
+    email = models.EmailField()
+    sujet = models.CharField(max_length=200)
+    message = models.TextField()
+    traite = models.BooleanField(default=False, help_text="Marqué comme traité par l'équipe CIAT")
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-cree_le"]
+        verbose_name = "Message de contact"
+        verbose_name_plural = "Messages de contact"
+
+    def __str__(self):
+        return f"Message de {self.nom} ({self.email}) - {self.sujet}"
