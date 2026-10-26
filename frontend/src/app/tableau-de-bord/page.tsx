@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardContent } from "./DashboardContent";
 import { KpiSkeletonGrid } from "./components/PageState";
 
@@ -25,8 +26,10 @@ function DashboardFallback() {
 
 export default function TableauDeBordPage() {
   return (
-    <Suspense fallback={<DashboardFallback />}>
-      <DashboardContent />
-    </Suspense>
+    <ProtectedRoute allowedRoles={["membre_comite", "coordonnateur", "administrateur"]}>
+      <Suspense fallback={<DashboardFallback />}>
+        <DashboardContent />
+      </Suspense>
+    </ProtectedRoute>
   );
 }

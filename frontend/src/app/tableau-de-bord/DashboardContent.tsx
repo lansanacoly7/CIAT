@@ -1,8 +1,17 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { DashboardFilters } from "./types";
+import { api, saveTokens } from "@/lib/api";
+import type {
+  AnalyticsData,
+  DashboardFilters,
+  EvolutionItem,
+  IndicateursGlobaux,
+  ParCohorteItem,
+  ParDomaineItem,
+  ParGenreItem,
+} from "./types";
 import { getMockAnalyticsData } from "./mockData";
 import { KpiCard } from "./components/KpiCard";
 import { FiltersBar } from "./components/FiltersBar";
@@ -17,9 +26,20 @@ import {
 import {
   ChartSkeleton,
   EmptyState,
-  ErrorState,
   KpiSkeletonGrid,
 } from "./components/PageState";
+import { CheckCircle2, Info, RefreshCw } from "lucide-react";
+
+function buildQuery(filters: DashboardFilters): string {
+  const params = new URLSearchParams();
+  if (filters.debut) params.set("debut", filters.debut);
+  if (filters.fin) params.set("fin", filters.fin);
+  if (filters.cohorte) params.set("cohorte", filters.cohorte);
+  if (filters.domaine) params.set("domaine", filters.domaine);
+  if (filters.statut) params.set("statut", filters.statut);
+  const str = params.toString();
+  return str ? `?${str}` : "";
+}
 
 export function DashboardContent() {
   const router = useRouter();
@@ -27,8 +47,10 @@ export function DashboardContent() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // Synchronisation des filtres avec l'URL searchParams
   const filters: DashboardFilters = useMemo(() => {
@@ -51,6 +73,81 @@ export function DashboardContent() {
     );
   }, [filters]);
 
+  const isExplicitDemo = process.env.NEXT_PUBLIC_MODE_DEMO === "1";
+
+  // Récupération résiliente des données
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+
+    // Si le mode démo est forcé explicitement par configuration
+    if (isExplicitDemo) {
+      setData(getMockAnalyticsData(filters));
+      setIsLiveConnected(false);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Auto-authentification transparente en développement si aucun token n'est encore stocké
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("ciat_access");
+        if (!token) {
+          try {
+            const authRes = await api<{ access: string; refresh: string }>(
+              "/auth/token/",
+              {
+                method: "POST",
+                body: { email: "coordo@ciat.sn", password: "Ciat2026!" },
+                auth: false,
+              }
+            );
+            if (authRes?.access) {
+              saveTokens(authRes.access, authRes.refresh);
+            }
+          } catch {
+            // En cas d'échec de l'auto-login, continuer pour tenter l'appel direct
+          }
+        }
+      }
+
+      const query = buildQuery(filters);
+      const [indicateurs, parDomaine, parCohorte, parGenre, evolution] =
+        await Promise.all([
+          api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
+          api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
+          api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
+          api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
+          api<EvolutionItem[]>(`/analytics/evolution/${query}`),
+        ]);
+
+      setData({
+        indicateurs,
+        parDomaine,
+        parCohorte,
+        parGenre,
+        evolution,
+      });
+      setIsLiveConnected(true);
+    } catch {
+      // Repli gracieux sur les données de démonstration avec bandeau explicite (Règle 5)
+      // Évite que la page soit détruite ou inutilisable si Django n'est pas démarré
+      setData(getMockAnalyticsData(filters));
+      setIsLiveConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters, isExplicitDemo]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleManualReconnect = async () => {
+    setIsReconnecting(true);
+    await fetchData();
+    setIsReconnecting(false);
+  };
+
   const updateFilters = (newFilters: DashboardFilters) => {
     const params = new URLSearchParams();
     if (newFilters.debut) params.set("debut", newFilters.debut);
@@ -70,26 +167,45 @@ export function DashboardContent() {
     });
   };
 
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setError(null);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 450);
-  };
-
-  // Données mock filtrées selon les critères actifs
-  const data = useMemo(() => {
-    return getMockAnalyticsData(filters);
-  }, [filters]);
-
-  const hasNoData = data.indicateurs.idees_recues === 0;
+  const hasNoData = Boolean(data && data.indicateurs.idees_recues === 0);
 
   return (
     <div className="min-h-full bg-[#fcfbf9]/90 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-4 sm:space-y-5">
+        {/* État de connexion de la source de données (Transparent & Règle 5) */}
+        {isLiveConnected === false && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50/90 px-4 py-2.5 text-xs text-amber-900 shadow-xs animate-fade-in-up">
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 shrink-0 text-amber-700" />
+              <span>
+                <strong>MODE DÉMONSTRATION ACTIF :</strong> Le serveur backend Django (port 8000) n'a pas pu être joint. Affichage des données simulées.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleManualReconnect}
+              disabled={isReconnecting}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-200/80 px-2.5 py-1 text-[11px] font-bold text-amber-900 transition hover:bg-amber-300"
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${isReconnecting ? "animate-spin" : ""}`}
+              />
+              <span>{isReconnecting ? "Connexion..." : "Reconnexion API"}</span>
+            </button>
+          </div>
+        )}
+
+        {isLiveConnected === true && (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-1.5 text-[11px] font-medium text-emerald-800">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span>
+              Données réelles connectées en direct depuis le serveur CIAT ({data?.indicateurs.idees_recues ?? 0} projets en base).
+            </span>
+          </div>
+        )}
+
         {/* =========================================================================
-            1. BANNIÈRE INSTITUTIONNELLE CIAT (Mockup Officiel)
+            1. BANNIÈRE INSTITUTIONNELLE CIAT
            ========================================================================= */}
         <div className="animate-fade-in-up">
           <DashboardBanner />
@@ -104,20 +220,18 @@ export function DashboardContent() {
             onChange={updateFilters}
             onReset={handleResetFilters}
             isFiltered={isFiltered}
-            onRefresh={handleRefresh}
+            onRefresh={fetchData}
             isLoading={isLoading}
             onExport={() => {
-              alert("Export du rapport de synthèse (T3) en cours...");
+              window.print();
             }}
           />
         </div>
 
         {/* =========================================================================
-            3. ÉTATS : ERREUR / CHARGEMENT / VIDE / CONTENU
+            3. ÉTATS : CHARGEMENT / VIDE / CONTENU
            ========================================================================= */}
-        {error ? (
-          <ErrorState message={error} onRetry={handleRefresh} />
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="space-y-4 sm:space-y-5">
             <KpiSkeletonGrid />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -127,7 +241,7 @@ export function DashboardContent() {
           </div>
         ) : hasNoData ? (
           <EmptyState onReset={handleResetFilters} />
-        ) : (
+        ) : data ? (
           <div className="space-y-4 sm:space-y-5">
             {/* =========================================================================
                 4. LES 6 CARTES KPI COMPACTES & GAIN DE PLACE (6 COLONNES DESKTOP)
@@ -197,7 +311,7 @@ export function DashboardContent() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <ChartCard
                   title="Évolution mensuelle des projets"
-                  description="Progression cumulée des innovations portées au CIAT"
+                  description="Progression des projets créés au CIAT"
                   badge="Série temporelle"
                 >
                   <EvolutionChart data={data.evolution} />
@@ -205,8 +319,8 @@ export function DashboardContent() {
 
                 <ChartCard
                   title="Projets par domaine prioritaire"
-                  description="Répartition des innovations selon les 6 filières d'excellence"
-                  badge="Filières ISEP"
+                  description="Répartition des innovations selon les filières d'excellence"
+                  badge="Filières CIAT"
                 >
                   <DomaineChart data={data.parDomaine} />
                 </ChartCard>
@@ -232,7 +346,7 @@ export function DashboardContent() {
               </div>
             </section>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

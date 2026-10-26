@@ -199,7 +199,7 @@ export function DashboardSidebar() {
           </div>
 
           {/* Slogan officiel CIAT en pied */}
-          <div className="flex items-center gap-2.5 px-5 pb-5 pt-2 text-[10px] text-[#cbb7a3]">
+          <div className="flex items-center gap-2.5 px-5 pb-10 pt-2 text-[10px] text-[#cbb7a3]">
             <Image
               src="/brand/symbole_blanc.png"
               alt=""

@@ -79,3 +79,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .animate-pulse-subtle {
   animation: pulseSubtle 3s ease-in-out infinite;
 }
+
+/* Masquage automatique du Header et Footer publics dans l'espace administration / tableau de bord */
+body:has(#dashboard-root) > header,
+body:has(#dashboard-root) > footer {
+  display: none !important;
+}
+

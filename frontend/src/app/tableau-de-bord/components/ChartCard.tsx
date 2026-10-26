@@ -125,6 +125,29 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null;
 }
 
+const formatMoisLabel = (mois: string) => {
+  if (!mois) return "";
+  if (/^\d{4}-\d{2}$/.test(mois)) {
+    const [year, month] = mois.split("-");
+    const monthNames = [
+      "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
+      "Juil", "Août", "Sept", "Oct", "Nov", "Déc"
+    ];
+    const mIdx = parseInt(month, 10) - 1;
+    const mStr = monthNames[mIdx] || month;
+    return `${mStr} '${year.slice(2)}`;
+  }
+  return mois;
+};
+
+const formatDomaineLabel = (label: string) => {
+  if (!label) return "";
+  if (label.length > 20) {
+    return label.slice(0, 18) + "…";
+  }
+  return label;
+};
+
 /** 1. Graphique d'évolution temporelle : courbe fluide et halo lumineux */
 export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
   return (
@@ -143,6 +166,7 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
           tickLine={false}
           axisLine={{ stroke: COLOR_BORDER }}
           tick={{ fill: "#8c7e75", fontSize: 11, fontWeight: 500 }}
+          tickFormatter={formatMoisLabel}
         />
         <YAxis
           tickLine={false}
@@ -153,7 +177,7 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
         <Area
           type="monotone"
           dataKey="total"
-          name="Projets cumulés"
+          name="Projets créés"
           stroke={COLOR_CARAMEL}
           strokeWidth={2.5}
           activeDot={{
@@ -191,7 +215,8 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
           tickLine={false}
           axisLine={false}
           tick={{ fill: "#3f1d0a", fontSize: 11, fontWeight: 600 }}
-          width={90}
+          tickFormatter={formatDomaineLabel}
+          width={130}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar

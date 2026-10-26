@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardSidebar } from "./components/DashboardSidebar";
+import { AdminLayout } from "./components/AdminLayout";
 
 export const metadata: Metadata = {
   title: "Tableau de bord décisionnel | CIAT",
@@ -12,15 +12,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="relative min-h-screen bg-[#fcfbf9]">
-      {/* Barre latérale officielle isolée au module tableau-de-bord */}
-      <DashboardSidebar />
-
-      {/* Contenu principal décalé pour laisser place à la sidebar fixe */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
-        <main className="flex-1">{children}</main>
-      </div>
-    </div>
-  );
+  return <AdminLayout>{children}</AdminLayout>;
 }
