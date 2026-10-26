@@ -8,6 +8,7 @@ Vérifie l'intégralité des critères d'acceptation :
 import shutil
 from datetime import timedelta
 
+from django.test import override_settings
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -30,6 +31,7 @@ from .models import (
 User = get_user_model()
 
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class PortalBaseTestCase(APITestCase):
     @classmethod
     def tearDownClass(cls):
@@ -370,6 +372,7 @@ class ProjetIncubeTests(PortalBaseTestCase):
 # TESTS ADMIN
 # ==============================================================================
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class AdminRegistrationTests(APITestCase):
     def test_tous_modeles_enregistres_dans_admin(self):
         modeles = [Actualite, Evenement, AppelProjet, Partenaire, DocumentPublic, MessageContact]
