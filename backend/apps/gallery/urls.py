@@ -1,16 +1,22 @@
+"""Routes d'API pour le module Galerie des innovations (P6)."""
 from django.urls import path
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from .views import (
+    FicheDetailView,
+    FicheListCreateView,
+    FicheQRCodeView,
+    FicheRefuserView,
+    FicheSoumettreView,
+    FicheValiderView,
+    StatistiquesGalleryView,
+)
 
-class GalleryIndex(APIView):
-    """Point d'entrée provisoire du module. À remplacer par les vraies routes."""
-
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        return Response({"module": "gallery", "status": "à implémenter"})
-
-
-urlpatterns = [path("", GalleryIndex.as_view(), name="gallery-index")]
+urlpatterns = [
+    path("fiches/", FicheListCreateView.as_view(), name="gallery-fiches"),
+    path("fiches/<int:pk>/soumettre/", FicheSoumettreView.as_view(), name="gallery-fiche-soumettre"),
+    path("fiches/<int:pk>/valider/", FicheValiderView.as_view(), name="gallery-fiche-valider"),
+    path("fiches/<int:pk>/refuser/", FicheRefuserView.as_view(), name="gallery-fiche-refuser"),
+    path("fiches/<slug:slug>/", FicheDetailView.as_view(), name="gallery-fiche-detail"),
+    path("fiches/<slug:slug>/qr/", FicheQRCodeView.as_view(), name="gallery-fiche-qr"),
+    path("statistiques/", StatistiquesGalleryView.as_view(), name="gallery-statistiques"),
+]
