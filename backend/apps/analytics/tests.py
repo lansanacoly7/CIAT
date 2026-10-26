@@ -1296,4 +1296,98 @@ class DataQualityControlCommandTests(TestCase):
         self.assertIn("statistiques", data)
 
 
+# ==============================================================================
+# TESTS PHASE 3 - T2 : Dictionnaire et Définition des Indicateurs
+# ==============================================================================
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class IndicateursDefinitionsViewTests(TestCase):
+    """Tests unitaires pour l'endpoint GET /api/analytics/indicateurs/definitions/"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.coordo = User.objects.create_user(
+            email="coordo.def@ciat.sn",
+            password="pwd",
+            role=Role.COORDONNATEUR,
+        )
+        self.admin = User.objects.create_user(
+            email="admin.def@ciat.sn",
+            password="pwd",
+            role=Role.ADMIN,
+        )
+        self.comite = User.objects.create_user(
+            email="comite.def@ciat.sn",
+            password="pwd",
+            role=Role.COMITE,
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.def@ciat.sn",
+            password="pwd",
+            role=Role.PORTEUR,
+        )
+
+    def test_acces_autorise_coordonnateur_admin_et_comite(self):
+        """Coordonnateur, administrateur et membre du comité peuvent consulter les définitions."""
+        for user in [self.coordo, self.admin, self.comite]:
+            self.client.force_authenticate(user=user)
+            res = self.client.get("/api/analytics/indicateurs/definitions/")
+            self.assertEqual(res.status_code, 200)
+            self.assertIn("indicateurs", res.data)
+            self.assertIn("categories", res.data)
+            self.assertGreaterEqual(res.data["count"], 10)
+
+    def test_acces_refuse_anonyme_et_porteur(self):
+        """Anonyme (401) et porteur (403) ne peuvent pas accéder aux définitions analytics."""
+        self.client.logout()
+        res_anon = self.client.get("/api/analytics/indicateurs/definitions/")
+        self.assertEqual(res_anon.status_code, 401)
+
+        self.client.force_authenticate(user=self.porteur)
+        res_porteur = self.client.get("/api/analytics/indicateurs/definitions/")
+        self.assertEqual(res_porteur.status_code, 403)
+
+    def test_structure_complete_des_indicateurs(self):
+        """Chaque indicateur contient l'ensemble des champs méthodologiques requis."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get("/api/analytics/indicateurs/definitions/")
+        self.assertEqual(res.status_code, 200)
+
+        required_keys = {
+            "code",
+            "nom",
+            "categorie",
+            "definition",
+            "formule",
+            "periode",
+            "source",
+            "limites",
+            "interpretation",
+        }
+        for ind in res.data["indicateurs"]:
+            self.assertTrue(
+                required_keys.issubset(ind.keys()),
+                f"L'indicateur {ind.get('code')} manque de métadonnées obligatoires.",
+            )
+
+        # Vérification de la présence des indicateurs clés
+        codes = [ind["code"] for ind in res.data["indicateurs"]]
+        self.assertIn("taux_selection", codes)
+        self.assertIn("prototypes", codes)
+        self.assertIn("total_finance", codes)
+        self.assertIn("jalons_en_retard", codes)
+        self.assertIn("par_domaine", codes)
+
+    def test_filtrage_par_categorie(self):
+        """Le paramètre ?categorie= permet de filtrer la liste des indicateurs."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get(
+            "/api/analytics/indicateurs/definitions/?categorie=Entonnoir d'incubation"
+        )
+        self.assertEqual(res.status_code, 200)
+        for ind in res.data["indicateurs"]:
+            self.assertEqual(ind["categorie"], "Entonnoir d'incubation")
+
+
+
 

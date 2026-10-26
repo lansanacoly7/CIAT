@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Home,
+  BookOpen,
   Rocket,
   FileText,
   Globe,
@@ -107,7 +108,8 @@ export function DashboardSidebar() {
 
   // Contenu exact de la Sidebar (Desktop fixe & Mobile Drawer)
   const renderSidebarContent = (onItemClick?: () => void) => {
-    const isDashboardActive = pathname === "/tableau-de-bord" || pathname.startsWith("/tableau-de-bord/");
+    const isMethodologieActive = pathname === "/tableau-de-bord/methodologie";
+    const isDashboardActive = pathname === "/tableau-de-bord";
     const isHomeActive = pathname === "/";
 
     return (
@@ -132,12 +134,12 @@ export function DashboardSidebar() {
             </Link>
           </div>
 
-          {/* 2. Bouton principal : Tableau de bord (en haut, style capsule) */}
-          <div className="px-3">
+          {/* 2. Boutons principaux : Tableau de bord & Méthodologie */}
+          <div className="px-3 space-y-1">
             <Link
               href="/tableau-de-bord"
               onClick={onItemClick}
-              className={`flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              className={`flex items-center gap-3.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                 isDashboardActive
                   ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
                   : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
@@ -145,6 +147,18 @@ export function DashboardSidebar() {
             >
               <Home className="h-5 w-5 stroke-[1.75]" />
               <span>Tableau de bord</span>
+            </Link>
+            <Link
+              href="/tableau-de-bord/methodologie"
+              onClick={onItemClick}
+              className={`flex items-center gap-3.5 rounded-xl px-4 py-2 text-sm transition-all ${
+                isMethodologieActive
+                  ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
+                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
+              <span>Méthodologie</span>
             </Link>
           </div>
 
