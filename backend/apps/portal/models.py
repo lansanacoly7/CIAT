@@ -20,7 +20,7 @@ class Actualite(models.Model):
     resume = models.TextField(blank=True)
     contenu = models.TextField()
     image = models.ImageField(upload_to="actualites/", null=True, blank=True)
-    publie_le = models.DateTimeField(default=timezone.now)
+    publie_le = models.DateTimeField(default=timezone.now, db_index=True)
     cree_le = models.DateTimeField(auto_now_add=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
@@ -50,7 +50,7 @@ class Evenement(models.Model):
     titre = models.CharField(max_length=200)
     description = models.TextField()
     lieu = models.CharField(max_length=200)
-    debut = models.DateTimeField()
+    debut = models.DateTimeField(db_index=True)
     fin = models.DateTimeField(null=True, blank=True)
     lien_inscription = models.URLField(max_length=500, blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
@@ -70,7 +70,7 @@ class AppelProjet(models.Model):
 
     titre = models.CharField(max_length=200)
     description = models.TextField()
-    date_limite = models.DateTimeField()
+    date_limite = models.DateTimeField(db_index=True)
     pieces_demandees = models.JSONField(default=list, blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
     modifie_le = models.DateTimeField(auto_now=True)

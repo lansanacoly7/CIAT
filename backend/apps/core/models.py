@@ -119,8 +119,10 @@ class Projet(models.Model):
     porteur = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="projets_portes"
     )
-    statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.IDEE)
-    cree_le = models.DateTimeField(auto_now_add=True)
+    statut = models.CharField(
+        max_length=20, choices=Statut.choices, default=Statut.IDEE, db_index=True
+    )
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:

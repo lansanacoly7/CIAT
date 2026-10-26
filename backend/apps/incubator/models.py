@@ -102,10 +102,13 @@ class Dossier(models.Model):
         Projet, on_delete=models.CASCADE, related_name="dossier"
     )
     statut = models.CharField(
-        max_length=20, choices=StatutDossier.choices, default=StatutDossier.BROUILLON
+        max_length=20,
+        choices=StatutDossier.choices,
+        default=StatutDossier.BROUILLON,
+        db_index=True,
     )
     soumis_le = models.DateTimeField(null=True, blank=True)
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -119,7 +122,7 @@ class Dossier(models.Model):
     @property
     def pieces_manquantes(self):
         """Liste des types de pièces obligatoires non encore déposés."""
-        types_deposes = set(self.pieces.values_list("type", flat=True))
+        types_deposes = {p.type for p in self.pieces.all()}
         return [p.value for p in PIECES_OBLIGATOIRES if p.value not in types_deposes]
 
     @property
@@ -387,13 +390,14 @@ class Objectif(models.Model):
         Projet, on_delete=models.CASCADE, related_name="objectifs"
     )
     libelle = models.CharField(max_length=255)
-    echeance = models.DateField(null=True, blank=True)
+    echeance = models.DateField(null=True, blank=True, db_index=True)
     statut = models.CharField(
         max_length=20,
         choices=StatutObjectif.choices,
         default=StatutObjectif.A_FAIRE,
+        db_index=True,
     )
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
     cree_par = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="objectifs_crees"
@@ -421,13 +425,14 @@ class Jalon(models.Model):
         Projet, on_delete=models.CASCADE, related_name="jalons"
     )
     titre = models.CharField(max_length=255)
-    echeance = models.DateField()
+    echeance = models.DateField(db_index=True)
     statut = models.CharField(
         max_length=20,
         choices=StatutJalon.choices,
         default=StatutJalon.A_FAIRE,
+        db_index=True,
     )
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
     cree_par = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="jalons_crees"
