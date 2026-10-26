@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (hasToken) {
-        if (localStorage.getItem("ciat_access") === "demo_porteur_token") {
+        const token = localStorage.getItem("ciat_access");
+        if (token === "demo_porteur_token") {
           if (isMounted) {
             setUser({
               id: 1,
@@ -83,6 +84,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               last_name: "Sall",
               role: "porteur",
               organisation: "ISEP Diamniadio",
+            });
+            setLoading(false);
+          }
+          return;
+        }
+        if (token === "demo_comite_token") {
+          if (isMounted) {
+            setUser({
+              id: 2,
+              email: "comite@ciat.sn",
+              first_name: "Aïssatou",
+              last_name: "Diop",
+              role: "membre_comite",
+              organisation: "Comité de sélection CIAT",
+            });
+            setLoading(false);
+          }
+          return;
+        }
+        if (token === "demo_coordo_token") {
+          if (isMounted) {
+            setUser({
+              id: 3,
+              email: "coordo@ciat.sn",
+              first_name: "Lansana",
+              last_name: "Coly",
+              role: "coordonnateur",
+              organisation: "Direction CIAT",
             });
             setLoading(false);
           }
@@ -122,6 +151,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(me);
       return me;
     } catch (err) {
+      if (email === "comite@ciat.sn") {
+        const demoUser: User = {
+          id: 2,
+          email: "comite@ciat.sn",
+          first_name: "Aïssatou",
+          last_name: "Diop",
+          role: "membre_comite",
+          organisation: "Comité de sélection CIAT",
+        };
+        saveTokens("demo_comite_token", "demo_refresh_token");
+        setUser(demoUser);
+        return demoUser;
+      }
+      if (email === "coordo@ciat.sn" || email === "admin@ciat.sn") {
+        const demoUser: User = {
+          id: 3,
+          email: "coordo@ciat.sn",
+          first_name: "Lansana",
+          last_name: "Coly",
+          role: "coordonnateur",
+          organisation: "Direction CIAT",
+        };
+        saveTokens("demo_coordo_token", "demo_refresh_token");
+        setUser(demoUser);
+        return demoUser;
+      }
       if (email === "porteur@ciat.sn" || email === "demo@ciat.sn") {
         const demoUser: User = {
           id: 1,
