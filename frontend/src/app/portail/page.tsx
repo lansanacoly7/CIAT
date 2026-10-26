@@ -32,6 +32,30 @@ const SECTIONS_PORTAIL = [
       "Les filières stratégiques fixées par le cahier des charges officiel : TIC & IA, Mécanique, Agriculture, Énergies, Santé, Éducation, Services.",
     cta: "Explorer les domaines",
   },
+  {
+    href: "/portail/actualites",
+    tag: "Information",
+    titre: "Actualités & Publications",
+    description:
+      "Suivez les temps forts, les annonces officielles, les partenariats et les réalisations technologiques du CIAT.",
+    cta: "Lire les actualités",
+  },
+  {
+    href: "/portail/evenements",
+    tag: "Agenda",
+    titre: "Événements & Démonstrations",
+    description:
+      "Calendrier des journées portes ouvertes, jurys d'évaluation, séminaires techniques et ateliers organisés à Diamniadio.",
+    cta: "Consulter l'agenda",
+  },
+  {
+    href: "/portail/appels",
+    tag: "Sélections",
+    titre: "Appels à Projets & Candidatures",
+    description:
+      "Consultez les appels ouverts, les dates limites de soumission et les pièces obligatoires pour candidater à l'incubateur.",
+    cta: "Voir les appels ouverts",
+  },
 ];
 
 // Données de cadrage préliminaires conformes à CONTRATS_API.md (en attente des endpoints de Pathé)
