@@ -56,22 +56,22 @@ function ListeProjets() {
           href="/incubateur"
           className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
         >
-          📝 Dépôt de dossier
+          Dépôt de dossier
         </Link>
         <span className="rounded-lg bg-brun px-4 py-2 text-xs font-bold text-white shadow-xs">
-          🎯 Suivi des projets
+          Suivi des projets
         </span>
         <Link
           href="/incubateur/alertes"
           className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
         >
-          🚨 Alertes de retard
+          Alertes de retard
         </Link>
         <Link
           href="/incubateur/evaluation"
           className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
         >
-          ⚖️ Évaluations comité
+          Évaluations comité
         </Link>
       </div>
 

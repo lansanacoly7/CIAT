@@ -1,15 +1,16 @@
 # Schéma de la Base de Données Relationnelle
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence :** Livrable Obligatoire N° 5 (Architecture des données, relations et contraintes d'intégrité)  
-> **Document compagnon :** [`docs/dictionnaire_donnees.md`](../dictionnaire_donnees.md) (Dictionnaire exhaustif des 31 modèles)
+> **Document compagnon :** [`docs/dictionnaire_donnees.md`](../dictionnaire_donnees.md) (Dictionnaire exhaustif des 33 modèles)  
+> **Avertissement :** La plateforme n'est **pas déployée en production**. Les bases exploitées sont SQLite (développement et tests) et PostgreSQL (cible pour conteneur de démonstration locale). Toutes les données sont strictement fictives.
 
 ---
 
 ## 1. Vue d'Ensemble et Principes de Modélisation
 
-La base de données de la plateforme CIAT a été conçue selon les principes rigoureux de la **3ᵉ forme normale (3FN)** pour éliminer toute redondance anormale, garantir l'intégrité référentielle et offrir des performances d'interrogation optimales en environnement de production (PostgreSQL) et de test (SQLite en mémoire / disque).
+La base de données de la plateforme CIAT a été conçue selon les principes rigoureux de la **3ᵉ forme normale (3FN)** pour éliminer toute redondance anormale, garantir l'intégrité référentielle et offrir des performances d'interrogation optimales en environnement cible conteneurisé (PostgreSQL) et de test / développement (SQLite en mémoire / disque). La plateforme n'est pas déployée en ligne.
 
 ### Principes architecturaux clés :
 1. **Socle relationnel unifié :** L'entité centrale `core_projet` sert de clé d'interconnexion transverse entre les dossiers d'incubation, les affectations de mentors, les fiches publiques de la galerie, les documents administratifs générés et les indicateurs analytiques.
@@ -73,6 +74,10 @@ erDiagram
 
     %% MODULE GALERIE DES INNOVATIONS (P6)
     PROJET ||--o{ FICHE_INNOVATION : "valorise"
+
+    %% MODULE ANALYTICS ET FINANCEMENT (P3)
+    PROJET ||--o{ PARTENARIAT : "formalise"
+    PROJET ||--o{ FINANCEMENT : "mobilise"
 
     %% MODULE PORTAIL PUBLIC (P1)
     %% Actualite, Evenement, AppelProjet, Partenaire, DocumentPublic, MessageContact
@@ -187,6 +192,28 @@ erDiagram
         string avertissement_ia
         string mode
     }
+
+    PARTENARIAT {
+        bigint id PK
+        bigint projet_id FK
+        string partenaire
+        string type
+        date date_debut
+        string statut
+        text description
+        datetime cree_le
+    }
+
+    FINANCEMENT {
+        bigint id PK
+        bigint projet_id FK
+        string source
+        decimal montant
+        date date
+        string statut
+        text description
+        datetime cree_le
+    }
 ```
 
 ---
@@ -249,11 +276,21 @@ erDiagram
    - Cycle de vie : `brouillon` ➔ `en_validation` ➔ `publie` / `refuse`. Seules les fiches `publie` sont exposées publiquement.
    - Compteur `vues` atomiquement incrémenté via `F('vues') + 1`.
 
+### 3.6 Suivi des Partenariats et Financements (`apps.analytics`)
+1. `analytics_partenariat` :
+   - Clé étrangère vers `core_projet` (`CASCADE`).
+   - Règle d'intégrité métier : interdit sur les projets au statut `idee` ou `depose`.
+   - Typologies canoniques : `technique`, `financier`, `commercial`, `academique`, `institutionnel`, `autre`.
+2. `analytics_financement` :
+   - Clé étrangère vers `core_projet` (`CASCADE`).
+   - Règle d'intégrité métier : réservé aux projets retenus ou incubés (`selectionne`, `incube`, `prototype`, `termine`) ; montant obligatoirement positif.
+   - Statuts de décaissement : `en_cours`, `accorde`, `decaisse`, `refuse`.
+
 ---
 
 ## 4. Indexation et Optimisation des Requêtes
 
-Afin de garantir des des temps de réponse courts sur l'API REST (objectif, non encore mesuré) :
+Afin de garantir des temps de réponse courts sur l'API REST (objectif, non encore mesuré) :
 1. **Index de clés étrangères et filtres :**
    - Toutes les clés étrangères Django créent un index B-Tree par défaut.
    - Index explicites sur les champs de recherche textuelle et de filtrage fréquent : `slug`, `statut`, `echeance`, `publie_le`.

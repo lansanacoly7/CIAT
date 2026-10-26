@@ -1,10 +1,11 @@
 # Journal des Tests de Bout en Bout et Registre des Anomalies
 
 > **Plateforme CIAT (Centre d'Innovation et d'Accélération Technologique)**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
-> **Référence :** `taches/phase3/lansana.md` (Tâches T1, T2, T3)  
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Référence :** `taches/phase3/lansana.md` & `taches/phase4/lansana.md`  
 > **Suite de test automatisée du parcours complet :** `backend/apps/core/tests/test_parcours_complet.py`  
-> **Temps d'exécution :** ~0,66 seconde (seuil exigé : < 30 secondes, optimisé avec `MD5PasswordHasher`)
+> **Temps d'exécution :** ~0,92 seconde (seuil exigé : < 30 secondes, optimisé avec `MD5PasswordHasher`)  
+> **Rappel :** La plateforme n'est **pas déployée en production** et les jeux de données utilisés sont **strictement fictifs**.
 
 ---
 
@@ -73,10 +74,10 @@ Ce registre consigne l'ensemble des défauts réels identifiés lors des revues 
   ```
 - **Résultat :**
   ```text
-  Ran 2 tests in 0.664s
+  Ran 2 tests in 0.921s
   OK
   ```
 - **Contrôles généraux de qualité :**
   - `python manage.py check` : 0 anomalie signalée.
   - `python manage.py makemigrations --check` : 0 migration en attente.
-  - Suite de tests complète (`python manage.py test apps`) : **145 tests passants** à 100 % en ~18 secondes.
+  - Suite de tests complète (`python manage.py test apps`) : **183 tests passants** à 100 % en ~21 secondes.

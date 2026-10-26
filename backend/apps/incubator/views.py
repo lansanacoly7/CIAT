@@ -596,20 +596,62 @@ class XLSXRenderer(renderers.BaseRenderer):
         return data
 
 
-class ProjetCompteRenduExportView(APIView):
-    """Génération du compte rendu complet d'un projet incubé au format Excel (.xlsx)."""
+class PDFRenderer(renderers.BaseRenderer):
+    """Renderer DRF pour les flux binaires PDF (.pdf)."""
+
+    media_type = "application/pdf"
+    format = "pdf"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
+class DossierAccuseReceptionView(APIView):
+    """Téléchargement de l'accusé de réception officiel en PDF pour un dossier soumis (Phase 4 Pathé)."""
 
     permission_classes = [permissions.IsAuthenticated]
-    renderer_classes = [XLSXRenderer, renderers.JSONRenderer]
+    renderer_classes = [PDFRenderer, renderers.JSONRenderer]
+
+    def get(self, request, pk):
+        dossier = get_object_or_404(
+            Dossier.objects.select_related("projet", "projet__porteur", "projet__domaine", "projet__cohorte").prefetch_related("pieces"),
+            pk=pk,
+        )
+        user = request.user
+
+        # Contrôle strict d'accès : porteur du dossier, équipe CIAT ou comité
+        if not (user.is_equipe or user.role == Role.COMITE or (user.role == Role.PORTEUR and dossier.projet.porteur_id == user.id)):
+            raise PermissionDenied("Vous n'avez pas accès à l'accusé de réception de ce dossier.")
+
+        # Si le dossier est encore en brouillon -> 400 Bad Request
+        if dossier.statut == StatutDossier.BROUILLON:
+            raise ValidationError({"detail": "Le dossier est encore en brouillon. L'accusé de réception n'est disponible qu'après soumission."})
+
+        from apps.incubator.exports_pdf import generer_accuse_reception_pdf
+        buf = generer_accuse_reception_pdf(dossier)
+        response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="accuse_reception_dossier_{dossier.id}.pdf"'
+        return response
+
+
+class ProjetCompteRenduExportView(APIView):
+    """Génération du compte rendu complet d'un projet incubé au format Excel (.xlsx) ou PDF (.pdf)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [XLSXRenderer, PDFRenderer, renderers.JSONRenderer]
 
     def perform_content_negotiation(self, request, force=False):
         if not force:
             fmt = request.query_params.get("format")
-            if fmt and fmt.lower() not in ("xlsx", "excel"):
-                raise ValidationError({"detail": f"Format '{fmt}' non supporté. Seul le format 'xlsx' est disponible."})
+            if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
+                raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
         return super().perform_content_negotiation(request, force=force)
 
     def get(self, request, pk, format=None):
+        fmt = request.query_params.get("format", "xlsx")
+        if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
+            raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
+
         projet = get_object_or_404(
             Projet.objects.select_related("porteur", "domaine", "cohorte", "affectation_mentor__mentor"),
             pk=pk,
@@ -620,6 +662,13 @@ class ProjetCompteRenduExportView(APIView):
         # Contrôle strict d'accès : porteur du projet, mentor affecté ou équipe CIAT
         if not (user.is_equipe or (user.role == Role.PORTEUR and projet.porteur_id == user.id) or (user.role == Role.MENTOR and is_mentor)):
             raise PermissionDenied("Vous n'avez pas accès au compte rendu de ce projet.")
+
+        if fmt and fmt.lower() == "pdf":
+            from apps.incubator.exports_pdf import generer_compte_rendu_pdf
+            buf = generer_compte_rendu_pdf(projet)
+            response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="compte_rendu_projet_{projet.id}.pdf"'
+            return response
 
         wb = openpyxl.Workbook()
         ws = wb.active

@@ -1,8 +1,9 @@
 # Journal des Prompts et Traçabilité de l'IA Générative
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
-> **Référence :** Livrable Obligatoire N° 8 (Conception, tests, corrections et résultats des prompts de la plateforme)
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Référence :** Livrable Obligatoire N° 8 (Conception, tests, corrections et résultats des prompts de la plateforme)  
+> **Avertissement :** La plateforme n'est **pas déployée en production**. Les données sont purement fictives. L'ensemble des appels IA dépend de fournisseurs externes tiers (Groq, Google Gemini) via des offres gratuites sujettes à des quotas journaliers, des limitations de débit et d'éventuelles interruptions de service.
 
 ---
 
@@ -163,12 +164,39 @@ Reste constructif, méthodologique et structuré.
 ### 5.1 Objectif et Sécurité Architecturale
 Offrir aux coordonnateurs et administrateurs la possibilité d'interroger la base statistique en langage naturel (ex. *« Combien de projets en prototype dans la cohorte 2025 ? »*) **sans jamais autoriser le modèle à exécuter du code SQL direct** (principe de défense en profondeur).
 
-### 5.2 Approche Technique (Prompt à Liste Fermée)
-Le prompt système contraint l'IA à analyser la question et à retourner un JSON précisant :
-1. L'endpoint d'agrégation cible parmi une liste fermée : `indicateurs`, `par-domaine`, `par-cohorte`, `par-genre`, `evolution`.
-2. Les filtres normalisés à appliquer : `cohorte`, `domaine`, `statut`, `debut`, `fin`.
+### 5.2 Approche Technique et Structure des Prompts
+La sécurité repose sur une architecture à double étape sans génération de code SQL :
 
-Le serveur Django valide ces paramètres, exécute l'agrégation SQL sécurisée via l'ORM, puis transmet les résultats chiffrés au modèle pour la mise en forme de la réponse textuelle finale. En cas de question impossible à traiter, le modèle renvoie le refus standard : *« Je ne peux pas répondre à cette question avec les données disponibles. »*
+#### Étape 1 : Prompt Routeur d'Intentions (`SYSTEM_ROUTER_PROMPT`)
+```text
+Tu es l'analyseur d'intentions du tableau de bord décisionnel du CIAT (Centre d'Innovation, 
+d'Application et de Transfert - ISEP Diamniadio).
+Ta mission est d'associer une question en langage naturel de l'utilisateur à l'un des 
+endpoints d'analyse existants et d'en extraire les filtres pertinents.
+
+LISTE FERMÉE DES ENDPOINTS AUTORISÉS :
+- "indicateurs" : pour les volumes globaux, totaux, nombre d'idées soumises, dossiers déposés, 
+  projets sélectionnés, projets incubés, prototypes réalisés, ou taux de sélection.
+- "par-domaine" : pour la répartition, comparaison ou ventilation par domaine/secteur.
+- "par-cohorte" : pour la comparaison entre cohortes annuelles (2024, 2025, 2026).
+- "par-genre" : pour la répartition femmes/hommes, la parité ou la représentativité des femmes.
+- "evolution" : pour l'évolution chronologique, temporelle ou mensuelle des projets.
+- "hors_sujet" : pour toute question ne concernant pas les données statistiques des projets du CIAT.
+
+FORMAT DE SORTIE JSON STRICT :
+{"endpoint": "...", "filtres": {"cohorte": "...", "domaine": "...", "statut": "..."}, "hors_sujet": boolean}
+```
+
+#### Étape 2 : Validation Serveur et Synthèse Textuelle (`SYSTEM_SYNTHESIS_PROMPT`)
+Le serveur Django valide le JSON retourné, applique les filtres sur l'ORM `Projet.objects` et transmet les chiffres agrégés au modèle avec la consigne :
+```text
+Tu es l'analyste décisionnel du CIAT (Centre d'Innovation, d'Application et de Transfert de l'ISEP Diamniadio).
+Rédige une réponse courte, claire et directe en français (1 à 3 phrases maximum) répondant à la question de l'utilisateur.
+RÈGLE ABSOLUE : Base-toi STRICTEMENT et UNIQUEMENT sur les chiffres et données réelles fournies en JSON. 
+N'invente aucun chiffre non présent dans les données. Si le résultat est 0, dis-le explicitement.
+```
+
+Si le sujet est jugé hors périmètre ou impossible à traiter, le serveur renvoie la réponse standard : *« Je ne peux pas répondre à cette question avec les données disponibles. »*
 
 ---
 
@@ -179,4 +207,4 @@ Le serveur Django valide ces paramètres, exécute l'agrégation SQL sécurisée
 | **Générateur Documents (P5)** | Texte brut avec balises Markdown | Échecs de découpage des sections | Passage au mode JSON strict avec retry automatique (2 tentatives) | **Stable et validé** |
 | **Assistant RAG (P4)** | Filtrage des sources par mots-clés | Refus formulés autrement laissaient fuiter des sources documentaires | Mode JSON strict (`passages_utilises`) et validation serveur des numéros | **Stable et validé** |
 | **Assistant Atelier (P4)** | Prompt générique de rédaction | Risque de chiffres et partenaires inventés | Consigne impérative d'insérer `[À COMPLÉTER]` | **Stable et validé** |
-| **Fournisseur LLM Core** | Alias `gemini-flash-latest` | Dépassements de délai fréquents (> 60s) | Modèle par défaut fixé à `gemini-3.5-flash` | **Stable et validé** |
+| **Fournisseurs LLM Core** | Alias `gemini-flash-latest` unique | Dépassements de délai fréquents (> 60s) et blocages de quotas | Architecture multi-fournisseurs (Groq `openai/gpt-oss-120b` ➔ Gemini `gemini-3.5-flash`) avec repli automatique | **Stable et validé** (sous réserve des quotas gratuits externes) |

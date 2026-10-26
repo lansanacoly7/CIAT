@@ -30,6 +30,7 @@ from rest_framework.views import APIView
 
 from apps.core.ai import AIError, AINotConfigured
 from apps.core.models import Projet
+from .definitions import CATEGORIES_INDICATEURS, INDICATEURS_DEFINITIONS
 from .models import (
     Financement,
     Partenariat,
@@ -709,3 +710,42 @@ class PartenariatsFinancementsStatsView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class IndicateursDefinitionsView(APIView):
+    """GET /api/analytics/indicateurs/definitions/
+
+    Fournit le dictionnaire complet et standardisé de tous les indicateurs
+    décisionnels affichés sur le tableau de bord CIAT (P3) :
+    - code & nom
+    - catégorie
+    - définition exacte
+    - formule de calcul mathématique et logique
+    - période de référence et filtres supportés
+    - source des données (modèles et tables SQL)
+    - limites méthodologiques (ex: dossiers déposés vs idées reçues)
+    - guide d'interprétation et seuils d'analyse
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def get(self, request):
+        categorie = request.query_params.get("categorie")
+        indicateurs = INDICATEURS_DEFINITIONS
+        if categorie:
+            cat_norm = categorie.strip().lower()
+            indicateurs = [
+                ind
+                for ind in indicateurs
+                if ind.get("categorie", "").lower() == cat_norm
+            ]
+
+        return Response(
+            {
+                "count": len(indicateurs),
+                "categories": CATEGORIES_INDICATEURS,
+                "indicateurs": indicateurs,
+            },
+            status=status.HTTP_200_OK,
+        )
+

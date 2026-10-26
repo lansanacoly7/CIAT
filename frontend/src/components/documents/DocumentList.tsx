@@ -158,7 +158,7 @@ export default function DocumentList({
           </p>
           {documents.length === 0 && (
             <Button variant="ia" onClick={onNewDocument} className="text-xs">
-              ✨ Créer mon premier document avec l&apos;IA
+              Créer mon premier document avec l&apos;IA
             </Button>
           )}
         </div>

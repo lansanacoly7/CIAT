@@ -119,9 +119,11 @@ class Projet(models.Model):
     porteur = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="projets_portes"
     )
-    statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.IDEE)
+    statut = models.CharField(
+        max_length=20, choices=Statut.choices, default=Statut.IDEE, db_index=True
+    )
     vues = models.PositiveIntegerField(default=0, help_text="Nombre de consultations de la fiche projet.")
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:

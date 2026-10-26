@@ -17,6 +17,7 @@ from .views import (
     AnalyticsExportView,
     EvolutionView,
     FinancementsListView,
+    IndicateursDefinitionsView,
     IndicateursView,
     ParCohorteView,
     ParDomaineView,
@@ -27,6 +28,11 @@ from .views import (
 )
 
 urlpatterns = [
+    path(
+        "indicateurs/definitions/",
+        IndicateursDefinitionsView.as_view(),
+        name="analytics-indicateurs-definitions",
+    ),
     path("indicateurs/", IndicateursView.as_view(), name="analytics-indicateurs"),
     path("par-domaine/", ParDomaineView.as_view(), name="analytics-par-domaine"),
     path("par-cohorte/", ParCohorteView.as_view(), name="analytics-par-cohorte"),

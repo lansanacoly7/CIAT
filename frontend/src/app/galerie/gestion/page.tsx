@@ -300,7 +300,7 @@ function EspaceGestionContent() {
                 : "bg-white text-brun hover:bg-ivoire border border-bordure"
             }`}
           >
-            📋 Mes fiches ({mesFiches.length})
+            Mes fiches ({mesFiches.length})
           </button>
 
           <button
@@ -330,7 +330,7 @@ function EspaceGestionContent() {
                     : "bg-white text-brun hover:bg-ivoire border border-bordure"
                 }`}
               >
-                ⚖️ Fiches en validation ({fichesValidation.length})
+                Fiches en validation ({fichesValidation.length})
               </button>
 
               <button
@@ -344,7 +344,7 @@ function EspaceGestionContent() {
                     : "bg-white text-brun hover:bg-ivoire border border-bordure"
                 }`}
               >
-                📊 Statistiques de consultation
+                Statistiques de consultation
               </button>
             </>
           )}

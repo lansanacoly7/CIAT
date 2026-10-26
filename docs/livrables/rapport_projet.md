@@ -2,9 +2,10 @@
 
 > **Développement de Solutions Numériques pour le CIAT et son Incubateur**  
 > **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 6)  
-> **Volume documentaire :** ~7 pages (synthèse des choix techniques, résultats mesurés, sécurité, usage de l'IA et perspectives)
+> **Volume documentaire :** ~7 pages (synthèse des choix techniques, résultats mesurés, sécurité, usage de l'IA et perspectives)  
+> **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (environnement de développement local, conteneurs et tests automatisés). Les données de test et de démonstration sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** (Groq, Google Gemini) soumis à quotas de requêtes et aléas de disponibilité.
 
 ---
 
@@ -44,7 +45,7 @@ La solution adopte une architecture moderne découplée reposant sur des protoco
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                   SERVEUR D'APPLICATION (BACK-END)                     │
-│               Django 5.1 + Django REST Framework (DRF)                 │
+│               Django 5.2 + Django REST Framework (DRF)                 │
 │                                                                        │
 │  [apps.core]       [apps.portal]       [apps.incubator]                │
 │  • Auth JWT / RBAC • Actualités / FAQ  • Dossiers & Complétude         │
@@ -53,7 +54,8 @@ La solution adopte une architecture moderne découplée reposant sur des protoco
 │                                                                        │
 │  [apps.analytics]  [apps.assistant]    [apps.documents]  [apps.gallery]│
 │  • Métriques SQL   • RAG strict        • Générateur IA   • Valorisation│
-│  • Filtres croisés • Citations JSON    • Versionnage     • QR Codes    │
+│  • Partenariats    • Citations JSON    • Versionnage     • QR Codes    │
+│  • Financements    • Atelier           • Immuabilité     • Statistiques│
 └──────────────────┬────────────────────────────────┬────────────────────┘
                    │                                │
                    ▼                                ▼
@@ -61,7 +63,7 @@ La solution adopte une architecture moderne découplée reposant sur des protoco
        │   BASE DE DONNÉES    │         │     FOURNISSEURS      │
        │     RELATIONNELLE    │         │     IA GÉNÉRATIVE     │
        │ PostgreSQL / SQLite  │         │  Groq / Gemini Flash  │
-       │      (31 tables)     │         │  (Format OpenAI API)  │
+       │      (33 tables)     │         │  (Format OpenAI API)  │
        └──────────────────────┘         └───────────────────────┘
 ```
 
@@ -69,10 +71,10 @@ La solution adopte une architecture moderne découplée reposant sur des protoco
 
 | Couche | Technologie retenue | Rationale et Bénéfices constatés |
 |---|---|---|
-| **Back-end** | **Python 3.12+ / Django 5.1 / DRF** | Robustesse éprouvée de l'ORM, écosystème de sécurité natif (CSRF, injection SQL, hachage sécurisé), facilité de modélisation et sérialisation conforme OpenAPI (drf-spectacular). |
-| **Front-end** | **Next.js 16 / React / TypeScript** | Typage statique prévenant les anomalies à l'exécution, Server Components pour les performances SEO du portail, réactivité de l'espace interactif de gestion. |
-| **Stockage relationnel** | **PostgreSQL (cible de production, test de compatibilité en cours) / SQLite (développement)** | Support natif des contraintes d'unicité avancées, requêtes JSONField performantes pour les sections documentaires et les métadonnées. |
-| **Passerelle IA** | **Abstraction `apps.core.ai`** | Implémentation du protocole standardisé « OpenAI-compatible ». Permet de basculer de Groq à Google Gemini sans modifier une seule ligne de code applicatif, avec gestion de quota gratuit et tolérance aux pannes. |
+| **Back-end** | **Python 3.13 / Django 5.2 / DRF** | Robustesse éprouvée de l'ORM, écosystème de sécurité natif (CSRF, injection SQL, hachage sécurisé), facilité de modélisation et sérialisation conforme OpenAPI (drf-spectacular). |
+| **Front-end** | **Next.js 16.4 / React 19.3 / Tailwind CSS v4** | Typage statique prévenant les anomalies à l'exécution, Server Components pour les performances SEO du portail, réactivité de l'espace interactif de gestion. |
+| **Stockage relationnel** | **SQLite (développement/tests) / PostgreSQL (cible conteneur local)** | La plateforme n'est pas déployée en production. Support des contraintes d'unicité avancées et des requêtes JSONField performantes pour les sections documentaires et les métadonnées. |
+| **Passerelle IA** | **Abstraction `apps.core.ai`** | Implémentation du protocole standardisé « OpenAI-compatible ». Permet de basculer de Groq à Google Gemini sans modifier une seule ligne de code applicatif, avec gestion de quotas gratuits et tolérance aux pannes. |
 
 ---
 
@@ -149,23 +151,25 @@ Conformément au registre tenu dans [`docs/TESTS_ET_ANOMALIES.md`](../TESTS_ET_A
 ## 6. Jeux de Données et Performance des Tests Automatisés
 
 ### 6.1 Cohérence et Idempotence Globales (`seed_all`)
-Pour offrir une démonstration réaliste et des dashboards immédiatement exploitables, la commande `python manage.py seed_all` initialise une base consolidée :
-- **62 projets innovants** réalistes ancrés dans le tissu socio-économique sénégalais.
+Pour offrir une démonstration réaliste et des dashboards immédiatement exploitables, la commande `python manage.py seed_all` initialise une base consolidée de données **strictement fictives** :
+- **64 projets innovants** réalistes ancrés dans le tissu socio-économique sénégalais (répartis sur 8 domaines et 4 cohortes).
+- **43 porteurs de projet** dont 16 femmes, matérialisant un taux de féminisation de 37,2 %.
 - **58 dossiers d'instruction**, 174 pièces obligatoires téléversées, 109 évaluations du comité et 53 décisions motivées.
 - **49 mentors affectés**, 147 objectifs, 147 jalons cadencés et 70 bilans d'étape à 3 et 6 mois.
+- **49 partenariats** formalisés (dont 37 actifs) et **50 financements** d'amorçage (totalisant 467 500 000 FCFA mobilisés dont 403 000 000 FCFA décaissés).
 - **23 fiches de galerie** (19 publiées, 2 en validation, 2 brouillons) avec QR codes dynamiques.
-- **Représentativité paritaire :** 39 % de femmes fondatrices.
+- **6 documents institutionnels** générés et archivés.
 - **Idempotence certifiée :** Une réexécution successive de la commande conserve strictement les totaux en base sans générer le moindre doublon.
 
 ### 6.2 Résultats de la Suite de Tests
-La validation de l'application repose sur deux suites de tests automatisées :
+La validation de l'application repose sur deux suites de tests automatisées exécutées sur machine locale :
 1. **Parcours complet de bout en bout (`apps.core.tests.test_parcours_complet`) :**  
    Simule l'ensemble du cycle de vie d'un porteur (inscription ➔ dépôt ➔ complétude ➔ notation comité ➔ décision coordonnateur ➔ jalonnement mentor ➔ publication galerie ➔ export document officiel) :
-   - Temps d'exécution : **0,66 seconde** (seuil exigé : < 30 secondes).
+   - Temps d'exécution : **~0,92 seconde** (seuil exigé : < 30 secondes).
    - Résultat : **2/2 tests passants** (100 %).
 2. **Suite globale de tests d'intégration (`python manage.py test apps`) :**  
-   - Couverture : **145 tests unitaires et fonctionnels**.
-   - Temps d'exécution total : **~14 secondes**.
+   - Couverture : **183 tests unitaires et fonctionnels** couvrant l'ensemble des 7 modules.
+   - Temps d'exécution total : **~21 secondes**.
    - Résultat : **100 % OK, 0 échec, 0 erreur**.
    - Contrôles système : `python manage.py check` (0 avertissement), `makemigrations --check` (0 divergence de schéma).
 
@@ -183,4 +187,4 @@ En toute transparence académique et technique, les limites suivantes constituen
 ## 8. Conclusion
 
 La plateforme numérique du CIAT conçue et livrée lors de cette évaluation pratique constitue une réponse technique complète, rigoureuse et pérenne aux défis d'accompagnement de l'ISEP Amadou Traoré de Diamniadio.  
-En mariant la solidité d'une modélisation relationnelle de 31 tables, une étanchéité de droits garantie par une matrice RBAC à 6 rôles, et une intégration de l'IA générative strictement encadrée par des garde-fous anti-hallucination, la solution démontre qu'il est possible de mobiliser l'intelligence artificielle au service de l'action publique et académique sans jamais sacrifier la sécurité, la souveraineté des données ni la rigueur méthodologique.
+En mariant la solidité d'une modélisation relationnelle de 33 tables, une étanchéité de droits garantie par une matrice RBAC à 6 rôles, et une intégration de l'IA générative strictement encadrée par des garde-fous anti-hallucination, la solution démontre qu'il est possible de mobiliser l'intelligence artificielle au service de l'action publique et académique sans jamais sacrifier la sécurité, la souveraineté des données ni la rigueur méthodologique.

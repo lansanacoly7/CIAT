@@ -11,6 +11,10 @@ import io
 from docx import Document as DocxDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, RGBColor
+
+COULEUR_BRUN_DOCX = RGBColor(97, 45, 16)
+COULEUR_TEXTE_DOCX = RGBColor(36, 20, 13)
+COULEUR_GRIS_DOCX = RGBColor(120, 120, 120)
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -21,9 +25,6 @@ from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 # Couleurs CIAT
 COULEUR_BRUN_HEX = "#612D10"
 COULEUR_TEXTE_HEX = "#24140D"
-COULEUR_BRUN_DOCX = RGBColor(97, 45, 16)
-COULEUR_TEXTE_DOCX = RGBColor(36, 20, 13)
-COULEUR_GRIS_DOCX = RGBColor(120, 120, 120)
 
 
 # ==============================================================================

@@ -13,6 +13,7 @@ Endpoints :
   - /api/portal/projets-incubes/ (public, statut incube|prototype|termine, filtres et recherche)
 """
 from django.db.models import F, Q, Sum
+from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, status, viewsets
@@ -422,3 +423,33 @@ class StatistiquesPortailView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+# ==============================================================================
+# Phase 4 — T3 : Export iCalendar (.ics) des événements du CIAT
+# ==============================================================================
+
+class EvenementCalendrierICSView(APIView):
+    """GET /api/portal/evenements/calendrier.ics : Flux iCalendar RFC 5545 public.
+
+    Renvoie tous les événements du CIAT (avec option ?a_venir=1 pour filtrer les événements futurs)
+    au format standard iCalendar (.ics) importable dans Google Agenda ou Outlook.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        queryset = Evenement.objects.all().order_by("debut")
+        a_venir = request.query_params.get("a_venir")
+        if a_venir in ("1", "true", "True"):
+            now = timezone.now()
+            queryset = queryset.filter(
+                Q(fin__gte=now) | Q(fin__isnull=True, debut__gte=now)
+            )
+
+        from .calendrier import generer_calendrier_ics
+
+        ics_content = generer_calendrier_ics(queryset)
+        response = HttpResponse(ics_content, content_type="text/calendar; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="evenements_ciat.ics"'
+        return response

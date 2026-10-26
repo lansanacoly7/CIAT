@@ -278,7 +278,7 @@ export default function DocumentEditor({
             onClick={() => handleExport("docx")}
             className="text-xs"
           >
-            {actionLoading === "export_docx" ? "Téléchargement..." : "📄 Télécharger Word"}
+            {actionLoading === "export_docx" ? "Téléchargement..." : "Télécharger Word"}
           </Button>
           <Button
             type="button"
@@ -287,7 +287,7 @@ export default function DocumentEditor({
             onClick={() => handleExport("pdf")}
             className="text-xs"
           >
-            {actionLoading === "export_pdf" ? "Téléchargement..." : "📑 Télécharger PDF"}
+            {actionLoading === "export_pdf" ? "Téléchargement..." : "Télécharger PDF"}
           </Button>
         </div>
       </div>
@@ -340,7 +340,7 @@ export default function DocumentEditor({
                   disabled={actionLoading === "publier"}
                   onClick={() => handleActionWorkflow("publier")}
                 >
-                  {actionLoading === "publier" ? "Publication..." : "🚀 Publier officiellement"}
+                  {actionLoading === "publier" ? "Publication..." : "Publier officiellement"}
                 </Button>
               )}
 
@@ -361,7 +361,7 @@ export default function DocumentEditor({
             {/* Avertissement statut */}
             {!isBrouillon && (
               <p className="text-[11px] text-texte-doux bg-white p-3 rounded-lg border border-bordure italic">
-                🔒 Ce document est au statut <strong>{doc.statut}</strong> : il n&apos;est plus modifiable depuis l&apos;interface afin de préserver son authenticité.
+                Ce document est au statut <strong>{doc.statut}</strong> : il n&apos;est plus modifiable depuis l&apos;interface afin de préserver son authenticité.
                 {isCoordoOuAdmin && " Vous pouvez le repasser en brouillon pour autoriser de nouvelles corrections."}
               </p>
             )}
@@ -450,7 +450,7 @@ export default function DocumentEditor({
                   disabled={saving}
                   className="text-xs"
                 >
-                  {saving ? "Enregistrement..." : "💾 Enregistrer nouvelle version"}
+                  {saving ? "Enregistrement..." : "Enregistrer nouvelle version"}
                 </Button>
               )}
             </div>
@@ -518,7 +518,7 @@ export default function DocumentEditor({
                   disabled={saving}
                   className="px-6 py-2.5 text-xs shadow-sm"
                 >
-                  {saving ? "Enregistrement en cours..." : "💾 Enregistrer nouvelle version"}
+                  {saving ? "Enregistrement en cours..." : "Enregistrer nouvelle version"}
                 </Button>
               </div>
             )}

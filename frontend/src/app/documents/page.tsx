@@ -103,7 +103,7 @@ export default function DocumentsPage() {
                     : "text-texte-doux hover:text-brun"
                 }`}
               >
-                📁 Mes documents
+                Mes documents
               </button>
               <button
                 type="button"
@@ -117,7 +117,7 @@ export default function DocumentsPage() {
                     : "text-texte-doux hover:text-brun"
                 }`}
               >
-                ✨ Nouveau document (IA)
+                Nouveau document (IA)
               </button>
             </div>
           </div>
