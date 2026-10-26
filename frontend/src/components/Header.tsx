@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
@@ -16,9 +17,26 @@ const NAV_LINKS = [
   { href: "/portail/appels", label: "Appels à projets" },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  administrateur: "Admin",
+  coordonnateur: "Coordo",
+  mentor: "Mentor",
+  membre_comite: "Comité",
+  porteur: "Porteur",
+  visiteur: "Visiteur",
+};
+
 export default function Header() {
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
+
+  // Masquer totalement l'en-tête et la barre mobile sur les écrans d'authentification plein écran
+  if (isAuthPage) {
+    return null;
+  }
 
   return (
     <>
@@ -54,14 +72,39 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Actions & Bouton Connexion */}
+          {/* Actions : Utilisateur connecté OU Bouton Connexion */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/connexion"
-              className="hidden rounded-lg bg-beige px-4 py-2 text-sm font-bold text-brun-fonce transition-all hover:brightness-105 active:scale-95 md:inline-flex"
-            >
-              Connexion
-            </Link>
+            {!loading && user ? (
+              <div className="hidden items-center gap-3 md:flex">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce">
+                    {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-semibold leading-tight text-white">
+                      {user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.email}
+                    </p>
+                    <span className="text-[10px] uppercase tracking-wide text-beige">
+                      {ROLE_LABELS[user.role] ?? user.role}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-medium text-[#ebd9c0] transition-colors hover:border-white hover:text-white"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/connexion"
+                className="hidden rounded-lg bg-beige px-4 py-2 text-sm font-bold text-brun-fonce transition-all hover:brightness-105 active:scale-95 md:inline-flex"
+              >
+                Connexion
+              </Link>
+            )}
 
             {/* Bouton Menu Burger Mobile (Touch target >= 44x44px) */}
             <button
@@ -102,23 +145,39 @@ export default function Header() {
                 );
               })}
               <div className="mt-3 border-t border-white/10 pt-3">
-                <Link
-                  href="/connexion"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-beige px-4 py-2 text-base font-bold text-brun-fonce hover:brightness-105"
-                >
-                  Espace Connexion
-                </Link>
+                {!loading && user ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{user.first_name || user.email}</p>
+                      <span className="text-xs text-beige">{ROLE_LABELS[user.role] ?? user.role}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-medium text-[#ebd9c0]"
+                    >
+                      Déconnexion
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/connexion"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-beige px-4 py-2 text-base font-bold text-brun-fonce hover:brightness-105"
+                  >
+                    Espace Connexion
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
         )}
       </header>
 
-      {/* 
-        Barre de Navigation Tactile Inférieure (Bottom Nav) sur Mobile
-        Imposée par Page 09 de la charte officielle : zone tactile minimale 44x44px
-      */}
+      {/* Barre de Navigation Tactile Inférieure sur Mobile */}
       <nav
         aria-label="Navigation mobile inférieure"
         className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-bordure bg-white/95 px-2 backdrop-blur-md md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.06)]"
@@ -172,15 +231,15 @@ export default function Header() {
         </Link>
 
         <Link
-          href="/connexion"
+          href={user ? "/incubateur" : "/connexion"}
           className={`flex min-h-[44px] min-w-[44px] flex-col items-center justify-center text-xs font-semibold ${
-            pathname === "/connexion" ? "text-brun font-bold" : "text-texte-doux"
+            pathname === "/connexion" || pathname === "/incubateur" ? "text-brun font-bold" : "text-texte-doux"
           }`}
         >
           <svg className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          Compte
+          {user ? "Espace" : "Compte"}
         </Link>
       </nav>
     </>
