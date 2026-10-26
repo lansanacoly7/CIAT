@@ -3,7 +3,7 @@
 Une seule plateforme pour le Centre d'Innovation, d'Application et de Transfert (ISEP Amadou Trawaré, Diamniadio).
 Backend Django REST Framework, frontend Next.js (TypeScript, Tailwind).
 
-> Écrit pour toute l'équipe Teranga Labs. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT_ISEP.pdf](Charte_Graphique_CIAT_ISEP.pdf).
+> Écrit pour toute l'équipe Teranga Labs. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](docs/PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT_ISEP.pdf](docs/Charte_Graphique_CIAT_ISEP.pdf).
 
 ## Démarrer en 5 minutes
 
@@ -71,7 +71,7 @@ Chaque module a son préfixe d'API : `/api/documents/`, `/api/incubator/`, `/api
 - **Appels à l'IA** : toujours via `from apps.core.ai import ai`. Jamais d'appel direct à un fournisseur.
 - **Apparence** : couleurs et polices viennent de la charte (variables dans `globals.css`, composants dans `components/ui.tsx`).
 - **Secrets** : les fichiers `.env` ne sont jamais publiés sur Git. Les clés d'API restent chez chacun.
-- **Git** : une branche par personne et par tâche (`feature/<module>-<sujet>`), demande de fusion vers `main` validée par Lansana.
+- **Git** : `main` ne se touche pas jusqu'à la fin du développement. Chacun travaille sur **une seule branche personnelle** à son nom (créée depuis `test`), sans branches de fonctionnalité. Quand tu as fini une tâche, tu pousses et tu préviens Lansana : il vérifie et fusionne dans `test`. Le détail pas à pas est dans [docs/GUIDE_GIT.md](docs/GUIDE_GIT.md).
 
 ## Service IA (Groq et Gemini, gratuits)
 

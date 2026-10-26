@@ -43,7 +43,7 @@ Types de pièces obligatoires : `fiche_projet`, `presentation_equipe`, `budget_p
 | `DELETE /dossiers/{id}/pieces/{piece_id}/` | Supprime une pièce (dossier non soumis) |
 | `POST /dossiers/{id}/soumettre/` | Refuse (`400`) si une pièce obligatoire manque |
 | `GET /grilles/actuelle/` | `{ id, criteres: [{ id, libelle, poids, note_max }] }` |
-| `POST /dossiers/{id}/evaluations/` | `{ notes: [{ critere, note }], avis }` (membre du comité) |
+| `POST /dossiers/{id}/evaluations/` | `{ notes: [{ critere, note }], avis }` (membre du comité, mentor, coordonnateur ou administrateur ; une seule évaluation par personne et par dossier) |
 | `GET /dossiers/{id}/evaluations/` | Liste des évaluations et `score_moyen` |
 | `POST /dossiers/{id}/decision/` | `{ decision: "accepte"\|"refuse", motif }` (coordonnateur). Met à jour le statut du dossier et du projet. |
 
@@ -80,3 +80,66 @@ Accès : coordonnateur, administrateur, membre du comité. Tous les endpoints ac
 | `GET /types/` | `[{ id, code, nom }]` (appel à candidatures, fiche de projet, convention, procès-verbal, ...) |
 | `GET /modeles/?type=` | `[{ id, type, nom, apercu, sections: [{ code, titre, consigne }] }]` |
 | `POST /generer/` | `{ modele, sujet, infos: {}, projet? }` → `{ id, titre, sections: [{ code, titre, contenu }], statut: "brouillon", version: 1 }` |
+
+### P5 — Ajouts de la Phase 2 (versions, workflow, export)
+
+Un document : `{ id, titre, modele, projet, auteur, statut, version_courante, cree_le, modifie_le }`. Statuts : `brouillon`, `valide`, `publie`. Une version : `{ numero, sections: [{ code, titre, contenu }], auteur, cree_le }`.
+
+| Route | Description |
+|---|---|
+| `GET /` | Mes documents (l'équipe CIAT voit tous les documents) |
+| `GET /{id}/` | Détail avec les sections de la version courante |
+| `PATCH /{id}/` | `{ sections: [{ code, contenu }] }` → crée une nouvelle version. Refusé (`409`) si le statut n'est pas `brouillon`. |
+| `GET /{id}/versions/` | Liste des versions |
+| `GET /{id}/versions/{numero}/` | Une version |
+| `POST /{id}/valider/` | Coordonnateur ou administrateur : `brouillon` donne `valide` |
+| `POST /{id}/publier/` | Administrateur : `valide` donne `publie` |
+| `POST /{id}/brouillon/` | Coordonnateur ou administrateur : repasse en `brouillon` |
+| `GET /{id}/export/?format=docx` ou `pdf` | Fichier à télécharger, mis en forme avec la charte |
+
+
+### P2 — Ajouts de la Phase 2 (`/api/incubator/`)
+
+Objectif : `{ id, projet, libelle, echeance, statut }` (statuts `a_faire`, `en_cours`, `atteint`).
+Jalon : `{ id, projet, titre, echeance, statut, en_retard, preuves: [...], commentaires: [...] }` (statuts saisis `a_faire`, `en_cours`, `fait` ; `en_retard` est calculé).
+
+| Route | Description |
+|---|---|
+| `GET /mentors/` | Utilisateurs de rôle mentor (coordonnateur, administrateur) |
+| `POST /projets/{id}/mentor/` | `{ mentor }` : affecte un mentor (coordonnateur, administrateur) |
+| `GET/POST /projets/{id}/objectifs/` | Liste et création |
+| `PATCH /objectifs/{id}/` | Modification |
+| `GET/POST /projets/{id}/jalons/` | Liste et création |
+| `PATCH /jalons/{id}/` | Modification |
+| `POST /jalons/{id}/preuves/` | `multipart/form-data` : `fichier` |
+| `POST /jalons/{id}/commentaires/` | `{ texte }` |
+| `GET /alertes/` | Jalons en retard visibles pour l'utilisateur connecté |
+| `GET/POST /projets/{id}/suivis/` | `{ echeance: "3_mois"\|"6_mois", bilan, indicateurs }` |
+| `GET /projets/{id}/compte-rendu/?format=xlsx` | Fichier Excel à télécharger |
+
+## P4 — Assistant (`/api/assistant/`)
+
+Authentification obligatoire.
+
+| Route | Description |
+|---|---|
+| `GET /conversations/` | Mes conversations : `[{ id, titre, cree_le }]` |
+| `POST /conversations/` | Crée une conversation |
+| `GET /conversations/{id}/messages/` | `[{ id, role: "user"\|"assistant", contenu, sources, cree_le }]` |
+| `POST /conversations/{id}/messages/` | `{ contenu, mode: "documents"\|"atelier" }` → message de l'assistant : `{ contenu, sources: [{ document_id, titre, extrait }], avertissement_ia }`. `sources` vide et refus explicite si rien de pertinent (mode `documents`). `503` sans clé IA. |
+| `POST /indexation/` | Administrateur : réindexe les documents publics |
+
+## P6 — Galerie (`/api/gallery/`)
+
+Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medias: [{ type: "photo"\|"video"\|"demo", url }], statut, vues }`. Statuts : `brouillon`, `en_validation`, `publie`, `refuse`.
+
+| Route | Description |
+|---|---|
+| `GET /fiches/` | Public : fiches publiées. Filtres `?domaine=&cohorte=&avancement=&search=` |
+| `GET /fiches/{slug}/` | Public : détail d'une fiche publiée (incrémente `vues`) |
+| `GET /fiches/{slug}/qr/` | Public : image PNG du QR code vers la fiche |
+| `POST /fiches/` | Porteur : crée une fiche pour son projet |
+| `POST /fiches/{id}/soumettre/` | Porteur : brouillon vers en validation |
+| `POST /fiches/{id}/valider/`, `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur |
+| `GET /statistiques/` | Équipe CIAT : `{ total_vues, par_fiche: [{ slug, titre, vues }] }` |
+
