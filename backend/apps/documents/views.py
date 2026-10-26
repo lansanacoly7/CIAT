@@ -1,6 +1,8 @@
-"""Vues API pour le générateur de documents du CIAT (P5)."""
+"""Vues API pour le générateur de documents du CIAT (P5) — Phases 1 et 2 (T1, T2, T3)."""
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +10,9 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.core.models import Role
+from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.documents.exports import generer_export_docx, generer_export_pdf
 from apps.documents.models import Document, ModeleDocument, TypeDocument, VersionDocument
 from apps.documents.serializers import (
     DocumentDetailSerializer,
@@ -116,7 +121,7 @@ class GenererDocumentView(APIView):
 
 
 # ==============================================================================
-# Phase 2 — Consultation, Modification et Gestion des versions (T1)
+# Phase 2 — T1 : Consultation, Modification et Gestion des versions
 # ==============================================================================
 
 def _verifier_acces_document(user, document):
@@ -261,3 +266,127 @@ class DocumentVersionDetailView(APIView):
             )
         serializer = VersionDocumentSerializer(version)
         return Response(serializer.data)
+
+
+# ==============================================================================
+# Phase 2 — T2 : Workflow de validation et droits
+# ==============================================================================
+
+class DocumentValiderView(APIView):
+    """POST /api/documents/{id}/valider/ : Coordonnateur ou Administrateur.
+
+    Passe un document de 'brouillon' à 'valide'.
+    """
+
+    permission_classes = [IsAuthenticated, IsEquipeCIAT]
+
+    def post(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+        if doc.statut != Document.Statut.BROUILLON:
+            return Response(
+                {
+                    "detail": f"Impossible de valider un document au statut '{doc.statut}'. Seul un brouillon peut être validé."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        doc.statut = Document.Statut.VALIDE
+        doc.save(update_fields=["statut", "modifie_le"])
+        return Response(DocumentDetailSerializer(doc).data, status=status.HTTP_200_OK)
+
+
+class DocumentPublierView(APIView):
+    """POST /api/documents/{id}/publier/ : Administrateur uniquement.
+
+    Passe un document de 'valide' à 'publie'.
+    """
+
+    permission_classes = [IsAuthenticated, HasRole(Role.ADMIN)]
+
+    def post(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+        if doc.statut == Document.Statut.PUBLIE:
+            return Response(
+                {"detail": "Ce document est déjà publié."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if doc.statut != Document.Statut.VALIDE:
+            return Response(
+                {
+                    "detail": f"Le document doit d'abord être validé avant d'être publié (statut actuel : '{doc.statut}')."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        doc.statut = Document.Statut.PUBLIE
+        doc.save(update_fields=["statut", "modifie_le"])
+        return Response(DocumentDetailSerializer(doc).data, status=status.HTTP_200_OK)
+
+
+class DocumentBrouillonView(APIView):
+    """POST /api/documents/{id}/brouillon/ : Coordonnateur ou Administrateur.
+
+    Repasse un document au statut 'brouillon' pour permettre de nouvelles modifications.
+    """
+
+    permission_classes = [IsAuthenticated, IsEquipeCIAT]
+
+    def post(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+        if doc.statut == Document.Statut.BROUILLON:
+            return Response(
+                {"detail": "Le document est déjà au statut brouillon."},
+                status=status.HTTP_200_OK,
+            )
+
+        doc.statut = Document.Statut.BROUILLON
+        doc.save(update_fields=["statut", "modifie_le"])
+        return Response(DocumentDetailSerializer(doc).data, status=status.HTTP_200_OK)
+
+
+# ==============================================================================
+# Phase 2 — T3 : Export Word (.docx) et PDF (.pdf) avec la charte
+# ==============================================================================
+
+class DocumentExportView(APIView):
+    """GET /api/documents/{id}/export/?format=docx ou ?format=pdf :
+
+    Exporte le document au format Word ou PDF mis en forme selon la charte graphique CIAT.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def perform_content_negotiation(self, request, force=False):
+        # Empêche DRF d'intercepter le query param ?format= (utilisé pour choisir docx ou pdf)
+        renderers = self.get_renderers()
+        return (renderers[0], renderers[0].media_type)
+
+    def get(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+
+        _verifier_acces_document(request.user, doc)
+
+        format_param = request.query_params.get("format", "").strip().lower()
+        if format_param not in ("docx", "pdf"):
+            return Response(
+                {
+                    "detail": "Format d'export invalide ou manquant. Formats supportés : 'docx', 'pdf'."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        titre_nettoye = slugify(doc.titre) or f"document_{doc.id}"
+        version_num = doc.version_courante
+
+        if format_param == "docx":
+            buf = generer_export_docx(doc)
+            filename = f"{titre_nettoye}_v{version_num}.docx"
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        else:
+            buf = generer_export_pdf(doc)
+            filename = f"{titre_nettoye}_v{version_num}.pdf"
+            content_type = "application/pdf"
+
+        response = HttpResponse(buf.getvalue(), content_type=content_type)
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
