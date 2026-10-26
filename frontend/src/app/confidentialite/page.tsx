@@ -186,9 +186,7 @@ export default function ConfidentialitePage() {
             </div>
 
             <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-xs sm:text-sm text-amber-950">
-              <strong>Protection de vos contenus :</strong> Les données confidentielles de vos candidatures ne sont pas
-              utilisées pour entraîner des modèles publics d&apos;IA tiers. Les requêtes de traitement sont exécutées via des
-              interfaces de programmation sécurisées respectant la confidentialité des échanges.
+              <strong>Attention à vos contenus :</strong> Les textes que vous soumettez à une fonction d&apos;IA (générateur de documents, assistant, questions sur les données) sont envoyés à un fournisseur d&apos;IA tiers pour être traités, selon ses propres conditions. Ne saisissez pas d&apos;informations confidentielles ou personnelles sensibles dans ces champs.
             </div>
           </section>
 

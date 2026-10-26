@@ -47,9 +47,9 @@ export default function MentionsLegalesPage() {
             </p>
             <ul className="text-xs sm:text-sm text-[#4A3220] space-y-1.5 pl-4 border-l-2 border-[#D4AA70]/50 mt-2">
               <li><strong>Siège :</strong> Pôle Urbain de Diamniadio, Dakar, Sénégal</li>
-              <li><strong>Téléphone :</strong> +221 33 800 00 00</li>
+              <li><strong>Téléphone :</strong> [À compléter par l&apos;ISEP]</li>
               <li><strong>Directeur de la publication :</strong> Le Coordonnateur du CIAT / Direction de l&apos;ISEP Diamniadio</li>
-              <li><strong>Courriel institutionnel :</strong> contact@isepdiamniadio.edu.sn / ciat@isepdiamniadio.edu.sn</li>
+              <li><strong>Courriel institutionnel :</strong> [À compléter par l&apos;ISEP]</li>
             </ul>
           </section>
 
@@ -93,9 +93,7 @@ export default function MentionsLegalesPage() {
               Hébergement technique &amp; Disponibilité
             </h2>
             <p className="text-sm leading-relaxed text-[#3D2817]">
-              La plateforme est hébergée sur les infrastructures serveurs de l&apos;ISEP de Diamniadio et ses partenaires
-              technologiques. L&apos;équipe technique veille à la continuité du service et à la sauvegarde régulière des
-              bases de données relationnelles.
+              L&apos;hébergeur de la plateforme (nom et adresse) sera indiqué ici à sa mise en ligne. [À compléter lors du déploiement]
             </p>
           </section>
 
