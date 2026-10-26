@@ -443,7 +443,7 @@ export default function DocumentCreationWizard({ onDocumentCreated }: DocumentCr
                     Génération IA en cours...
                   </span>
                 ) : (
-                  "✨ Générer le document avec l'IA"
+                  "Générer le document avec l'IA"
                 )}
               </Button>
 

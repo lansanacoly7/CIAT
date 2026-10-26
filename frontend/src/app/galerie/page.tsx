@@ -168,7 +168,7 @@ export default function GaleriePage() {
               variant="secondary"
               className="text-xs font-bold shadow-xs"
             >
-              ⚙️ Espace Porteur & Gestion →
+              Espace Porteur & Gestion →
             </ButtonLink>
           </div>
         </div>
