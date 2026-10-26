@@ -10,21 +10,21 @@ Ordre conseillé : T1, puis T2, puis T3.
 ## T1 — Affectation d'un mentor et objectifs
 - **Complexité :** Moyenne · **Importance :** Haute · **Durée estimée :** 3 h
 - **À faire :** un projet sélectionné reçoit un mentor (utilisateur de rôle `mentor`), affecté par un coordonnateur ou administrateur. Un mentor ne voit que les projets qui lui sont affectés (en plus des dossiers qu'il peut déjà évaluer). Objectifs d'un projet : libellé, échéance, statut (`a_faire`, `en_cours`, `atteint`), créés par le coordonnateur ou le mentor, modifiables par eux.
-- **Tu attends :** rien. Branche : `feature/incubator-mentors`, à créer depuis ta branche personnelle à jour.
+- **Tu attends :** rien. Branche : ta branche personnelle.
 - **Attendu par :** Maimouna (écrans de suivi), ta propre T2.
 - **Terminé quand :** un mentor affecté voit son projet et seulement les siens, un porteur voit les objectifs de son projet sans pouvoir les modifier, affecter un utilisateur qui n'est pas mentor est refusé.
 
 ## T2 — Jalons, preuves, commentaires et alertes de retard
 - **Complexité :** Élevée · **Importance :** Haute · **Durée estimée :** 4 à 5 h
 - **À faire :** jalons d'un projet (titre, échéance, statut), dépôt de preuves en fichier (mêmes limites que les pièces de dossier), commentaires horodatés (porteur, mentor, coordonnateur). Un jalon dont l'échéance est passée et qui n'est pas fait est **en retard** (statut calculé, jamais saisi à la main). Route `GET /alertes/` : les jalons en retard visibles pour l'utilisateur selon son rôle.
-- **Tu attends :** ta T1. Branche : `feature/incubator-jalons`.
+- **Tu attends :** ta T1. Branche : ta branche personnelle.
 - **Attendu par :** Maimouna (calendrier et alertes), Alioune (indicateurs de retard).
 - **Terminé quand :** un jalon passé non fait apparaît dans `/alertes/` sans action manuelle, un porteur ne voit que ses propres alertes, une preuve trop lourde ou d'un type interdit est refusée avec un message clair.
 
 ## T3 — Suivi à trois et six mois et compte rendu
 - **Complexité :** Moyenne · **Importance :** Normale · **Durée estimée :** 3 à 4 h
 - **À faire :** bilans de suivi à 3 et 6 mois (échéance, bilan écrit, indicateurs libres) créés par le mentor ou le coordonnateur. Route de compte rendu d'un projet en Excel (`.xlsx`, avec `openpyxl`) : informations du projet, objectifs, jalons et bilans. Choisis des bibliothèques légères sous Windows et ajoute-les à `requirements.txt`.
-- **Tu attends :** tes T1 et T2. Branche : `feature/incubator-suivi`.
+- **Tu attends :** tes T1 et T2. Branche : ta branche personnelle.
 - **Attendu par :** Lansana (démonstration, livrable « comptes rendus »).
 - **Terminé quand :** un projet a ses bilans à 3 et 6 mois, l'export Excel s'ouvre correctement avec les accents et les quatre blocs, et un porteur ne peut pas lire le compte rendu d'un autre projet.
 
