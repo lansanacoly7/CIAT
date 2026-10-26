@@ -94,6 +94,15 @@ class Document(models.Model):
     def __str__(self):
         return self.titre
 
+    @property
+    def derniere_version(self):
+        return self.versions.order_by("-numero").first()
+
+    @property
+    def version_courante(self):
+        dv = self.derniere_version
+        return dv.numero if dv else 1
+
 
 class VersionDocument(models.Model):
     """Version horodatée d'un document avec contenu des sections."""
