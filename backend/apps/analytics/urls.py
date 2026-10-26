@@ -11,10 +11,13 @@ from django.urls import path
 from .views import (
     EvolutionView,
     ExportView,
+    FinancementsListView,
     IndicateursView,
     ParCohorteView,
     ParDomaineView,
     ParGenreView,
+    PartenariatsFinancementsStatsView,
+    PartenariatsListView,
     QuestionView,
 )
 
@@ -26,6 +29,13 @@ urlpatterns = [
     path("evolution/", EvolutionView.as_view(), name="analytics-evolution"),
     path("export/", ExportView.as_view(), name="analytics-export"),
     path("question/", QuestionView.as_view(), name="analytics-question"),
+    path("partenariats/", PartenariatsListView.as_view(), name="analytics-partenariats"),
+    path("financements/", FinancementsListView.as_view(), name="analytics-financements"),
+    path(
+        "partenariats-financements/stats/",
+        PartenariatsFinancementsStatsView.as_view(),
+        name="analytics-partenariats-financements-stats",
+    ),
 ]
 
 

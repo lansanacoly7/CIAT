@@ -72,3 +72,65 @@ export interface QuestionAnalyticsResponse {
   filtres_utilises: Record<string, string>;
 }
 
+export interface SourceFinancementStat {
+  source: string;
+  total: number;
+  count: number;
+}
+
+export interface TypePartenariatStat {
+  type: string;
+  type_key: string;
+  count: number;
+}
+
+export interface DomaineFinancementStat {
+  domaine: string;
+  total: number;
+  count: number;
+}
+
+export interface PartenariatsFinancementsStats {
+  total_finance: number;
+  financements_decaisses: number;
+  nombre_financements: number;
+  nombre_partenariats_actifs: number;
+  total_partenariats: number;
+  par_source: SourceFinancementStat[];
+  par_type_partenariat: TypePartenariatStat[];
+  par_domaine: DomaineFinancementStat[];
+}
+
+export interface PartenariatItem {
+  id: number;
+  projet: number;
+  projet_titre: string;
+  cohorte: string | null;
+  domaine: string | null;
+  porteur_nom: string;
+  partenaire: string;
+  type: string;
+  type_display: string;
+  date_debut: string;
+  statut: string;
+  statut_display: string;
+  description: string;
+  cree_le: string;
+}
+
+export interface FinancementItem {
+  id: number;
+  projet: number;
+  projet_titre: string;
+  cohorte: string | null;
+  domaine: string | null;
+  porteur_nom: string;
+  source: string;
+  montant: string;
+  date: string;
+  statut: string;
+  statut_display: string;
+  description: string;
+  cree_le: string;
+}
+

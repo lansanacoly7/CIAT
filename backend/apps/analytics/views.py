@@ -13,7 +13,7 @@ Tous les endpoints acceptent les filtres :
 import io
 import logging
 from datetime import datetime
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
 from django.utils import timezone
@@ -23,6 +23,14 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.ai import AIError, AINotConfigured
+from .models import (
+    Financement,
+    Partenariat,
+    StatutFinancement,
+    StatutPartenariat,
+    TypePartenariat,
+)
+from .serializers import FinancementSerializer, PartenariatSerializer
 from .services import traiter_question_analytics
 
 import openpyxl
@@ -1331,4 +1339,246 @@ class QuestionView(APIView):
                 {"detail": "Une erreur inattendue est survenue lors de l'analyse de votre question."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+def apply_partenariat_filters(queryset, request):
+    """Filtre les partenariats selon les critères du dashboard."""
+    params = request.query_params
+
+    debut = params.get("debut")
+    if debut:
+        try:
+            d = datetime.strptime(debut.strip(), "%Y-%m-%d").date()
+            queryset = queryset.filter(date_debut__gte=d)
+        except ValueError:
+            pass
+
+    fin = params.get("fin")
+    if fin:
+        try:
+            f = datetime.strptime(fin.strip(), "%Y-%m-%d").date()
+            queryset = queryset.filter(date_debut__lte=f)
+        except ValueError:
+            pass
+
+    cohorte = params.get("cohorte")
+    if cohorte:
+        c_str = str(cohorte).strip()
+        if c_str.isdigit():
+            queryset = queryset.filter(
+                Q(projet__cohorte__annee=int(c_str)) | Q(projet__cohorte_id=int(c_str))
+            )
+        else:
+            queryset = queryset.filter(projet__cohorte__nom__icontains=c_str)
+
+    domaine = params.get("domaine")
+    if domaine:
+        d_str = str(domaine).strip()
+        if d_str.isdigit():
+            queryset = queryset.filter(projet__domaine_id=int(d_str))
+        else:
+            queryset = queryset.filter(
+                Q(projet__domaine__slug__icontains=d_str) | Q(projet__domaine__nom__icontains=d_str)
+            )
+
+    statut = params.get("statut")
+    if statut:
+        queryset = queryset.filter(statut__iexact=str(statut).strip())
+
+    type_part = params.get("type")
+    if type_part:
+        queryset = queryset.filter(type__iexact=str(type_part).strip())
+
+    return queryset
+
+
+def apply_financement_filters(queryset, request):
+    """Filtre les financements selon les critères du dashboard."""
+    params = request.query_params
+
+    debut = params.get("debut")
+    if debut:
+        try:
+            d = datetime.strptime(debut.strip(), "%Y-%m-%d").date()
+            queryset = queryset.filter(date__gte=d)
+        except ValueError:
+            pass
+
+    fin = params.get("fin")
+    if fin:
+        try:
+            f = datetime.strptime(fin.strip(), "%Y-%m-%d").date()
+            queryset = queryset.filter(date__lte=f)
+        except ValueError:
+            pass
+
+    cohorte = params.get("cohorte")
+    if cohorte:
+        c_str = str(cohorte).strip()
+        if c_str.isdigit():
+            queryset = queryset.filter(
+                Q(projet__cohorte__annee=int(c_str)) | Q(projet__cohorte_id=int(c_str))
+            )
+        else:
+            queryset = queryset.filter(projet__cohorte__nom__icontains=c_str)
+
+    domaine = params.get("domaine")
+    if domaine:
+        d_str = str(domaine).strip()
+        if d_str.isdigit():
+            queryset = queryset.filter(projet__domaine_id=int(d_str))
+        else:
+            queryset = queryset.filter(
+                Q(projet__domaine__slug__icontains=d_str) | Q(projet__domaine__nom__icontains=d_str)
+            )
+
+    statut = params.get("statut")
+    if statut:
+        queryset = queryset.filter(statut__iexact=str(statut).strip())
+
+    source = params.get("source")
+    if source:
+        queryset = queryset.filter(source__icontains=str(source).strip())
+
+    return queryset
+
+
+class PartenariatsListView(APIView):
+    """GET /api/analytics/partenariats/
+    
+    Liste des partenariats reliés aux projets du CIAT avec filtres (cohorte, domaine, statut, type, dates).
+    Accessible à l'équipe CIAT et au comité de sélection.
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def get(self, request):
+        qs = Partenariat.objects.select_related(
+            "projet", "projet__domaine", "projet__cohorte", "projet__porteur"
+        )
+        qs = apply_partenariat_filters(qs, request)
+        serializer = PartenariatSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FinancementsListView(APIView):
+    """GET /api/analytics/financements/
+    
+    Liste des financements accordés et décaissés pour les projets du CIAT avec filtres.
+    Accessible à l'équipe CIAT et au comité de sélection.
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def get(self, request):
+        qs = Financement.objects.select_related(
+            "projet", "projet__domaine", "projet__cohorte", "projet__porteur"
+        )
+        qs = apply_financement_filters(qs, request)
+        serializer = FinancementSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PartenariatsFinancementsStatsView(APIView):
+    """GET /api/analytics/partenariats-financements/stats/
+    
+    Indicateurs agrégés pour le tableau de bord :
+    - total_finance : montant total cumulé en FCFA
+    - financements_decaisses : montant décaissé en FCFA
+    - nombre_financements : nombre d'opérations de financement
+    - nombre_partenariats_actifs : partenariats actifs
+    - total_partenariats : volume total de partenariats
+    - par_source : ventilation par guichet/source de financement
+    - par_type_partenariat : ventilation par catégorie
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def get(self, request):
+        fin_qs = Financement.objects.select_related("projet")
+        part_qs = Partenariat.objects.select_related("projet")
+
+        fin_qs = apply_financement_filters(fin_qs, request)
+        part_qs = apply_partenariat_filters(part_qs, request)
+
+        total_finance_val = (
+            fin_qs.exclude(statut=StatutFinancement.REFUSE).aggregate(
+                total=Sum("montant")
+            )["total"]
+            or 0
+        )
+        financements_decaisses_val = (
+            fin_qs.filter(statut=StatutFinancement.DECAISSE).aggregate(
+                total=Sum("montant")
+            )["total"]
+            or 0
+        )
+        nombre_financements_val = fin_qs.count()
+
+        nombre_partenariats_actifs_val = part_qs.filter(
+            statut=StatutPartenariat.ACTIF
+        ).count()
+        total_partenariats_val = part_qs.count()
+
+        # Répartition par source
+        sources_raw = (
+            fin_qs.exclude(statut=StatutFinancement.REFUSE)
+            .values("source")
+            .annotate(total=Sum("montant"), count=Count("id"))
+            .order_by("-total")
+        )
+        par_source = [
+            {
+                "source": s["source"],
+                "total": int(s["total"] or 0),
+                "count": s["count"],
+            }
+            for s in sources_raw
+        ]
+
+        # Répartition par type de partenariat
+        types_raw = (
+            part_qs.values("type")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        type_display_map = dict(TypePartenariat.choices)
+        par_type_partenariat = [
+            {
+                "type": type_display_map.get(t["type"], t["type"]),
+                "type_key": t["type"],
+                "count": t["count"],
+            }
+            for t in types_raw
+        ]
+
+        # Répartition des financements par domaine
+        par_domaine_raw = (
+            fin_qs.exclude(statut=StatutFinancement.REFUSE)
+            .values("projet__domaine__nom")
+            .annotate(total=Sum("montant"), count=Count("id"))
+            .order_by("-total")
+        )
+        par_domaine = [
+            {
+                "domaine": d["projet__domaine__nom"] or "Non renseigné",
+                "total": int(d["total"] or 0),
+                "count": d["count"],
+            }
+            for d in par_domaine_raw
+        ]
+
+        return Response(
+            {
+                "total_finance": int(total_finance_val),
+                "financements_decaisses": int(financements_decaisses_val),
+                "nombre_financements": nombre_financements_val,
+                "nombre_partenariats_actifs": nombre_partenariats_actifs_val,
+                "total_partenariats": total_partenariats_val,
+                "par_source": par_source,
+                "par_type_partenariat": par_type_partenariat,
+                "par_domaine": par_domaine,
+            },
+            status=status.HTTP_200_OK,
+        )
 

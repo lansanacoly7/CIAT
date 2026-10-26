@@ -31,6 +31,7 @@ import {
 import { ExportToolbar } from "./components/ExportToolbar";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { NaturalLanguageQueryBox } from "./components/NaturalLanguageQueryBox";
+import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
 import { CheckCircle2, Info, RefreshCw } from "lucide-react";
 
 function buildQuery(filters: DashboardFilters): string {
@@ -396,6 +397,17 @@ export function DashboardContent() {
                     <GenreChart data={data.parGenre} />
                   </ChartCard>
                 </div>
+              </section>
+
+              {/* =========================================================================
+                  5.1 SUIVI DES PARTENARIATS ET FINANCEMENTS (T3)
+                 ========================================================================= */}
+              <section
+                aria-labelledby="partenariats-title"
+                className="animate-fade-in-up"
+                style={{ animationDelay: "240ms" }}
+              >
+                <PartenariatsFinancementsSection filters={filters} />
               </section>
             </div>
           ) : null}

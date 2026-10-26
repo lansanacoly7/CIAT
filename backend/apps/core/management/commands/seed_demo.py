@@ -658,3 +658,9 @@ class Command(BaseCommand):
             f"- Comptes équipes : admin@ciat.sn, coordo@ciat.sn, mentor@ciat.sn, comite@ciat.sn, porteur@ciat.sn (mdp: {MOT_DE_PASSE})\n"
             f"- Porteurs démo : porteur01@demo.ciat.sn à porteur40@demo.ciat.sn (mdp: {MOT_DE_PASSE})"
         )
+
+        try:
+            from django.core.management import call_command
+            call_command("seed_analytics", stdout=self.stdout)
+        except Exception as exc:
+            self.stdout.write(self.style.WARNING(f"Avertissement seed_analytics : {exc}"))
