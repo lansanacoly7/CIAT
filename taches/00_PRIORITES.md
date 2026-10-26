@@ -28,8 +28,8 @@ Chaque tâche indique :
 ## Règles communes
 
 1. Les endpoints et les formats de données sont fixés dans [CONTRATS_API.md](CONTRATS_API.md). Ne les change pas sans prévenir Lansana : d'autres codent dessus.
-2. Une branche par tâche : `feature/<module>-<sujet>` (le nom est donné dans chaque tâche). Jamais de travail direct sur `main`.
-3. Quand ta tâche est terminée, ouvre une demande de fusion (pull request) vers `main` et préviens Lansana. Il vérifie, accepte, puis te donne la tâche suivante.
+2. Une branche par tâche : `feature/<module>-<sujet>` (le nom est donné dans chaque tâche). Elle part de la branche `test`. Ne travaille jamais directement sur `test` ni sur `main` (pas à pas dans [docs/GUIDE_GIT.md](../docs/GUIDE_GIT.md)).
+3. Quand ta tâche est terminée, pousse ta branche et préviens Lansana. Il vérifie ta branche : si c'est bon, il la fusionne dans `test` ; sinon il te signale l'erreur et tu corriges sur la même branche. Il vérifie, accepte, puis te donne la tâche suivante.
 4. Si tu attends quelqu'un, ne reste pas bloqué : travaille avec des données fictives respectant le contrat, puis branche le vrai service.
 5. Avant de proposer ton travail : `python manage.py check` (back) ou `npm run lint && npm run build` (front). Le détail est dans le README à la racine.
 6. Les couleurs, polices et composants viennent de la charte (`Charte_Graphique_CIAT_ISEP.pdf`) et de `frontend/src/components/ui.tsx`.
