@@ -54,3 +54,15 @@ export interface SelectOption {
   value: string;
   label: string;
 }
+
+export interface RetardItem {
+  projet: string;
+  jalon: string;
+  echeance: string;
+  statut: string;
+  cohorte: string;
+  domaine: string;
+}
+
+export type FicheMode = "globale" | "cohorte" | "domaine";
+

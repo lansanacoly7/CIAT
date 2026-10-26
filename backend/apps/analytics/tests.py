@@ -63,7 +63,9 @@ class AnalyticsSecurityAndRBACPermissionsTests(TestCase):
             reverse("analytics-par-cohorte"),
             reverse("analytics-par-genre"),
             reverse("analytics-evolution"),
+            reverse("analytics-export"),
         ]
+
 
     def test_anonymous_access_is_denied(self):
         """Un utilisateur non authentifié ne peut accéder à aucun endpoint d'analyse."""
@@ -334,3 +336,80 @@ class AnalyticsEndpointsAndDataTests(TestCase):
         self.assertEqual(data["idees_recues"], 0)
         self.assertEqual(data["dossiers_deposes"], 0)
         self.assertEqual(data["taux_selection"], 0.0)
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsExportTests(TestCase):
+    """Tests des exports Excel (.xlsx) et PDF (.pdf) du tableau de bord."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.coordo = User.objects.create_user(
+            email="coordo.export@ciat.sn",
+            password="pwd",
+            role=Role.COORDONNATEUR,
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.export@ciat.sn",
+            password="pwd",
+            role=Role.PORTEUR,
+        )
+        self.url = reverse("analytics-export")
+
+        # Jeu de test avec projets
+        cohorte = Cohorte.objects.create(nom="Cohorte Export 2026", annee=2026)
+        domaine = Domaine.objects.create(nom="Santé & Numérique", slug="sante-numerique")
+        porteur_f = User.objects.create_user(
+            email="f.export@ciat.sn", password="pwd", role=Role.PORTEUR, genre="F"
+        )
+        Projet.objects.create(
+            titre="Projet Santé 1",
+            resume="Desc",
+            porteur=porteur_f,
+            domaine=domaine,
+            cohorte=cohorte,
+            statut=Projet.Statut.INCUBE,
+        )
+
+
+    def test_export_invalid_format_returns_400(self):
+        """Un format non supporté retourne HTTP 400 Bad Request."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get(self.url, {"format": "docx"})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Format non supporté", res.json().get("detail", ""))
+
+
+
+    def test_export_xlsx_success(self):
+        """L'export format=xlsx génère un fichier binaire Excel valide avec entêtes."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get(self.url, {"format": "xlsx"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            res["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertTrue(res["Content-Disposition"].startswith("attachment; filename="))
+        self.assertTrue(len(res.content) > 1000)
+
+    def test_export_pdf_success(self):
+        """L'export format=pdf génère un document PDF valide aux normes CIAT."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get(self.url, {"format": "pdf"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res["Content-Type"], "application/pdf")
+        self.assertTrue(res["Content-Disposition"].startswith("attachment; filename="))
+        self.assertTrue(res.content.startswith(b"%PDF-"))
+        self.assertTrue(len(res.content) > 1000)
+
+    def test_export_with_filters(self):
+        """L'export applique fidèlement les filtres demandés."""
+        self.client.force_authenticate(user=self.coordo)
+        res = self.client.get(
+            self.url,
+            {"format": "xlsx", "cohorte": "2026", "domaine": "sante-numerique"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(res.content) > 1000)
+
