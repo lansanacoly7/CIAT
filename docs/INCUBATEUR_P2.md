@@ -104,6 +104,28 @@ Le module **P2 (Gestion de l'incubateur)** est le cœur opérationnel de la plat
   - Le porteur du projet bénéficie d'un accès en lecture seule (`GET`) pour suivre sa feuille de route, tout refus d'écriture étant sanctuarisé (`HTTP 403`).
   - Les mentors non affectés au projet se voient refuser l'accès (`HTTP 403`).
 
+### 2.8. `Jalon`, `PreuveJalon` et `CommentaireJalon` (Phase 2 - T2)
+- **`Jalon` :**
+  - `projet` : `ForeignKey` vers `Projet` (`related_name="jalons"`).
+  - `titre` : libellé du jalon.
+  - `echeance` : date limite de réalisation.
+  - `statut` : `a_faire` (défaut), `en_cours`, `fait`.
+  - **Propriété calculée `en_retard` :** Vrai si `echeance < now.date()` et `statut != 'fait'`. **JAMAIS saisie manuellement**, toujours recalculée en temps réel.
+  - **Droits :** Création et modification réservées au mentor affecté et à l'équipe CIAT. Consultation autorisée pour le porteur du projet.
+- **`PreuveJalon` :**
+  - Fichier téléversé pour justifier l'avancement d'un jalon.
+  - Validations strictes identiques aux pièces du dossier : 10 Mo max, rejet des fichiers 0 octet, contrôle binaire des magic bytes (`validate_file_content`), sanitisation anti path traversal.
+  - Droits : Porteur du projet, mentor affecté, ou équipe CIAT.
+- **`CommentaireJalon` :**
+  - Commentaire horodaté relié au jalon.
+  - Droits : Porteur du projet, mentor affecté, ou équipe CIAT.
+- **Route `/api/incubator/alertes/` :**
+  - Remonte dynamiquement tous les jalons en retard (`en_retard=True`).
+  - **Isolation stricte par rôle :**
+    - Porteur : ne voit que les alertes de ses propres projets.
+    - Mentor : ne voit que les alertes des projets qui lui sont affectés.
+    - Équipe CIAT : vision globale de toutes les alertes de la plateforme.
+
 ---
 
 ## 3. Matrice des Rôles et Contrats d'API
@@ -117,6 +139,12 @@ Toutes les routes sont sous `/api/incubator/`.
 | `GET` | `/api/incubator/projets/{id}/objectifs/` | Liste des objectifs d'accompagnement du projet. | Équipe, Mentor affecté, Porteur (lecture) |
 | `POST` | `/api/incubator/projets/{id}/objectifs/` | Création d'un objectif d'accompagnement (`libelle`, `echeance`). | Équipe, Mentor affecté |
 | `PATCH` | `/api/incubator/objectifs/{id}/` | Mise à jour d'un objectif (`statut`, `libelle`, `echeance`). | Équipe, Mentor affecté |
+| `GET` | `/api/incubator/projets/{id}/jalons/` | Liste des jalons du projet avec preuves, commentaires et `en_retard`. | Équipe, Mentor affecté, Porteur (lecture) |
+| `POST` | `/api/incubator/projets/{id}/jalons/` | Création d'un jalon (`titre`, `echeance`, `statut`). | Équipe, Mentor affecté |
+| `PATCH` | `/api/incubator/jalons/{id}/` | Modification d'un jalon (`statut`, `titre`, `echeance`). | Équipe, Mentor affecté |
+| `POST` | `/api/incubator/jalons/{id}/preuves/` | Dépôt multipart d'un fichier de preuve (contrôle binaire). | Équipe, Mentor affecté, Porteur |
+| `POST` | `/api/incubator/jalons/{id}/commentaires/` | Dépôt d'un commentaire horodaté (`{ "texte": "..." }`). | Équipe, Mentor affecté, Porteur |
+| `GET` | `/api/incubator/alertes/` | Jalons en retard visibles selon le rôle de l'utilisateur. | Authentifié (filtré selon rôle) |
 | `GET` | `/api/incubator/dossiers/` | Liste les dossiers. Filtré par porteur pour les porteurs ; complet pour comité et équipe. | Authentifié |
 | `POST` | `/api/incubator/dossiers/` | Crée un dossier : supporte `{ "projet": <id> }` et `{ "projet_id": <id> }`. | Porteur propriétaire, Admin, Coordo |
 | `GET` | `/api/incubator/dossiers/{id}/` | Détail complet d'un dossier. | Propriétaire ou Équipe/Comité/Mentor |
@@ -128,6 +156,7 @@ Toutes les routes sont sous `/api/incubator/`.
 | `GET` | `/api/incubator/dossiers/{id}/evaluations/` | Consultation confidentielle des évaluations et `score_moyen`. | Comité, Mentors, Équipe *(Interdit aux porteurs)* |
 | `POST` | `/api/incubator/dossiers/{id}/evaluations/` | Dépôt de notation sur tous les critères de la grille active. | Membre du comité, Équipe |
 | `POST` | `/api/incubator/dossiers/{id}/decision/` | Dépôt de la décision motivée finale. | Coordonnateur, Administrateur |
+
 
 
 ---
@@ -150,11 +179,11 @@ Toutes les routes sont sous `/api/incubator/`.
 python manage.py check                     # 0 issue
 python manage.py makemigrations --check    # No changes detected
 
-# Suite de tests complète (34 tests automatisés)
+# Suite de tests complète (42 tests automatisés)
 python manage.py test apps.incubator
 ```
 
-**Couverture des 34 tests :**
+**Couverture des 42 tests :**
 - **12 tests d'authentification et de sécurité des rôles (Phase 1) :** Rejet anonyme, isolation multi-porteurs, immutabilité de `projet`, confidentialité des jurys, restrictions par rôle.
 - **11 tests de règles métier et cycle de vie (Phase 1) :** Parcours complet nominal, interdiction d'évaluation sur brouillon ou après décision, critères d'autres grilles rejetés, complétude des critères, note hors limites, unicité de grille active, double évaluation, double décision, concurrence de soumission.
 - **4 tests de sécurité des fichiers (Phase 1) :** Validation de signature PDF, rejet de fichier vide (0 octet), rejet de fichier avec extension spoofée, assainissement anti path traversal.
@@ -166,4 +195,14 @@ python manage.py test apps.incubator
   5. Isolation des projets dans `/api/projets/` : un mentor ne voit que les projets qui lui sont assignés.
   6. Sanctuarisation des objectifs : le porteur a un accès en lecture seule et ne peut ni POST ni PATCH (403).
   7. Gestion par le mentor affecté (création et mise à jour) et rejet d'un mentor tiers non affecté (403).
+- **8 tests Phase 2 - T2 (Jalons, Preuves, Commentaires & Alertes) :**
+  1. Création de jalon par le mentor affecté et interdiction formelle au porteur et mentor tiers (403).
+  2. Consultation en lecture seule par le porteur et rejet de modification (403).
+  3. Mise à jour de statut (`a_faire` $\rightarrow$ `fait`) et d'échéance par le mentor affecté.
+  4. Dépôt de preuves de complétude (PDF, PNG) par le porteur et le mentor affecté.
+  5. Rejet strict des preuves invalides (fichier vide 0 octet, extension binaire spoofée, extension interdite).
+  6. Rejet de dépôt de preuve par un mentor non affecté au projet (403).
+  7. Ajout et validation de commentaires horodatés (rejet de texte vide 400, rejet de mentor tiers 403).
+  8. Calcul temps réel d'`en_retard` et filtrage strict de `/api/incubator/alertes/` selon le rôle.
+
 

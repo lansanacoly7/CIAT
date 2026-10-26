@@ -29,6 +29,12 @@ def piece_upload_path(instance, filename):
     return f"incubator/pieces/{instance.dossier_id}/{clean_file}"
 
 
+def preuve_upload_path(instance, filename):
+    clean_file = sanitize_filename(filename)
+    return f"incubator/preuves/{instance.jalon.projet_id}/{clean_file}"
+
+
+
 def validate_file_size(value):
     max_size = 10 * 1024 * 1024  # 10 Mo
     if value.size == 0:
@@ -396,3 +402,98 @@ class Objectif(models.Model):
 
     def __str__(self):
         return f"{self.projet.titre} - {self.libelle} ({self.statut})"
+
+
+class StatutJalon(models.TextChoices):
+    A_FAIRE = "a_faire", "À faire"
+    EN_COURS = "en_cours", "En cours"
+    FAIT = "fait", "Fait"
+
+
+class Jalon(models.Model):
+    """Jalon d'un projet d'incubation."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="jalons"
+    )
+    titre = models.CharField(max_length=255)
+    echeance = models.DateField()
+    statut = models.CharField(
+        max_length=20,
+        choices=StatutJalon.choices,
+        default=StatutJalon.A_FAIRE,
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+    cree_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="jalons_crees"
+    )
+
+    class Meta:
+        ordering = ["echeance", "cree_le"]
+        verbose_name = "Jalon de projet"
+        verbose_name_plural = "Jalons de projets"
+
+    def __str__(self):
+        return f"{self.projet.titre} - {self.titre} ({self.statut})"
+
+    @property
+    def en_retard(self) -> bool:
+        """Indicateur calculé en temps réel : vrai si la date d'échéance est passée et statut non fait."""
+        return bool(self.statut != StatutJalon.FAIT and self.echeance < timezone.now().date())
+
+
+class PreuveJalon(models.Model):
+    """Fichier de preuve déposé pour justifier l'avancement d'un jalon."""
+
+    jalon = models.ForeignKey(
+        Jalon, on_delete=models.CASCADE, related_name="preuves"
+    )
+    fichier = models.FileField(
+        upload_to=preuve_upload_path,
+        validators=[
+            FileExtensionValidator(allowed_extensions=ALLOWED_PIECE_EXTENSIONS),
+            validate_file_size,
+            validate_file_content,
+        ],
+    )
+    nom = models.CharField(max_length=255)
+    depose_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="preuves_jalons"
+    )
+    depose_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-depose_le"]
+        verbose_name = "Preuve de jalon"
+        verbose_name_plural = "Preuves de jalons"
+
+    def __str__(self):
+        return f"Preuve: {self.nom} pour jalon {self.jalon_id}"
+
+    def save(self, *args, **kwargs):
+        if not self.nom and self.fichier:
+            self.nom = sanitize_filename(self.fichier.name)
+        super().save(*args, **kwargs)
+
+
+class CommentaireJalon(models.Model):
+    """Commentaire horodaté sur un jalon d'incubation."""
+
+    jalon = models.ForeignKey(
+        Jalon, on_delete=models.CASCADE, related_name="commentaires"
+    )
+    auteur = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="commentaires_jalons"
+    )
+    texte = models.TextField()
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["cree_le"]
+        verbose_name = "Commentaire de jalon"
+        verbose_name_plural = "Commentaires de jalons"
+
+    def __str__(self):
+        return f"Commentaire de {self.auteur} sur jalon {self.jalon_id}"
+

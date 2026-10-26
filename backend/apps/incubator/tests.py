@@ -1,27 +1,33 @@
-import concurrent.futures
+import datetime
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection, transaction
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.incubator.models import (
     AffectationMentor,
+    CommentaireJalon,
     Critere,
     Decision,
     Dossier,
     Evaluation,
     Grille,
+    Jalon,
     Objectif,
     Piece,
+    PreuveJalon,
     StatutDossier,
+    StatutJalon,
     StatutObjectif,
     TypePiece,
 )
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
 
 
 @override_settings(PASSWORD_HASHERS=FAST_HASHERS)
@@ -843,4 +849,297 @@ class IncubateurPhase2MentorsObjectifsTests(TestCase):
             self.client.patch(url_detail, {"statut": StatutObjectif.ATTEINT}, format="json").status_code,
             status.HTTP_403_FORBIDDEN,
         )
+
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
+class IncubateurPhase2JalonsTests(TestCase):
+    """Tests Phase 2 T2 : Jalons, preuves, commentaires et alertes de retard."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.domaine = Domaine.objects.create(nom="GreenTech")
+        self.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
+
+        # Utilisateurs
+        self.admin = User.objects.create_user(
+            email="admin_j@ciat.sn", password="password123", role=Role.ADMIN
+        )
+        self.coordo = User.objects.create_user(
+            email="coordo_j@ciat.sn", password="password123", role=Role.COORDONNATEUR
+        )
+        self.porteur1 = User.objects.create_user(
+            email="porteur1_j@ciat.sn", password="password123", role=Role.PORTEUR
+        )
+        self.porteur2 = User.objects.create_user(
+            email="porteur2_j@ciat.sn", password="password123", role=Role.PORTEUR
+        )
+        self.mentor1 = User.objects.create_user(
+            email="mentor1_j@ciat.sn", password="password123", role=Role.MENTOR
+        )
+        self.mentor2 = User.objects.create_user(
+            email="mentor2_j@ciat.sn", password="password123", role=Role.MENTOR
+        )
+
+        # Projets
+        self.projet1 = Projet.objects.create(
+            titre="Projet Jalons 1",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        self.projet2 = Projet.objects.create(
+            titre="Projet Jalons 2",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur2,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+
+        # Affectations
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.coordo)
+        AffectationMentor.objects.create(projet=self.projet2, mentor=self.mentor2, affecte_par=self.coordo)
+
+    def test_creation_jalon_par_mentor_affecte_et_rejet_porteur(self):
+        """Le mentor affecté ou l'équipe peut créer un jalon, mais pas le porteur ni un tiers."""
+        url = reverse("incubator:projet-jalons", kwargs={"pk": self.projet1.id})
+
+        # 1. Porteur tente de créer -> 403
+        self.client.force_authenticate(user=self.porteur1)
+        res_porteur = self.client.post(
+            url,
+            {"titre": "Conception architecture", "echeance": "2026-11-15", "statut": StatutJalon.A_FAIRE},
+            format="json",
+        )
+        self.assertEqual(res_porteur.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 2. Mentor non affecté (mentor2) tente de créer -> 403
+        self.client.force_authenticate(user=self.mentor2)
+        res_m2 = self.client.post(
+            url,
+            {"titre": "Audit tiers", "echeance": "2026-11-15"},
+            format="json",
+        )
+        self.assertEqual(res_m2.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Mentor affecté (mentor1) crée -> 201
+        self.client.force_authenticate(user=self.mentor1)
+        res_m1 = self.client.post(
+            url,
+            {"titre": "Conception architecture", "echeance": "2026-11-15", "statut": StatutJalon.A_FAIRE},
+            format="json",
+        )
+        self.assertEqual(res_m1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_m1.data["titre"], "Conception architecture")
+        self.assertEqual(res_m1.data["statut"], StatutJalon.A_FAIRE)
+
+    def test_porteur_lecture_seule_jalons(self):
+        """Le porteur peut consulter les jalons mais ne peut pas les modifier."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Prototype v1",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_list = reverse("incubator:projet-jalons", kwargs={"pk": self.projet1.id})
+        url_detail = reverse("incubator:jalon-detail", kwargs={"pk": jalon.id})
+
+        self.client.force_authenticate(user=self.porteur1)
+        res_get = self.client.get(url_list)
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_get.data), 1)
+        self.assertEqual(res_get.data[0]["titre"], "Prototype v1")
+
+        # Porteur tente de modifier -> 403
+        res_patch = self.client.patch(url_detail, {"statut": StatutJalon.FAIT}, format="json")
+        self.assertEqual(res_patch.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_modification_jalon_par_mentor_affecte(self):
+        """Le mentor affecté peut mettre à jour statut et échéance du jalon."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Prototype v1",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_detail = reverse("incubator:jalon-detail", kwargs={"pk": jalon.id})
+
+        self.client.force_authenticate(user=self.mentor1)
+        res_patch = self.client.patch(
+            url_detail,
+            {"statut": StatutJalon.FAIT, "titre": "Prototype v1 finalisé"},
+            format="json",
+        )
+        self.assertEqual(res_patch.status_code, status.HTTP_200_OK)
+        jalon.refresh_from_db()
+        self.assertEqual(jalon.statut, StatutJalon.FAIT)
+        self.assertEqual(jalon.titre, "Prototype v1 finalisé")
+
+    def test_depot_preuve_par_porteur_et_mentor(self):
+        """Le porteur et le mentor affecté peuvent déposer des preuves de réalisation."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Test unitaire",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_preuve = reverse("incubator:jalon-preuves", kwargs={"pk": jalon.id})
+
+        # Porteur dépose un PDF valide
+        self.client.force_authenticate(user=self.porteur1)
+        valid_pdf = SimpleUploadedFile("rapport.pdf", b"%PDF-1.4\nContenu valide", content_type="application/pdf")
+        res_porteur = self.client.post(url_preuve, {"fichier": valid_pdf}, format="multipart")
+        self.assertEqual(res_porteur.status_code, status.HTTP_201_CREATED)
+
+        # Mentor affecté dépose une image PNG valide
+        self.client.force_authenticate(user=self.mentor1)
+        valid_png = SimpleUploadedFile("capture.png", b"\x89PNG\r\n\x1a\nValid PNG content", content_type="image/png")
+        res_mentor = self.client.post(url_preuve, {"fichier": valid_png}, format="multipart")
+        self.assertEqual(res_mentor.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(PreuveJalon.objects.filter(jalon=jalon).count(), 2)
+
+    def test_depot_preuve_fichiers_invalides(self):
+        """Rejet de fichier vide, spoofé ou avec extension interdite."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon Fichiers",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_preuve = reverse("incubator:jalon-preuves", kwargs={"pk": jalon.id})
+        self.client.force_authenticate(user=self.porteur1)
+
+        # Fichier vide -> 400
+        empty_f = SimpleUploadedFile("vide.pdf", b"", content_type="application/pdf")
+        res_empty = self.client.post(url_preuve, {"fichier": empty_f}, format="multipart")
+        self.assertEqual(res_empty.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Fichier spoofé -> 400
+        spoof_f = SimpleUploadedFile("bad.pdf", b"#!/bin/sh\nmalware", content_type="application/pdf")
+        res_spoof = self.client.post(url_preuve, {"fichier": spoof_f}, format="multipart")
+        self.assertEqual(res_spoof.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Extension non autorisée (.exe) -> 400
+        exe_f = SimpleUploadedFile("malware.exe", b"binary", content_type="application/octet-stream")
+        res_exe = self.client.post(url_preuve, {"fichier": exe_f}, format="multipart")
+        self.assertEqual(res_exe.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_depot_preuve_mentor_non_affecte_refuse(self):
+        """Un mentor non affecté au projet ne peut pas déposer de preuve."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon privé",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_preuve = reverse("incubator:jalon-preuves", kwargs={"pk": jalon.id})
+        self.client.force_authenticate(user=self.mentor2)
+
+        pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\nContenu", content_type="application/pdf")
+        res = self.client.post(url_preuve, {"fichier": pdf}, format="multipart")
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_commentaires_jalon_porteur_et_mentor(self):
+        """Porteur et mentor affecté peuvent commenter un jalon."""
+        jalon = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon discussion",
+            echeance=datetime.date(2026, 12, 1),
+            cree_par=self.mentor1,
+        )
+        url_com = reverse("incubator:jalon-commentaires", kwargs={"pk": jalon.id})
+
+        # Porteur commente
+        self.client.force_authenticate(user=self.porteur1)
+        res_p = self.client.post(url_com, {"texte": "Travail en cours, livrable bientôt prêt."}, format="json")
+        self.assertEqual(res_p.status_code, status.HTTP_201_CREATED)
+
+        # Mentor commente
+        self.client.force_authenticate(user=self.mentor1)
+        res_m = self.client.post(url_com, {"texte": "Bien reçu, merci d'ajouter les métriques."}, format="json")
+        self.assertEqual(res_m.status_code, status.HTTP_201_CREATED)
+
+        # Commentaire vide -> 400
+        res_empty = self.client.post(url_com, {"texte": "   "}, format="json")
+        self.assertEqual(res_empty.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Mentor non affecté -> 403
+        self.client.force_authenticate(user=self.mentor2)
+        res_m2 = self.client.post(url_com, {"texte": "Commentaire indésirable"}, format="json")
+        self.assertEqual(res_m2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_jalons_en_retard_calcul_et_route_alertes(self):
+        """Vérifie le calcul dynamique d'en_retard et l'isolation des alertes selon le rôle."""
+        today = timezone.now().date()
+        past_date = today - datetime.timedelta(days=5)
+        future_date = today + datetime.timedelta(days=10)
+
+        # Projet 1
+        j1_retard = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon Retard P1",
+            echeance=past_date,
+            statut=StatutJalon.A_FAIRE,
+            cree_par=self.mentor1,
+        )
+        j2_fait = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon Fait P1",
+            echeance=past_date,
+            statut=StatutJalon.FAIT,
+            cree_par=self.mentor1,
+        )
+        j3_futur = Jalon.objects.create(
+            projet=self.projet1,
+            titre="Jalon Futur P1",
+            echeance=future_date,
+            statut=StatutJalon.A_FAIRE,
+            cree_par=self.mentor1,
+        )
+
+        # Projet 2
+        j4_retard = Jalon.objects.create(
+            projet=self.projet2,
+            titre="Jalon Retard P2",
+            echeance=past_date,
+            statut=StatutJalon.EN_COURS,
+            cree_par=self.mentor2,
+        )
+
+        # Vérification calcul dynamique
+        self.assertTrue(j1_retard.en_retard)
+        self.assertFalse(j2_fait.en_retard)
+        self.assertFalse(j3_futur.en_retard)
+        self.assertTrue(j4_retard.en_retard)
+
+        url_alertes = reverse("incubator:alertes-retard")
+
+        # 1. Porteur 1 ne voit QUE son jalon en retard (j1_retard)
+        self.client.force_authenticate(user=self.porteur1)
+        res_p1 = self.client.get(url_alertes)
+        self.assertEqual(res_p1.status_code, status.HTTP_200_OK)
+        ids_p1 = [a["id"] for a in res_p1.data]
+        self.assertIn(j1_retard.id, ids_p1)
+        self.assertNotIn(j4_retard.id, ids_p1)
+        self.assertNotIn(j2_fait.id, ids_p1)
+
+        # 2. Mentor 1 ne voit QUE le jalon en retard de son projet affecté (j1_retard)
+        self.client.force_authenticate(user=self.mentor1)
+        res_m1 = self.client.get(url_alertes)
+        self.assertEqual(res_m1.status_code, status.HTTP_200_OK)
+        ids_m1 = [a["id"] for a in res_m1.data]
+        self.assertIn(j1_retard.id, ids_m1)
+        self.assertNotIn(j4_retard.id, ids_m1)
+
+        # 3. Coordonnateur voit TOUTES les alertes de retard (j1 et j4)
+        self.client.force_authenticate(user=self.coordo)
+        res_coordo = self.client.get(url_alertes)
+        self.assertEqual(res_coordo.status_code, status.HTTP_200_OK)
+        ids_coordo = [a["id"] for a in res_coordo.data]
+        self.assertIn(j1_retard.id, ids_coordo)
+        self.assertIn(j4_retard.id, ids_coordo)
+        self.assertNotIn(j2_fait.id, ids_coordo)
+        self.assertNotIn(j3_futur.id, ids_coordo)
+
 

@@ -2,16 +2,21 @@
 from django.urls import path
 
 from .views import (
+    AlerteJalonListView,
     DossierDecisionView,
     DossierDetailView,
     DossierEvaluationListCreateView,
     DossierListCreateView,
     DossierSoumettreView,
     GrilleActuelleView,
+    JalonCommentaireCreateView,
+    JalonDetailView,
+    JalonPreuveCreateView,
     MentorListView,
     ObjectifDetailView,
     PieceCreateView,
     PieceDeleteView,
+    ProjetJalonListCreateView,
     ProjetMentorView,
     ProjetObjectifListCreateView,
 )
@@ -24,6 +29,13 @@ urlpatterns = [
     path("projets/<int:pk>/mentor/", ProjetMentorView.as_view(), name="projet-mentor"),
     path("projets/<int:pk>/objectifs/", ProjetObjectifListCreateView.as_view(), name="projet-objectifs"),
     path("objectifs/<int:pk>/", ObjectifDetailView.as_view(), name="objectif-detail"),
+    # Jalons, preuves, commentaires et alertes de retard
+    path("projets/<int:pk>/jalons/", ProjetJalonListCreateView.as_view(), name="projet-jalons"),
+    path("jalons/<int:pk>/", JalonDetailView.as_view(), name="jalon-detail"),
+    path("jalons/<int:pk>/preuves/", JalonPreuveCreateView.as_view(), name="jalon-preuves"),
+    path("jalons/<int:pk>/commentaires/", JalonCommentaireCreateView.as_view(), name="jalon-commentaires"),
+    path("alertes/", AlerteJalonListView.as_view(), name="alertes-retard"),
+
     # Dossiers de candidature
     path("dossiers/", DossierListCreateView.as_view(), name="dossier-list-create"),
     path("dossiers/<int:pk>/", DossierDetailView.as_view(), name="dossier-detail"),

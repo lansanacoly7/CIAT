@@ -2,14 +2,17 @@ from django.contrib import admin
 
 from .models import (
     AffectationMentor,
+    CommentaireJalon,
     Critere,
     Decision,
     Dossier,
     Evaluation,
     Grille,
+    Jalon,
     Note,
     Objectif,
     Piece,
+    PreuveJalon,
 )
 
 
@@ -75,4 +78,25 @@ class ObjectifAdmin(admin.ModelAdmin):
     list_display = ["id", "projet", "libelle", "statut", "echeance", "cree_par", "cree_le"]
     list_filter = ["statut", "cree_le"]
     search_fields = ["libelle", "projet__titre"]
+
+
+class PreuveJalonInline(admin.TabularInline):
+    model = PreuveJalon
+    extra = 0
+    readonly_fields = ["depose_le"]
+
+
+class CommentaireJalonInline(admin.TabularInline):
+    model = CommentaireJalon
+    extra = 0
+    readonly_fields = ["cree_le"]
+
+
+@admin.register(Jalon)
+class JalonAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "titre", "statut", "echeance", "en_retard", "cree_par", "cree_le"]
+    list_filter = ["statut", "echeance", "cree_le"]
+    search_fields = ["titre", "projet__titre"]
+    inlines = [PreuveJalonInline, CommentaireJalonInline]
+
 

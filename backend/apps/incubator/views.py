@@ -2,6 +2,7 @@
 from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -12,25 +13,33 @@ from apps.core.models import Projet, Role, User
 from apps.core.permissions import HasRole, IsEquipeCIAT
 from .models import (
     AffectationMentor,
+    CommentaireJalon,
     Critere,
     Decision,
     Dossier,
     Evaluation,
     Grille,
+    Jalon,
     Objectif,
     Piece,
+    PreuveJalon,
     StatutDossier,
+    StatutJalon,
 )
 from .serializers import (
     AffectationMentorSerializer,
+    AlerteJalonSerializer,
+    CommentaireJalonSerializer,
     DecisionSerializer,
     DossierSerializer,
     EvaluationCreateSerializer,
     EvaluationSerializer,
     GrilleSerializer,
+    JalonSerializer,
     MentorUserSerializer,
     ObjectifSerializer,
     PieceSerializer,
+    PreuveJalonSerializer,
 )
 
 
@@ -331,4 +340,139 @@ class ObjectifDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class ProjetJalonListCreateView(APIView):
+    """Consultation et création des jalons d'un projet."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _check_access(self, user, projet, write=False):
+        if user.is_equipe:
+            return True
+
+        is_mentor = hasattr(projet, "affectation_mentor") and projet.affectation_mentor.mentor_id == user.id
+
+        if user.role == Role.MENTOR:
+            if not is_mentor:
+                raise PermissionDenied("Vous n'êtes pas le mentor affecté à ce projet.")
+            return True
+
+        if user.role == Role.PORTEUR and projet.porteur_id == user.id:
+            if write:
+                raise PermissionDenied("Les porteurs de projet ne peuvent pas créer de jalons.")
+            return True
+
+        raise PermissionDenied("Vous n'avez pas accès aux jalons de ce projet.")
+
+    def get(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=False)
+        jalons = (
+            Jalon.objects.filter(projet=projet)
+            .prefetch_related("preuves__depose_par", "commentaires__auteur")
+            .select_related("cree_par")
+        )
+        return Response(JalonSerializer(jalons, many=True).data)
+
+    def post(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=True)
+        serializer = JalonSerializer(
+            data=request.data,
+            context={"request": request, "projet": projet},
+        )
+        serializer.is_valid(raise_exception=True)
+        jalon = serializer.save()
+        return Response(JalonSerializer(jalon).data, status=status.HTTP_201_CREATED)
+
+
+class JalonDetailView(APIView):
+    """Mise à jour d'un jalon."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
+        user = request.user
+        is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
+
+        if not (user.is_equipe or (user.role == Role.MENTOR and is_mentor)):
+            raise PermissionDenied("Seul le mentor affecté ou l'équipe CIAT peut modifier un jalon.")
+
+        serializer = JalonSerializer(jalon, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class JalonPreuveCreateView(APIView):
+    """Dépôt d'une preuve de réalisation sur un jalon."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk):
+        jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
+        user = request.user
+        is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
+        is_porteur = (user.role == Role.PORTEUR and jalon.projet.porteur_id == user.id)
+
+        if not (user.is_equipe or (user.role == Role.MENTOR and is_mentor) or is_porteur):
+            raise PermissionDenied("Vous n'êtes pas autorisé à déposer une preuve sur ce jalon.")
+
+        serializer = PreuveJalonSerializer(
+            data=request.data,
+            context={"request": request, "jalon": jalon},
+        )
+        serializer.is_valid(raise_exception=True)
+        preuve = serializer.save()
+        return Response(PreuveJalonSerializer(preuve).data, status=status.HTTP_201_CREATED)
+
+
+class JalonCommentaireCreateView(APIView):
+    """Ajout d'un commentaire sur un jalon."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
+        user = request.user
+        is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
+        is_porteur = (user.role == Role.PORTEUR and jalon.projet.porteur_id == user.id)
+
+        if not (user.is_equipe or (user.role == Role.MENTOR and is_mentor) or is_porteur):
+            raise PermissionDenied("Vous n'êtes pas autorisé à commenter ce jalon.")
+
+        serializer = CommentaireJalonSerializer(
+            data=request.data,
+            context={"request": request, "jalon": jalon},
+        )
+        serializer.is_valid(raise_exception=True)
+        com = serializer.save()
+        return Response(CommentaireJalonSerializer(com).data, status=status.HTTP_201_CREATED)
+
+
+class AlerteJalonListView(APIView):
+    """Liste des jalons en retard visibles pour l'utilisateur connecté selon son rôle."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        today = timezone.now().date()
+        base_qs = Jalon.objects.filter(echeance__lt=today).exclude(statut=StatutJalon.FAIT).select_related("projet")
+
+        if user.is_equipe:
+            qs = base_qs
+        elif user.role == Role.MENTOR:
+            qs = base_qs.filter(projet__affectation_mentor__mentor=user)
+        elif user.role == Role.PORTEUR:
+            qs = base_qs.filter(projet__porteur=user)
+        else:
+            qs = Jalon.objects.none()
+
+        serializer = AlerteJalonSerializer(qs.order_by("echeance"), many=True)
+        return Response(serializer.data)
+
 
