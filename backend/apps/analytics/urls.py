@@ -15,6 +15,7 @@ from .views import (
     ParCohorteView,
     ParDomaineView,
     ParGenreView,
+    QuestionView,
 )
 
 urlpatterns = [
@@ -24,5 +25,7 @@ urlpatterns = [
     path("par-genre/", ParGenreView.as_view(), name="analytics-par-genre"),
     path("evolution/", EvolutionView.as_view(), name="analytics-evolution"),
     path("export/", ExportView.as_view(), name="analytics-export"),
+    path("question/", QuestionView.as_view(), name="analytics-question"),
 ]
+
 

@@ -10,6 +10,7 @@ Vérifie :
 5. Robustesse aux cas limites (base vide, 0 division)
 """
 from datetime import date, timedelta
+from unittest.mock import patch
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
@@ -412,4 +413,265 @@ class AnalyticsExportTests(TestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertTrue(len(res.content) > 1000)
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsAIQuestionTests(TestCase):
+    """Tests complets pour l'interrogation en langage naturel (T2)."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse("analytics-question")
+
+        # Utilisateurs
+        self.admin = User.objects.create_user(
+            email="admin.ai@ciat.sn", password="pwd", role=Role.ADMIN
+        )
+        self.coordo = User.objects.create_user(
+            email="coordo.ai@ciat.sn", password="pwd", role=Role.COORDONNATEUR
+        )
+        self.comite = User.objects.create_user(
+            email="comite.ai@ciat.sn", password="pwd", role=Role.COMITE
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.ai@ciat.sn", password="pwd", role=Role.PORTEUR
+        )
+        self.visiteur = User.objects.create_user(
+            email="visiteur.ai@ciat.sn", password="pwd", role=Role.VISITEUR
+        )
+
+        # Domaines et cohortes
+        self.domaine_tic = Domaine.objects.create(nom="TIC & Numérique", slug="tic")
+        self.domaine_agri = Domaine.objects.create(nom="Agroécologie", slug="agri")
+        self.cohorte_2024 = Cohorte.objects.create(nom="Cohorte 2024", annee=2024)
+        self.cohorte_2025 = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+
+        # Porteurs avec genre
+        self.porteur_f = User.objects.create_user(
+            email="femme.ai@ciat.sn", password="pwd", role=Role.PORTEUR, genre="F"
+        )
+        self.porteur_h = User.objects.create_user(
+            email="homme.ai@ciat.sn", password="pwd", role=Role.PORTEUR, genre="H"
+        )
+
+        # Projets
+        Projet.objects.create(
+            titre="Solution IoT Smart Agriculture",
+            resume="Projet IoT",
+            domaine=self.domaine_agri,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur_f,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+        Projet.objects.create(
+            titre="Plateforme E-santé",
+            resume="Santé digitale",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur_h,
+            statut=Projet.Statut.INCUBE,
+        )
+        Projet.objects.create(
+            titre="Ancien projet 2024",
+            resume="Archive 2024",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2024,
+            porteur=self.porteur_f,
+            statut=Projet.Statut.DEPOSE,
+        )
+
+    def test_anonymous_and_unauthorized_roles_rejected(self):
+        """Les requêtes anonymes ou de porteurs/visiteurs sont bloquées (401/403)."""
+        # Anonyme
+        res_anon = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertIn(
+            res_anon.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
+
+        # Porteur
+        self.client.force_authenticate(user=self.porteur)
+        res_porteur = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertEqual(res_porteur.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Visiteur
+        self.client.force_authenticate(user=self.visiteur)
+        res_visiteur = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertEqual(res_visiteur.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_empty_or_missing_question_returns_400(self):
+        """Une question absente ou vide renvoie HTTP 400 Bad Request."""
+        self.client.force_authenticate(user=self.coordo)
+
+        res_empty = self.client.post(self.url, {})
+        self.assertEqual(res_empty.status_code, status.HTTP_400_BAD_REQUEST)
+
+        res_whitespace = self.client.post(self.url, {"question": "    "})
+        self.assertEqual(res_whitespace.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_prototype_in_cohorte_2025_question_success(self, mock_chat):
+        """Vérifie : 'Combien de projets en prototype dans la cohorte 2025 ?' donne le bon chiffre."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        # Mocking : 1er appel = routeur JSON, 2e appel = synthèse
+        router_response = json.dumps({
+            "endpoint": "indicateurs",
+            "filtres": {"cohorte": "2025", "statut": "prototype"},
+            "hors_sujet": False,
+        })
+        synthesis_response = "Il y a exactement 1 projet au stade de prototype dans la cohorte 2025."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets en prototype dans la cohorte 2025 ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+
+        self.assertIn("reponse", data)
+        self.assertIn("donnees", data)
+        self.assertIn("filtres_utilises", data)
+
+        self.assertEqual(data["reponse"], synthesis_response)
+        self.assertEqual(data["filtres_utilises"]["cohorte"], "2025")
+        self.assertEqual(data["filtres_utilises"]["statut"], "prototype")
+
+        # Recoupement des données ORM exactes calculées par Django
+        self.assertEqual(data["donnees"]["prototypes"], 1)
+        self.assertEqual(data["donnees"]["idees_recues"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_par_domaine_question(self, mock_chat):
+        """Vérifie le routage vers l'endpoint 'par-domaine' et les données agrégées."""
+        import json
+        self.client.force_authenticate(user=self.admin)
+
+        router_response = json.dumps({
+            "endpoint": "par-domaine",
+            "filtres": {},
+            "hors_sujet": False,
+        })
+        synthesis_response = "Les projets se répartissent entre TIC (2 projets) et Agroécologie (1 projet)."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quelle est la répartition des projets par domaine ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(data["reponse"], synthesis_response)
+        self.assertIsInstance(data["donnees"], list)
+        domaines = {d["domaine"]: d["total"] for d in data["donnees"]}
+        self.assertEqual(domaines["TIC & Numérique"], 2)
+        self.assertEqual(domaines["Agroécologie"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_par_genre_question(self, mock_chat):
+        """Vérifie le routage vers l'endpoint 'par-genre'."""
+        import json
+        self.client.force_authenticate(user=self.comite)
+
+        router_response = json.dumps({
+            "endpoint": "par-genre",
+            "filtres": {},
+            "hors_sujet": False,
+        })
+        synthesis_response = "2 projets sont portés par des femmes et 1 par un homme."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quelle est la part des femmes parmi les porteurs de projet ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        genres = {g["genre"]: g["total"] for g in data["donnees"]}
+        self.assertEqual(genres["Femmes"], 2)
+        self.assertEqual(genres["Hommes"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_off_topic_question_is_refused(self, mock_chat):
+        """Une question hors sujet est explicitement refusée selon les consignes."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        router_response = json.dumps({
+            "endpoint": "hors_sujet",
+            "filtres": {},
+            "hors_sujet": True,
+        })
+        mock_chat.return_value = router_response
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quel temps fait-il aujourd'hui à Diamniadio ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(
+            data["reponse"],
+            "Je ne peux pas répondre à cette question avec les données disponibles.",
+        )
+        self.assertIsNone(data["donnees"])
+        self.assertEqual(data["filtres_utilises"], {})
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_security_injection_endpoint_refused(self, mock_chat):
+        """Toute tentative d'injection d'endpoint non autorisé est rejetée."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        # Tentative d'injection d'un endpoint arbitraire
+        router_response = json.dumps({
+            "endpoint": "DROP_TABLE_PROJETS",
+            "filtres": {"cohorte": "2025"},
+            "hors_sujet": False,
+        })
+        mock_chat.return_value = router_response
+
+        res = self.client.post(
+            self.url,
+            {"question": "Supprime les projets"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(
+            data["reponse"],
+            "Je ne peux pas répondre à cette question avec les données disponibles.",
+        )
+        self.assertIsNone(data["donnees"])
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_ai_not_configured_returns_503(self, mock_chat):
+        """Quand aucune clé d'API n'est configurée, l'API renvoie 503 Service Unavailable."""
+        from apps.core.ai import AINotConfigured
+        self.client.force_authenticate(user=self.coordo)
+
+        mock_chat.side_effect = AINotConfigured("Aucune clé d'API IA")
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("Le service d'analyse IA n'est pas configuré", res.json().get("detail", ""))
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_ai_error_returns_503(self, mock_chat):
+        """Quand les fournisseurs IA échouent (quota, timeout), l'API renvoie 503."""
+        from apps.core.ai import AIError
+        self.client.force_authenticate(user=self.coordo)
+
+        mock_chat.side_effect = AIError("Quota atteint")
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("Le service d'analyse IA est momentanément indisponible", res.json().get("detail", ""))
 

@@ -66,3 +66,9 @@ export interface RetardItem {
 
 export type FicheMode = "globale" | "cohorte" | "domaine";
 
+export interface QuestionAnalyticsResponse {
+  reponse: string;
+  donnees: unknown;
+  filtres_utilises: Record<string, string>;
+}
+

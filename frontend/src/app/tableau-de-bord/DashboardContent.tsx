@@ -30,6 +30,7 @@ import {
 } from "./components/PageState";
 import { ExportToolbar } from "./components/ExportToolbar";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
+import { NaturalLanguageQueryBox } from "./components/NaturalLanguageQueryBox";
 import { CheckCircle2, Info, RefreshCw } from "lucide-react";
 
 function buildQuery(filters: DashboardFilters): string {
@@ -271,6 +272,13 @@ export function DashboardContent() {
             onOpenPrintModal={() => setIsPrintModalOpen(true)}
             targetCaptureId="dashboard-main-content"
           />
+        </div>
+
+        {/* =========================================================================
+            2.2 INTERROGATION DES DONNÉES EN LANGAGE NATUREL (IA DÉCISIONNELLE - T2)
+           ========================================================================= */}
+        <div className="animate-fade-in-up" style={{ animationDelay: "125ms" }}>
+          <NaturalLanguageQueryBox />
         </div>
 
         {/* Zone de contenu principale ciblée pour l'export image PNG */}

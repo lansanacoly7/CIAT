@@ -11,6 +11,7 @@ Tous les endpoints acceptent les filtres :
 ?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ&cohorte=&domaine=&statut=
 """
 import io
+import logging
 from datetime import datetime
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
@@ -18,7 +19,11 @@ from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from apps.core.ai import AIError, AINotConfigured
+from .services import traiter_question_analytics
 
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -37,6 +42,8 @@ from reportlab.platypus import (
 
 from apps.core.models import Projet
 from .permissions import IsAnalyticsAuthorized
+
+logger = logging.getLogger(__name__)
 
 
 def apply_filters(queryset, request):
@@ -1266,4 +1273,62 @@ class ExportView(APIView):
             return generate_excel_response(summary_data, filter_label)
         else:
             return generate_pdf_response(summary_data, filter_label)
+
+
+class QuestionView(APIView):
+    """POST /api/analytics/question/
+
+    Pose une question en langage naturel sur les données d'analyse décisionnelle.
+    Format attendu : { "question": "Combien de projets en prototype dans la cohorte 2025 ?" }
+    Format renvoyé : { "reponse": string, "donnees": any, "filtres_utilises": dict }
+
+    Sécurité stricte :
+    - Le modèle de langage ne génère JAMAIS de code SQL ni de scripts exécutables.
+    - Il sélectionne uniquement parmi une liste fermée d'endpoints et de filtres autorisés.
+    - L'accès est restreint aux mêmes rôles que les indicateurs (IsAnalyticsAuthorized).
+    - Débit limité par le throttle 'ai' (20 requêtes / min).
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai"
+
+    def post(self, request):
+        question = request.data.get("question")
+        if not question or not str(question).strip():
+            return Response(
+                {"detail": "Le champ 'question' est requis et ne peut être vide."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            resultat = traiter_question_analytics(str(question).strip())
+            return Response(resultat, status=status.HTTP_200_OK)
+        except AINotConfigured as exc:
+            return Response(
+                {
+                    "detail": "Le service d'analyse IA n'est pas configuré (aucune clé d'API disponible).",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except AIError as exc:
+            return Response(
+                {
+                    "detail": "Le service d'analyse IA est momentanément indisponible.",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            logger.exception("Erreur inattendue dans QuestionView : %s", exc)
+            return Response(
+                {"detail": "Une erreur inattendue est survenue lors de l'analyse de votre question."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
