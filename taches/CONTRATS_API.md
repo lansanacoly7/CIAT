@@ -80,3 +80,20 @@ Accès : coordonnateur, administrateur, membre du comité. Tous les endpoints ac
 | `GET /types/` | `[{ id, code, nom }]` (appel à candidatures, fiche de projet, convention, procès-verbal, ...) |
 | `GET /modeles/?type=` | `[{ id, type, nom, apercu, sections: [{ code, titre, consigne }] }]` |
 | `POST /generer/` | `{ modele, sujet, infos: {}, projet? }` → `{ id, titre, sections: [{ code, titre, contenu }], statut: "brouillon", version: 1 }` |
+
+### P5 — Ajouts de la Phase 2 (versions, workflow, export)
+
+Un document : `{ id, titre, modele, projet, auteur, statut, version_courante, cree_le, modifie_le }`. Statuts : `brouillon`, `valide`, `publie`. Une version : `{ numero, sections: [{ code, titre, contenu }], auteur, cree_le }`.
+
+| Route | Description |
+|---|---|
+| `GET /` | Mes documents (l'équipe CIAT voit tous les documents) |
+| `GET /{id}/` | Détail avec les sections de la version courante |
+| `PATCH /{id}/` | `{ sections: [{ code, contenu }] }` → crée une nouvelle version. Refusé (`409`) si le statut n'est pas `brouillon`. |
+| `GET /{id}/versions/` | Liste des versions |
+| `GET /{id}/versions/{numero}/` | Une version |
+| `POST /{id}/valider/` | Coordonnateur ou administrateur : `brouillon` donne `valide` |
+| `POST /{id}/publier/` | Administrateur : `valide` donne `publie` |
+| `POST /{id}/brouillon/` | Coordonnateur ou administrateur : repasse en `brouillon` |
+| `GET /{id}/export/?format=docx` ou `pdf` | Fichier à télécharger, mis en forme avec la charte |
+

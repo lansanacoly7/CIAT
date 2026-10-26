@@ -1,7 +1,7 @@
 # Pathé — Phase 1
 
 > Domaine : back-end. Module : **P1 Portail institutionnel** (priorité 2). Code dans `backend/apps/portal/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P1).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P1).
 
 Ordre conseillé : T1, puis T2, puis T3.
 

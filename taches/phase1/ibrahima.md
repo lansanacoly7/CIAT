@@ -1,7 +1,7 @@
 # Ibrahima — Phase 1
 
 > Domaine : back-end. Module : **P2 Gestion de l'incubateur** (priorité 1). Code dans `backend/apps/incubator/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P2).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P2).
 
 Ordre conseillé : T1, puis T2, puis T3.
 

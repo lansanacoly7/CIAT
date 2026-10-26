@@ -1,7 +1,7 @@
 # Maimouna — Phase 1
 
 > Domaine : front-end et back-end. Module : **P2 Gestion de l'incubateur, côté interface** (priorité 1), avec l'authentification de toute l'application. Code dans `frontend/src/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (sections socle et P2).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (sections socle et P2).
 
 Ordre conseillé : T1, puis T2, puis T3.
 

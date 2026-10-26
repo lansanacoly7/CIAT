@@ -1,6 +1,6 @@
-# Priorités et Phase 1
+# Priorités et organisation par phase
 
-> Écrit pour toute l'équipe. Chacun a son fichier de tâches dans ce dossier, au nom de son prénom.
+> Écrit pour toute l'équipe. Les tâches sont rangées par phase : `phase1/` (en cours ou terminée) et `phase2/`. Dans chaque dossier de phase, chacun a un fichier à son prénom, seulement s'il a des tâches dans cette phase. Quand tu as fini ta phase, ton fichier de la phase suivante t'attend (ou Lansana te le donne).
 
 ## Ordre de priorité des modules
 

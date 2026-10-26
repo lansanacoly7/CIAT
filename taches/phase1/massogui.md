@@ -1,7 +1,7 @@
 # Massogui — Phase 1
 
 > Domaine : front-end, conception du site web. Module : **P1 Portail institutionnel** (priorité 2). Code dans `frontend/src/app/` et `frontend/src/components/`.
-> Lis d'abord [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md) (section P1).
+> Lis d'abord [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md) (section P1).
 
 Ordre conseillé : T1, puis T2, puis T3, puis T4.
 

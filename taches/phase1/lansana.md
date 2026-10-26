@@ -1,7 +1,7 @@
 # Lansana — Phase 1
 
 > Domaine : lead technique, intervient partout. Modules : **données de démonstration**, **fondations de P5 (générateur de documents)**, **déploiement**. Revue de toutes les demandes de fusion.
-> Lis [00_PRIORITES.md](00_PRIORITES.md) et [CONTRATS_API.md](CONTRATS_API.md).
+> Lis [00_PRIORITES.md](../00_PRIORITES.md) et [CONTRATS_API.md](../CONTRATS_API.md).
 
 Ordre conseillé : T1 d'abord (il débloque Alioune), puis T2 et T3 en parallèle des revues.
 
