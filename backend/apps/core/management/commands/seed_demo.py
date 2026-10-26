@@ -412,6 +412,13 @@ PROJETS_DE_DEMO = [
         "solution": "Cuve inox sous pression montant à 121°C pendant 20 minutes uniquement par concentration des rayons solaires.",
         "domaine": 4, "cohorte": "Cohorte 2026", "porteur": "porteur06@demo.ciat.sn", "statut": Projet.Statut.IDEE, "mois_offset": 1
     },
+    {
+        "titre": "Unité Mobile de Purification d'Eau pour Dispensaires Ruraux",
+        "resume": "Système mobile de filtration sur membrane céramique et stérilisation UV solaire produisant de l'eau purifiée de qualité médicale pour soins d'urgence.",
+        "probleme": "Manque d'eau potable stérile dans les postes de santé enclavés pour la désinfection et la préparation de solutés de réhydratation.",
+        "solution": "Filtration autonome par gravité et panneau solaire 50W éliminant 99,99 % des bactéries et virus sans additif chimique.",
+        "domaine": 4, "cohorte": "Cohorte 2025", "porteur": "porteur03@demo.ciat.sn", "statut": Projet.Statut.SELECTIONNE, "mois_offset": 6
+    },
 
     # --- DOMAINE 6 : ÉDUCATION, FORMATION PROFESSIONNELLE ET INSERTION ---
     {
@@ -542,6 +549,8 @@ class Command(BaseCommand):
     help = "Remplit la base avec les données de démonstration du CIAT (environ 60 projets, 3 cohortes, 7 domaines, ~40 porteurs)."
 
     def handle(self, *args, **options):
+        nb_projets_avant = Projet.objects.count()
+
         # 1. Domaines
         domaines_objs = []
         for nom in DOMAINES:
@@ -600,7 +609,7 @@ class Command(BaseCommand):
 
         # 5. Projets de démonstration
         date_reference = datetime(2026, 10, 20, 10, 0, tzinfo=timezone.utc)
-        nb_projets_crees = 0
+        nb_boucle_crees = 0
 
         for p_data in PROJETS_DE_DEMO:
             domaine = domaines_objs[p_data["domaine"]]
@@ -630,9 +639,10 @@ class Command(BaseCommand):
             )
 
             if created:
-                nb_projets_crees += 1
+                nb_boucle_crees += 1
 
         total_projets = Projet.objects.count()
+        nb_projets_crees = max(total_projets - nb_projets_avant, nb_boucle_crees)
         total_porteurs = User.objects.filter(role=Role.PORTEUR).count()
         femmes = User.objects.filter(role=Role.PORTEUR, genre=User.Genre.FEMME).count()
         pourcentage_femmes = (femmes / total_porteurs * 100) if total_porteurs else 0

@@ -1,11 +1,12 @@
 """Tests unitaires pour la commande de seed des données de démonstration."""
 from datetime import timedelta
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import authenticate
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class SeedDemoCommandTestCase(TestCase):
     """Vérifie la conformité, le réalisme et l'idempotence des données de démonstration."""
 
@@ -47,9 +48,9 @@ class SeedDemoCommandTestCase(TestCase):
         self.assertGreaterEqual(pourcentage_femmes, 30.0, "La proportion de femmes doit être >= 30%.")
         self.assertLessEqual(pourcentage_femmes, 50.0, "La proportion de femmes doit être <= 50%.")
 
-        # Vérification du volume de projets (~60 projets)
+        # Vérification du volume de projets (exactement 62 projets)
         nb_projets = Projet.objects.count()
-        self.assertGreaterEqual(nb_projets, 60, "Au moins 60 projets doivent être générés.")
+        self.assertEqual(nb_projets, 62, "Exactement 62 projets doivent être générés.")
 
         # Vérification de la représentation de tous les statuts
         tous_les_statuts = {choice[0] for choice in Projet.Statut.choices}
@@ -75,7 +76,7 @@ class SeedDemoCommandTestCase(TestCase):
         )
 
         # Vérification de l'étalement des dates de création sur au moins 12 à 18 mois
-        projets_dates = Projet.objects.order_tous = list(Projet.objects.order_by("cree_le").values_list("cree_le", flat=True))
+        projets_dates = list(Projet.objects.order_by("cree_le").values_list("cree_le", flat=True))
         delta_dates = projets_dates[-1] - projets_dates[0]
         self.assertGreater(delta_dates, timedelta(days=365), "Les dates de création doivent s'étaler sur plus d'un an.")
 
