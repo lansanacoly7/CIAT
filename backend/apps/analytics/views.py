@@ -25,7 +25,7 @@ def apply_filters(queryset, request):
     """Applique les filtres communs du contrat P3 :
     ?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ&cohorte=&domaine=&statut=
     """
-    params = request.query_params
+    params = getattr(request, "query_params", getattr(request, "GET", {}))
 
     # Filtre sur date de début (création >= début)
     debut = params.get("debut")
