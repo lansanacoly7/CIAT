@@ -43,7 +43,7 @@ Types de pièces obligatoires : `fiche_projet`, `presentation_equipe`, `budget_p
 | `DELETE /dossiers/{id}/pieces/{piece_id}/` | Supprime une pièce (dossier non soumis) |
 | `POST /dossiers/{id}/soumettre/` | Refuse (`400`) si une pièce obligatoire manque |
 | `GET /grilles/actuelle/` | `{ id, criteres: [{ id, libelle, poids, note_max }] }` |
-| `POST /dossiers/{id}/evaluations/` | `{ notes: [{ critere, note }], avis }` (membre du comité) |
+| `POST /dossiers/{id}/evaluations/` | `{ notes: [{ critere, note }], avis }` (membre du comité, mentor, coordonnateur ou administrateur ; une seule évaluation par personne et par dossier) |
 | `GET /dossiers/{id}/evaluations/` | Liste des évaluations et `score_moyen` |
 | `POST /dossiers/{id}/decision/` | `{ decision: "accepte"\|"refuse", motif }` (coordonnateur). Met à jour le statut du dossier et du projet. |
 
@@ -96,4 +96,24 @@ Un document : `{ id, titre, modele, projet, auteur, statut, version_courante, cr
 | `POST /{id}/publier/` | Administrateur : `valide` donne `publie` |
 | `POST /{id}/brouillon/` | Coordonnateur ou administrateur : repasse en `brouillon` |
 | `GET /{id}/export/?format=docx` ou `pdf` | Fichier à télécharger, mis en forme avec la charte |
+
+
+### P2 — Ajouts de la Phase 2 (`/api/incubator/`)
+
+Objectif : `{ id, projet, libelle, echeance, statut }` (statuts `a_faire`, `en_cours`, `atteint`).
+Jalon : `{ id, projet, titre, echeance, statut, en_retard, preuves: [...], commentaires: [...] }` (statuts saisis `a_faire`, `en_cours`, `fait` ; `en_retard` est calculé).
+
+| Route | Description |
+|---|---|
+| `GET /mentors/` | Utilisateurs de rôle mentor (coordonnateur, administrateur) |
+| `POST /projets/{id}/mentor/` | `{ mentor }` : affecte un mentor (coordonnateur, administrateur) |
+| `GET/POST /projets/{id}/objectifs/` | Liste et création |
+| `PATCH /objectifs/{id}/` | Modification |
+| `GET/POST /projets/{id}/jalons/` | Liste et création |
+| `PATCH /jalons/{id}/` | Modification |
+| `POST /jalons/{id}/preuves/` | `multipart/form-data` : `fichier` |
+| `POST /jalons/{id}/commentaires/` | `{ texte }` |
+| `GET /alertes/` | Jalons en retard visibles pour l'utilisateur connecté |
+| `GET/POST /projets/{id}/suivis/` | `{ echeance: "3_mois"\|"6_mois", bilan, indicateurs }` |
+| `GET /projets/{id}/compte-rendu/?format=xlsx` | Fichier Excel à télécharger |
 
