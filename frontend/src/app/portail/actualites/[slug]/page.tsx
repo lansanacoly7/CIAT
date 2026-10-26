@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, use, useEffect, useState } from "react";
-import { Badge, ButtonLink, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, ButtonLink, DemoBanner, PageTitle } from "@/components/ui";
 import { getActualiteBySlug, type Actualite } from "@/lib/portal-api";
+
 
 function formatDate(dateStr: string) {
   try {
@@ -25,15 +26,46 @@ function ActualiteDetailContent({
   const { slug } = use(params);
   const [actu, setActu] = useState<Actualite | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadActu = () => {
+    setLoading(true);
+    setError(null);
+    getActualiteBySlug(slug)
+      .then((res) => {
+        setActu(res.item);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Impossible de charger cette actualité. Le service est momentanément indisponible.");
+        setActu(null);
+        setIsDemo(false);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     let ignore = false;
-    getActualiteBySlug(slug).then((res) => {
-      if (!ignore) {
-        setActu(res);
-        setLoading(false);
-      }
-    });
+    getActualiteBySlug(slug)
+      .then((res) => {
+        if (!ignore) {
+          setActu(res.item);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Impossible de charger cette actualité. Le service est momentanément indisponible.");
+          setActu(null);
+          setIsDemo(false);
+          setLoading(false);
+        }
+      });
     return () => {
       ignore = true;
     };
@@ -43,6 +75,19 @@ function ActualiteDetailContent({
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <p className="text-sm font-semibold text-brun animate-pulse">Chargement de l&apos;article...</p>
+      </div>
+    );
+  }
+
+  if (error && !actu) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <ApiErrorBanner message={error} onRetry={loadActu} />
+        <div className="text-center">
+          <ButtonLink href="/portail/actualites" variant="secondary">
+            ← Revenir aux actualités
+          </ButtonLink>
+        </div>
       </div>
     );
   }
@@ -63,9 +108,14 @@ function ActualiteDetailContent({
     );
   }
 
+
   return (
     <article className="mx-auto max-w-4xl px-4 py-10 md:py-16">
+      {/* Bandeau Mode Démonstration */}
+      {isDemo && <DemoBanner />}
+
       {/* Fil d'ariane & métadonnées */}
+
       <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-texte-doux">
         <ButtonLink href="/portail/actualites" variant="secondary" className="!min-h-[36px] px-3 py-1 text-xs">
           ← Toutes les actualités

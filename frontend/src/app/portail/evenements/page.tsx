@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, Button, ButtonLink, Card, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import { getEvenements, type Evenement } from "@/lib/portal-api";
 
 function formatEventDate(debutStr: string, finStr: string) {
@@ -46,6 +46,7 @@ export default function EvenementsPage() {
   const [items, setItems] = useState<Evenement[]>([]);
   const [loading, setLoading] = useState(true);
   const [fromApi, setFromApi] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEvenements = () => {
@@ -55,11 +56,14 @@ export default function EvenementsPage() {
       .then((res) => {
         setItems(res.items);
         setFromApi(res.fromApi);
-        if (res.error) setError(res.error);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
         setLoading(false);
       })
       .catch(() => {
-        setError("Impossible de charger les événements. Veuillez réessayer.");
+        setError("Les événements sont momentanément indisponibles. Réessayez plus tard.");
+        setItems([]);
+        setIsDemo(false);
         setLoading(false);
       });
   };
@@ -71,13 +75,16 @@ export default function EvenementsPage() {
         if (!ignore) {
           setItems(res.items);
           setFromApi(res.fromApi);
-          if (res.error) setError(res.error);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setError("Impossible de charger les événements. Veuillez réessayer.");
+          setError("Les événements sont momentanément indisponibles. Réessayez plus tard.");
+          setItems([]);
+          setIsDemo(false);
           setLoading(false);
         }
       });
@@ -94,30 +101,29 @@ export default function EvenementsPage() {
         subtitle="Participez aux journées de démonstration, aux masterclasses technologiques et aux réunions d'évaluation du CIAT."
       />
 
-      {error && (
-        <div className="mb-8 rounded-xl border border-erreur bg-[#f6dedc] p-4 text-sm text-erreur flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="secondary" onClick={fetchEvenements} className="!min-h-[36px] text-xs">
-            Réessayer
-          </Button>
-        </div>
-      )}
+      {/* Bandeau Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner />}
+
+      {/* État d'erreur réseau / serveur indisponible */}
+      {error && <ApiErrorBanner message={error} onRetry={fetchEvenements} />}
 
       {/* Barre d'état */}
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-xs text-texte-doux">
-          {items.length} {items.length > 1 ? "événements programmés" : "événement programmé"}
-        </p>
-        <Badge tone={fromApi ? "succes" : "neutre"}>
-          {fromApi ? "Flux API en direct" : "Calendrier Synchronisé"}
-        </Badge>
-      </div>
+      {!error && (
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-xs text-texte-doux">
+            {items.length} {items.length > 1 ? "événements programmés" : "événement programmé"}
+          </p>
+          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
+            {fromApi ? "Flux API en direct" : isDemo ? "Données de démo" : "Hors-ligne"}
+          </Badge>
+        </div>
+      )}
 
       {loading ? (
         <div className="rounded-2xl border border-bordure bg-ivoire p-12 text-center">
           <p className="text-sm font-semibold text-brun animate-pulse">Chargement du calendrier des événements...</p>
         </div>
-      ) : items.length === 0 ? (
+      ) : error && items.length === 0 ? null : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun événement à venir pour le moment.</p>
           <p className="mt-2 text-sm text-texte-doux">
@@ -130,6 +136,7 @@ export default function EvenementsPage() {
           </div>
         </div>
       ) : (
+
         /* Liste des Événements */
         <div className="space-y-6">
           {items.map((evt) => {

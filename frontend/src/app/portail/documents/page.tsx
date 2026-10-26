@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, Button, ButtonLink, Card, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, Button, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import { getDocumentsPublics, type DocumentPublic } from "@/lib/portal-api";
 
 const CATEGORIES = [
@@ -30,6 +30,7 @@ export default function DocumentsPortailPage() {
   const [selectedCat, setSelectedCat] = useState("tous");
   const [loading, setLoading] = useState(true);
   const [fromApi, setFromApi] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
@@ -40,11 +41,14 @@ export default function DocumentsPortailPage() {
       .then((res) => {
         setItems(res.items);
         setFromApi(res.fromApi);
-        if (res.error) setError(res.error);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
         setLoading(false);
       })
       .catch(() => {
-        setError("Impossible de charger les documents. Veuillez réessayer.");
+        setError("Les documents publics sont momentanément indisponibles. Réessayez plus tard.");
+        setItems([]);
+        setIsDemo(false);
         setLoading(false);
       });
   };
@@ -56,13 +60,16 @@ export default function DocumentsPortailPage() {
         if (!ignore) {
           setItems(res.items);
           setFromApi(res.fromApi);
-          if (res.error) setError(res.error);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setError("Impossible de charger les documents. Veuillez réessayer.");
+          setError("Les documents publics sont momentanément indisponibles. Réessayez plus tard.");
+          setItems([]);
+          setIsDemo(false);
           setLoading(false);
         }
       });
@@ -88,6 +95,9 @@ export default function DocumentsPortailPage() {
         subtitle="Téléchargez les canevas officiels de candidature, la charte de propriété intellectuelle, le règlement des ateliers et les guides techniques d'incubation."
       />
 
+      {/* Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner className="mb-6" />}
+
       {/* Notification de téléchargement */}
       {downloadSuccess && (
         <div className="mb-6 rounded-xl border border-succes/40 bg-[#e3f1e9] p-4 text-xs font-semibold text-succes flex items-center justify-between animate-fadeIn">
@@ -102,44 +112,47 @@ export default function DocumentsPortailPage() {
         </div>
       )}
 
-      {/* Source des données */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-xs text-texte-doux">
-          {items.length} {items.length > 1 ? "documents disponibles" : "document disponible"}
-        </p>
-        <Badge tone={fromApi ? "succes" : "neutre"}>
-          {fromApi ? "Connecté à l'API" : "Ressources certifiées CIAT"}
-        </Badge>
-      </div>
-
-      {/* Filtres par catégorie */}
-      <div className="mb-8 flex flex-wrap gap-2">
-        {CATEGORIES.map((cat) => {
-          const active = selectedCat === cat.value;
-          return (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setSelectedCat(cat.value)}
-              className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-                active
-                  ? "bg-brun text-white shadow-sm"
-                  : "border border-bordure bg-white text-texte hover:bg-ivoire"
-              }`}
-            >
-              {cat.label}
-            </button>
-          );
-        })}
-      </div>
-
       {/* État d'erreur */}
       {error && (
-        <div className="mb-8 rounded-xl border border-erreur bg-[#f6dedc] p-4 text-sm text-erreur flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="secondary" onClick={() => fetchDocs()} className="!min-h-[36px] text-xs">
-            Réessayer
-          </Button>
+        <ApiErrorBanner
+          message={error}
+          onRetry={() => fetchDocs()}
+          className="mb-8"
+        />
+      )}
+
+      {/* Source des données */}
+      {!error && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-xs text-texte-doux">
+            {items.length} {items.length > 1 ? "documents disponibles" : "document disponible"}
+          </p>
+          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
+            {fromApi ? "Connecté à l'API" : isDemo ? "Mode démo" : "CIAT"}
+          </Badge>
+        </div>
+      )}
+
+      {/* Filtres par catégorie */}
+      {!error && items.length > 0 && (
+        <div className="mb-8 flex flex-wrap gap-2">
+          {CATEGORIES.map((cat) => {
+            const active = selectedCat === cat.value;
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setSelectedCat(cat.value)}
+                className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                  active
+                    ? "bg-brun text-white shadow-sm"
+                    : "border border-bordure bg-white text-texte hover:bg-ivoire"
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -160,7 +173,7 @@ export default function DocumentsPortailPage() {
             </div>
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : error && items.length === 0 ? null : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun document dans cette catégorie.</p>
           <div className="mt-4">
