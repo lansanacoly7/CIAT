@@ -1,0 +1,33 @@
+"""Configuration de l'administration Django pour le module Assistant."""
+from django.contrib import admin
+
+from .models import Conversation, MessageAssistant, PassageDocument
+
+
+@admin.register(PassageDocument)
+class PassageDocumentAdmin(admin.ModelAdmin):
+    list_display = ("document", "position", "cree_le")
+    list_filter = ("document__categorie", "cree_le")
+    search_fields = ("document__titre", "texte")
+
+
+class MessageAssistantInline(admin.TabularInline):
+    model = MessageAssistant
+    extra = 0
+    readonly_fields = ("role", "contenu", "sources", "avertissement_ia", "mode", "cree_le")
+    can_delete = False
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ("titre", "utilisateur", "cree_le", "modifie_le")
+    list_filter = ("cree_le", "modifie_le")
+    search_fields = ("titre", "utilisateur__email")
+    inlines = [MessageAssistantInline]
+
+
+@admin.register(MessageAssistant)
+class MessageAssistantAdmin(admin.ModelAdmin):
+    list_display = ("conversation", "role", "mode", "cree_le")
+    list_filter = ("role", "mode", "cree_le")
+    search_fields = ("contenu", "conversation__titre")

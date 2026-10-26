@@ -28,8 +28,8 @@ Chaque tâche indique :
 ## Règles communes
 
 1. Les endpoints et les formats de données sont fixés dans [CONTRATS_API.md](CONTRATS_API.md). Ne les change pas sans prévenir Lansana : d'autres codent dessus.
-2. Tu as une branche personnelle à ton nom, et une branche de fonctionnalité par tâche, créée **à partir de ta branche personnelle**. Son nom est `<ta-branche>--<sujet>` : le sujet est celui donné après `feature/` dans chaque tâche (par exemple `feature/analytics-api` devient `Alioune--analytics-api`). Ne travaille jamais directement sur `test`, `main` ni sur une branche personnelle : voir [../docs/GUIDE_GIT.md](../docs/GUIDE_GIT.md).
-3. Quand ta tâche est terminée, pousse ta branche de fonctionnalité et préviens Lansana. Il la vérifie : si c'est bon, il la fusionne dans ta branche personnelle puis dans `test` ; sinon il te signale l'erreur et tu corriges sur la même branche.
+2. Tu travailles sur **ta branche personnelle** (une seule, à ton nom, créée depuis `test`) : pas de branche par fonctionnalité. Ne travaille jamais directement sur `test` ni sur `main` : voir [../docs/GUIDE_GIT.md](../docs/GUIDE_GIT.md).
+3. Quand ta tâche est terminée, pousse ta branche personnelle et préviens Lansana. Il la vérifie : si c'est bon, il la fusionne dans `test` ; sinon il te signale l'erreur et tu corriges sur la même branche.
 4. Si tu attends quelqu'un, ne reste pas bloqué : travaille avec des données fictives respectant le contrat, puis branche le vrai service.
 5. Avant de proposer ton travail : `python manage.py check` (back) ou `npm run lint && npm run build` (front). Le détail est dans le README à la racine.
 6. Les couleurs, polices et composants viennent de la charte (`Charte_Graphique_CIAT_ISEP.pdf`) et de `frontend/src/components/ui.tsx`.

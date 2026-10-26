@@ -1,8 +1,18 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MODULES } from "@/lib/modules";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
+
+  if (isAuthPage) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-[#3d2315] bg-brun-fonce text-[#ebd9c0] pb-24 md:pb-8">
       <div className="mx-auto max-w-6xl px-4 py-12">

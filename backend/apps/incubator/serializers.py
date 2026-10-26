@@ -6,15 +6,24 @@ from rest_framework.exceptions import PermissionDenied
 from apps.core.models import Projet, Role, User
 from .models import (
     ALLOWED_PIECE_EXTENSIONS,
+    AffectationMentor,
+    CommentaireJalon,
     Critere,
     Decision,
     DecisionType,
     Dossier,
+    EcheanceSuivi,
     Evaluation,
     Grille,
+    Jalon,
     Note,
+    Objectif,
     Piece,
+    PreuveJalon,
     StatutDossier,
+    StatutJalon,
+    StatutObjectif,
+    SuiviProjet,
     TypePiece,
 )
 
@@ -334,3 +343,262 @@ class DecisionSerializer(serializers.ModelSerializer):
             )
             decision.appliquer()
         return decision
+
+
+class MentorUserSerializer(serializers.ModelSerializer):
+    """Représentation publique d'un mentor pour affectation."""
+    nom_complet = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "nom_complet",
+            "telephone",
+            "organisation",
+        ]
+
+    def get_nom_complet(self, obj):
+        return obj.get_full_name() or obj.email
+
+
+class AffectationMentorSerializer(serializers.ModelSerializer):
+    mentor_details = MentorUserSerializer(source="mentor", read_only=True)
+    mentor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = AffectationMentor
+        fields = ["id", "projet", "mentor", "mentor_details", "affecte_le", "affecte_par"]
+        read_only_fields = ["id", "projet", "affecte_le", "affecte_par"]
+
+    def validate_mentor(self, user):
+        if user.role != Role.MENTOR:
+            raise serializers.ValidationError("L'utilisateur affecté doit avoir le rôle mentor.")
+        return user
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        mentor = validated_data["mentor"]
+
+        affectation, _ = AffectationMentor.objects.update_or_create(
+            projet=projet,
+            defaults={"mentor": mentor, "affecte_par": user},
+        )
+        return affectation
+
+
+class ObjectifSerializer(serializers.ModelSerializer):
+    cree_par_nom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Objectif
+        fields = [
+            "id",
+            "projet",
+            "libelle",
+            "echeance",
+            "statut",
+            "cree_le",
+            "modifie_le",
+            "cree_par",
+            "cree_par_nom",
+        ]
+        read_only_fields = ["id", "projet", "cree_le", "modifie_le", "cree_par"]
+
+    def get_cree_par_nom(self, obj):
+        return obj.cree_par.get_full_name() or obj.cree_par.email
+
+    def validate_libelle(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le libellé de l'objectif est obligatoire.")
+        return value.strip()
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        return Objectif.objects.create(projet=projet, cree_par=user, **validated_data)
+
+
+class PreuveJalonSerializer(serializers.ModelSerializer):
+    depose_par_nom = serializers.SerializerMethodField()
+    nom = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = PreuveJalon
+        fields = ["id", "jalon", "fichier", "nom", "depose_par", "depose_par_nom", "depose_le"]
+        read_only_fields = ["id", "jalon", "depose_par", "depose_le"]
+
+    def get_depose_par_nom(self, obj):
+        if obj.depose_par:
+            return obj.depose_par.get_full_name() or obj.depose_par.email
+        return None
+
+    def validate_fichier(self, file):
+        if not file:
+            raise serializers.ValidationError("Le fichier de preuve est obligatoire.")
+        ext = file.name.split(".")[-1].lower() if "." in file.name else ""
+        if ext not in ALLOWED_PIECE_EXTENSIONS:
+            raise serializers.ValidationError(
+                f"Format de fichier '.{ext}' non autorisé. Extensions acceptées : {', '.join(ALLOWED_PIECE_EXTENSIONS)}."
+            )
+        return file
+
+    def create(self, validated_data):
+        jalon = self.context["jalon"]
+        user = self.context["request"].user
+        if not validated_data.get("nom"):
+            validated_data["nom"] = validated_data["fichier"].name
+        return PreuveJalon.objects.create(jalon=jalon, depose_par=user, **validated_data)
+
+
+
+class CommentaireJalonSerializer(serializers.ModelSerializer):
+    auteur_nom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CommentaireJalon
+        fields = ["id", "jalon", "auteur", "auteur_nom", "texte", "cree_le"]
+        read_only_fields = ["id", "jalon", "auteur", "cree_le"]
+
+    def get_auteur_nom(self, obj):
+        return obj.auteur.get_full_name() or obj.auteur.email
+
+    def validate_texte(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le commentaire ne peut pas être vide.")
+        return value.strip()
+
+    def create(self, validated_data):
+        jalon = self.context["jalon"]
+        user = self.context["request"].user
+        return CommentaireJalon.objects.create(jalon=jalon, auteur=user, **validated_data)
+
+
+class JalonSerializer(serializers.ModelSerializer):
+    preuves = PreuveJalonSerializer(many=True, read_only=True)
+    commentaires = CommentaireJalonSerializer(many=True, read_only=True)
+    en_retard = serializers.BooleanField(read_only=True)
+    cree_par_nom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Jalon
+        fields = [
+            "id",
+            "projet",
+            "titre",
+            "echeance",
+            "statut",
+            "en_retard",
+            "preuves",
+            "commentaires",
+            "cree_le",
+            "modifie_le",
+            "cree_par",
+            "cree_par_nom",
+        ]
+        read_only_fields = ["id", "projet", "en_retard", "cree_le", "modifie_le", "cree_par"]
+
+    def get_cree_par_nom(self, obj):
+        if obj.cree_par:
+            return obj.cree_par.get_full_name() or obj.cree_par.email
+        return None
+
+    def validate_titre(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le titre du jalon est obligatoire.")
+        return value.strip()
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        return Jalon.objects.create(projet=projet, cree_par=user, **validated_data)
+
+
+class AlerteJalonSerializer(serializers.ModelSerializer):
+    projet_titre = serializers.CharField(source="projet.titre", read_only=True)
+    en_retard = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Jalon
+        fields = [
+            "id",
+            "projet",
+            "projet_titre",
+            "titre",
+            "echeance",
+            "statut",
+            "en_retard",
+            "cree_le",
+        ]
+
+
+class SuiviProjetSerializer(serializers.ModelSerializer):
+    redige_par_nom = serializers.SerializerMethodField()
+    indicateurs = serializers.JSONField(required=False, allow_null=True)
+
+    class Meta:
+        model = SuiviProjet
+        fields = [
+            "id",
+            "projet",
+            "echeance",
+            "bilan",
+            "indicateurs",
+            "redige_par",
+            "redige_par_nom",
+            "cree_le",
+            "modifie_le",
+        ]
+        read_only_fields = ["id", "projet", "redige_par", "cree_le", "modifie_le"]
+
+    def get_redige_par_nom(self, obj):
+        if obj.redige_par:
+            return obj.redige_par.get_full_name() or obj.redige_par.email
+        return None
+
+    def validate_bilan(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le bilan de suivi ne peut pas être vide.")
+        return value.strip()
+
+    def validate_indicateurs(self, value):
+        """Validation stricte du format des indicateurs : objet JSON avec valeurs scalaires."""
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                "Le champ indicateurs doit être un objet JSON (dictionnaire clé/valeur). "
+                "Les listes, chaînes ou types primitifs ne sont pas autorisés à la racine."
+            )
+        for k, v in value.items():
+            if not isinstance(k, str) or not k.strip():
+                raise serializers.ValidationError(
+                    "Les clés du dictionnaire d'indicateurs doivent être des chaînes non vides."
+                )
+            if isinstance(v, (dict, list)):
+                raise serializers.ValidationError(
+                    f"La valeur de l'indicateur '{k}' ne doit pas être une structure imbriquée (objet ou liste)."
+                )
+        return value
+
+
+    def validate(self, attrs):
+        projet = self.context.get("projet")
+        echeance = attrs.get("echeance")
+        if self.instance is None and projet and echeance:
+            if SuiviProjet.objects.filter(projet=projet, echeance=echeance).exists():
+                raise serializers.ValidationError(
+                    {"echeance": f"Un bilan de suivi pour l'échéance '{echeance}' a déjà été enregistré pour ce projet."}
+                )
+        return attrs
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        return SuiviProjet.objects.create(projet=projet, redige_par=user, **validated_data)
+
+
