@@ -34,6 +34,7 @@ test
 2. Tu préviens Lansana : « Ma tâche est finie, branche `feature/...` ».
 3. Il la vérifie. Si c'est bon, il la fusionne dans **ta branche personnelle**, puis ta branche personnelle dans `test`.
 4. Sinon, il te signale l'erreur : tu corriges **sur la même branche** de fonctionnalité et tu le préviens à nouveau.
+5. Une fois fusionnée dans ta branche personnelle, ta branche de fonctionnalité est **supprimée** de GitHub par Lansana : ton travail reste dans ta branche personnelle. Il ne doit pas rester de branche de fonctionnalité terminée sur le dépôt.
 
 ## Première fois : récupérer le projet et créer ta branche personnelle
 
