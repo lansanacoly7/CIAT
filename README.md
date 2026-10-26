@@ -3,7 +3,7 @@
 Une seule plateforme pour le Centre d'Innovation, d'Application et de Transfert (ISEP Amadou Trawaré, Diamniadio).
 Backend Django REST Framework, frontend Next.js (TypeScript, Tailwind).
 
-> Écrit pour toute l'équipe Teranga Labs. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT.pdf](Charte_Graphique_CIAT.pdf).
+> Écrit pour toute l'équipe Teranga Labs. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT_ISEP.pdf](Charte_Graphique_CIAT_ISEP.pdf).
 
 ## Démarrer en 5 minutes
 
