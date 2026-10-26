@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge, ButtonLink, Card, ProjectStatusBadge } from "@/components/ui";
 import { MODULES } from "@/lib/modules";
+
+export const metadata: Metadata = {
+  title: "Accueil — Centre d'Innovation, d'Application et de Transfert",
+  description: "Plateforme du CIAT de l'ISEP Amadou Trawaré de Diamniadio : portail d'innovation, incubateur, galerie des prototypes et accompagnement de projets.",
+};
 
 const PILIERS = [
   {
