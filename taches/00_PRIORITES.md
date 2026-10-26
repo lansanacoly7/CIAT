@@ -28,7 +28,7 @@ Chaque tâche indique :
 ## Règles communes
 
 1. Les endpoints et les formats de données sont fixés dans [CONTRATS_API.md](CONTRATS_API.md). Ne les change pas sans prévenir Lansana : d'autres codent dessus.
-2. Tu as une branche personnelle à ton nom, et une branche de fonctionnalité par tâche (`feature/<module>-<sujet>`, le nom est donné dans chaque tâche) créée **à partir de ta branche personnelle**. Ne travaille jamais directement sur `test`, `main` ni sur une branche personnelle : voir [../docs/GUIDE_GIT.md](../docs/GUIDE_GIT.md).
+2. Tu as une branche personnelle à ton nom, et une branche de fonctionnalité par tâche, créée **à partir de ta branche personnelle**. Son nom est `<ta-branche>--<sujet>` : le sujet est celui donné après `feature/` dans chaque tâche (par exemple `feature/analytics-api` devient `Alioune--analytics-api`). Ne travaille jamais directement sur `test`, `main` ni sur une branche personnelle : voir [../docs/GUIDE_GIT.md](../docs/GUIDE_GIT.md).
 3. Quand ta tâche est terminée, pousse ta branche de fonctionnalité et préviens Lansana. Il la vérifie : si c'est bon, il la fusionne dans ta branche personnelle puis dans `test` ; sinon il te signale l'erreur et tu corriges sur la même branche.
 4. Si tu attends quelqu'un, ne reste pas bloqué : travaille avec des données fictives respectant le contrat, puis branche le vrai service.
 5. Avant de proposer ton travail : `python manage.py check` (back) ou `npm run lint && npm run build` (front). Le détail est dans le README à la racine.

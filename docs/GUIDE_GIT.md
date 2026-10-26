@@ -8,7 +8,7 @@
 - **`main`** : on n'y touche pas jusqu'à la fin du développement. C'est la version finale.
 - **`test`** : la branche commune. Elle contient ce que Lansana a vérifié.
 - **Ta branche personnelle** : une branche à ton nom, créée une seule fois à partir de `test`. Elle contient tout ton travail.
-- **Tes branches de fonctionnalité** : une par tâche, créées **à partir de ta branche personnelle**. C'est là que tu écris le code.
+- **Tes branches de fonctionnalité** : une par tâche, créées **à partir de ta branche personnelle**. C'est là que tu écris le code. Leur nom est celui de ta branche personnelle, suivi de `--` et du sujet : `<ta-branche>--<sujet>` (par exemple `Alioune--analytics-api`). Elles se rangent ainsi juste sous ta branche dans la liste de GitHub, et on voit tout de suite qui les a développées. Dans les fiches de tâches, le nom indiqué après `Branche :` (par exemple `feature/analytics-api`) donne le sujet : remplace `feature/` par `<ta-branche>--`.
 
 | Personne | Branche personnelle |
 |---|---|
@@ -23,10 +23,10 @@
 main
 test
  ├─ Alioune                    (ta branche personnelle)
- │    ├─ feature/analytics-api     (une tâche)
- │    └─ feature/analytics-graphiques   (une autre tâche)
+ │    ├─ Alioune--analytics-api     (une tâche)
+ │    └─ Alioune--analytics-graphiques   (une autre tâche)
  └─ dev-massogui
-      └─ feature/portal-annuaire-ui
+      └─ dev-massogui--portal-annuaire-ui
 ```
 
 **Le circuit :**
@@ -58,9 +58,9 @@ git pull origin Alioune
 git merge origin/test        # récupère le travail validé des autres
 ```
 
-**2. Créer ta branche de fonctionnalité** (le nom est donné dans ta fiche de tâches)
+**2. Créer ta branche de fonctionnalité** (le sujet est donné dans ta fiche de tâches)
 ```bash
-git checkout -b feature/analytics-api
+git checkout -b Alioune--analytics-api
 ```
 
 **3. Travailler, puis enregistrer régulièrement**
@@ -72,17 +72,17 @@ Fais de petits commits avec un message clair en français. Une tâche = une bran
 
 **4. Pousser**
 ```bash
-git push -u origin feature/analytics-api
+git push -u origin Alioune--analytics-api
 ```
 Les fois suivantes, `git push` suffit.
 
-**5. Prévenir Lansana** : « Ma tâche T2 est finie, branche `feature/analytics-api` ».
+**5. Prévenir Lansana** : « Ma tâche T2 est finie, branche `Alioune--analytics-api` ».
 
 ## Si Lansana demande des corrections
 
 Tu restes sur ta branche de fonctionnalité :
 ```bash
-git checkout feature/analytics-api
+git checkout Alioune--analytics-api
 # ... corrections ...
 git add .
 git commit -m "Corrige le filtre par cohorte"
