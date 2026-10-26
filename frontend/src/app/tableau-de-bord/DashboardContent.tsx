@@ -2,14 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  Lightbulb,
-  FileCheck2,
-  Award,
-  Rocket,
-  Cpu,
-  TrendingUp,
-} from "lucide-react";
 import type { DashboardFilters } from "./types";
 import { getMockAnalyticsData } from "./mockData";
 import { KpiCard } from "./components/KpiCard";
@@ -153,46 +145,35 @@ export function DashboardContent() {
                   label="Idées reçues"
                   value={data.indicateurs.idees_recues}
                   subtext="Total des soumissions initiales"
-                  icon={<Lightbulb className="h-4 w-4" strokeWidth={1.75} />}
-                  trend="+18% ce mois"
                 />
                 <KpiCard
                   label="Dossiers déposés"
                   value={data.indicateurs.dossiers_deposes}
                   subtext="Candidatures avec pièces obligatoires"
-                  icon={<FileCheck2 className="h-4 w-4" strokeWidth={1.75} />}
-                  trend="Complets à 85%"
                 />
                 <KpiCard
                   label="Projets sélectionnés"
                   value={data.indicateurs.projets_selectionnes}
-                  subtext="Avis favorable du comité d'évaluation"
-                  icon={<Award className="h-4 w-4" strokeWidth={1.75} />}
-                  trend="Jury session 1"
+                  subtext="Avis favorable du comité"
                 />
                 <KpiCard
                   label="Projets incubés"
                   value={data.indicateurs.projets_incubes}
-                  subtext="Parcours d'incubation actif au CIAT"
-                  icon={<Rocket className="h-4 w-4" strokeWidth={1.75} />}
-                  trend="En cours"
+                  subtext="Parcours d'incubation actif"
                 />
                 <KpiCard
                   label="Prototypes validés"
                   value={data.indicateurs.prototypes}
-                  subtext="Maturation technique certifiée (Fablab)"
-                  icon={<Cpu className="h-4 w-4" strokeWidth={1.75} />}
-                  trend="Certifiés TRL-5"
+                  subtext="Maturation technique certifiée"
                 />
                 <KpiCard
                   label="Taux de sélection"
                   value={data.indicateurs.taux_selection}
                   suffix="%"
-                  subtext="Rapport sélectionnés / dossiers déposés"
-                  icon={<TrendingUp className="h-4 w-4" strokeWidth={1.75} />}
+                  subtext="Sélectionnés / dossiers"
                   badge={
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse-subtle" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       Cohorte active
                     </span>
                   }
