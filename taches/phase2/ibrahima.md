@@ -10,7 +10,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 ## T1 — Affectation d'un mentor et objectifs
 - **Complexité :** Moyenne · **Importance :** Haute · **Durée estimée :** 3 h
 - **À faire :** un projet sélectionné reçoit un mentor (utilisateur de rôle `mentor`), affecté par un coordonnateur ou administrateur. Un mentor ne voit que les projets qui lui sont affectés (en plus des dossiers qu'il peut déjà évaluer). Objectifs d'un projet : libellé, échéance, statut (`a_faire`, `en_cours`, `atteint`), créés par le coordonnateur ou le mentor, modifiables par eux.
-- **Tu attends :** rien. Branche : `feature/incubator-mentors`, à créer depuis `test` à jour.
+- **Tu attends :** rien. Branche : `feature/incubator-mentors`, à créer depuis ta branche personnelle à jour.
 - **Attendu par :** Maimouna (écrans de suivi), ta propre T2.
 - **Terminé quand :** un mentor affecté voit son projet et seulement les siens, un porteur voit les objectifs de son projet sans pouvoir les modifier, affecter un utilisateur qui n'est pas mentor est refusé.
 

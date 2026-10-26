@@ -9,7 +9,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 ## T1 — Consultation et modification d'un document (versions)
 - **Complexité :** Moyenne · **Importance :** Critique · **Durée estimée :** 3 à 4 h
 - **À faire :** routes de consultation (`GET /`, `GET /{id}/`) : un utilisateur voit ses documents, l'équipe CIAT les voit tous. Route de modification `PATCH /{id}/` qui prend les sections corrigées et crée une **nouvelle version** (numéro suivant, l'ancienne reste intacte). Routes `GET /{id}/versions/` et `GET /{id}/versions/{numero}/`. Valide que les codes de section envoyés existent dans le modèle du document.
-- **Tu attends :** rien (le moteur est dans `test`). Branche : `feature/documents-versions`, à créer depuis `test` à jour.
+- **Tu attends :** rien (le moteur est dans `test`). Branche : `feature/documents-versions`, à créer depuis ta branche personnelle à jour.
 - **Attendu par :** Maimouna (éditeur de documents), et ta propre T2.
 - **Terminé quand :** deux modifications successives donnent les versions 2 et 3, la version 1 est toujours lisible, un autre utilisateur ne peut pas lire ni modifier le document de quelqu'un d'autre, un code de section inconnu est refusé avec un message clair.
 
