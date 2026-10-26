@@ -13,6 +13,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -30,6 +31,7 @@ from .models import (
 User = get_user_model()
 
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class PortalBaseTestCase(APITestCase):
     @classmethod
     def tearDownClass(cls):
@@ -67,12 +69,14 @@ class PortalBaseTestCase(APITestCase):
             titre="Lancement de la plateforme CIAT",
             resume="Une nouvelle étape pour l'innovation technologique.",
             contenu="Le CIAT inaugure sa plateforme numérique pour accompagner les porteurs de projets.",
+            publie=True,
             publie_le=now - timedelta(days=2),
         )
         self.actu2 = Actualite.objects.create(
             titre="Atelier intelligence artificielle",
             resume="Formation intensive sur les LLMs.",
             contenu="Tous les incubés sont invités à participer à l'atelier.",
+            publie=True,
             publie_le=now - timedelta(days=1),
         )
 
@@ -341,7 +345,7 @@ class ProjetIncubeTests(PortalBaseTestCase):
         response = self.client.get(f"/api/portal/projets-incubes/{self.projet_incube.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        champs_attendus = {"id", "titre", "resume", "domaine_nom", "cohorte_nom", "statut"}
+        champs_attendus = {"id", "titre", "resume", "domaine_nom", "cohorte_nom", "statut", "vues"}
         self.assertEqual(set(data.keys()), champs_attendus)
         # Vérification qu'aucun email ou identifiant privé ne fuite
         self.assertNotIn("porteur", data)
@@ -370,8 +374,140 @@ class ProjetIncubeTests(PortalBaseTestCase):
 # TESTS ADMIN
 # ==============================================================================
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class AdminRegistrationTests(APITestCase):
     def test_tous_modeles_enregistres_dans_admin(self):
         modeles = [Actualite, Evenement, AppelProjet, Partenaire, DocumentPublic, MessageContact]
         for m in modeles:
             self.assertIn(m, admin.site._registry, f"Le modèle {m.__name__} n'est pas dans l'admin Django")
+
+
+# ==============================================================================
+# TESTS PHASE 3 — T1 (Brouillon/Publication) et T2 (Statistiques/Vues)
+# ==============================================================================
+
+class PortalPhase3Tests(PortalBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        now = timezone.now()
+        # Création d'une actualité brouillon (publie=False)
+        self.actu_brouillon = Actualite.objects.create(
+            titre="Actualité en brouillon confidentielle",
+            resume="Brouillon non validé",
+            contenu="Texte interne non destiné au public.",
+            publie=False,
+            publie_le=now,
+        )
+
+    def test_actualite_non_publiee_masquee_au_public(self):
+        """Une actualité brouillon n'apparaît pas dans la liste publique."""
+        response = self.client.get("/api/portal/actualites/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        slugs = [item["slug"] for item in response.json()["results"]]
+        self.assertNotIn(self.actu_brouillon.slug, slugs)
+        self.assertEqual(response.json()["count"], 2)
+
+    def test_actualite_non_publiee_detail_renvoie_404_au_public(self):
+        """L'accès direct au détail d'un brouillon par le public renvoie 404."""
+        response = self.client.get(f"/api/portal/actualites/{self.actu_brouillon.slug}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Même comportement si cherché par ID
+        response_id = self.client.get(f"/api/portal/actualites/{self.actu_brouillon.id}/")
+        self.assertEqual(response_id.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_actualite_non_publiee_visible_et_modifiable_par_equipe(self):
+        """L'équipe CIAT voit les brouillons et peut les passer en publié."""
+        self.client.force_authenticate(user=self.coordo_user)
+
+        # 1. Le coordonnateur voit le brouillon dans la liste
+        res_list = self.client.get("/api/portal/actualites/")
+        self.assertEqual(res_list.status_code, status.HTTP_200_OK)
+        slugs = [item["slug"] for item in res_list.json()["results"]]
+        self.assertIn(self.actu_brouillon.slug, slugs)
+        self.assertEqual(res_list.json()["count"], 3)
+
+        # 2. Le coordonnateur peut lire le détail du brouillon
+        res_detail = self.client.get(f"/api/portal/actualites/{self.actu_brouillon.slug}/")
+        self.assertEqual(res_detail.status_code, status.HTTP_200_OK)
+        self.assertFalse(res_detail.json()["publie"])
+
+        # 3. Le coordonnateur publie l'actualité
+        res_patch = self.client.patch(
+            f"/api/portal/actualites/{self.actu_brouillon.id}/",
+            {"publie": True},
+            format="json",
+        )
+        self.assertEqual(res_patch.status_code, status.HTTP_200_OK)
+        self.assertTrue(res_patch.json()["publie"])
+
+        # 4. Maintenant, l'actualité est devenue visible pour le public anonyme
+        self.client.logout()
+        res_public = self.client.get(f"/api/portal/actualites/{self.actu_brouillon.slug}/")
+        self.assertEqual(res_public.status_code, status.HTTP_200_OK)
+
+    def test_incrementation_atomique_vues_actualite(self):
+        """Deux consultations successives d'une actualité incrémentent son compteur de vues à 2."""
+        self.assertEqual(self.actu1.vues, 0)
+
+        # Première consultation
+        res1 = self.client.get(f"/api/portal/actualites/{self.actu1.slug}/")
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res1.json()["vues"], 1)
+
+        # Deuxième consultation
+        res2 = self.client.get(f"/api/portal/actualites/{self.actu1.slug}/")
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res2.json()["vues"], 2)
+
+        self.actu1.refresh_from_db()
+        self.assertEqual(self.actu1.vues, 2)
+
+    def test_incrementation_atomique_vues_projet_incube(self):
+        """Deux consultations du détail d'un projet incubé donnent vues = 2."""
+        self.assertEqual(self.projet_incube.vues, 0)
+
+        res1 = self.client.get(f"/api/portal/projets-incubes/{self.projet_incube.id}/")
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res1.json()["vues"], 1)
+
+        res2 = self.client.get(f"/api/portal/projets-incubes/{self.projet_incube.id}/")
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res2.json()["vues"], 2)
+
+        self.projet_incube.refresh_from_db()
+        self.assertEqual(self.projet_incube.vues, 2)
+
+    def test_statistiques_portail_permissions_et_donnees(self):
+        """GET /api/portal/statistiques/ est réservé à l'équipe et renvoie les vues consolidées."""
+        # Incrémenter des vues
+        self.client.get(f"/api/portal/actualites/{self.actu1.slug}/")
+        self.client.get(f"/api/portal/actualites/{self.actu1.slug}/")
+        self.client.get(f"/api/portal/projets-incubes/{self.projet_incube.id}/")
+
+        # 1. Anonyme -> 401
+        res_anon = self.client.get("/api/portal/statistiques/")
+        self.assertEqual(res_anon.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Porteur -> 403
+        self.client.force_authenticate(user=self.porteur_user)
+        res_porteur = self.client.get("/api/portal/statistiques/")
+        self.assertEqual(res_porteur.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Coordonnateur -> 200
+        self.client.force_authenticate(user=self.coordo_user)
+        res_coordo = self.client.get("/api/portal/statistiques/")
+        self.assertEqual(res_coordo.status_code, status.HTTP_200_OK)
+        data = res_coordo.json()
+
+        self.assertIn("total_vues", data)
+        self.assertIn("actualites", data)
+        self.assertIn("projets", data)
+
+        self.assertEqual(data["total_vues"], 3)  # 2 actu + 1 projet
+        # Vérification du format des éléments
+        actu_stats = next(a for a in data["actualites"] if a["slug"] == self.actu1.slug)
+        self.assertEqual(actu_stats["vues"], 2)
+        proj_stats = next(p for p in data["projets"] if p["id"] == self.projet_incube.id)
+        self.assertEqual(proj_stats["vues"], 1)
+
