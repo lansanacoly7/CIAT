@@ -1,16 +1,11 @@
-from django.urls import path
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.views import APIView
+"""Configuration des routes pour apps.portal."""
+from rest_framework.routers import DefaultRouter
 
+from .views import ActualiteViewSet, AppelProjetViewSet, EvenementViewSet
 
-class PortalIndex(APIView):
-    """Point d'entrée provisoire du module. À remplacer par les vraies routes."""
+router = DefaultRouter()
+router.register(r"actualites", ActualiteViewSet, basename="actualite")
+router.register(r"evenements", EvenementViewSet, basename="evenement")
+router.register(r"appels", AppelProjetViewSet, basename="appel")
 
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        return Response({"module": "portal", "status": "à implémenter"})
-
-
-urlpatterns = [path("", PortalIndex.as_view(), name="portal-index")]
+urlpatterns = router.urls
