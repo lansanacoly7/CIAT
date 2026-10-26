@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api, saveTokens } from "@/lib/api";
 import type {
@@ -75,41 +75,83 @@ export function DashboardContent() {
 
   const isExplicitDemo = process.env.NEXT_PUBLIC_MODE_DEMO === "1";
 
-  // Récupération résiliente des données
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
+  // Chargement asynchrone des données synchronisé avec les filtres
+  useEffect(() => {
+    let isSubscribed = true;
 
-    // Si le mode démo est forcé explicitement par configuration
-    if (isExplicitDemo) {
-      setData(getMockAnalyticsData(filters));
-      setIsLiveConnected(false);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      // Auto-authentification transparente en développement si aucun token n'est encore stocké
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("ciat_access");
-        if (!token) {
-          try {
-            const authRes = await api<{ access: string; refresh: string }>(
-              "/auth/token/",
-              {
-                method: "POST",
-                body: { email: "coordo@ciat.sn", password: "Ciat2026!" },
-                auth: false,
-              }
-            );
-            if (authRes?.access) {
-              saveTokens(authRes.access, authRes.refresh);
-            }
-          } catch {
-            // En cas d'échec de l'auto-login, continuer pour tenter l'appel direct
-          }
+    async function syncData() {
+      if (isExplicitDemo) {
+        if (isSubscribed) {
+          setData(getMockAnalyticsData(filters));
+          setIsLiveConnected(false);
+          setIsLoading(false);
         }
+        return;
       }
 
+      try {
+        if (typeof window !== "undefined") {
+          const token = localStorage.getItem("ciat_access");
+          if (!token) {
+            try {
+              const authRes = await api<{ access: string; refresh: string }>(
+                "/auth/token/",
+                {
+                  method: "POST",
+                  body: { email: "coordo@ciat.sn", password: "Ciat2026!" },
+                  auth: false,
+                }
+              );
+              if (authRes?.access) {
+                saveTokens(authRes.access, authRes.refresh);
+              }
+            } catch {
+              // Continuer vers l'appel direct
+            }
+          }
+        }
+
+        const query = buildQuery(filters);
+        const [indicateurs, parDomaine, parCohorte, parGenre, evolution] =
+          await Promise.all([
+            api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
+            api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
+            api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
+            api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
+            api<EvolutionItem[]>(`/analytics/evolution/${query}`),
+          ]);
+
+        if (isSubscribed) {
+          setData({
+            indicateurs,
+            parDomaine,
+            parCohorte,
+            parGenre,
+            evolution,
+          });
+          setIsLiveConnected(true);
+          setIsLoading(false);
+        }
+      } catch {
+        if (isSubscribed) {
+          setData(getMockAnalyticsData(filters));
+          setIsLiveConnected(false);
+          setIsLoading(false);
+        }
+      }
+    }
+
+    syncData();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [filters, isExplicitDemo]);
+
+  const handleManualReconnect = async () => {
+    setIsReconnecting(true);
+    setIsLoading(true);
+    try {
       const query = buildQuery(filters);
       const [indicateurs, parDomaine, parCohorte, parGenre, evolution] =
         await Promise.all([
@@ -129,23 +171,12 @@ export function DashboardContent() {
       });
       setIsLiveConnected(true);
     } catch {
-      // Repli gracieux sur les données de démonstration avec bandeau explicite (Règle 5)
-      // Évite que la page soit détruite ou inutilisable si Django n'est pas démarré
       setData(getMockAnalyticsData(filters));
       setIsLiveConnected(false);
     } finally {
       setIsLoading(false);
+      setIsReconnecting(false);
     }
-  }, [filters, isExplicitDemo]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleManualReconnect = async () => {
-    setIsReconnecting(true);
-    await fetchData();
-    setIsReconnecting(false);
   };
 
   const updateFilters = (newFilters: DashboardFilters) => {
@@ -178,7 +209,7 @@ export function DashboardContent() {
             <div className="flex items-center gap-2">
               <Info className="h-4 w-4 shrink-0 text-amber-700" />
               <span>
-                <strong>MODE DÉMONSTRATION ACTIF :</strong> Le serveur backend Django (port 8000) n'a pas pu être joint. Affichage des données simulées.
+                <strong>MODE DÉMONSTRATION ACTIF :</strong> Le serveur backend Django (port 8000) n&apos;a pas pu être joint. Affichage des données simulées.
               </span>
             </div>
             <button
@@ -220,7 +251,7 @@ export function DashboardContent() {
             onChange={updateFilters}
             onReset={handleResetFilters}
             isFiltered={isFiltered}
-            onRefresh={fetchData}
+            onRefresh={handleManualReconnect}
             isLoading={isLoading}
             onExport={() => {
               window.print();
