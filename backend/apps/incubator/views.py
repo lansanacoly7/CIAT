@@ -275,9 +275,19 @@ class MentorListView(generics.ListAPIView):
 
 
 class ProjetMentorView(APIView):
-    """Affectation ou modification du mentor d'un projet."""
+    """Affectation ou consultation du mentor d'un projet."""
 
-    permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated()]
+        return [HasRole(Role.ADMIN, Role.COORDONNATEUR)()]
+
+    def get(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        affectation = AffectationMentor.objects.filter(projet=projet).select_related("mentor").first()
+        if not affectation:
+            return Response(None, status=status.HTTP_200_OK)
+        return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
         projet = get_object_or_404(Projet, pk=pk)

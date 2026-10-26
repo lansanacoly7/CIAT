@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, ApiError, type Page } from "@/lib/api";
 import type { Dossier } from "@/lib/incubator";
@@ -49,19 +50,7 @@ function DepotDossier() {
     let cancelled = false;
     (async () => {
       try {
-        let doms: Domaine[] = [];
-        try {
-          doms = await api<Domaine[]>("/domaines/");
-        } catch {
-          doms = [
-            { id: 1, nom: "Agriculture, agroalimentaire et élevage" },
-            { id: 2, nom: "Technologies de l'information, IA et numérique" },
-            { id: 3, nom: "Énergie, efficacité énergétique et énergies renouvelables" },
-            { id: 4, nom: "Pharmaceutique et biomédical" },
-            { id: 5, nom: "Éducation, formation professionnelle et insertion" },
-            { id: 6, nom: "Services aux collectivités, entrepreneuriat et incubation" },
-          ];
-        }
+        const doms = await api<Domaine[]>("/domaines/");
         if (cancelled) return;
         setDomaines(doms);
 
@@ -140,6 +129,30 @@ function DepotDossier() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-[#EFE4D6] pb-3">
+        <span className="rounded-lg bg-[#612D10] px-4 py-2 text-xs font-bold text-white shadow-xs">
+          📝 Dépôt de dossier
+        </span>
+        <Link
+          href="/incubateur/projets"
+          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
+        >
+          🎯 Suivi des projets
+        </Link>
+        <Link
+          href="/incubateur/alertes"
+          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
+        >
+          🚨 Alertes de retard
+        </Link>
+        <Link
+          href="/incubateur/evaluation"
+          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
+        >
+          ⚖️ Évaluations comité
+        </Link>
+      </div>
+
       <h1 className="text-2xl font-bold text-[#612D10] sm:text-3xl">Dépôt de dossier</h1>
       <p className="mb-6 mt-1 text-sm text-[#6b5646]">Présentez votre projet au CIAT en trois étapes.</p>
 

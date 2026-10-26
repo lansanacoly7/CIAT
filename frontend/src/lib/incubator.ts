@@ -4,7 +4,7 @@
  * Aucun stockage fictif ou contournement local : toutes les opérations sont reliées à l'API Django REST Framework.
  */
 
-import { api } from "./api";
+import { api, ApiError, API_URL } from "./api";
 
 export type PieceType =
   | "fiche_projet"
@@ -225,4 +225,182 @@ export async function soumettreDossier(dossierId: number): Promise<Dossier> {
     pieces_manquantes: manquantes,
     pieces: res.pieces ?? [],
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Suivi des projets incubés : mentor, objectifs, jalons, alertes      */
+/* ------------------------------------------------------------------ */
+
+export type ObjectifStatut = "a_faire" | "en_cours" | "atteint";
+export type JalonStatut = "a_faire" | "en_cours" | "fait";
+
+export const OBJECTIF_STATUTS: Record<ObjectifStatut, string> = {
+  a_faire: "À faire",
+  en_cours: "En cours",
+  atteint: "Atteint",
+};
+
+export const JALON_STATUTS: Record<JalonStatut, string> = {
+  a_faire: "À faire",
+  en_cours: "En cours",
+  fait: "Fait",
+};
+
+export interface Mentor {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  nom_complet: string;
+  telephone?: string;
+  organisation?: string;
+}
+
+/** Réponse de POST /projets/{id}/mentor/. */
+export interface AffectationMentor {
+  id: number;
+  projet: number;
+  mentor: number;
+  mentor_details: Mentor;
+  affecte_le: string;
+}
+
+export interface Objectif {
+  id: number;
+  projet: number;
+  libelle: string;
+  echeance: string | null;
+  statut: ObjectifStatut;
+  cree_par_nom?: string;
+}
+
+export interface PreuveJalon {
+  id: number;
+  jalon: number;
+  fichier: string;
+  nom: string;
+  depose_par_nom: string | null;
+  depose_le: string;
+}
+
+export interface CommentaireJalon {
+  id: number;
+  jalon: number;
+  auteur_nom: string;
+  texte: string;
+  cree_le: string;
+}
+
+export interface Jalon {
+  id: number;
+  projet: number;
+  titre: string;
+  echeance: string;
+  statut: JalonStatut;
+  en_retard: boolean;
+  preuves: PreuveJalon[];
+  commentaires: CommentaireJalon[];
+}
+
+export interface AlerteJalon {
+  id: number;
+  projet: number;
+  projet_titre: string;
+  titre: string;
+  echeance: string;
+  statut: JalonStatut;
+  en_retard: boolean;
+}
+
+export interface ObjectifInput {
+  libelle: string;
+  echeance: string | null;
+  statut: ObjectifStatut;
+}
+
+export interface JalonInput {
+  titre: string;
+  echeance: string;
+  statut: JalonStatut;
+}
+
+/** Les listes de suivi ne sont pas paginées ; on tolère malgré tout la forme paginée. */
+function unwrap<T>(res: T[] | { results: T[] }): T[] {
+  return Array.isArray(res) ? res : res.results;
+}
+
+export const getMentors = async () => unwrap(await api<Mentor[] | { results: Mentor[] }>("/incubator/mentors/"));
+
+export const getProjetMentor = async (projetId: number): Promise<AffectationMentor | null> => {
+  try {
+    return await api<AffectationMentor | null>(`/incubator/projets/${projetId}/mentor/`);
+  } catch {
+    return null;
+  }
+};
+
+export const affecterMentor = (projetId: number, mentor: number) =>
+  api<AffectationMentor>(`/incubator/projets/${projetId}/mentor/`, { method: "POST", body: { mentor } });
+
+export const getObjectifs = async (projetId: number) =>
+  unwrap(await api<Objectif[] | { results: Objectif[] }>(`/incubator/projets/${projetId}/objectifs/`));
+
+export const creerObjectif = (projetId: number, data: ObjectifInput) =>
+  api<Objectif>(`/incubator/projets/${projetId}/objectifs/`, { method: "POST", body: data });
+
+export const modifierObjectif = (id: number, data: Partial<ObjectifInput>) =>
+  api<Objectif>(`/incubator/objectifs/${id}/`, { method: "PATCH", body: data });
+
+export const getJalons = async (projetId: number) =>
+  unwrap(await api<Jalon[] | { results: Jalon[] }>(`/incubator/projets/${projetId}/jalons/`));
+
+export const creerJalon = (projetId: number, data: JalonInput) =>
+  api<Jalon>(`/incubator/projets/${projetId}/jalons/`, { method: "POST", body: data });
+
+export const modifierJalon = (id: number, data: Partial<JalonInput>) =>
+  api<Jalon>(`/incubator/jalons/${id}/`, { method: "PATCH", body: data });
+
+export function deposerPreuve(jalonId: number, fichier: File) {
+  const form = new FormData();
+  form.append("fichier", fichier);
+  return api<PreuveJalon>(`/incubator/jalons/${jalonId}/preuves/`, { method: "POST", body: form });
+}
+
+export const ajouterCommentaire = (jalonId: number, texte: string) =>
+  api<CommentaireJalon>(`/incubator/jalons/${jalonId}/commentaires/`, { method: "POST", body: { texte } });
+
+export const getAlertes = async () =>
+  unwrap(await api<AlerteJalon[] | { results: AlerteJalon[] }>("/incubator/alertes/"));
+
+/** Message français lisible pour une erreur d'API (jamais de données de secours). */
+export function suiviErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    if (err.status === 403) {
+      const d = err.data as { detail?: unknown } | null;
+      return typeof d?.detail === "string" ? d.detail : "Vous n'avez pas l'autorisation d'effectuer cette action.";
+    }
+    if (err.status === 404) return "Ressource introuvable.";
+    if (err.data && typeof err.data === "object") {
+      const parts = Object.values(err.data as Record<string, unknown>).flatMap((v) =>
+        Array.isArray(v) ? v.map(String) : typeof v === "string" ? [v] : [],
+      );
+      if (parts.length) return parts.join(" ");
+    }
+    return fallback;
+  }
+  return "Impossible de joindre le serveur. Vérifiez votre connexion internet et réessayez.";
+}
+
+export function formatDateFr(iso: string | null | undefined) {
+  if (!iso) return "—";
+  return new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** URL absolue d'un fichier servi par le backend (`/media/...`). */
+export function mediaUrl(fichier: string) {
+  return /^https?:\/\//.test(fichier) ? fichier : `${API_URL.replace(/\/api\/?$/, "")}${fichier}`;
 }
