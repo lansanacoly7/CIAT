@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { api, saveTokens } from "@/lib/api";
+import { api, API_URL, saveTokens } from "@/lib/api";
 import type {
   AnalyticsData,
   DashboardFilters,
@@ -28,6 +28,10 @@ import {
   EmptyState,
   KpiSkeletonGrid,
 } from "./components/PageState";
+import { ExportToolbar } from "./components/ExportToolbar";
+import { PrintSummaryModal } from "./components/PrintSummaryModal";
+import { NaturalLanguageQueryBox } from "./components/NaturalLanguageQueryBox";
+import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
 import { CheckCircle2, Info, RefreshCw } from "lucide-react";
 
 function buildQuery(filters: DashboardFilters): string {
@@ -51,6 +55,7 @@ export function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Synchronisation des filtres avec l'URL searchParams
   const filters: DashboardFilters = useMemo(() => {
@@ -254,131 +259,192 @@ export function DashboardContent() {
             onRefresh={handleManualReconnect}
             isLoading={isLoading}
             onExport={() => {
-              window.print();
+              setIsPrintModalOpen(true);
             }}
           />
         </div>
 
         {/* =========================================================================
-            3. ÉTATS : CHARGEMENT / VIDE / CONTENU
+            2.1 BARRE D'EXPORTS (IMAGE PNG, EXCEL, PDF & FICHE IMPRIMABLE)
            ========================================================================= */}
-        {isLoading ? (
-          <div className="space-y-4 sm:space-y-5">
-            <KpiSkeletonGrid />
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              <ChartSkeleton />
-              <ChartSkeleton />
+        <div className="animate-fade-in-up" style={{ animationDelay: "110ms" }}>
+          <ExportToolbar
+            filters={filters}
+            onOpenPrintModal={() => setIsPrintModalOpen(true)}
+            targetCaptureId="dashboard-main-content"
+          />
+        </div>
+
+        {/* =========================================================================
+            2.2 INTERROGATION DES DONNÉES EN LANGAGE NATUREL (IA DÉCISIONNELLE - T2)
+           ========================================================================= */}
+        <div className="animate-fade-in-up" style={{ animationDelay: "125ms" }}>
+          <NaturalLanguageQueryBox />
+        </div>
+
+        {/* Zone de contenu principale ciblée pour l'export image PNG */}
+        <div id="dashboard-main-content">
+          {isLoading ? (
+            <div className="space-y-4 sm:space-y-5">
+              <KpiSkeletonGrid />
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <ChartSkeleton />
+                <ChartSkeleton />
+              </div>
             </div>
-          </div>
-        ) : hasNoData ? (
-          <EmptyState onReset={handleResetFilters} />
-        ) : data ? (
-          <div className="space-y-4 sm:space-y-5">
-            {/* =========================================================================
-                4. LES 6 CARTES KPI COMPACTES & GAIN DE PLACE (6 COLONNES DESKTOP)
-               ========================================================================= */}
-            <section
-              aria-labelledby="kpis-title"
-              className="animate-fade-in-up"
-              style={{ animationDelay: "140ms" }}
-            >
-              <h2 id="kpis-title" className="sr-only">
-                Indicateurs clés de performance
-              </h2>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
-                <KpiCard
-                  label="Idées reçues"
-                  value={data.indicateurs.idees_recues}
-                  subtext="Total des soumissions initiales"
-                />
-                <KpiCard
-                  label="Dossiers déposés"
-                  value={data.indicateurs.dossiers_deposes}
-                  subtext="Candidatures avec pièces obligatoires"
-                />
-                <KpiCard
-                  label="Projets sélectionnés"
-                  value={data.indicateurs.projets_selectionnes}
-                  subtext="Avis favorable du comité"
-                />
-                <KpiCard
-                  label="Projets incubés"
-                  value={data.indicateurs.projets_incubes}
-                  subtext="Parcours d'incubation actif"
-                />
-                <KpiCard
-                  label="Prototypes validés"
-                  value={data.indicateurs.prototypes}
-                  subtext="Maturation technique certifiée"
-                />
-                <KpiCard
-                  label="Taux de sélection"
-                  value={data.indicateurs.taux_selection}
-                  suffix="%"
-                  subtext="Sélectionnés / dossiers"
-                  badge={
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Cohorte active
-                    </span>
-                  }
-                />
-              </div>
-            </section>
+          ) : hasNoData ? (
+            <EmptyState onReset={handleResetFilters} />
+          ) : data ? (
+            <div className="space-y-4 sm:space-y-5">
+              {/* =========================================================================
+                  4. LES 6 CARTES KPI COMPACTES & GAIN DE PLACE (6 COLONNES DESKTOP)
+                 ========================================================================= */}
+              <section
+                aria-labelledby="kpis-title"
+                className="animate-fade-in-up"
+                style={{ animationDelay: "140ms" }}
+              >
+                <h2 id="kpis-title" className="sr-only">
+                  Indicateurs clés de performance
+                </h2>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
+                  <KpiCard
+                    label="Idées reçues"
+                    value={data.indicateurs.idees_recues}
+                    subtext="Total des soumissions initiales"
+                  />
+                  <KpiCard
+                    label="Dossiers déposés"
+                    value={data.indicateurs.dossiers_deposes}
+                    subtext="Candidatures avec pièces obligatoires"
+                  />
+                  <KpiCard
+                    label="Projets sélectionnés"
+                    value={data.indicateurs.projets_selectionnes}
+                    subtext="Avis favorable du comité"
+                  />
+                  <KpiCard
+                    label="Projets incubés"
+                    value={data.indicateurs.projets_incubes}
+                    subtext="Parcours d'incubation actif"
+                  />
+                  <KpiCard
+                    label="Prototypes validés"
+                    value={data.indicateurs.prototypes}
+                    subtext="Maturation technique certifiée"
+                  />
+                  <KpiCard
+                    label="Taux de sélection"
+                    value={data.indicateurs.taux_selection}
+                    suffix="%"
+                    subtext="Sélectionnés / dossiers"
+                    badge={
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Cohorte active
+                      </span>
+                    }
+                  />
+                </div>
+              </section>
 
-            {/* =========================================================================
-                5. LES 4 GRAPHIQUES RECHARTS (ÉLÉGANTS, ARRONDIS, CHARTE CIAT)
-               ========================================================================= */}
-            <section
-              aria-labelledby="charts-title"
-              className="space-y-6 animate-fade-in-up"
-              style={{ animationDelay: "200ms" }}
-            >
-              <h2 id="charts-title" className="sr-only">
-                Visualisations graphiques
-              </h2>
+              {/* =========================================================================
+                  5. LES 4 GRAPHIQUES RECHARTS (ÉLÉGANTS, ARRONDIS, CHARTE CIAT)
+                 ========================================================================= */}
+              <section
+                aria-labelledby="charts-title"
+                className="space-y-6 animate-fade-in-up"
+                style={{ animationDelay: "200ms" }}
+              >
+                <h2 id="charts-title" className="sr-only">
+                  Visualisations graphiques
+                </h2>
 
-              {/* Ligne 1 : Évolution et Répartition par domaine */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ChartCard
-                  title="Évolution mensuelle des projets"
-                  description="Progression des projets créés au CIAT"
-                  badge="Série temporelle"
-                >
-                  <EvolutionChart data={data.evolution} />
-                </ChartCard>
+                {/* Ligne 1 : Évolution et Répartition par domaine */}
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <ChartCard
+                    title="Évolution mensuelle des projets"
+                    description="Progression des projets créés au CIAT"
+                    badge="Série temporelle"
+                  >
+                    <EvolutionChart data={data.evolution} />
+                  </ChartCard>
 
-                <ChartCard
-                  title="Projets par domaine prioritaire"
-                  description="Répartition des innovations selon les filières d'excellence"
-                  badge="Filières CIAT"
-                >
-                  <DomaineChart data={data.parDomaine} />
-                </ChartCard>
-              </div>
+                  <ChartCard
+                    title="Projets par domaine prioritaire"
+                    description="Répartition des innovations selon les filières d'excellence"
+                    badge="Filières CIAT"
+                  >
+                    <DomaineChart data={data.parDomaine} />
+                  </ChartCard>
+                </div>
 
-              {/* Ligne 2 : Comparaison cohortes et Répartition genre */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ChartCard
-                  title="Comparaison entre cohortes"
-                  description="Idées soumises, dossiers retenus et prototypes finalisés"
-                  badge="2024 — 2026"
-                >
-                  <CohorteChart data={data.parCohorte} />
-                </ChartCard>
+                {/* Ligne 2 : Comparaison cohortes et Répartition genre */}
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <ChartCard
+                    title="Comparaison entre cohortes"
+                    description="Idées soumises, dossiers retenus et prototypes finalisés"
+                    badge="2024 — 2026"
+                  >
+                    <CohorteChart data={data.parCohorte} />
+                  </ChartCard>
 
-                <ChartCard
-                  title="Répartition par genre des porteurs"
-                  description="Mixité des équipes et représentativité des porteurs de projet"
-                  badge="Parité & Impact"
-                >
-                  <GenreChart data={data.parGenre} />
-                </ChartCard>
-              </div>
-            </section>
-          </div>
-        ) : null}
+                  <ChartCard
+                    title="Répartition par genre des porteurs"
+                    description="Mixité des équipes et représentativité des porteurs de projet"
+                    badge="Parité & Impact"
+                  >
+                    <GenreChart data={data.parGenre} />
+                  </ChartCard>
+                </div>
+              </section>
+
+              {/* =========================================================================
+                  5.1 SUIVI DES PARTENARIATS ET FINANCEMENTS (T3)
+                 ========================================================================= */}
+              <section
+                aria-labelledby="partenariats-title"
+                className="animate-fade-in-up"
+                style={{ animationDelay: "240ms" }}
+              >
+                <PartenariatsFinancementsSection filters={filters} />
+              </section>
+            </div>
+          ) : null}
+        </div>
+
+        {/* =========================================================================
+            6. MODALE FICHE DE SYNTHÈSE IMPRIMABLE
+           ========================================================================= */}
+        {data && (
+          <PrintSummaryModal
+            isOpen={isPrintModalOpen}
+            onClose={() => setIsPrintModalOpen(false)}
+            data={data}
+            filters={filters}
+            onExportPdf={async () => {
+              const query = buildQuery(filters);
+              const token = typeof window !== "undefined" ? localStorage.getItem("ciat_access") : null;
+              const headers = new Headers();
+              if (token) headers.set("Authorization", `Bearer ${token}`);
+              const res = await fetch(`${API_URL}/analytics/export/?format=pdf${query ? `&${query.slice(1)}` : ""}`, {
+                headers,
+              });
+              if (!res.ok) throw new Error("Erreur génération PDF");
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `ciat_fiche_synthese_${new Date().toISOString().slice(0, 10)}.pdf`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
+

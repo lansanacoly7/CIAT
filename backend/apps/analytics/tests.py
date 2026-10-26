@@ -10,14 +10,26 @@ Vérifie :
 5. Robustesse aux cas limites (base vide, 0 division)
 """
 from datetime import date, timedelta
+from decimal import Decimal
 import io
+from unittest.mock import patch
 import openpyxl
+
+from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
+from apps.analytics.models import (
+    Financement,
+    Partenariat,
+    StatutFinancement,
+    StatutPartenariat,
+    TypePartenariat,
+)
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
@@ -66,6 +78,7 @@ class AnalyticsSecurityAndRBACPermissionsTests(TestCase):
             reverse("analytics-par-genre"),
             reverse("analytics-evolution"),
         ]
+
 
     def test_anonymous_access_is_denied(self):
         """Un utilisateur non authentifié ne peut accéder à aucun endpoint d'analyse."""
@@ -477,4 +490,616 @@ class AnalyticsExportTests(TestCase):
         """Un visiteur non connecté est rejeté (401)."""
         res = self.client.get(reverse("analytics-export"), {"format": "xlsx"})
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsAIQuestionTests(TestCase):
+    """Tests complets pour l'interrogation en langage naturel (T2)."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse("analytics-question")
+
+        # Utilisateurs
+        self.admin = User.objects.create_user(
+            email="admin.ai@ciat.sn", password="pwd", role=Role.ADMIN
+        )
+        self.coordo = User.objects.create_user(
+            email="coordo.ai@ciat.sn", password="pwd", role=Role.COORDONNATEUR
+        )
+        self.comite = User.objects.create_user(
+            email="comite.ai@ciat.sn", password="pwd", role=Role.COMITE
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.ai@ciat.sn", password="pwd", role=Role.PORTEUR
+        )
+        self.visiteur = User.objects.create_user(
+            email="visiteur.ai@ciat.sn", password="pwd", role=Role.VISITEUR
+        )
+
+        # Domaines et cohortes
+        self.domaine_tic = Domaine.objects.create(nom="TIC & Numérique", slug="tic")
+        self.domaine_agri = Domaine.objects.create(nom="Agroécologie", slug="agri")
+        self.cohorte_2024 = Cohorte.objects.create(nom="Cohorte 2024", annee=2024)
+        self.cohorte_2025 = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+
+        # Porteurs avec genre
+        self.porteur_f = User.objects.create_user(
+            email="femme.ai@ciat.sn", password="pwd", role=Role.PORTEUR, genre="F"
+        )
+        self.porteur_h = User.objects.create_user(
+            email="homme.ai@ciat.sn", password="pwd", role=Role.PORTEUR, genre="H"
+        )
+
+        # Projets
+        Projet.objects.create(
+            titre="Solution IoT Smart Agriculture",
+            resume="Projet IoT",
+            domaine=self.domaine_agri,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur_f,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+        Projet.objects.create(
+            titre="Plateforme E-santé",
+            resume="Santé digitale",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur_h,
+            statut=Projet.Statut.INCUBE,
+        )
+        Projet.objects.create(
+            titre="Ancien projet 2024",
+            resume="Archive 2024",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2024,
+            porteur=self.porteur_f,
+            statut=Projet.Statut.DEPOSE,
+        )
+
+    def test_anonymous_and_unauthorized_roles_rejected(self):
+        """Les requêtes anonymes ou de porteurs/visiteurs sont bloquées (401/403)."""
+        # Anonyme
+        res_anon = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertIn(
+            res_anon.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
+
+        # Porteur
+        self.client.force_authenticate(user=self.porteur)
+        res_porteur = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertEqual(res_porteur.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Visiteur
+        self.client.force_authenticate(user=self.visiteur)
+        res_visiteur = self.client.post(self.url, {"question": "Combien de projets ?"})
+        self.assertEqual(res_visiteur.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_empty_or_missing_question_returns_400(self):
+        """Une question absente ou vide renvoie HTTP 400 Bad Request."""
+        self.client.force_authenticate(user=self.coordo)
+
+        res_empty = self.client.post(self.url, {})
+        self.assertEqual(res_empty.status_code, status.HTTP_400_BAD_REQUEST)
+
+        res_whitespace = self.client.post(self.url, {"question": "    "})
+        self.assertEqual(res_whitespace.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_prototype_in_cohorte_2025_question_success(self, mock_chat):
+        """Vérifie : 'Combien de projets en prototype dans la cohorte 2025 ?' donne le bon chiffre."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        # Mocking : 1er appel = routeur JSON, 2e appel = synthèse
+        router_response = json.dumps({
+            "endpoint": "indicateurs",
+            "filtres": {"cohorte": "2025", "statut": "prototype"},
+            "hors_sujet": False,
+        })
+        synthesis_response = "Il y a exactement 1 projet au stade de prototype dans la cohorte 2025."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets en prototype dans la cohorte 2025 ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+
+        self.assertIn("reponse", data)
+        self.assertIn("donnees", data)
+        self.assertIn("filtres_utilises", data)
+
+        self.assertEqual(data["reponse"], synthesis_response)
+        self.assertEqual(data["filtres_utilises"]["cohorte"], "2025")
+        self.assertEqual(data["filtres_utilises"]["statut"], "prototype")
+
+        # Recoupement des données ORM exactes calculées par Django
+        self.assertEqual(data["donnees"]["prototypes"], 1)
+        self.assertEqual(data["donnees"]["idees_recues"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_par_domaine_question(self, mock_chat):
+        """Vérifie le routage vers l'endpoint 'par-domaine' et les données agrégées."""
+        import json
+        self.client.force_authenticate(user=self.admin)
+
+        router_response = json.dumps({
+            "endpoint": "par-domaine",
+            "filtres": {},
+            "hors_sujet": False,
+        })
+        synthesis_response = "Les projets se répartissent entre TIC (2 projets) et Agroécologie (1 projet)."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quelle est la répartition des projets par domaine ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(data["reponse"], synthesis_response)
+        self.assertIsInstance(data["donnees"], list)
+        domaines = {d["domaine"]: d["total"] for d in data["donnees"]}
+        self.assertEqual(domaines["TIC & Numérique"], 2)
+        self.assertEqual(domaines["Agroécologie"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_par_genre_question(self, mock_chat):
+        """Vérifie le routage vers l'endpoint 'par-genre'."""
+        import json
+        self.client.force_authenticate(user=self.comite)
+
+        router_response = json.dumps({
+            "endpoint": "par-genre",
+            "filtres": {},
+            "hors_sujet": False,
+        })
+        synthesis_response = "2 projets sont portés par des femmes et 1 par un homme."
+        mock_chat.side_effect = [router_response, synthesis_response]
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quelle est la part des femmes parmi les porteurs de projet ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        genres = {g["genre"]: g["total"] for g in data["donnees"]}
+        self.assertEqual(genres["Femmes"], 2)
+        self.assertEqual(genres["Hommes"], 1)
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_off_topic_question_is_refused(self, mock_chat):
+        """Une question hors sujet est explicitement refusée selon les consignes."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        router_response = json.dumps({
+            "endpoint": "hors_sujet",
+            "filtres": {},
+            "hors_sujet": True,
+        })
+        mock_chat.return_value = router_response
+
+        res = self.client.post(
+            self.url,
+            {"question": "Quel temps fait-il aujourd'hui à Diamniadio ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(
+            data["reponse"],
+            "Je ne peux pas répondre à cette question avec les données disponibles.",
+        )
+        self.assertIsNone(data["donnees"])
+        self.assertEqual(data["filtres_utilises"], {})
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_security_injection_endpoint_refused(self, mock_chat):
+        """Toute tentative d'injection d'endpoint non autorisé est rejetée."""
+        import json
+        self.client.force_authenticate(user=self.coordo)
+
+        # Tentative d'injection d'un endpoint arbitraire
+        router_response = json.dumps({
+            "endpoint": "DROP_TABLE_PROJETS",
+            "filtres": {"cohorte": "2025"},
+            "hors_sujet": False,
+        })
+        mock_chat.return_value = router_response
+
+        res = self.client.post(
+            self.url,
+            {"question": "Supprime les projets"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(
+            data["reponse"],
+            "Je ne peux pas répondre à cette question avec les données disponibles.",
+        )
+        self.assertIsNone(data["donnees"])
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_ai_not_configured_returns_503(self, mock_chat):
+        """Quand aucune clé d'API n'est configurée, l'API renvoie 503 Service Unavailable."""
+        from apps.core.ai import AINotConfigured
+        self.client.force_authenticate(user=self.coordo)
+
+        mock_chat.side_effect = AINotConfigured("Aucune clé d'API IA")
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("Le service d'analyse IA n'est pas configuré", res.json().get("detail", ""))
+
+    @patch("apps.analytics.services.ai.chat")
+    def test_ai_error_returns_503(self, mock_chat):
+        """Quand les fournisseurs IA échouent (quota, timeout), l'API renvoie 503."""
+        from apps.core.ai import AIError
+        self.client.force_authenticate(user=self.coordo)
+
+        mock_chat.side_effect = AIError("Quota atteint")
+
+        res = self.client.post(
+            self.url,
+            {"question": "Combien de projets ?"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("Le service d'analyse IA est momentanément indisponible", res.json().get("detail", ""))
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsPartenariatsAndFinancementsModelsTests(TestCase):
+    """Validation des règles métier strictes des modèles Partenariat et Financement (T3)."""
+
+    def setUp(self):
+        self.domaine = Domaine.objects.create(nom="TIC", slug="tic")
+        self.cohorte = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+        self.porteur = User.objects.create_user(
+            email="porteur.t3@ciat.sn", password="pwd", role=Role.PORTEUR
+        )
+
+        self.projet_idee = Projet.objects.create(
+            titre="Idée sans partenariat",
+            resume="Test idée",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+
+        self.projet_depose = Projet.objects.create(
+            titre="Dépôt sans financement",
+            resume="Test dépose",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.DEPOSE,
+        )
+
+        self.projet_incube = Projet.objects.create(
+            titre="Projet Incubé Éligible",
+            resume="Incubation",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.INCUBE,
+        )
+
+    def test_partenariat_creation_allowed_for_incubated_project(self):
+        """Un projet sélectionné ou incubé peut recevoir un partenariat."""
+        part = Partenariat.objects.create(
+            projet=self.projet_incube,
+            partenaire="Sonatel",
+            type=TypePartenariat.TECHNIQUE,
+            date_debut=date.today(),
+            statut=StatutPartenariat.ACTIF,
+        )
+        self.assertIsNotNone(part.id)
+        self.assertEqual(part.partenaire, "Sonatel")
+
+    def test_partenariat_forbidden_for_idea_or_depose_project(self):
+        """Une ValidationError est levée si on tente d'associer un partenariat à une simple idée."""
+        with self.assertRaises(ValidationError):
+            Partenariat.objects.create(
+                projet=self.projet_idee,
+                partenaire="DER/FJ",
+                type=TypePartenariat.FINANCIER,
+                date_debut=date.today(),
+            )
+
+        with self.assertRaises(ValidationError):
+            Partenariat.objects.create(
+                projet=self.projet_depose,
+                partenaire="DER/FJ",
+                type=TypePartenariat.FINANCIER,
+                date_debut=date.today(),
+            )
+
+    def test_financement_creation_allowed_for_incubated_project(self):
+        """Un projet incubé peut recevoir un financement."""
+        fin = Financement.objects.create(
+            projet=self.projet_incube,
+            source="DER/FJ",
+            montant=Decimal("5000000"),
+            date=date.today(),
+            statut=StatutFinancement.DECAISSE,
+        )
+        self.assertIsNotNone(fin.id)
+        self.assertEqual(fin.montant, Decimal("5000000"))
+
+    def test_financement_forbidden_for_idea_or_depose_project(self):
+        """Une ValidationError est levée si on tente d'associer un financement à une idée ou dossier déposé."""
+        with self.assertRaises(ValidationError):
+            Financement.objects.create(
+                projet=self.projet_idee,
+                source="Fonds Amorçage",
+                montant=Decimal("3000000"),
+                date=date.today(),
+            )
+
+        with self.assertRaises(ValidationError):
+            Financement.objects.create(
+                projet=self.projet_depose,
+                source="Fonds Amorçage",
+                montant=Decimal("3000000"),
+                date=date.today(),
+            )
+
+    def test_financement_negative_amount_raises_validation_error(self):
+        """Un montant négatif ou nul est strictement interdit."""
+        with self.assertRaises(ValidationError):
+            Financement.objects.create(
+                projet=self.projet_incube,
+                source="DER/FJ",
+                montant=Decimal("-500000"),
+                date=date.today(),
+            )
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsPartenariatsAndFinancementsEndpointsTests(TestCase):
+    """Vérification des endpoints DRF pour les partenariats et financements (T3)."""
+
+    def setUp(self):
+        self.client = APIClient()
+
+        # Utilisateurs
+        self.admin = User.objects.create_user(
+            email="admin.pf@ciat.sn", password="pwd", role=Role.ADMIN
+        )
+        self.coordo = User.objects.create_user(
+            email="coordo.pf@ciat.sn", password="pwd", role=Role.COORDONNATEUR
+        )
+        self.comite = User.objects.create_user(
+            email="comite.pf@ciat.sn", password="pwd", role=Role.COMITE
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur.pf@ciat.sn", password="pwd", role=Role.PORTEUR
+        )
+        self.visiteur = User.objects.create_user(
+            email="visiteur.pf@ciat.sn", password="pwd", role=Role.VISITEUR
+        )
+
+        # Domaines et cohortes
+        self.domaine_tic = Domaine.objects.create(nom="TIC Numérique", slug="tic")
+        self.domaine_agri = Domaine.objects.create(nom="Agroécologie", slug="agri")
+        self.cohorte_2024 = Cohorte.objects.create(nom="Cohorte 2024", annee=2024)
+        self.cohorte_2025 = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+
+        # Projets éligibles
+        self.projet_1 = Projet.objects.create(
+            titre="Smart Agri IoT",
+            resume="IoT Agri",
+            domaine=self.domaine_agri,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+        self.projet_2 = Projet.objects.create(
+            titre="E-Santé Dakar",
+            resume="Santé digitale",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2024,
+            porteur=self.porteur,
+            statut=Projet.Statut.INCUBE,
+        )
+
+        # Partenariats
+        self.part_1 = Partenariat.objects.create(
+            projet=self.projet_1,
+            partenaire="DER/FJ",
+            type=TypePartenariat.FINANCIER,
+            date_debut=date.today(),
+            statut=StatutPartenariat.ACTIF,
+        )
+        self.part_2 = Partenariat.objects.create(
+            projet=self.projet_2,
+            partenaire="Orange Fab",
+            type=TypePartenariat.COMMERCIAL,
+            date_debut=date.today() - timedelta(days=60),
+            statut=StatutPartenariat.SIGNE,
+        )
+
+        # Financements
+        self.fin_1 = Financement.objects.create(
+            projet=self.projet_1,
+            source="DER/FJ",
+            montant=Decimal("10000000"),
+            date=date.today(),
+            statut=StatutFinancement.DECAISSE,
+        )
+        self.fin_2 = Financement.objects.create(
+            projet=self.projet_2,
+            source="CIAT Amorçage",
+            montant=Decimal("5000000"),
+            date=date.today() - timedelta(days=30),
+            statut=StatutFinancement.ACCORDE,
+        )
+
+        self.url_part = reverse("analytics-partenariats")
+        self.url_fin = reverse("analytics-financements")
+        self.url_stats = reverse("analytics-partenariats-financements-stats")
+
+    def test_rbac_permissions_on_endpoints(self):
+        """Seuls l'équipe CIAT et le comité peuvent consulter les partenariats et financements."""
+        # Anonyme
+        for url in [self.url_part, self.url_fin, self.url_stats]:
+            res = self.client.get(url)
+            self.assertIn(
+                res.status_code,
+                [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+            )
+
+        # Porteur
+        self.client.force_authenticate(user=self.porteur)
+        for url in [self.url_part, self.url_fin, self.url_stats]:
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Visiteur
+        self.client.force_authenticate(user=self.visiteur)
+        for url in [self.url_part, self.url_fin, self.url_stats]:
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Rôles autorisés
+        for u in [self.coordo, self.admin, self.comite]:
+            self.client.force_authenticate(user=u)
+            for url in [self.url_part, self.url_fin, self.url_stats]:
+                res = self.client.get(url)
+                self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_partenariats_list_and_filters(self):
+        """GET /api/analytics/partenariats/ filtre fidèlement par cohorte, domaine et statut."""
+        self.client.force_authenticate(user=self.coordo)
+
+        res = self.client.get(self.url_part)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(len(data), 2)
+
+        # Filtre sur cohorte 2025
+        res_c25 = self.client.get(self.url_part, {"cohorte": "2025"})
+        self.assertEqual(res_c25.status_code, status.HTTP_200_OK)
+        data_c25 = res_c25.json()
+        self.assertEqual(len(data_c25), 1)
+        self.assertEqual(data_c25[0]["partenaire"], "DER/FJ")
+
+        # Filtre sur type
+        res_type = self.client.get(self.url_part, {"type": "commercial"})
+        self.assertEqual(res_type.status_code, status.HTTP_200_OK)
+        data_type = res_type.json()
+        self.assertEqual(len(data_type), 1)
+        self.assertEqual(data_type[0]["partenaire"], "Orange Fab")
+
+    def test_financements_list_and_filters(self):
+        """GET /api/analytics/financements/ filtre fidèlement par source et domaine."""
+        self.client.force_authenticate(user=self.coordo)
+
+        res = self.client.get(self.url_fin)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(len(data), 2)
+
+        # Filtre sur source DER/FJ
+        res_src = self.client.get(self.url_fin, {"source": "DER/FJ"})
+        self.assertEqual(res_src.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_src.json()), 1)
+
+        # Filtre sur domaine agri
+        res_dom = self.client.get(self.url_fin, {"domaine": "agri"})
+        self.assertEqual(res_dom.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_dom.json()), 1)
+
+    def test_partenariats_financements_stats(self):
+        """GET /api/analytics/partenariats-financements/stats/ calcule exactement les indicateurs."""
+        self.client.force_authenticate(user=self.coordo)
+
+        res = self.client.get(self.url_stats)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        stats_data = res.json()
+
+        # Total financé = 10 000 000 + 5 000 000 = 15 000 000
+        # Décaissé = 10 000 000
+        # Partenariats actifs = 1 (part_1)
+        # Total partenariats = 2
+        self.assertEqual(stats_data["total_finance"], 15000000)
+        self.assertEqual(stats_data["financements_decaisses"], 10000000)
+        self.assertEqual(stats_data["nombre_financements"], 2)
+        self.assertEqual(stats_data["nombre_partenariats_actifs"], 1)
+        self.assertEqual(stats_data["total_partenariats"], 2)
+        self.assertEqual(len(stats_data["par_source"]), 2)
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsSeedAnalyticsCommandTests(TestCase):
+    """Vérification de la commande de remplissage seed_analytics (idempotence et cohérence)."""
+
+    def setUp(self):
+        self.domaine = Domaine.objects.create(nom="TIC Test", slug="tic-test")
+        self.cohorte = Cohorte.objects.create(nom="Cohorte Test 2025", annee=2025)
+        self.porteur = User.objects.create_user(
+            email="porteur.seed@ciat.sn", password="pwd", role=Role.PORTEUR
+        )
+
+        # 1 Idée (ne doit JAMAIS recevoir de financement)
+        Projet.objects.create(
+            titre="Idée pure",
+            resume="Idée",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+
+        # 2 Projets éligibles (Incubé & Prototype)
+        Projet.objects.create(
+            titre="Projet Éligible 1",
+            resume="Incubé",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.INCUBE,
+        )
+        Projet.objects.create(
+            titre="Projet Éligible 2",
+            resume="Prototype",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+
+    def test_seed_analytics_is_idempotent_and_respects_rules(self):
+        """seed_analytics génère des données valides et ne crée aucun doublon au second passage."""
+        # Premier passage
+        call_command("seed_analytics")
+        nb_part_1 = Partenariat.objects.count()
+        nb_fin_1 = Financement.objects.count()
+
+        self.assertGreater(nb_part_1, 0)
+        self.assertGreater(nb_fin_1, 0)
+
+        # Règle d'or : aucune idée ni dossier déposé n'a de financement
+        self.assertEqual(
+            Financement.objects.filter(projet__statut=Projet.Statut.IDEE).count(), 0
+        )
+        self.assertEqual(
+            Partenariat.objects.filter(projet__statut=Projet.Statut.IDEE).count(), 0
+        )
+
+        # Deuxième passage (idempotence)
+        call_command("seed_analytics")
+        nb_part_2 = Partenariat.objects.count()
+        nb_fin_2 = Financement.objects.count()
+
+        self.assertEqual(nb_part_1, nb_part_2)
+        self.assertEqual(nb_fin_1, nb_fin_2)
+
 
