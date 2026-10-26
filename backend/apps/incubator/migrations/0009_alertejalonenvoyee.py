@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('incubator', '0006_suiviprojet'),
+        ('incubator', '0008_alter_piece_fichier_alter_preuvejalon_fichier'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
