@@ -9,6 +9,7 @@ Points d'entrée de l'API /api/analytics/ :
 """
 from django.urls import path
 from .views import (
+    AnalyticsExportView,
     EvolutionView,
     IndicateursView,
     ParCohorteView,
@@ -22,4 +23,5 @@ urlpatterns = [
     path("par-cohorte/", ParCohorteView.as_view(), name="analytics-par-cohorte"),
     path("par-genre/", ParGenreView.as_view(), name="analytics-par-genre"),
     path("evolution/", EvolutionView.as_view(), name="analytics-evolution"),
+    path("export/", AnalyticsExportView.as_view(), name="analytics-export"),
 ]
