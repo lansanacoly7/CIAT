@@ -16,9 +16,11 @@ from .views import (
     ObjectifDetailView,
     PieceCreateView,
     PieceDeleteView,
+    ProjetCompteRenduExportView,
     ProjetJalonListCreateView,
     ProjetMentorView,
     ProjetObjectifListCreateView,
+    ProjetSuiviListCreateView,
 )
 
 app_name = "incubator"
@@ -35,6 +37,10 @@ urlpatterns = [
     path("jalons/<int:pk>/preuves/", JalonPreuveCreateView.as_view(), name="jalon-preuves"),
     path("jalons/<int:pk>/commentaires/", JalonCommentaireCreateView.as_view(), name="jalon-commentaires"),
     path("alertes/", AlerteJalonListView.as_view(), name="alertes-retard"),
+    # Suivis à 3 et 6 mois et compte rendu export
+    path("projets/<int:pk>/suivis/", ProjetSuiviListCreateView.as_view(), name="projet-suivis"),
+    path("projets/<int:pk>/compte-rendu/", ProjetCompteRenduExportView.as_view(), name="projet-compte-rendu"),
+
 
     # Dossiers de candidature
     path("dossiers/", DossierListCreateView.as_view(), name="dossier-list-create"),

@@ -1,8 +1,13 @@
 """Vues DRF pour le module P2 - Gestion de l'incubateur."""
+import io
 from django.db import transaction
 from django.db.models import Avg
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+import openpyxl
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,6 +22,7 @@ from .models import (
     Critere,
     Decision,
     Dossier,
+    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
@@ -25,6 +31,7 @@ from .models import (
     PreuveJalon,
     StatutDossier,
     StatutJalon,
+    SuiviProjet,
 )
 from .serializers import (
     AffectationMentorSerializer,
@@ -40,6 +47,7 @@ from .serializers import (
     ObjectifSerializer,
     PieceSerializer,
     PreuveJalonSerializer,
+    SuiviProjetSerializer,
 )
 
 
@@ -474,5 +482,261 @@ class AlerteJalonListView(APIView):
 
         serializer = AlerteJalonSerializer(qs.order_by("echeance"), many=True)
         return Response(serializer.data)
+
+
+class ProjetSuiviListCreateView(APIView):
+    """Consultation et saisie des bilans de suivi à 3 et 6 mois."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _check_access(self, user, projet, write=False):
+        if user.is_equipe:
+            return True
+
+        is_mentor = hasattr(projet, "affectation_mentor") and projet.affectation_mentor.mentor_id == user.id
+
+        if user.role == Role.MENTOR:
+            if not is_mentor:
+                raise PermissionDenied("Vous n'êtes pas le mentor affecté à ce projet.")
+            return True
+
+        if user.role == Role.PORTEUR and projet.porteur_id == user.id:
+            if write:
+                raise PermissionDenied("Les porteurs de projet ne peuvent pas saisir de bilans de suivi.")
+            return True
+
+        raise PermissionDenied("Vous n'avez pas accès aux bilans de suivi de ce projet.")
+
+    def get(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=False)
+        suivis = SuiviProjet.objects.filter(projet=projet).select_related("redige_par")
+        return Response(SuiviProjetSerializer(suivis, many=True).data)
+
+    def post(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=True)
+        serializer = SuiviProjetSerializer(
+            data=request.data,
+            context={"request": request, "projet": projet},
+        )
+        serializer.is_valid(raise_exception=True)
+        suivi = serializer.save()
+        return Response(SuiviProjetSerializer(suivi).data, status=status.HTTP_201_CREATED)
+
+
+class ProjetCompteRenduExportView(APIView):
+    """Génération du compte rendu complet d'un projet incubé au format Excel (.xlsx)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        projet = get_object_or_404(
+            Projet.objects.select_related("porteur", "domaine", "cohorte", "affectation_mentor__mentor"),
+            pk=pk,
+        )
+        user = request.user
+        is_mentor = hasattr(projet, "affectation_mentor") and projet.affectation_mentor.mentor_id == user.id
+
+        # Contrôle strict d'accès : porteur du projet, mentor affecté ou équipe CIAT
+        if not (user.is_equipe or (user.role == Role.PORTEUR and projet.porteur_id == user.id) or (user.role == Role.MENTOR and is_mentor)):
+            raise PermissionDenied("Vous n'avez pas accès au compte rendu de ce projet.")
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Compte Rendu Incubation"
+
+        # Styles
+        font_titre_doc = Font(name="Calibri", size=16, bold=True, color="1E3A8A")
+        font_section = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
+        fill_section = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+
+        font_header_table = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        fill_header_table = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+
+        font_label = Font(name="Calibri", size=11, bold=True, color="1F2937")
+        font_data = Font(name="Calibri", size=11, color="111827")
+
+        border_thin = Side(border_style="thin", color="D1D5DB")
+        border_all = Border(left=border_thin, right=border_thin, top=border_thin, bottom=border_thin)
+
+        row_idx = 1
+
+        # Titre général
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        cell_title = ws.cell(row=row_idx, column=1, value=f"CIAT — COMPTE RENDU D'INCUBATION : {projet.titre.upper()}")
+        cell_title.font = font_titre_doc
+        cell_title.alignment = Alignment(vertical="center")
+        row_idx += 2
+
+        # --- BLOC 1 : INFORMATIONS DU PROJET ---
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        cell_sec1 = ws.cell(row=row_idx, column=1, value="1. INFORMATIONS DU PROJET")
+        cell_sec1.font = font_section
+        cell_sec1.fill = fill_section
+        cell_sec1.alignment = Alignment(vertical="center", indent=1)
+        row_idx += 1
+
+        infos = [
+            ("Titre du projet", projet.titre),
+            ("Domaine", projet.domaine.nom if projet.domaine else "—"),
+            ("Cohorte", str(projet.cohorte) if projet.cohorte else "—"),
+            ("Statut du projet", projet.get_statut_display()),
+            ("Porteur de projet", f"{projet.porteur.get_full_name()} ({projet.porteur.email})"),
+            ("Mentor référent", f"{projet.affectation_mentor.mentor.get_full_name()} ({projet.affectation_mentor.mentor.email})" if hasattr(projet, "affectation_mentor") else "Non affecté"),
+            ("Date d'extraction", timezone.now().strftime("%d/%m/%Y %H:%M")),
+        ]
+
+        for label, val in infos:
+            c_lbl = ws.cell(row=row_idx, column=1, value=label)
+            c_lbl.font = font_label
+            c_lbl.border = border_all
+            ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+            c_val = ws.cell(row=row_idx, column=2, value=val)
+            c_val.font = font_data
+            for col in range(2, 7):
+                ws.cell(row=row_idx, column=col).border = border_all
+            row_idx += 1
+
+        row_idx += 2
+
+        # --- BLOC 2 : OBJECTIFS D'ACCOMPAGNEMENT ---
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        cell_sec2 = ws.cell(row=row_idx, column=1, value="2. OBJECTIFS D'ACCOMPAGNEMENT")
+        cell_sec2.font = font_section
+        cell_sec2.fill = fill_section
+        cell_sec2.alignment = Alignment(vertical="center", indent=1)
+        row_idx += 1
+
+        headers_obj = ["N°", "Libellé de l'objectif", "Échéance", "Statut", "Créé par", "Créé le"]
+        for col_idx, h in enumerate(headers_obj, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=h)
+            cell.font = font_header_table
+            cell.fill = fill_header_table
+            cell.border = border_all
+            cell.alignment = Alignment(horizontal="center")
+        row_idx += 1
+
+        objectifs = Objectif.objects.filter(projet=projet).select_related("cree_par").order_by("echeance", "cree_le")
+        if objectifs.exists():
+            for idx, obj in enumerate(objectifs, start=1):
+                ws.cell(row=row_idx, column=1, value=idx).border = border_all
+                ws.cell(row=row_idx, column=2, value=obj.libelle).border = border_all
+                ws.cell(row=row_idx, column=3, value=obj.echeance.strftime("%d/%m/%Y") if obj.echeance else "—").border = border_all
+                ws.cell(row=row_idx, column=4, value=obj.get_statut_display()).border = border_all
+                ws.cell(row=row_idx, column=5, value=obj.cree_par.get_full_name() or obj.cree_par.email).border = border_all
+                ws.cell(row=row_idx, column=6, value=obj.cree_le.strftime("%d/%m/%Y")).border = border_all
+                row_idx += 1
+        else:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1, value="Aucun objectif d'accompagnement défini pour le moment.")
+            c.font = font_data
+            for col in range(1, 7):
+                ws.cell(row=row_idx, column=col).border = border_all
+            row_idx += 1
+
+        row_idx += 2
+
+        # --- BLOC 3 : JALONS ET RÉALISATIONS ---
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        cell_sec3 = ws.cell(row=row_idx, column=1, value="3. JALONS ET RÉALISATIONS")
+        cell_sec3.font = font_section
+        cell_sec3.fill = fill_section
+        cell_sec3.alignment = Alignment(vertical="center", indent=1)
+        row_idx += 1
+
+        headers_jalons = ["N°", "Titre du jalon", "Échéance", "Statut", "En retard", "Preuves (nb)"]
+        for col_idx, h in enumerate(headers_jalons, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=h)
+            cell.font = font_header_table
+            cell.fill = fill_header_table
+            cell.border = border_all
+            cell.alignment = Alignment(horizontal="center")
+        row_idx += 1
+
+        jalons = Jalon.objects.filter(projet=projet).prefetch_related("preuves").order_by("echeance", "cree_le")
+        if jalons.exists():
+            for idx, j in enumerate(jalons, start=1):
+                ws.cell(row=row_idx, column=1, value=idx).border = border_all
+                ws.cell(row=row_idx, column=2, value=j.titre).border = border_all
+                ws.cell(row=row_idx, column=3, value=j.echeance.strftime("%d/%m/%Y")).border = border_all
+                ws.cell(row=row_idx, column=4, value=j.get_statut_display()).border = border_all
+                ws.cell(row=row_idx, column=5, value="Oui" if j.en_retard else "Non").border = border_all
+                ws.cell(row=row_idx, column=6, value=j.preuves.count()).border = border_all
+                row_idx += 1
+        else:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1, value="Aucun jalon défini pour le moment.")
+            c.font = font_data
+            for col in range(1, 7):
+                ws.cell(row=row_idx, column=col).border = border_all
+            row_idx += 1
+
+        row_idx += 2
+
+        # --- BLOC 4 : BILANS DE SUIVI (3 ET 6 MOIS) ---
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        cell_sec4 = ws.cell(row=row_idx, column=1, value="4. BILANS DE SUIVI PÉRIODIQUE (3 ET 6 MOIS)")
+        cell_sec4.font = font_section
+        cell_sec4.fill = fill_section
+        cell_sec4.alignment = Alignment(vertical="center", indent=1)
+        row_idx += 1
+
+        suivis = SuiviProjet.objects.filter(projet=projet).select_related("redige_par").order_by("echeance")
+        if suivis.exists():
+            for s in suivis:
+                ws.cell(row=row_idx, column=1, value=f"Échéance : {s.get_echeance_display()}").font = font_label
+                ws.cell(row=row_idx, column=1).border = border_all
+                ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+                c_s = ws.cell(row=row_idx, column=2, value=f"Rédigé par {s.redige_par.get_full_name()} le {s.cree_le.strftime('%d/%m/%Y')}")
+                c_s.font = font_data
+                for col in range(2, 7):
+                    ws.cell(row=row_idx, column=col).border = border_all
+                row_idx += 1
+
+                ws.cell(row=row_idx, column=1, value="Bilan écrit").font = font_label
+                ws.cell(row=row_idx, column=1).border = border_all
+                ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+                c_b = ws.cell(row=row_idx, column=2, value=s.bilan)
+                c_b.font = font_data
+                for col in range(2, 7):
+                    ws.cell(row=row_idx, column=col).border = border_all
+                row_idx += 1
+
+                if s.indicateurs:
+                    ws.cell(row=row_idx, column=1, value="Indicateurs").font = font_label
+                    ws.cell(row=row_idx, column=1).border = border_all
+                    ws.merge_cells(start_row=row_idx, start_column=2, end_row=row_idx, end_column=6)
+                    ind_text = ", ".join(f"{k}: {v}" for k, v in s.indicateurs.items())
+                    c_i = ws.cell(row=row_idx, column=2, value=ind_text)
+                    c_i.font = font_data
+                    for col in range(2, 7):
+                        ws.cell(row=row_idx, column=col).border = border_all
+                    row_idx += 1
+                row_idx += 1
+        else:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1, value="Aucun bilan de suivi enregistré pour ce projet.")
+            c.font = font_data
+            for col in range(1, 7):
+                ws.cell(row=row_idx, column=col).border = border_all
+            row_idx += 1
+
+        # Ajustement des largeurs de colonnes
+        column_widths = {1: 20, 2: 40, 3: 18, 4: 18, 5: 25, 6: 18}
+        for col_idx, width in column_widths.items():
+            ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="compte_rendu_projet_{projet.id}.xlsx"'
+        return response
+
 
 

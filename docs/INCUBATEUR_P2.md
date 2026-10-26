@@ -126,6 +126,23 @@ Le module **P2 (Gestion de l'incubateur)** est le cœur opérationnel de la plat
     - Mentor : ne voit que les alertes des projets qui lui sont affectés.
     - Équipe CIAT : vision globale de toutes les alertes de la plateforme.
 
+### 2.9. `SuiviProjet` et Compte Rendu Excel (Phase 2 - T3)
+- **`SuiviProjet` :**
+  - Relations : `ForeignKey` vers `Projet` (`related_name="suivis"`), `redige_par` (`User`).
+  - Échéances fixées : `3_mois` et `6_mois` (`EcheanceSuivi`).
+  - Champs : `bilan` (compte rendu textuel), `indicateurs` (`JSONField` pour indicateurs clés de performance).
+  - Contrainte d'unicité : `unique_suivi_projet_echeance` garantit un seul bilan par échéance pour un projet donné.
+  - Droits : Rédigé par le mentor affecté ou l'équipe CIAT. Consultation permise pour le porteur.
+- **Export Compte Rendu Excel (`GET /api/incubator/projets/{id}/compte-rendu/?format=xlsx`) :**
+  - Génère dynamiquement un classeur `.xlsx` professionnel avec `openpyxl`.
+  - Intègre parfaitement les accents UTF-8 et la charte CIAT (bleu institutionnel `#1E3A8A`, bordures, largeurs automatiques).
+  - **Quatre blocs complets :**
+    1. *Informations du projet* (titre, porteur, mentor, domaine, cohorte, statut, date).
+    2. *Objectifs d'accompagnement* (libellé, échéance, statut, créateur).
+    3. *Jalons et réalisations* (titre, statut, retard, nombre de preuves).
+    4. *Bilans de suivi périodique* (bilans rédigés à 3 et 6 mois, indicateurs clés).
+  - Contrôle d'accès strict : réservé au porteur du projet, au mentor affecté et à l'équipe CIAT (rejet HTTP 403 pour tout tiers).
+
 ---
 
 ## 3. Matrice des Rôles et Contrats d'API
@@ -145,6 +162,9 @@ Toutes les routes sont sous `/api/incubator/`.
 | `POST` | `/api/incubator/jalons/{id}/preuves/` | Dépôt multipart d'un fichier de preuve (contrôle binaire). | Équipe, Mentor affecté, Porteur |
 | `POST` | `/api/incubator/jalons/{id}/commentaires/` | Dépôt d'un commentaire horodaté (`{ "texte": "..." }`). | Équipe, Mentor affecté, Porteur |
 | `GET` | `/api/incubator/alertes/` | Jalons en retard visibles selon le rôle de l'utilisateur. | Authentifié (filtré selon rôle) |
+| `GET` | `/api/incubator/projets/{id}/suivis/` | Liste des bilans de suivi à 3 et 6 mois du projet. | Équipe, Mentor affecté, Porteur (lecture) |
+| `POST` | `/api/incubator/projets/{id}/suivis/` | Saisie d'un bilan de suivi (`3_mois` ou `6_mois`, `bilan`, `indicateurs`). | Équipe, Mentor affecté |
+| `GET` | `/api/incubator/projets/{id}/compte-rendu/?format=xlsx` | Téléchargement du compte-rendu Excel structuré en 4 blocs. | Équipe, Mentor affecté, Porteur |
 | `GET` | `/api/incubator/dossiers/` | Liste les dossiers. Filtré par porteur pour les porteurs ; complet pour comité et équipe. | Authentifié |
 | `POST` | `/api/incubator/dossiers/` | Crée un dossier : supporte `{ "projet": <id> }` et `{ "projet_id": <id> }`. | Porteur propriétaire, Admin, Coordo |
 | `GET` | `/api/incubator/dossiers/{id}/` | Détail complet d'un dossier. | Propriétaire ou Équipe/Comité/Mentor |
@@ -156,6 +176,7 @@ Toutes les routes sont sous `/api/incubator/`.
 | `GET` | `/api/incubator/dossiers/{id}/evaluations/` | Consultation confidentielle des évaluations et `score_moyen`. | Comité, Mentors, Équipe *(Interdit aux porteurs)* |
 | `POST` | `/api/incubator/dossiers/{id}/evaluations/` | Dépôt de notation sur tous les critères de la grille active. | Membre du comité, Équipe |
 | `POST` | `/api/incubator/dossiers/{id}/decision/` | Dépôt de la décision motivée finale. | Coordonnateur, Administrateur |
+
 
 
 
@@ -179,11 +200,11 @@ Toutes les routes sont sous `/api/incubator/`.
 python manage.py check                     # 0 issue
 python manage.py makemigrations --check    # No changes detected
 
-# Suite de tests complète (42 tests automatisés)
+# Suite de tests complète (48 tests automatisés)
 python manage.py test apps.incubator
 ```
 
-**Couverture des 42 tests :**
+**Couverture des 48 tests :**
 - **12 tests d'authentification et de sécurité des rôles (Phase 1) :** Rejet anonyme, isolation multi-porteurs, immutabilité de `projet`, confidentialité des jurys, restrictions par rôle.
 - **11 tests de règles métier et cycle de vie (Phase 1) :** Parcours complet nominal, interdiction d'évaluation sur brouillon ou après décision, critères d'autres grilles rejetés, complétude des critères, note hors limites, unicité de grille active, double évaluation, double décision, concurrence de soumission.
 - **4 tests de sécurité des fichiers (Phase 1) :** Validation de signature PDF, rejet de fichier vide (0 octet), rejet de fichier avec extension spoofée, assainissement anti path traversal.
@@ -204,5 +225,13 @@ python manage.py test apps.incubator
   6. Rejet de dépôt de preuve par un mentor non affecté au projet (403).
   7. Ajout et validation de commentaires horodatés (rejet de texte vide 400, rejet de mentor tiers 403).
   8. Calcul temps réel d'`en_retard` et filtrage strict de `/api/incubator/alertes/` selon le rôle.
+- **6 tests Phase 2 - T3 (Suivis 3 & 6 mois et Export Excel) :**
+  1. Saisie des bilans à 3 et 6 mois par le mentor affecté et le coordonnateur.
+  2. Rejet de doublon pour la même échéance (contrainte d'unicité projet + échéance, 400).
+  3. Consultation en lecture seule par le porteur et interdiction de rédaction (403).
+  4. Rejet d'accès aux bilans par un mentor non affecté (403).
+  5. Génération et validation de l'export Excel (`openpyxl`, vérification des 4 blocs structurés et des accents UTF-8).
+  6. Sanctuarisation de l'export : rejet 403 pour tout porteur ou mentor tiers n'appartenant pas au projet.
+
 
 

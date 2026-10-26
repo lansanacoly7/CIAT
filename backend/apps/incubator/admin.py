@@ -13,6 +13,7 @@ from .models import (
     Objectif,
     Piece,
     PreuveJalon,
+    SuiviProjet,
 )
 
 
@@ -98,5 +99,13 @@ class JalonAdmin(admin.ModelAdmin):
     list_filter = ["statut", "echeance", "cree_le"]
     search_fields = ["titre", "projet__titre"]
     inlines = [PreuveJalonInline, CommentaireJalonInline]
+
+
+@admin.register(SuiviProjet)
+class SuiviProjetAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "echeance", "redige_par", "cree_le"]
+    list_filter = ["echeance", "cree_le"]
+    search_fields = ["projet__titre", "bilan"]
+
 
 

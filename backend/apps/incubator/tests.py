@@ -7,6 +7,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+import io
+import openpyxl
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.incubator.models import (
     AffectationMentor,
@@ -14,6 +16,7 @@ from apps.incubator.models import (
     Critere,
     Decision,
     Dossier,
+    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
@@ -23,6 +26,7 @@ from apps.incubator.models import (
     StatutDossier,
     StatutJalon,
     StatutObjectif,
+    SuiviProjet,
     TypePiece,
 )
 
@@ -1141,5 +1145,211 @@ class IncubateurPhase2JalonsTests(TestCase):
         self.assertIn(j4_retard.id, ids_coordo)
         self.assertNotIn(j2_fait.id, ids_coordo)
         self.assertNotIn(j3_futur.id, ids_coordo)
+
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
+class IncubateurPhase2SuiviAndExportTests(TestCase):
+    """Tests Phase 2 T3 : Suivi à 3 et 6 mois et export de compte-rendu Excel."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.domaine = Domaine.objects.create(nom="Biotechnologies")
+        self.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
+
+        self.coordo = User.objects.create_user(
+            email="coordo_s@ciat.sn", password="password123", role=Role.COORDONNATEUR, first_name="Coordo", last_name="CIAT"
+        )
+        self.porteur1 = User.objects.create_user(
+            email="porteur1_s@ciat.sn", password="password123", role=Role.PORTEUR, first_name="Cheikh", last_name="Diop"
+        )
+        self.porteur2 = User.objects.create_user(
+            email="porteur2_s@ciat.sn", password="password123", role=Role.PORTEUR, first_name="Awa", last_name="Ndiaye"
+        )
+        self.mentor1 = User.objects.create_user(
+            email="mentor1_s@ciat.sn", password="password123", role=Role.MENTOR, first_name="Mansour", last_name="Sy"
+        )
+        self.mentor2 = User.objects.create_user(
+            email="mentor2_s@ciat.sn", password="password123", role=Role.MENTOR, first_name="Aïda", last_name="Fall"
+        )
+
+        self.projet1 = Projet.objects.create(
+            titre="Système d'Irrigation Éco-Énergétique",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur1,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        self.projet2 = Projet.objects.create(
+            titre="Plateforme E-Santé Rurale",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur2,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.coordo)
+        AffectationMentor.objects.create(projet=self.projet2, mentor=self.mentor2, affecte_par=self.coordo)
+
+        # Données pour enrichir le compte-rendu du projet 1
+        Objectif.objects.create(projet=self.projet1, libelle="Développer l'API REST", statut=StatutObjectif.ATTEINT, cree_par=self.mentor1)
+        Jalon.objects.create(projet=self.projet1, titre="Validation du banc de test", echeance=datetime.date(2026, 11, 1), statut=StatutJalon.FAIT, cree_par=self.mentor1)
+
+    def test_creation_suivis_3_et_6_mois_par_mentor_affecte(self):
+        """Le mentor affecté ou le coordonnateur peut créer les bilans à 3 et 6 mois."""
+        url = reverse("incubator:projet-suivis", kwargs={"pk": self.projet1.id})
+
+        # 1. Mentor affecté crée le bilan à 3 mois
+        self.client.force_authenticate(user=self.mentor1)
+        res_3m = self.client.post(
+            url,
+            {
+                "echeance": "3_mois",
+                "bilan": "Le projet progresse conformément au calendrier. Le prototype a été testé avec succès.",
+                "indicateurs": {"avancement_pct": 50, "utilisateurs_testeurs": 12},
+            },
+            format="json",
+        )
+        self.assertEqual(res_3m.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_3m.data["echeance"], "3_mois")
+
+        # 2. Coordonnateur crée le bilan à 6 mois
+        self.client.force_authenticate(user=self.coordo)
+        res_6m = self.client.post(
+            url,
+            {
+                "echeance": "6_mois",
+                "bilan": "Phase pilote opérationnelle. Préparation du déploiement à grande échelle.",
+                "indicateurs": {"avancement_pct": 90, "chiffre_affaires_fcfa": 1500000},
+            },
+            format="json",
+        )
+        self.assertEqual(res_6m.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_6m.data["echeance"], "6_mois")
+
+        # Vérification en base
+        self.assertEqual(SuiviProjet.objects.filter(projet=self.projet1).count(), 2)
+
+    def test_rejet_doublon_suivi_meme_echeance(self):
+        """Un projet ne peut pas recevoir deux bilans pour la même échéance."""
+        SuiviProjet.objects.create(
+            projet=self.projet1,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="Premier bilan 3 mois.",
+            redige_par=self.mentor1,
+        )
+
+        url = reverse("incubator:projet-suivis", kwargs={"pk": self.projet1.id})
+        self.client.force_authenticate(user=self.mentor1)
+
+        res_dup = self.client.post(
+            url,
+            {"echeance": "3_mois", "bilan": "Deuxième tentative."},
+            format="json",
+        )
+        self.assertEqual(res_dup.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("déjà été enregistré", str(res_dup.data))
+
+    def test_porteur_lecture_seule_suivis_et_rejet_ecriture(self):
+        """Le porteur peut consulter les bilans de suivi mais ne peut pas en rédiger."""
+        SuiviProjet.objects.create(
+            projet=self.projet1,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="Bilan officiel 3 mois.",
+            redige_par=self.mentor1,
+        )
+
+        url = reverse("incubator:projet-suivis", kwargs={"pk": self.projet1.id})
+        self.client.force_authenticate(user=self.porteur1)
+
+        # GET -> 200
+        res_get = self.client.get(url)
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_get.data), 1)
+        self.assertEqual(res_get.data[0]["echeance"], "3_mois")
+
+        # POST -> 403
+        res_post = self.client.post(url, {"echeance": "6_mois", "bilan": "Tentative porteur."}, format="json")
+        self.assertEqual(res_post.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_mentor_non_affecte_acces_suivis_refuse(self):
+        """Un mentor non affecté n'a pas accès aux bilans de suivi d'un autre projet."""
+        url = reverse("incubator:projet-suivis", kwargs={"pk": self.projet1.id})
+        self.client.force_authenticate(user=self.mentor2)
+
+        self.assertEqual(self.client.get(url).status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            self.client.post(url, {"echeance": "3_mois", "bilan": "Intrusion."}, format="json").status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_export_compte_rendu_excel_succes_et_structure_4_blocs(self):
+        """Vérifie la génération du fichier Excel avec ses 4 blocs et les bons accents UTF-8."""
+        SuiviProjet.objects.create(
+            projet=self.projet1,
+            echeance=EcheanceSuivi.TROIS_MOIS,
+            bilan="Résultats probants du modèle économique et technique.",
+            indicateurs={"taux_satisfaction": "95%"},
+            redige_par=self.mentor1,
+        )
+
+        url_export = reverse("incubator:projet-compte-rendu", kwargs={"pk": self.projet1.id})
+
+        # Porteur propriétaire télécharge le compte-rendu
+        self.client.force_authenticate(user=self.porteur1)
+        res = self.client.get(url_export)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            res["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertIn("attachment; filename=", res["Content-Disposition"])
+
+        # Analyse et validation du contenu Excel via openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(res.content))
+        self.assertIn("Compte Rendu Incubation", wb.sheetnames)
+        ws = wb["Compte Rendu Incubation"]
+
+        # Extraction de l'ensemble des textes du fichier
+        all_cell_values = [
+            str(cell.value)
+            for row in ws.iter_rows()
+            for cell in row
+            if cell.value is not None
+        ]
+        full_text = " ".join(all_cell_values)
+
+        # 1. Vérification Bloc 1 : Informations projet & accents
+        self.assertIn("INFORMATIONS DU PROJET", full_text)
+        self.assertIn("Système d'Irrigation Éco-Énergétique", full_text)
+        self.assertIn("Cheikh Diop", full_text)
+        self.assertIn("Mansour Sy", full_text)
+
+        # 2. Vérification Bloc 2 : Objectifs
+        self.assertIn("OBJECTIFS D'ACCOMPAGNEMENT", full_text)
+        self.assertIn("Développer l'API REST", full_text)
+
+        # 3. Vérification Bloc 3 : Jalons
+        self.assertIn("JALONS ET RÉALISATIONS", full_text)
+        self.assertIn("Validation du banc de test", full_text)
+
+        # 4. Vérification Bloc 4 : Bilans de suivi
+        self.assertIn("BILANS DE SUIVI PÉRIODIQUE", full_text)
+        self.assertIn("Résultats probants du modèle économique et technique.", full_text)
+        self.assertIn("taux_satisfaction: 95%", full_text)
+
+    def test_export_compte_rendu_interdit_aux_tiers(self):
+        """Un porteur ou un mentor d'un autre projet ne peut pas exporter le compte-rendu."""
+        url_export = reverse("incubator:projet-compte-rendu", kwargs={"pk": self.projet1.id})
+
+        # Porteur 2 tente de télécharger le compte-rendu du projet 1 -> 403
+        self.client.force_authenticate(user=self.porteur2)
+        res_p2 = self.client.get(url_export)
+        self.assertEqual(res_p2.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Mentor 2 (non affecté) tente de télécharger -> 403
+        self.client.force_authenticate(user=self.mentor2)
+        res_m2 = self.client.get(url_export)
+        self.assertEqual(res_m2.status_code, status.HTTP_403_FORBIDDEN)
+
 
 

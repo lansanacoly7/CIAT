@@ -12,6 +12,7 @@ from .models import (
     Decision,
     DecisionType,
     Dossier,
+    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
@@ -22,6 +23,7 @@ from .models import (
     StatutDossier,
     StatutJalon,
     StatutObjectif,
+    SuiviProjet,
     TypePiece,
 )
 
@@ -532,4 +534,49 @@ class AlerteJalonSerializer(serializers.ModelSerializer):
             "en_retard",
             "cree_le",
         ]
+
+
+class SuiviProjetSerializer(serializers.ModelSerializer):
+    redige_par_nom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SuiviProjet
+        fields = [
+            "id",
+            "projet",
+            "echeance",
+            "bilan",
+            "indicateurs",
+            "redige_par",
+            "redige_par_nom",
+            "cree_le",
+            "modifie_le",
+        ]
+        read_only_fields = ["id", "projet", "redige_par", "cree_le", "modifie_le"]
+
+    def get_redige_par_nom(self, obj):
+        if obj.redige_par:
+            return obj.redige_par.get_full_name() or obj.redige_par.email
+        return None
+
+    def validate_bilan(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le bilan de suivi ne peut pas être vide.")
+        return value.strip()
+
+    def validate(self, attrs):
+        projet = self.context.get("projet")
+        echeance = attrs.get("echeance")
+        if self.instance is None and projet and echeance:
+            if SuiviProjet.objects.filter(projet=projet, echeance=echeance).exists():
+                raise serializers.ValidationError(
+                    {"echeance": f"Un bilan de suivi pour l'échéance '{echeance}' a déjà été enregistré pour ce projet."}
+                )
+        return attrs
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        return SuiviProjet.objects.create(projet=projet, redige_par=user, **validated_data)
+
 

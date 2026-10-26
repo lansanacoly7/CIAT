@@ -497,3 +497,39 @@ class CommentaireJalon(models.Model):
     def __str__(self):
         return f"Commentaire de {self.auteur} sur jalon {self.jalon_id}"
 
+
+class EcheanceSuivi(models.TextChoices):
+    TROIS_MOIS = "3_mois", "3 mois"
+    SIX_MOIS = "6_mois", "6 mois"
+
+
+class SuiviProjet(models.Model):
+    """Bilan périodique de suivi d'un projet incubé (à 3 mois ou 6 mois)."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="suivis"
+    )
+    echeance = models.CharField(max_length=20, choices=EcheanceSuivi.choices)
+    bilan = models.TextField()
+    indicateurs = models.JSONField(default=dict, blank=True)
+    redige_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="suivis_rediges"
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["echeance", "-cree_le"]
+        verbose_name = "Bilan de suivi"
+        verbose_name_plural = "Bilans de suivi"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["projet", "echeance"],
+                name="unique_suivi_projet_echeance",
+            )
+        ]
+
+    def __str__(self):
+        return f"Suivi {self.get_echeance_display()} - {self.projet.titre}"
+
+
