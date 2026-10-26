@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  PIECES_OBLIGATOIRES,
-  PIECE_LABELS,
-  type Piece,
-  type PieceType,
-} from "@/lib/incubator";
+import { PIECES_OBLIGATOIRES, PIECE_LABELS, type Piece, type PieceType } from "@/lib/incubator";
 
 interface CompletenessGaugeProps {
   completude: number;
@@ -13,124 +8,88 @@ interface CompletenessGaugeProps {
   pieces?: Piece[];
 }
 
-export function CompletenessGauge({
-  completude,
-  piecesManquantes = [],
-  pieces = [],
-}: CompletenessGaugeProps) {
+const RADIUS = 38;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+export function CompletenessGauge({ completude, piecesManquantes = [], pieces = [] }: CompletenessGaugeProps) {
   const isComplete = completude === 100;
-  const typesManquants = new Set(piecesManquantes);
+  const missing = new Set(piecesManquantes);
+  const color = isComplete ? "#2E7D32" : "#C99A68";
 
   return (
-    <div className="rounded-lg border border-[#EFE4D6] bg-white p-5 shadow-xs sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#6B5646]">
-            État du dossier
+    <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={completude}
+          aria-label="Complétude du dossier"
+          className="relative h-28 w-28 shrink-0"
+        >
+          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden>
+            <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="#EFE4D6" strokeWidth="9" />
+            <circle
+              cx="50"
+              cy="50"
+              r={RADIUS}
+              fill="none"
+              stroke={color}
+              strokeWidth="9"
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={CIRCUMFERENCE * (1 - completude / 100)}
+              className="transition-all duration-500"
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-title)] text-2xl font-extrabold text-[#612D10]">
+            {completude}%
           </span>
+        </div>
+
+        <div className="min-w-0 flex-1 text-center sm:text-left">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#6b5646]">Complétude du dossier</p>
           <h3 className="font-[family-name:var(--font-title)] text-lg font-bold text-[#612D10]">
-            Complétude des pièces justificatives
+            {isComplete ? "Toutes les pièces obligatoires sont déposées" : `${piecesManquantes.length} pièce(s) obligatoire(s) à fournir`}
           </h3>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
-              isComplete
-                ? "bg-[#E3F1E9] text-[#2E7D32]"
-                : "bg-[#F8EBD3] text-[#D97706]"
-            }`}
-          >
-            {isComplete ? (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Dossier complet (100%)</span>
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                <span>{completude}% complet</span>
-              </>
-            )}
-          </span>
+          <p className="mt-1 text-sm text-[#6b5646]">
+            {isComplete
+              ? "Vous pouvez passer au récapitulatif et soumettre votre candidature."
+              : "Le dossier doit être complet à 100 % pour être soumis au comité."}
+          </p>
         </div>
       </div>
 
-      {/* Barre de progression */}
-      <div className="mt-4">
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#EFE4D6]">
-          <div
-            className={`h-full transition-all duration-500 ease-out ${
-              isComplete ? "bg-[#2E7D32]" : "bg-[#C99A68]"
-            }`}
-            style={{ width: `${Math.max(completude, 4)}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Liste des pièces obligatoires */}
-      <div className="mt-5 space-y-2.5">
-        <p className="text-xs font-medium text-[#6B5646]">
-          Pièces requises pour soumission au comité d&apos;évaluation :
-        </p>
-
-        <div className="grid gap-2 sm:grid-cols-3">
-          {PIECES_OBLIGATOIRES.map((type) => {
-            const isMissing = typesManquants.has(type);
-            const isProvided = !isMissing;
-            const piece = pieces.find((p) => p.type === type);
-
-            return (
-              <div
-                key={type}
-                className={`flex items-start gap-2.5 rounded-md border p-3 transition-colors ${
-                  isProvided
-                    ? "border-[#2E7D32]/30 bg-[#E3F1E9]/40"
-                    : "border-[#D97706]/30 bg-[#F8EBD3]/30"
+      <ul className="mt-5 grid gap-2 sm:grid-cols-3">
+        {PIECES_OBLIGATOIRES.map((type) => {
+          const ok = !missing.has(type);
+          const piece = pieces.find((p) => p.type === type);
+          return (
+            <li
+              key={type}
+              className={`flex items-start gap-2.5 rounded-lg border p-3 ${
+                ok ? "border-[#2E7D32]/30 bg-[#E3F1E9]/40" : "border-[#EFE4D6] bg-[#FAF7F2]"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  ok ? "bg-[#2E7D32] text-white" : "border-2 border-[#C99A68] bg-white text-[#C99A68]"
                 }`}
               >
-                <div className="mt-0.5">
-                  {isProvided ? (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2E7D32] text-white">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                  ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#D97706] text-white">
-                      <span className="text-xs font-bold">!</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold leading-tight text-[#24140D]">
-                    {PIECE_LABELS[type].label}
-                  </p>
-                  <p className="mt-1 truncate text-[11px] text-[#6B5646]">
-                    {isProvided ? (piece ? piece.nom : "Fourni") : "À fournir (obligatoire)"}
-                  </p>
-                </div>
+                {ok ? "✓" : ""}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-tight text-[#24140D]">{PIECE_LABELS[type].label}</p>
+                <p className="mt-0.5 truncate text-xs text-[#6b5646]">
+                  <span className="sr-only">{ok ? "Déposé : " : "À fournir : "}</span>
+                  {ok ? (piece ? piece.nom : "Déposé") : "À fournir"}
+                </p>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {!isComplete && (
-        <p className="mt-3 text-xs text-[#D97706]">
-          * {piecesManquantes.length} pièce(s) obligatoire(s) manquante(s) : vous devez toutes les fournir pour pouvoir soumettre votre candidature.
-        </p>
-      )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

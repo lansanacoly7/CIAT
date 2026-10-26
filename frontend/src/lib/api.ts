@@ -76,5 +76,39 @@ export async function api<T = unknown>(path: string, options: Options = {}): Pro
     const data = await res.json().catch(() => null);
     throw new ApiError(res.status, data);
   }
-  return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  if (!text.trim()) return null as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return text as unknown as T;
+  }
 }
+
+export async function apiBlob(path: string, options: Options = {}): Promise<Blob> {
+  const { body, auth = true, headers, ...rest } = options;
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+
+  const send = () => {
+    const h = new Headers(headers);
+    if (body !== undefined && !isForm) h.set("Content-Type", "application/json");
+    const token = auth ? getAccess() : null;
+    if (token) h.set("Authorization", `Bearer ${token}`);
+    return fetch(`${API_URL}${path}`, {
+      ...rest,
+      headers: h,
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+    });
+  };
+
+  let res = await send();
+  if (res.status === 401 && auth && (await refreshAccess())) res = await send();
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new ApiError(res.status, data);
+  }
+  return res.blob();
+}
+

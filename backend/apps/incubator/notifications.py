@@ -77,7 +77,7 @@ def envoyer_alertes_jalons_en_retard(today=None) -> dict:
     alertes_ignorees = 0
     details = []
 
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <contact@ciat.sn>")
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <noreply@localhost>")
 
     for jalon in jalons_en_retard:
         projet = jalon.projet

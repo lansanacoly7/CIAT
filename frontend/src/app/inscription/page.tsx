@@ -109,26 +109,116 @@ function InscriptionForm() {
     <AuthSplitLayout title="Créer un compte" subtitle="Rejoignez le CIAT en tant que porteur de projet." maxWidth="lg">
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         <FormError message={error} />
+
+        {/* Groupe 1 : Informations personnelles */}
         <div className="grid gap-3.5 sm:grid-cols-2">
-          <Field id="first_name" label="Prénom" autoComplete="given-name" required value={form.first_name} onChange={set("first_name")} error={fieldErrors.first_name} />
-          <Field id="last_name" label="Nom" autoComplete="family-name" required value={form.last_name} onChange={set("last_name")} error={fieldErrors.last_name} />
+          <Field
+            id="first_name"
+            label="Prénom"
+            autoComplete="given-name"
+            required
+            value={form.first_name}
+            onChange={(e) => {
+              set("first_name")(e);
+              if (fieldErrors.first_name) setFieldErrors((f) => ({ ...f, first_name: undefined }));
+            }}
+            error={fieldErrors.first_name}
+          />
+          <Field
+            id="last_name"
+            label="Nom"
+            autoComplete="family-name"
+            required
+            value={form.last_name}
+            onChange={(e) => {
+              set("last_name")(e);
+              if (fieldErrors.last_name) setFieldErrors((f) => ({ ...f, last_name: undefined }));
+            }}
+            error={fieldErrors.last_name}
+          />
         </div>
-        <Field id="email" label="Adresse e-mail" type="email" autoComplete="email" required value={form.email} onChange={set("email")} error={fieldErrors.email} placeholder="vous@exemple.com" />
+
+        <Field
+          id="email"
+          label="Adresse e-mail"
+          type="email"
+          autoComplete="email"
+          required
+          value={form.email}
+          onChange={(e) => {
+            set("email")(e);
+            if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: undefined }));
+          }}
+          error={fieldErrors.email}
+          placeholder="vous@exemple.com"
+        />
+
         <div className="grid gap-3.5 sm:grid-cols-2">
-          <Field id="telephone" label="Téléphone" type="tel" autoComplete="tel" value={form.telephone} onChange={set("telephone")} error={fieldErrors.telephone} placeholder="+221 77 000 00 00" />
-          <Field id="organisation" label="Organisation" autoComplete="organization" value={form.organisation} onChange={set("organisation")} error={fieldErrors.organisation} />
+          <Field
+            id="telephone"
+            label="Téléphone"
+            type="tel"
+            autoComplete="tel"
+            optionalLabel
+            value={form.telephone}
+            onChange={set("telephone")}
+            error={fieldErrors.telephone}
+            placeholder="+221 77 000 00 00"
+          />
+          <Field
+            id="organisation"
+            label="Organisation"
+            autoComplete="organization"
+            optionalLabel
+            value={form.organisation}
+            onChange={set("organisation")}
+            error={fieldErrors.organisation}
+            placeholder="Entreprise, école, startup…"
+          />
         </div>
+
+        {/* Groupe 2 : Sécurité du compte */}
         <div className="grid gap-3.5 sm:grid-cols-2">
-          <Field id="password" label="Mot de passe" type="password" autoComplete="new-password" required minLength={8} value={form.password} onChange={set("password")} error={fieldErrors.password} />
-          <Field id="confirm" label="Confirmer" type="password" autoComplete="new-password" required value={form.confirm} onChange={set("confirm")} error={confirmError} />
+          <Field
+            id="password"
+            label="Mot de passe"
+            type="password"
+            autoComplete="new-password"
+            required
+            hint="8 caractères minimum"
+            value={form.password}
+            onChange={(e) => {
+              set("password")(e);
+              if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: undefined }));
+              if (confirmError) setConfirmError(undefined);
+            }}
+            error={fieldErrors.password}
+          />
+          <Field
+            id="confirm"
+            label="Confirmer le mot de passe"
+            type="password"
+            autoComplete="new-password"
+            required
+            value={form.confirm}
+            onChange={(e) => {
+              set("confirm")(e);
+              if (confirmError) setConfirmError(undefined);
+            }}
+            error={confirmError}
+          />
         </div>
-        <SubmitButton loading={submitting} loadingLabel="Création du compte…">
-          Créer mon compte
-        </SubmitButton>
+
+        <div className="pt-1">
+          <SubmitButton loading={submitting} loadingLabel="Création du compte…">
+            Créer mon compte
+          </SubmitButton>
+        </div>
       </form>
-      <p className="mt-5 text-center text-sm text-[#6b5646]">
+
+      <p className="mt-5 text-center text-xs text-[#6b5646] sm:text-sm">
         Déjà un compte ?{" "}
-        <Link href={connexionHref} className="font-semibold text-[#612D10] underline hover:text-[#3F1D0A]">
+        <Link href={connexionHref} className="font-semibold text-[#612D10] underline transition-colors hover:text-[#3F1D0A]">
           Se connecter
         </Link>
       </p>
