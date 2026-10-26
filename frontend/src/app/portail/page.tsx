@@ -56,6 +56,14 @@ const SECTIONS_PORTAIL = [
       "Consultez les appels ouverts, les dates limites de soumission et les pièces obligatoires pour candidater à l'incubateur.",
     cta: "Voir les appels ouverts",
   },
+  {
+    href: "/portail/projets",
+    tag: "Innovations",
+    titre: "Annuaire des Projets Incubés",
+    description:
+      "Moteur de recherche et fiches détaillées des projets, prototypes et innovations accompagnés par l'incubateur.",
+    cta: "Explorer l'annuaire",
+  },
 ];
 
 // Données de cadrage préliminaires conformes à CONTRATS_API.md (en attente des endpoints de Pathé)

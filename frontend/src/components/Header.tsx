@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/portail/ciat", label: "Le CIAT" },
   { href: "/portail/incubateur", label: "L'Incubateur" },
   { href: "/portail/domaines", label: "7 Domaines" },
+  { href: "/portail/projets", label: "Projets incubés" },
   { href: "/portail/actualites", label: "Actualités" },
   { href: "/portail/evenements", label: "Événements" },
   { href: "/portail/appels", label: "Appels à projets" },
