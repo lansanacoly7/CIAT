@@ -150,7 +150,7 @@ AI_PROVIDER_CONFIG = {
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
         "api_key": os.getenv("GEMINI_API_KEY", ""),
-        "model": os.getenv("GEMINI_MODEL", "gemini-flash-latest"),
+        "model": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
     },
 }
 
