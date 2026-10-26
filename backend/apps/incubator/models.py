@@ -537,3 +537,7 @@ class SuiviProjet(models.Model):
         return f"Suivi {self.get_echeance_display()} - {self.projet.titre}"
 
 
+# Import du modèle d'idempotence des alertes de retard (Phase 4 Pathé)
+from .notifications import AlerteJalonEnvoyee  # noqa: E402
+
+
