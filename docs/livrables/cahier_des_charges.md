@@ -95,7 +95,7 @@ La plateforme repose sur une segmentation stricte en **6 rôles d'utilisateurs**
 
 ### 4.2 Performance et Disponibilité
 - **Temps de réponse API :** Objectif de réponses rapides sur les requêtes standards, grâce à l'optimisation des requêtes Django (aucune mesure de charge n'a encore été réalisée) (`select_related`, `prefetch_related`, agrégations SQL natives).
-- **Vitesse de la suite de tests :** Exécution complète de la suite de 183 tests automatisés en environ 21 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
+- **Vitesse de la suite de tests :** Exécution complète de la suite de 256 tests automatisés (100 % passants) en environ 30 à 40 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
 - **Tolérance aux pannes des services d'IA :** Mécanisme de fallback ordonné multi-fournisseurs (Groq ➔ Gemini) avec gestion gracieuse des erreurs (`503 Service Unavailable` ou `502 Bad Gateway` avec messages clairs en français). Les services d'IA reposent sur des quotas gratuits de fournisseurs tiers et demeurent soumis à des limites de requêtes ou des indisponibilités ponctuelles.
 
 ### 4.3 Ergonomie et Identité Visuelle

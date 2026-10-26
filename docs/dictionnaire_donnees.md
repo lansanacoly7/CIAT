@@ -376,9 +376,9 @@ erDiagram
 |---|---|---|---|
 | **Core (`apps.core`)** | `User`, `Domaine`, `Cohorte`, `Projet` | 4 | Référentiel unifié, authentification JWT et RBAC. |
 | **Portail (`apps.portal`)** | `Actualite`, `Evenement`, `AppelProjet`, `Partenaire`, `DocumentPublic`, `MessageContact` | 6 | Site web vitrine, diffusion institutionnelle et contact. |
-| **Incubateur (`apps.incubator`)** | `Dossier`, `Piece`, `Grille`, `Critere`, `Evaluation`, `Note`, `Decision`, `AffectationMentor`, `Objectif`, `Jalon`, `PreuveJalon`, `CommentaireJalon`, `SuiviProjet` | 13 | Gestion complète du cycle d'incubation, jurys et mentorat. |
+| **Incubateur (`apps.incubator`)** | `Dossier`, `Piece`, `Grille`, `Critere`, `Evaluation`, `Note`, `Decision`, `AffectationMentor`, `Objectif`, `Jalon`, `PreuveJalon`, `CommentaireJalon`, `SuiviProjet`, `AlerteJalonEnvoyee` | 14 | Gestion complète du cycle d'incubation, jurys, mentorat et alertes de jalons. |
 | **Documents (`apps.documents`)** | `TypeDocument`, `ModeleDocument`, `Document`, `VersionDocument` | 4 | Générateur de documents officiels ISEP/CIAT assisté par IA. |
 | **Assistant (`apps.assistant`)** | `PassageDocument`, `Conversation`, `MessageAssistant` | 3 | RAG documentaire strict et atelier d'assistance aux porteurs. |
 | **Galerie (`apps.gallery`)** | `FicheInnovation` | 1 | Valorisation publique, QR codes dynamiques et statistiques. |
 | **Analytics (`apps.analytics`)** | `Partenariat`, `Financement` | 2 | Suivi des partenariats et des financements mobilisés, agrégations décisionnelles. |
-| **TOTAL** | **33 Modèles** | **33 Tables** | **Architecture modulaire, cohérente et scalable.** |
+| **TOTAL** | **34 Modèles** | **34 Tables** | **Architecture modulaire, cohérente et scalable.** |

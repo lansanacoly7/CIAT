@@ -117,8 +117,19 @@ export default function ActualitesPage() {
         /* Grille des Actualités */
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {items.map((actu) => (
-            <Card key={actu.id} className="flex h-full flex-col justify-between">
+            <Card key={actu.id} className="flex h-full flex-col justify-between overflow-hidden">
               <div>
+                {actu.image && (
+                  <div className="-mx-6 -mt-6 mb-4 h-44 overflow-hidden border-b border-bordure bg-ivoire">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={actu.image}
+                      alt={actu.titre}
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-xs text-texte-doux">
                   <span>{formatDate(actu.publie_le)}</span>
                   <span className="font-semibold text-beige">CIAT</span>
