@@ -1,18 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Award,
   Building2,
+  CheckCircle2,
   Download,
+  Loader2,
   Printer,
   Sparkles,
   Users,
   X,
 } from "lucide-react";
+import { api } from "@/lib/api";
+import type {
+  AnalyticsData,
+  DashboardFilters,
+  FicheMode,
+  IndicateursGlobaux,
+  ParCohorteItem,
+  ParDomaineItem,
+  ParGenreItem,
+} from "../types";
 
-import type { AnalyticsData, DashboardFilters, FicheMode, RetardItem } from "../types";
+interface AlerteJalonItem {
+  id: number;
+  projet: number;
+  projet_titre: string;
+  titre: string;
+  echeance: string;
+  statut: string;
+  en_retard: boolean;
+}
 
 interface PrintSummaryModalProps {
   isOpen: boolean;
@@ -33,6 +53,10 @@ export function PrintSummaryModal({
   const [selectedCohorte, setSelectedCohorte] = useState<string>("");
   const [selectedDomaine, setSelectedDomaine] = useState<string>("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isTargetLoading, setIsTargetLoading] = useState(false);
+
+  const [targetedData, setTargetedData] = useState<AnalyticsData | null>(null);
+  const [realAlertes, setRealAlertes] = useState<AlerteJalonItem[]>([]);
 
   // Liste des cohortes disponibles issues des données réelles
   const cohortesList = useMemo(() => {
@@ -48,7 +72,9 @@ export function PrintSummaryModal({
   const activeCohorte = useMemo(() => {
     if (selectedCohorte) return selectedCohorte;
     if (filters.cohorte) {
-      const match = cohortesList.find((c) => c.toLowerCase().includes(filters.cohorte!.toLowerCase()));
+      const match = cohortesList.find((c) =>
+        c.toLowerCase().includes(filters.cohorte!.toLowerCase())
+      );
       if (match) return match;
     }
     return cohortesList[0] || "Toutes cohortes";
@@ -58,83 +84,97 @@ export function PrintSummaryModal({
   const activeDomaine = useMemo(() => {
     if (selectedDomaine) return selectedDomaine;
     if (filters.domaine) {
-      const match = domainesList.find((d) => d.toLowerCase().includes(filters.domaine!.toLowerCase()));
+      const match = domainesList.find((d) =>
+        d.toLowerCase().includes(filters.domaine!.toLowerCase())
+      );
       if (match) return match;
     }
     return domainesList[0] || "Tous domaines";
   }, [selectedDomaine, filters.domaine, domainesList]);
 
-  // Calcul des indicateurs ciblés selon le mode choisi
-  const targetedStats = useMemo(() => {
-    if (ficheMode === "cohorte" && activeCohorte) {
-      const item = data.parCohorte.find((c) => c.cohorte === activeCohorte);
-      if (item) {
-        const total = item.total || 0;
-        const sel = item.selectionnes || 0;
-        const proto = item.prototypes || 0;
-        const taux = total > 0 ? Math.round((sel / total) * 1000) / 10 : 0;
-        return {
-          labelCible: `Cohorte : ${activeCohorte}`,
-          idees_recues: total,
-          dossiers_deposes: total,
-          projets_selectionnes: sel,
-          projets_incubes: Math.min(sel, Math.round(sel * 0.8) || sel),
-          prototypes: proto,
-          taux_selection: taux,
-        };
+  // Chargement asynchrone des données ciblées depuis l'API pour garantir la conformité stricte
+  useEffect(() => {
+    if (!isOpen) return;
+    let isSubscribed = true;
+
+    async function loadTargetedData() {
+      setIsTargetLoading(true);
+      try {
+        const queryParams = new URLSearchParams();
+        if (ficheMode === "cohorte" && activeCohorte) {
+          queryParams.set("cohorte", activeCohorte);
+        } else if (ficheMode === "domaine" && activeDomaine) {
+          queryParams.set("domaine", activeDomaine);
+        } else {
+          if (filters.debut) queryParams.set("debut", filters.debut);
+          if (filters.fin) queryParams.set("fin", filters.fin);
+          if (filters.cohorte) queryParams.set("cohorte", filters.cohorte);
+          if (filters.domaine) queryParams.set("domaine", filters.domaine);
+          if (filters.statut) queryParams.set("statut", filters.statut);
+        }
+        const qs = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
+        const [ind, dom, coh, gen, alertes] = await Promise.all([
+          api<IndicateursGlobaux>(`/analytics/indicateurs/${qs}`).catch(
+            () => data.indicateurs
+          ),
+          api<ParDomaineItem[]>(`/analytics/par-domaine/${qs}`).catch(
+            () => data.parDomaine
+          ),
+          api<ParCohorteItem[]>(`/analytics/par-cohorte/${qs}`).catch(
+            () => data.parCohorte
+          ),
+          api<ParGenreItem[]>(`/analytics/par-genre/${qs}`).catch(
+            () => data.parGenre
+          ),
+          api<AlerteJalonItem[]>("/incubator/alertes/").catch(() => []),
+        ]);
+
+        if (isSubscribed) {
+          setTargetedData({
+            indicateurs: ind,
+            parDomaine: dom,
+            parCohorte: coh,
+            parGenre: gen,
+            evolution: data.evolution,
+          });
+          setRealAlertes(alertes || []);
+        }
+      } catch {
+        if (isSubscribed) {
+          setTargetedData(data);
+        }
+      } finally {
+        if (isSubscribed) {
+          setIsTargetLoading(false);
+        }
       }
     }
 
-    if (ficheMode === "domaine" && activeDomaine) {
-      const item = data.parDomaine.find((d) => d.domaine === activeDomaine);
-      if (item) {
-        const total = item.total || 0;
-        const globalTotal = data.indicateurs.idees_recues || 1;
-        const ratio = total / globalTotal;
-        const sel = Math.round(data.indicateurs.projets_selectionnes * ratio);
-        const incub = Math.round(data.indicateurs.projets_incubes * ratio);
-        const proto = Math.round(data.indicateurs.prototypes * ratio);
-        const taux = total > 0 ? Math.round((sel / total) * 1000) / 10 : 0;
-        return {
-          labelCible: `Domaine d'intervention : ${activeDomaine}`,
-          idees_recues: total,
-          dossiers_deposes: total,
-          projets_selectionnes: sel,
-          projets_incubes: incub,
-          prototypes: proto,
-          taux_selection: taux,
-        };
-      }
-    }
+    loadTargetedData();
 
-    // Mode globale par défaut
-    return {
-      labelCible: "Synthèse Globale Multi-Cohortes & Domaines",
-      ...data.indicateurs,
+    return () => {
+      isSubscribed = false;
     };
-  }, [ficheMode, activeCohorte, activeDomaine, data]);
+  }, [isOpen, ficheMode, activeCohorte, activeDomaine, filters, data]);
 
-  // Jalons / alertes de retards représentatifs pour la fiche
-  const simulatedRetards: RetardItem[] = useMemo(() => {
-    return [
-      {
-        projet: "Système Solaire Hybride Diamniadio",
-        jalon: "Validation des bancs de tests",
-        echeance: "15/10/2026",
-        statut: "En retard (Jalon)",
-        cohorte: activeCohorte || "Cohorte 2026",
-        domaine: "Énergies renouvelables",
-      },
-      {
-        projet: "Plateforme IA Diagnostic Santé Rurale",
-        jalon: "Recueil du jeu de données cliniques",
-        echeance: "20/10/2026",
-        statut: "En retard (Jalon)",
-        cohorte: activeCohorte || "Cohorte 2026",
-        domaine: "Santé & Numérique",
-      },
-    ];
-  }, [activeCohorte]);
+  const currentIndicateurs = targetedData
+    ? targetedData.indicateurs
+    : data.indicateurs;
+  const currentDomaines = targetedData
+    ? targetedData.parDomaine
+    : data.parDomaine;
+  const currentGenres = targetedData ? targetedData.parGenre : data.parGenre;
+
+  const currentLabelCible = useMemo(() => {
+    if (ficheMode === "cohorte") {
+      return `Cohorte d'incubation : ${activeCohorte}`;
+    }
+    if (ficheMode === "domaine") {
+      return `Filière d'excellence : ${activeDomaine}`;
+    }
+    return "Vue globale multi-cohortes & multi-domaines";
+  }, [ficheMode, activeCohorte, activeDomaine]);
 
   if (!isOpen) return null;
 
@@ -196,6 +236,9 @@ export function PrintSummaryModal({
             <h3 className="text-sm font-bold text-ciat-brown">
               Fiche de Synthèse Décisionnelle Imprimable
             </h3>
+            {isTargetLoading && (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-ciat-terracotta" />
+            )}
           </div>
 
           {/* Choix du mode de fiche */}
@@ -311,10 +354,12 @@ export function PrintSummaryModal({
                   République du Sénégal
                 </p>
                 <p className="text-[11px] leading-tight">
-                  Ministère de l&apos;Enseignement Supérieur, de la Recherche et de l&apos;Innovation
+                  Ministère de l&apos;Enseignement Supérieur, de la Recherche et
+                  de l&apos;Innovation
                 </p>
                 <p className="text-[11px] font-semibold text-ciat-dark mt-0.5">
-                  Institut Supérieur d&apos;Enseignement Professionnel (ISEP) — Diamniadio
+                  Institut Supérieur d&apos;Enseignement Professionnel (ISEP) —
+                  Diamniadio
                 </p>
               </div>
 
@@ -323,7 +368,12 @@ export function PrintSummaryModal({
                   CIAT — Pôle Innovation
                 </span>
                 <p className="text-[11px] text-ciat-dark/70 mt-1">
-                  Édité le {new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
+                  Édité le{" "}
+                  {new Date().toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
             </div>
@@ -334,7 +384,7 @@ export function PrintSummaryModal({
                   FICHE DE SYNTHÈSE ANALYTIQUE DÉCISIONNELLE
                 </h1>
                 <p className="text-xs font-semibold text-ciat-terracotta mt-0.5">
-                  {targetedStats.labelCible}
+                  {currentLabelCible}
                 </p>
               </div>
 
@@ -362,39 +412,51 @@ export function PrintSummaryModal({
 
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
               <div className="p-2.5 rounded-lg bg-ciat-cream border border-ciat-sand/40">
-                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">Idées reçues</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">
+                  Idées reçues
+                </p>
                 <p className="text-lg font-extrabold text-ciat-brown mt-0.5">
-                  {targetedStats.idees_recues}
+                  {currentIndicateurs.idees_recues}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-ciat-cream border border-ciat-sand/40">
-                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">Dossiers</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">
+                  Dossiers
+                </p>
                 <p className="text-lg font-extrabold text-ciat-brown mt-0.5">
-                  {targetedStats.dossiers_deposes}
+                  {currentIndicateurs.dossiers_deposes}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-ciat-cream border border-ciat-sand/40">
-                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">Sélectionnés</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">
+                  Sélectionnés
+                </p>
                 <p className="text-lg font-extrabold text-ciat-terracotta mt-0.5">
-                  {targetedStats.projets_selectionnes}
+                  {currentIndicateurs.projets_selectionnes}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-ciat-cream border border-ciat-sand/40">
-                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">Incubés</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">
+                  Incubés
+                </p>
                 <p className="text-lg font-extrabold text-ciat-terracotta mt-0.5">
-                  {targetedStats.projets_incubes}
+                  {currentIndicateurs.projets_incubes}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-ciat-cream border border-ciat-sand/40">
-                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">Prototypes</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-dark/70">
+                  Prototypes
+                </p>
                 <p className="text-lg font-extrabold text-ciat-brown mt-0.5">
-                  {targetedStats.prototypes}
+                  {currentIndicateurs.prototypes}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-ciat-sand/30 border border-ciat-sand/60">
-                <p className="text-[10px] uppercase font-bold text-ciat-brown">Sélection %</p>
+                <p className="text-[10px] uppercase font-bold text-ciat-brown">
+                  Sélection %
+                </p>
                 <p className="text-lg font-black text-ciat-brown mt-0.5">
-                  {targetedStats.taux_selection}%
+                  {currentIndicateurs.taux_selection}%
                 </p>
               </div>
             </div>
@@ -419,14 +481,20 @@ export function PrintSummaryModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ciat-sand/15">
-                  {data.parDomaine.map((d) => {
-                    const total = data.indicateurs.idees_recues || 1;
+                  {currentDomaines.map((d) => {
+                    const total = currentIndicateurs.idees_recues || 1;
                     const pct = Math.round((d.total / total) * 100);
                     return (
                       <tr key={d.domaine} className="hover:bg-ciat-cream/40">
-                        <td className="py-1 text-ciat-dark font-medium">{d.domaine}</td>
-                        <td className="py-1 text-right font-bold text-ciat-brown">{d.total}</td>
-                        <td className="py-1 text-right text-ciat-dark/70">{pct}%</td>
+                        <td className="py-1 text-ciat-dark font-medium">
+                          {d.domaine}
+                        </td>
+                        <td className="py-1 text-right font-bold text-ciat-brown">
+                          {d.total}
+                        </td>
+                        <td className="py-1 text-right text-ciat-dark/70">
+                          {pct}%
+                        </td>
                       </tr>
                     );
                   })}
@@ -447,18 +515,28 @@ export function PrintSummaryModal({
                   <tr className="border-b border-ciat-sand/20 text-ciat-dark/70">
                     <th className="py-1 font-semibold">Catégorie</th>
                     <th className="py-1 font-semibold text-right">Porteurs</th>
-                    <th className="py-1 font-semibold text-right">Pourcentage</th>
+                    <th className="py-1 font-semibold text-right">
+                      Pourcentage
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ciat-sand/15">
-                  {data.parGenre.map((g) => {
-                    const totalG = data.parGenre.reduce((acc, curr) => acc + curr.total, 0) || 1;
+                  {currentGenres.map((g) => {
+                    const totalG =
+                      currentGenres.reduce((acc, curr) => acc + curr.total, 0) ||
+                      1;
                     const pct = Math.round((g.total / totalG) * 100);
                     return (
                       <tr key={g.genre} className="hover:bg-ciat-cream/40">
-                        <td className="py-1 text-ciat-dark font-medium">{g.genre}</td>
-                        <td className="py-1 text-right font-bold text-ciat-brown">{g.total}</td>
-                        <td className="py-1 text-right text-ciat-dark/70">{pct}%</td>
+                        <td className="py-1 text-ciat-dark font-medium">
+                          {g.genre}
+                        </td>
+                        <td className="py-1 text-right font-bold text-ciat-brown">
+                          {g.total}
+                        </td>
+                        <td className="py-1 text-right text-ciat-dark/70">
+                          {pct}%
+                        </td>
                       </tr>
                     );
                   })}
@@ -468,65 +546,97 @@ export function PrintSummaryModal({
               <div className="mt-3 p-2 bg-ciat-sand/15 rounded-md text-[11px] text-ciat-dark/80 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-ciat-terracotta shrink-0" />
                 <span>
-                  Objectif charte CIAT : au moins 40% de projets portés ou co-portés par des femmes.
+                  Objectif charte CIAT : au moins 40% de projets portés ou
+                  co-portés par des femmes.
                 </span>
               </div>
             </div>
           </div>
 
-          {/* 4. Suivi des Jalons et Projets en Alerte / Retard (Exigé par T1) */}
-          <div className="border border-red-200 rounded-lg p-3.5 bg-red-50/30 mb-6 page-break-avoid">
-            <div className="flex items-center gap-2 mb-2 border-b border-red-200/60 pb-1.5">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <h3 className="text-xs font-bold text-red-900 uppercase tracking-wider">
-                4. Vigilance & Suivi des Retards (Jalons en alerte)
+          {/* 4. Suivi des Jalons et Projets en Alerte / Retard (Issu de la base de données réelle) */}
+          <div className="border border-ciat-sand/40 rounded-lg p-3.5 bg-ciat-cream/30 mb-6 page-break-avoid">
+            <div className="flex items-center gap-2 mb-2 border-b border-ciat-sand/30 pb-1.5">
+              <AlertTriangle className="w-4 h-4 text-ciat-terracotta" />
+              <h3 className="text-xs font-bold text-ciat-brown uppercase tracking-wider">
+                4. Suivi des Jalons et Projets en Alerte / Retard
               </h3>
             </div>
 
-            <p className="text-[11px] text-red-800/80 mb-2">
-              Projets sélectionnés ou incubés nécessitant un réajustement d&apos;échéance ou une intervention du mentor :
-            </p>
+            {realAlertes.length > 0 ? (
+              <>
+                <p className="text-[11px] text-ciat-dark/80 mb-2">
+                  Projets sélectionnés ou incubés avec un jalon ayant dépassé
+                  son échéance :
+                </p>
 
-            <table className="w-full text-xs text-left bg-white rounded-md border border-red-200 overflow-hidden">
-              <thead className="bg-red-100/60 text-red-900">
-                <tr>
-                  <th className="py-1.5 px-2.5 font-semibold">Projet</th>
-                  <th className="py-1.5 px-2 font-semibold">Jalon bloquant</th>
-                  <th className="py-1.5 px-2 font-semibold text-center">Échéance initiale</th>
-                  <th className="py-1.5 px-2.5 font-semibold text-right">Statut</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-red-150">
-                {simulatedRetards.map((r, idx) => (
-                  <tr key={idx} className="hover:bg-red-50/50">
-                    <td className="py-1.5 px-2.5 font-semibold text-ciat-dark">{r.projet}</td>
-                    <td className="py-1.5 px-2 text-ciat-dark/80">{r.jalon}</td>
-                    <td className="py-1.5 px-2 text-center text-ciat-dark/70 font-mono text-[11px]">
-                      {r.echeance}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-right font-semibold text-red-700">
-                      {r.statut}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <table className="w-full text-xs text-left bg-white rounded-md border border-ciat-sand/30 overflow-hidden">
+                  <thead className="bg-ciat-sand/20 text-ciat-brown">
+                    <tr>
+                      <th className="py-1.5 px-2.5 font-semibold">Projet</th>
+                      <th className="py-1.5 px-2 font-semibold">Jalon</th>
+                      <th className="py-1.5 px-2 font-semibold text-center">
+                        Échéance
+                      </th>
+                      <th className="py-1.5 px-2.5 font-semibold text-right">
+                        Statut
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ciat-sand/15">
+                    {realAlertes.slice(0, 10).map((r) => (
+                      <tr key={r.id} className="hover:bg-ciat-cream/40">
+                        <td className="py-1.5 px-2.5 font-semibold text-ciat-dark">
+                          {r.projet_titre}
+                        </td>
+                        <td className="py-1.5 px-2 text-ciat-dark/80">
+                          {r.titre}
+                        </td>
+                        <td className="py-1.5 px-2 text-center text-ciat-dark/70 font-mono text-[11px]">
+                          {r.echeance}
+                        </td>
+                        <td className="py-1.5 px-2.5 text-right font-semibold text-ciat-terracotta">
+                          {r.statut}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : (
+              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-md text-xs text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  Aucun jalon en retard : les projets incubés progressent
+                  conformément à leur calendrier d&apos;objectifs.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 5. Signature et validation officielle */}
           <div className="pt-4 border-t border-ciat-sand/40 grid grid-cols-2 gap-8 text-xs page-break-avoid">
             <div>
-              <p className="font-semibold text-ciat-dark/70">Pour le Centre d&apos;Innovation (CIAT) :</p>
-              <p className="text-[11px] text-ciat-dark/60 mt-0.5">Le Coordonnateur de l&apos;Incubateur</p>
+              <p className="font-semibold text-ciat-dark/70">
+                Pour le Centre d&apos;Innovation (CIAT) :
+              </p>
+              <p className="text-[11px] text-ciat-dark/60 mt-0.5">
+                Le Coordonnateur de l&apos;Incubateur
+              </p>
               <div className="h-16 mt-2 border-b border-dashed border-ciat-sand/50" />
               <p className="text-[10px] text-ciat-dark/50 mt-1">Date et visa</p>
             </div>
 
             <div className="text-right">
-              <p className="font-semibold text-ciat-dark/70">Comité de Sélection & Partenariats :</p>
-              <p className="text-[11px] text-ciat-dark/60 mt-0.5">Le Représentant du Comité</p>
+              <p className="font-semibold text-ciat-dark/70">
+                Comité de Sélection & Partenariats :
+              </p>
+              <p className="text-[11px] text-ciat-dark/60 mt-0.5">
+                Le Représentant du Comité
+              </p>
               <div className="h-16 mt-2 border-b border-dashed border-ciat-sand/50" />
-              <p className="text-[10px] text-ciat-dark/50 mt-1">Date et signature</p>
+              <p className="text-[10px] text-ciat-dark/50 mt-1">
+                Date et signature
+              </p>
             </div>
           </div>
         </div>
