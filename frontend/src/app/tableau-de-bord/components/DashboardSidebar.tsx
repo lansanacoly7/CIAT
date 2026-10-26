@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Home,
+  BookOpen,
   Rocket,
   FileText,
   Globe,
@@ -15,7 +16,9 @@ import {
   Layers,
   User,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 // Les modules de gestion CIAT (Tableau de bord placé en haut en élément principal)
 const GESTION_ITEMS = [
@@ -52,6 +55,7 @@ const GESTION_ITEMS = [
 ];
 
 export function DashboardSidebar() {
+  const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -78,8 +82,33 @@ export function DashboardSidebar() {
 
   const closeMobile = () => setIsMobileOpen(false);
 
+  // Libellé et rôle dynamiques
+  const roleLabel =
+    user?.role === "administrateur"
+      ? "Administrateur"
+      : user?.role === "coordonnateur"
+      ? "Coordonnateur CIAT"
+      : user?.role === "membre_comite"
+      ? "Comité de Sélection"
+      : user?.role === "mentor"
+      ? "Mentor"
+      : "Équipe CIAT";
+
+  const userDisplayName = user
+    ? user.first_name
+      ? `${user.first_name} ${user.last_name || ""}`.trim()
+      : user.email.split("@")[0]
+    : "Administrateur";
+
+  const userInitial = user?.first_name
+    ? user.first_name[0].toUpperCase()
+    : user?.email
+    ? user.email[0].toUpperCase()
+    : "A";
+
   // Contenu exact de la Sidebar (Desktop fixe & Mobile Drawer)
   const renderSidebarContent = (onItemClick?: () => void) => {
+    const isMethodologieActive = pathname === "/tableau-de-bord/methodologie";
     const isDashboardActive = pathname === "/tableau-de-bord";
     const isHomeActive = pathname === "/";
 
@@ -105,12 +134,12 @@ export function DashboardSidebar() {
             </Link>
           </div>
 
-          {/* 2. Bouton principal : Tableau de bord (en haut, style capsule) */}
-          <div className="px-3">
+          {/* 2. Boutons principaux : Tableau de bord & Méthodologie */}
+          <div className="px-3 space-y-1">
             <Link
               href="/tableau-de-bord"
               onClick={onItemClick}
-              className={`flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              className={`flex items-center gap-3.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                 isDashboardActive
                   ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
                   : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
@@ -118,6 +147,18 @@ export function DashboardSidebar() {
             >
               <Home className="h-5 w-5 stroke-[1.75]" />
               <span>Tableau de bord</span>
+            </Link>
+            <Link
+              href="/tableau-de-bord/methodologie"
+              onClick={onItemClick}
+              className={`flex items-center gap-3.5 rounded-xl px-4 py-2 text-sm transition-all ${
+                isMethodologieActive
+                  ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
+                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
+              <span>Méthodologie</span>
             </Link>
           </div>
 
@@ -178,24 +219,47 @@ export function DashboardSidebar() {
           {/* Ligne de séparation */}
           <div className="mx-4 mb-3 border-t border-white/10" />
 
-          {/* Profil Administrateur (Avatar rond blanc + texte) */}
+          {/* Profil Administrateur avec Déconnexion directe */}
           <div className="px-3 pb-2">
-            <Link
-              href="/connexion"
-              onClick={onItemClick}
-              className="group flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-white/10"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] shadow-sm">
-                  <User className="h-5 w-5 fill-current" />
+            <div className="group flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-2 transition-colors hover:bg-white/10">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] font-bold text-sm shadow-sm">
+                  {user ? userInitial : <User className="h-5 w-5 fill-current" />}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white">Administrateur</div>
-                  <div className="text-[11px] text-[#cbb7a3]">Admin &amp; Coordinateur</div>
+                  <div className="text-sm font-semibold text-white truncate">
+                    {userDisplayName}
+                  </div>
+                  <div className="text-[11px] text-[#cbb7a3] truncate">
+                    {roleLabel}
+                  </div>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-white/50 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onItemClick) onItemClick();
+                    logout();
+                  }}
+                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
+                  title="Déconnexion"
+                  aria-label="Déconnexion"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              ) : (
+                <Link
+                  href="/connexion"
+                  onClick={onItemClick}
+                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
+                  title="Se connecter"
+                  aria-label="Se connecter"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Slogan officiel CIAT en pied */}
@@ -220,7 +284,6 @@ export function DashboardSidebar() {
     <>
       {/* 
         1. SIDEBAR FIXE PERMANENTE SUR GRAND ÉCRAN (Desktop lg: 1024px et +)
-        Totalement isolée dans le module tableau-de-bord pour éviter tout conflit git.
       */}
       <aside
         aria-label="Navigation latérale principale"
@@ -250,7 +313,7 @@ export function DashboardSidebar() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <span className="text-xs font-bold text-[#602d10]">Espace Décisionnel CIAT</span>
+        <span className="text-xs font-bold text-[#602d10]">CIAT — Espace de Gestion</span>
         <div className="w-8" />
       </div>
 

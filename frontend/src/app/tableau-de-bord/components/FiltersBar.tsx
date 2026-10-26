@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Filter,
   RotateCcw,
@@ -13,6 +14,7 @@ import {
   SlidersHorizontal,
   RefreshCw,
   Download,
+  BookOpen,
 } from "lucide-react";
 import type { DashboardFilters } from "../types";
 import { COHORTE_OPTIONS, DOMAINE_OPTIONS, STATUT_OPTIONS } from "../mockData";
@@ -106,6 +108,15 @@ export function FiltersBar({
               <span>Exporter</span>
             </button>
           )}
+
+          <Link
+            href="/tableau-de-bord/methodologie"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200/90 bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-2xs transition-all hover:border-[#602d10] hover:bg-white hover:text-[#602d10] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c99a69]"
+            title="Consulter les définitions méthodologiques et limites des indicateurs"
+          >
+            <BookOpen className="h-3.5 w-3.5 text-[#602d10]" strokeWidth={1.75} />
+            <span>Méthodologie</span>
+          </Link>
         </div>
       </div>
 
