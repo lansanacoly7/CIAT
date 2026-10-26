@@ -1,6 +1,21 @@
 from django.contrib import admin
 
-from .models import Critere, Decision, Dossier, Evaluation, Grille, Note, Piece
+from apps.core.models import Role, User
+from .models import (
+    AffectationMentor,
+    CommentaireJalon,
+    Critere,
+    Decision,
+    Dossier,
+    Evaluation,
+    Grille,
+    Jalon,
+    Note,
+    Objectif,
+    Piece,
+    PreuveJalon,
+    SuiviProjet,
+)
 
 
 class PieceInline(admin.TabularInline):
@@ -52,3 +67,51 @@ class EvaluationAdmin(admin.ModelAdmin):
 class DecisionAdmin(admin.ModelAdmin):
     list_display = ["id", "dossier", "decision", "decide_par", "cree_le"]
     list_filter = ["decision", "cree_le"]
+
+
+@admin.register(AffectationMentor)
+class AffectationMentorAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "mentor", "affecte_par", "affecte_le"]
+    search_fields = ["projet__titre", "mentor__email", "mentor__last_name"]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "mentor":
+            kwargs["queryset"] = User.objects.filter(role=Role.MENTOR)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(Objectif)
+class ObjectifAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "libelle", "statut", "echeance", "cree_par", "cree_le"]
+    list_filter = ["statut", "cree_le"]
+    search_fields = ["libelle", "projet__titre"]
+
+
+class PreuveJalonInline(admin.TabularInline):
+    model = PreuveJalon
+    extra = 0
+    readonly_fields = ["depose_le"]
+
+
+class CommentaireJalonInline(admin.TabularInline):
+    model = CommentaireJalon
+    extra = 0
+    readonly_fields = ["cree_le"]
+
+
+@admin.register(Jalon)
+class JalonAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "titre", "statut", "echeance", "en_retard", "cree_par", "cree_le"]
+    list_filter = ["statut", "echeance", "cree_le"]
+    search_fields = ["titre", "projet__titre"]
+    inlines = [PreuveJalonInline, CommentaireJalonInline]
+
+
+@admin.register(SuiviProjet)
+class SuiviProjetAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "echeance", "redige_par", "cree_le"]
+    list_filter = ["echeance", "cree_le"]
+    search_fields = ["projet__titre", "bilan"]
+
+
+
