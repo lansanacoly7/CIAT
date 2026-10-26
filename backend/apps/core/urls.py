@@ -12,7 +12,7 @@ router.register("projets", views.ProjetViewSet, basename="projet")
 urlpatterns = [
     path("health/", views.HealthView.as_view(), name="health"),
     path("auth/register/", views.RegisterView.as_view(), name="register"),
-    path("auth/token/", TokenObtainPairView.as_view(), name="token"),
+    path("auth/token/", views.CiatTokenObtainPairView.as_view(), name="token"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("auth/me/", views.MeView.as_view(), name="me"),
     path("", include(router.urls)),

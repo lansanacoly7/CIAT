@@ -140,10 +140,16 @@ class DocumentListView(APIView):
 
     def get(self, request):
         if getattr(request.user, "is_equipe", False):
-            queryset = Document.objects.all().select_related("modele", "projet", "auteur")
+            queryset = (
+                Document.objects.all()
+                .select_related("modele", "projet", "auteur")
+                .prefetch_related("versions")
+            )
         else:
-            queryset = Document.objects.filter(auteur=request.user).select_related(
-                "modele", "projet", "auteur"
+            queryset = (
+                Document.objects.filter(auteur=request.user)
+                .select_related("modele", "projet", "auteur")
+                .prefetch_related("versions")
             )
         serializer = DocumentListSerializer(queryset, many=True)
         return Response(serializer.data)

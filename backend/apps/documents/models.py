@@ -81,9 +81,9 @@ class Document(models.Model):
         related_name="documents_crees",
     )
     statut = models.CharField(
-        max_length=20, choices=Statut.choices, default=Statut.BROUILLON
+        max_length=20, choices=Statut.choices, default=Statut.BROUILLON, db_index=True
     )
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -100,6 +100,12 @@ class Document(models.Model):
 
     @property
     def version_courante(self):
+        # Utilise le cache prefetch s'il est disponible pour éviter les requêtes N+1
+        if hasattr(self, "_prefetched_objects_cache") and "versions" in self._prefetched_objects_cache:
+            versions = self.versions.all()
+            if versions:
+                return max(v.numero for v in versions)
+            return 1
         dv = self.derniere_version
         return dv.numero if dv else 1
 

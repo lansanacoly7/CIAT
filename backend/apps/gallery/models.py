@@ -46,12 +46,13 @@ class FicheInnovation(models.Model):
         choices=Statut.choices,
         default=Statut.BROUILLON,
         verbose_name="Statut du workflow",
+        db_index=True,
     )
     vues = models.PositiveIntegerField(
         default=0,
         verbose_name="Nombre de consultations",
     )
-    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:

@@ -12,6 +12,7 @@ migration_0002 = importlib.import_module("apps.documents.migrations.0002_seed_do
 INITIAL_DATA = migration_0002.INITIAL_DATA
 
 
+
 class Command(BaseCommand):
     help = "Charge les 4 types de documents et les 12 modèles prédéfinis du CIAT."
 
