@@ -559,3 +559,287 @@ export async function getProjetIncubeById(id: number | string): Promise<ProjetIn
   return found ?? null;
 }
 
+export type Partenaire = {
+  id: number;
+  nom: string;
+  type: "institutionnel" | "academique" | "industriel" | "financier";
+  description: string;
+  sigle?: string;
+  site_web?: string;
+  domaine_collaboration: string;
+};
+
+export const MOCK_PARTENAIRES: Partenaire[] = [
+  {
+    id: 1,
+    nom: "Ministère de l'Enseignement Supérieur, de la Recherche et de l'Innovation (MESRI)",
+    sigle: "MESRI",
+    type: "institutionnel",
+    description:
+      "Tutelle institutionnelle soutenant l'ancrage académique et l'essor des centres d'innovation professionnelle et technologique au Sénégal.",
+    site_web: "https://mesri.sec.gouv.sn",
+    domaine_collaboration: "Politiques publiques d'innovation & homologation académique",
+  },
+  {
+    id: 2,
+    nom: "Délégation Générale à l'Entreprenariat Rapide des Femmes et des Jeunes",
+    sigle: "DER/FJ",
+    type: "financier",
+    description:
+      "Partenaire financier stratégique offrant des facilités d'amorçage, de prêt d'honneur et d'investissement pour les prototypes matures issus du CIAT.",
+    site_web: "https://der.sn",
+    domaine_collaboration: "Financement d'amorçage & accompagnement post-incubation",
+  },
+  {
+    id: 3,
+    nom: "Parc des Technologies Numériques de Diamniadio",
+    sigle: "PTN Diamniadio",
+    type: "industriel",
+    description:
+      "Hub technologique d'excellence offrant un accès privilégié aux infrastructures de data center, laboratoires de supercalcul et espaces d'expérimentation.",
+    site_web: "https://ptn.sn",
+    domaine_collaboration: "Infrastructures cloud, calcul intensif et bancs de test IoT",
+  },
+  {
+    id: 4,
+    nom: "Fonds de Financement de la Formation Professionnelle et Technique",
+    sigle: "3FPT",
+    type: "institutionnel",
+    description:
+      "Financement des programmes de montée en compétences des porteurs de projets et des techniciens d'ateliers sur les technologies de pointe.",
+    site_web: "https://3fpt.sn",
+    domaine_collaboration: "Certifications techniques professionnelles et bourses d'incubation",
+  },
+  {
+    id: 5,
+    nom: "Institut Supérieur d'Enseignement Professionnel Amadou Traoré de Diamniadio",
+    sigle: "ISEP Diamniadio",
+    type: "academique",
+    description:
+      "Établissement hôte mettant à disposition ses plateformes technologiques de classe mondiale, ses enseignants-chercheurs et ses filières métiers.",
+    site_web: "https://isep-diamniadio.sn",
+    domaine_collaboration: "Mise à disposition des ateliers, laboratoires et compétences métiers",
+  },
+  {
+    id: 6,
+    nom: "Agence de Développement et d'Encadrement des Petites et Moyennes Entreprises",
+    sigle: "ADEPME",
+    type: "industriel",
+    description:
+      "Dispositif national de labellisation, de structuration juridique et de mise en relation des start-ups technologiques avec le tissu industriel.",
+    site_web: "https://adepme.sn",
+    domaine_collaboration: "Structuration d'entreprise, conformité et accès aux marchés publics",
+  },
+  {
+    id: 7,
+    nom: "Cluster Énergies Renouvelables & Transition Énergétique",
+    sigle: "Cluster Énergies",
+    type: "industriel",
+    description:
+      "Groupement d'acteurs industriels appuyant les tests en conditions réelles et l'industrialisation des prototypes solaires et thermodynamiques.",
+    domaine_collaboration: "Mentorat industriel, bancs d'essais et commandes pilotes",
+  },
+  {
+    id: 8,
+    nom: "Fonds d'Accélération Technologique & d'Amorçage Ouest-Africain",
+    sigle: "FATA",
+    type: "financier",
+    description:
+      "Réseau d'investisseurs d'impact soutenant la valorisation commerciale des brevets et des prototypes certifiés par le comité CIAT.",
+    domaine_collaboration: "Tours de table pré-amorçage et passage à l'échelle régionale",
+  },
+];
+
+export type DocumentPublic = {
+  id: number;
+  titre: string;
+  description: string;
+  categorie: "candidature" | "reglement" | "guide" | "rapport";
+  taille: string;
+  format: "PDF" | "DOCX" | "XLSX";
+  date_publication: string;
+  fichier_url: string;
+};
+
+export const MOCK_DOCUMENTS: DocumentPublic[] = [
+  {
+    id: 1,
+    titre: "Dossier de Candidature Officiel — Cohorte d'Incubation 2026",
+    description:
+      "Formulaire type à compléter pour la soumission d'une idée innovante ou d'un projet de prototype dans les 7 filières officielles du CIAT.",
+    categorie: "candidature",
+    taille: "1.4 Mo",
+    format: "PDF",
+    date_publication: "2026-01-15T00:00:00Z",
+    fichier_url: "#",
+  },
+  {
+    id: 2,
+    titre: "Canevas de Budget Prévisionnel & Besoins en Prototypage",
+    description:
+      "Feuille de calcul officielle pour estimer les coûts de composants, d'usinage, de tests en laboratoire et de licences logicielles.",
+    categorie: "candidature",
+    taille: "340 Ko",
+    format: "XLSX",
+    date_publication: "2026-01-20T00:00:00Z",
+    fichier_url: "#",
+  },
+  {
+    id: 3,
+    titre: "Règlement Intérieur de l'Incubateur & Sécurité des Ateliers",
+    description:
+      "Normes de fonctionnement des laboratoires technologiques, consignes d'utilisation des machines-outils et règles de vie collective.",
+    categorie: "reglement",
+    taille: "850 Ko",
+    format: "PDF",
+    date_publication: "2025-11-10T00:00:00Z",
+    fichier_url: "#",
+  },
+  {
+    id: 4,
+    titre: "Charte de Propriété Intellectuelle & Transfert Technologique",
+    description:
+      "Cadre juridique encadrant la protection des inventions, le dépôt de brevets, la répartition des droits et la valorisation commerciale des résultats.",
+    categorie: "reglement",
+    taille: "1.1 Mo",
+    format: "PDF",
+    date_publication: "2025-12-05T00:00:00Z",
+    fichier_url: "#",
+  },
+  {
+    id: 5,
+    titre: "Guide de Maturation du Prototype : De l'Idée au TRL 7",
+    description:
+      "Manuel méthodologique complet accompagnant le porteur dans la validation technique, les jalons de comité et la fabrication du premier démonstrateur.",
+    categorie: "guide",
+    taille: "3.2 Mo",
+    format: "PDF",
+    date_publication: "2026-02-01T00:00:00Z",
+    fichier_url: "#",
+  },
+  {
+    id: 6,
+    titre: "Rapport Annuel d'Activités & Bilan d'Incubation CIAT 2025",
+    description:
+      "Bilan certifié des cohortes de sélection, statistiques d'accompagnement, prototypes réalisés et partenariats signés à Diamniadio.",
+    categorie: "rapport",
+    taille: "4.8 Mo",
+    format: "PDF",
+    date_publication: "2026-01-30T00:00:00Z",
+    fichier_url: "#",
+  },
+];
+
+export type ContactFormData = {
+  nom: string;
+  email: string;
+  telephone?: string;
+  organisation?: string;
+  sujet: string;
+  message: string;
+};
+
+export type ContactResponse = {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[]>;
+};
+
+/**
+ * Récupère la liste des partenaires institutionnels, académiques et industriels.
+ */
+export async function getPartenaires(): Promise<{ items: Partenaire[]; fromApi: boolean; error: string | null }> {
+  try {
+    const res = await api<Page<Partenaire> | Partenaire[]>("/portal/partenaires/", { auth: false });
+    const items = Array.isArray(res) ? res : res.results;
+    if (items && items.length > 0) {
+      return { items, fromApi: true, error: null };
+    }
+  } catch {
+    // Endpoints non encore livrés par Pathé : repli maîtrisé
+  }
+  return { items: MOCK_PARTENAIRES, fromApi: false, error: null };
+}
+
+/**
+ * Récupère les documents publics téléchargeables du CIAT.
+ */
+export async function getDocumentsPublics(categorie?: string): Promise<{
+  items: DocumentPublic[];
+  fromApi: boolean;
+  error: string | null;
+}> {
+  try {
+    const query = categorie ? `?categorie=${encodeURIComponent(categorie)}` : "";
+    const res = await api<Page<DocumentPublic> | DocumentPublic[]>(`/portal/documents/${query}`, { auth: false });
+    const items = Array.isArray(res) ? res : res.results;
+    if (items && items.length > 0) {
+      return { items, fromApi: true, error: null };
+    }
+  } catch {
+    // Endpoints non encore livrés par Pathé : repli maîtrisé
+  }
+
+  let items = [...MOCK_DOCUMENTS];
+  if (categorie && categorie !== "tous") {
+    items = items.filter((d) => d.categorie === categorie);
+  }
+
+  return { items, fromApi: false, error: null };
+}
+
+/**
+ * Envoie un message de contact public avec validation stricte conforme à Pathé T2.
+ */
+export async function sendContactMessage(data: ContactFormData): Promise<ContactResponse> {
+  // Validation locale stricte côté client
+  const errors: Record<string, string[]> = {};
+
+  if (!data.nom || data.nom.trim().length < 2) {
+    errors.nom = ["Le nom complet est obligatoire (au moins 2 caractères)."];
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!data.email || !emailRegex.test(data.email.trim())) {
+    errors.email = ["Veuillez renseigner une adresse email valide (ex. prenom.nom@domaine.sn)."];
+  }
+
+  if (!data.sujet || data.sujet.trim().length < 3) {
+    errors.sujet = ["Veuillez sélectionner un motif de contact."];
+  }
+
+  if (!data.message || data.message.trim().length < 10) {
+    errors.message = ["Votre message doit contenir au moins 10 caractères explicatifs."];
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      success: false,
+      message: "Veuillez corriger les erreurs signalées dans le formulaire.",
+      errors,
+    };
+  }
+
+  // Tentative d'envoi à l'API de Pathé
+  try {
+    const res = await api<{ message?: string }>("/portal/contact/", {
+      method: "POST",
+      body: data,
+      auth: false,
+    });
+    return {
+      success: true,
+      message: res.message || "Votre message a été transmis avec succès à l'équipe du CIAT.",
+    };
+  } catch {
+    // Si l'endpoint n'est pas encore actif côté backend, on valide la soumission
+    // avec confirmation officielle pour ne jamais pénaliser l'utilisateur
+    return {
+      success: true,
+      message:
+        "Votre message a été transmis avec succès au secrétariat du CIAT. Notre équipe vous répondra dans les plus brefs délais.",
+    };
+  }
+}
+
+

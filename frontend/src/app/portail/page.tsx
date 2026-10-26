@@ -64,6 +64,30 @@ const SECTIONS_PORTAIL = [
       "Moteur de recherche et fiches détaillées des projets, prototypes et innovations accompagnés par l'incubateur.",
     cta: "Explorer l'annuaire",
   },
+  {
+    href: "/portail/partenaires",
+    tag: "Réseau",
+    titre: "Nos Partenaires Stratégiques",
+    description:
+      "Institutions régaliennes, bailleurs de fonds, universités et industriels engagés dans l'écosystème CIAT.",
+    cta: "Découvrir les partenaires",
+  },
+  {
+    href: "/portail/documents",
+    tag: "Ressources",
+    titre: "Espace Documentaire Officiel",
+    description:
+      "Téléchargez les canevas de candidature, les règlements intérieurs, les chartes de PI et les guides de prototypage.",
+    cta: "Accéder aux documents",
+  },
+  {
+    href: "/portail/contact",
+    tag: "Échanges",
+    titre: "Contact & Secrétariat",
+    description:
+      "Formulaire officiel pour adresser vos questions, proposer un partenariat ou solliciter un accompagnement.",
+    cta: "Nous contacter",
+  },
 ];
 
 // Données de cadrage préliminaires conformes à CONTRATS_API.md (en attente des endpoints de Pathé)

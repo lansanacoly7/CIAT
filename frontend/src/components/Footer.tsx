@@ -49,13 +49,23 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/portail" className="hover:text-white transition-colors">
-                  Hub du Portail Public
+                <Link href="/portail/projets" className="hover:text-white transition-colors">
+                  Annuaire des Projets Incubés
                 </Link>
               </li>
               <li>
-                <Link href="/galerie" className="hover:text-white transition-colors">
-                  Vitrine des Innovations
+                <Link href="/portail/partenaires" className="hover:text-white transition-colors">
+                  Nos Partenaires
+                </Link>
+              </li>
+              <li>
+                <Link href="/portail/documents" className="hover:text-white transition-colors">
+                  Espace Documentaire
+                </Link>
+              </li>
+              <li>
+                <Link href="/portail/contact" className="hover:text-white transition-colors">
+                  Contact &amp; Secrétariat
                 </Link>
               </li>
             </ul>
