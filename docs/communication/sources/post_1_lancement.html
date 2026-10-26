@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Post 1 — Lancement Officiel de la Plateforme (1080x1080)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1080px;
+      height: 1080px;
+      background: #24140D;
+      color: #FAF7F2;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Dégradé géométrique subtil en arrière-plan */
+    .bg-accent {
+      position: absolute;
+      top: -150px;
+      right: -150px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212, 170, 112, 0.18) 0%, rgba(36, 20, 13, 0) 70%);
+      pointer-events: none;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .logo {
+      height: 65px;
+      width: auto;
+    }
+    .badge {
+      background: rgba(212, 170, 112, 0.18);
+      border: 1.5px solid #D4AA70;
+      color: #D4AA70;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* Cadre Photo */
+    .visual-frame {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 3px solid #5A3A22;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      z-index: 10;
+    }
+    .visual-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .visual-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(36,20,13,0.7) 100%);
+      display: flex;
+      align-items: flex-end;
+      padding: 24px 30px;
+    }
+    .visual-caption {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #D4AA70;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Contenu Inférieur */
+    .main-text {
+      z-index: 10;
+      margin-top: 10px;
+    }
+    .tagline {
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 38px;
+      line-height: 1.18;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #EBD9C0;
+      font-size: 17px;
+      line-height: 1.45;
+      max-width: 900px;
+    }
+
+    /* Footer / CTA */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1.5px solid #5A3A22;
+      padding-top: 24px;
+      z-index: 10;
+    }
+    .url-chip {
+      background: #D4AA70;
+      color: #24140D;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      display: inline-block;
+      box-shadow: 0 4px 14px rgba(212, 170, 112, 0.35);
+    }
+    .slogan {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #CBB69E;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-accent"></div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <img src="../assets/logo_blanc.png" alt="CIAT" class="logo">
+    <div class="badge">Lancement Officiel</div>
+  </div>
+
+  <!-- Cadre Photo Campus -->
+  <div class="visual-frame">
+    <img src="../assets/campus-isep.png" alt="Campus ISEP Diamniadio">
+    <div class="visual-overlay">
+      <div class="visual-caption">ISEP Amadou Traoré &bull; Pôle Urbain de Diamniadio</div>
+    </div>
+  </div>
+
+  <!-- Message Principal -->
+  <div class="main-text">
+    <div class="tagline">Plateforme Numérique Écosystème CIAT 360</div>
+    <h1>Donnez vie à vos idées technologiques.</h1>
+    <p>
+      Le Centre d'Innovation, d'Application et de Transfert déploie sa plateforme numérique :
+      appels à projets, suivi contractuel d'incubation, galerie de prototypes et assistant IA.
+    </p>
+  </div>
+
+  <!-- Footer / Call to action -->
+  <div class="footer-bar">
+    <div class="url-chip">ciat.isepdiamniadio.sn</div>
+    <div class="slogan">Innovation &bull; Incubation &bull; Impact</div>
+  </div>
+</body>
+</html>
