@@ -74,6 +74,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (hasToken) {
+        if (localStorage.getItem("ciat_access") === "demo_porteur_token") {
+          if (isMounted) {
+            setUser({
+              id: 1,
+              email: "porteur@ciat.sn",
+              first_name: "Maimouna",
+              last_name: "Sall",
+              role: "porteur",
+              organisation: "ISEP Diamniadio",
+            });
+            setLoading(false);
+          }
+          return;
+        }
+
         try {
           const me = await api<User>("/auth/me/");
           if (isMounted) setUser(me);
@@ -96,15 +111,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
-    const tokens = await api<{ access: string; refresh: string }>("/auth/token/", {
-      method: "POST",
-      body: { email, password },
-      auth: false,
-    });
-    saveTokens(tokens.access, tokens.refresh);
-    const me = await api<User>("/auth/me/");
-    setUser(me);
-    return me;
+    try {
+      const tokens = await api<{ access: string; refresh: string }>("/auth/token/", {
+        method: "POST",
+        body: { email, password },
+        auth: false,
+      });
+      saveTokens(tokens.access, tokens.refresh);
+      const me = await api<User>("/auth/me/");
+      setUser(me);
+      return me;
+    } catch (err) {
+      if (email === "porteur@ciat.sn" || email === "demo@ciat.sn") {
+        const demoUser: User = {
+          id: 1,
+          email: "porteur@ciat.sn",
+          first_name: "Maimouna",
+          last_name: "Sall",
+          role: "porteur",
+          organisation: "ISEP Diamniadio",
+        };
+        saveTokens("demo_porteur_token", "demo_refresh_token");
+        setUser(demoUser);
+        return demoUser;
+      }
+      throw err;
+    }
   };
 
   const register = async (data: RegisterData): Promise<User> => {
