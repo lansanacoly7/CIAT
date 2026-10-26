@@ -458,6 +458,72 @@ export type ProjetsResponse = {
   error: string | null;
 };
 
+function normalizeProjet(item: Record<string, unknown>): ProjetIncube {
+  const domaine =
+    typeof item.domaine === "object" && item.domaine !== null
+      ? (item.domaine as { id: number; nom: string; slug: string })
+      : { id: 0, nom: (item.domaine_nom as string) || "Filière CIAT", slug: "" };
+
+  const cohorte =
+    typeof item.cohorte === "object" && item.cohorte !== null
+      ? (item.cohorte as { id: number; nom: string; annee: number })
+      : { id: 0, nom: (item.cohorte_nom as string) || "Incubateur CIAT", annee: 2026 };
+
+  return {
+    id: typeof item.id === "number" ? item.id : Number(item.id || 0),
+    titre: String(item.titre || ""),
+    resume: String(item.resume || ""),
+    probleme:
+      String(item.probleme || item.resume || "Problématique industrielle en cours de qualification au CIAT."),
+    solution:
+      String(item.solution || item.resume || "Solution technologique prototypée à l'ISEP Diamniadio."),
+    domaine,
+    cohorte,
+    statut: (item.statut as "incube" | "prototype" | "termine") || "incube",
+    porteur_nom: String(item.porteur_nom || "Équipe Porteuse CIAT"),
+    cree_le: String(item.cree_le || new Date().toISOString()),
+    impact_attendu: item.impact_attendu ? String(item.impact_attendu) : "Valorisation territoriale et maturation.",
+    technologies: Array.isArray(item.technologies)
+      ? (item.technologies as string[])
+      : ["Prototypage CIAT", "Transfert Technologique"],
+  };
+}
+
+function normalizePartenaire(item: Record<string, unknown>): Partenaire {
+  const nom = String(item.nom || "");
+  return {
+    id: typeof item.id === "number" ? item.id : Number(item.id || 0),
+    nom,
+    type: (item.type as Partenaire["type"]) || "institutionnel",
+    description: String(item.description || "Partenaire stratégique engagé dans le développement du CIAT."),
+    sigle: typeof item.sigle === "string" ? item.sigle : nom.slice(0, 8),
+    site_web: typeof item.site_web === "string" ? item.site_web : undefined,
+    domaine_collaboration: String(item.domaine_collaboration || item.description || "Coopération technique"),
+  };
+}
+
+function normalizeDocument(item: Record<string, unknown>): DocumentPublic {
+  const cat = typeof item.categorie === "string" ? item.categorie.toLowerCase() : "guide";
+  const mappedCat: DocumentPublic["categorie"] = cat.includes("candidat")
+    ? "candidature"
+    : cat.includes("regle")
+    ? "reglement"
+    : cat.includes("rapport")
+    ? "rapport"
+    : "guide";
+
+  return {
+    id: typeof item.id === "number" ? item.id : Number(item.id || 0),
+    titre: String(item.titre || ""),
+    description: String(item.description || `Document officiel de la catégorie ${item.categorie || "CIAT"}.`),
+    categorie: mappedCat,
+    taille: typeof item.taille === "string" ? item.taille : "1.2 Mo",
+    format: (item.format as DocumentPublic["format"]) || "PDF",
+    date_publication: String(item.date_publication || item.cree_le || new Date().toISOString()),
+    fichier_url: typeof item.fichier === "string" ? item.fichier : "#",
+  };
+}
+
 /**
  * Récupère l'annuaire des projets incubés du CIAT avec filtres combinés et recherche.
  */
@@ -473,15 +539,17 @@ export async function getProjetsIncubes(params: ProjetsFilterParams = {}): Promi
     if (statut) query.set("statut", statut);
     query.set("page", String(page));
 
-    const res = await api<Page<ProjetIncube> | ProjetIncube[]>(`/portal/projets-incubes/?${query.toString()}`, {
-      auth: false,
-    });
+    const res = await api<Page<Record<string, unknown>> | Record<string, unknown>[]>(
+      `/portal/projets-incubes/?${query.toString()}`,
+      { auth: false }
+    );
 
     const isPaged = res && typeof res === "object" && "results" in res;
-    const items = isPaged ? (res as Page<ProjetIncube>).results : (res as ProjetIncube[]);
-    const total = isPaged ? (res as Page<ProjetIncube>).count : (items ? items.length : 0);
+    const rawItems = isPaged ? (res as Page<Record<string, unknown>>).results : (res as Record<string, unknown>[]);
+    const total = isPaged ? (res as Page<Record<string, unknown>>).count : (rawItems ? rawItems.length : 0);
 
-    if (items && items.length > 0) {
+    if (rawItems && rawItems.length > 0) {
+      const items = rawItems.map(normalizeProjet);
       return {
         items,
         total,
@@ -549,8 +617,8 @@ export async function getProjetsIncubes(params: ProjetsFilterParams = {}): Promi
  */
 export async function getProjetIncubeById(id: number | string): Promise<ProjetIncube | null> {
   try {
-    const res = await api<ProjetIncube>(`/portal/projets-incubes/${id}/`, { auth: false });
-    if (res && res.titre) return res;
+    const res = await api<Record<string, unknown>>(`/portal/projets-incubes/${id}/`, { auth: false });
+    if (res && res.titre) return normalizeProjet(res);
   } catch {
     // Fallback local
   }
@@ -750,10 +818,12 @@ export type ContactResponse = {
  */
 export async function getPartenaires(): Promise<{ items: Partenaire[]; fromApi: boolean; error: string | null }> {
   try {
-    const res = await api<Page<Partenaire> | Partenaire[]>("/portal/partenaires/", { auth: false });
-    const items = Array.isArray(res) ? res : res.results;
-    if (items && items.length > 0) {
-      return { items, fromApi: true, error: null };
+    const res = await api<Page<Record<string, unknown>> | Record<string, unknown>[]>("/portal/partenaires/", {
+      auth: false,
+    });
+    const raw = Array.isArray(res) ? res : res.results;
+    if (raw && raw.length > 0) {
+      return { items: raw.map(normalizePartenaire), fromApi: true, error: null };
     }
   } catch {
     // Endpoints non encore livrés par Pathé : repli maîtrisé
@@ -771,10 +841,13 @@ export async function getDocumentsPublics(categorie?: string): Promise<{
 }> {
   try {
     const query = categorie ? `?categorie=${encodeURIComponent(categorie)}` : "";
-    const res = await api<Page<DocumentPublic> | DocumentPublic[]>(`/portal/documents/${query}`, { auth: false });
-    const items = Array.isArray(res) ? res : res.results;
-    if (items && items.length > 0) {
-      return { items, fromApi: true, error: null };
+    const res = await api<Page<Record<string, unknown>> | Record<string, unknown>[]>(
+      `/portal/documents/${query}`,
+      { auth: false }
+    );
+    const raw = Array.isArray(res) ? res : res.results;
+    if (raw && raw.length > 0) {
+      return { items: raw.map(normalizeDocument), fromApi: true, error: null };
     }
   } catch {
     // Endpoints non encore livrés par Pathé : repli maîtrisé
