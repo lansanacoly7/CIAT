@@ -1,0 +1,7 @@
+<svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- CIAT - Version blanche pour fond sombre (format carré) -->
+  <g id="ciat-blanc-symbol">
+    <path id="c-frame" d="M 834.06 207.94 L 710.31 331.69 A 255 255 0 1 0 710.31 692.31 L 834.06 816.06 A 430 430 0 1 1 834.06 207.94 Z" fill="#FFFFFF" />
+    <circle id="innovation-core" cx="530" cy="512" r="140" fill="#FFFFFF" />
+  </g>
+</svg>
