@@ -75,7 +75,7 @@ const POLE_REALISATIONS = [
     description:
       "Moteur de recherche multicritère et fiches détaillées des projets et prototypes accompagnés dans les 7 filières.",
     cta: "Explorer l'annuaire",
-    badge: "62 Projets Réels",
+    badge: "Projets Incubés",
   },
   {
     href: "/portail/partenaires",

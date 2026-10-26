@@ -29,6 +29,12 @@ def piece_upload_path(instance, filename):
     return f"incubator/pieces/{instance.dossier_id}/{clean_file}"
 
 
+def preuve_upload_path(instance, filename):
+    clean_file = sanitize_filename(filename)
+    return f"incubator/preuves/{instance.jalon.projet_id}/{clean_file}"
+
+
+
 def validate_file_size(value):
     max_size = 10 * 1024 * 1024  # 10 Mo
     if value.size == 0:
@@ -335,3 +341,199 @@ class Decision(models.Model):
 
         self.dossier.save(update_fields=["statut", "modifie_le"])
         self.dossier.projet.save(update_fields=["statut", "modifie_le"])
+
+
+class AffectationMentor(models.Model):
+    """Affectation d'un mentor à un projet d'incubation."""
+
+    projet = models.OneToOneField(
+        Projet, on_delete=models.CASCADE, related_name="affectation_mentor"
+    )
+    mentor = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="projets_mentores"
+    )
+    affecte_le = models.DateTimeField(auto_now_add=True)
+    affecte_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="mentors_affectes"
+    )
+
+    class Meta:
+        ordering = ["-affecte_le"]
+        verbose_name = "Affectation de mentor"
+        verbose_name_plural = "Affectations de mentors"
+
+    def __str__(self):
+        return f"{self.mentor} -> {self.projet.titre}"
+
+    def clean(self):
+        if self.mentor_id and self.mentor.role != Role.MENTOR:
+            raise ValidationError("L'utilisateur affecté doit avoir le rôle mentor.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+
+class StatutObjectif(models.TextChoices):
+    A_FAIRE = "a_faire", "À faire"
+    EN_COURS = "en_cours", "En cours"
+    ATTEINT = "atteint", "Atteint"
+
+
+class Objectif(models.Model):
+    """Objectif fixé pour un projet incubé."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="objectifs"
+    )
+    libelle = models.CharField(max_length=255)
+    echeance = models.DateField(null=True, blank=True)
+    statut = models.CharField(
+        max_length=20,
+        choices=StatutObjectif.choices,
+        default=StatutObjectif.A_FAIRE,
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+    cree_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="objectifs_crees"
+    )
+
+    class Meta:
+        ordering = ["echeance", "cree_le"]
+        verbose_name = "Objectif de projet"
+        verbose_name_plural = "Objectifs de projets"
+
+    def __str__(self):
+        return f"{self.projet.titre} - {self.libelle} ({self.statut})"
+
+
+class StatutJalon(models.TextChoices):
+    A_FAIRE = "a_faire", "À faire"
+    EN_COURS = "en_cours", "En cours"
+    FAIT = "fait", "Fait"
+
+
+class Jalon(models.Model):
+    """Jalon d'un projet d'incubation."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="jalons"
+    )
+    titre = models.CharField(max_length=255)
+    echeance = models.DateField()
+    statut = models.CharField(
+        max_length=20,
+        choices=StatutJalon.choices,
+        default=StatutJalon.A_FAIRE,
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+    cree_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="jalons_crees"
+    )
+
+    class Meta:
+        ordering = ["echeance", "cree_le"]
+        verbose_name = "Jalon de projet"
+        verbose_name_plural = "Jalons de projets"
+
+    def __str__(self):
+        return f"{self.projet.titre} - {self.titre} ({self.statut})"
+
+    @property
+    def en_retard(self) -> bool:
+        """Indicateur calculé en temps réel : vrai si la date d'échéance est passée et statut non fait."""
+        return bool(self.statut != StatutJalon.FAIT and self.echeance < timezone.now().date())
+
+
+class PreuveJalon(models.Model):
+    """Fichier de preuve déposé pour justifier l'avancement d'un jalon."""
+
+    jalon = models.ForeignKey(
+        Jalon, on_delete=models.CASCADE, related_name="preuves"
+    )
+    fichier = models.FileField(
+        upload_to=preuve_upload_path,
+        validators=[
+            FileExtensionValidator(allowed_extensions=ALLOWED_PIECE_EXTENSIONS),
+            validate_file_size,
+            validate_file_content,
+        ],
+    )
+    nom = models.CharField(max_length=255)
+    depose_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="preuves_jalons"
+    )
+    depose_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-depose_le"]
+        verbose_name = "Preuve de jalon"
+        verbose_name_plural = "Preuves de jalons"
+
+    def __str__(self):
+        return f"Preuve: {self.nom} pour jalon {self.jalon_id}"
+
+    def save(self, *args, **kwargs):
+        if not self.nom and self.fichier:
+            self.nom = sanitize_filename(self.fichier.name)
+        super().save(*args, **kwargs)
+
+
+class CommentaireJalon(models.Model):
+    """Commentaire horodaté sur un jalon d'incubation."""
+
+    jalon = models.ForeignKey(
+        Jalon, on_delete=models.CASCADE, related_name="commentaires"
+    )
+    auteur = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="commentaires_jalons"
+    )
+    texte = models.TextField()
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["cree_le"]
+        verbose_name = "Commentaire de jalon"
+        verbose_name_plural = "Commentaires de jalons"
+
+    def __str__(self):
+        return f"Commentaire de {self.auteur} sur jalon {self.jalon_id}"
+
+
+class EcheanceSuivi(models.TextChoices):
+    TROIS_MOIS = "3_mois", "3 mois"
+    SIX_MOIS = "6_mois", "6 mois"
+
+
+class SuiviProjet(models.Model):
+    """Bilan périodique de suivi d'un projet incubé (à 3 mois ou 6 mois)."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="suivis"
+    )
+    echeance = models.CharField(max_length=20, choices=EcheanceSuivi.choices)
+    bilan = models.TextField()
+    indicateurs = models.JSONField(default=dict, blank=True)
+    redige_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="suivis_rediges"
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["echeance", "-cree_le"]
+        verbose_name = "Bilan de suivi"
+        verbose_name_plural = "Bilans de suivi"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["projet", "echeance"],
+                name="unique_suivi_projet_echeance",
+            )
+        ]
+
+    def __str__(self):
+        return f"Suivi {self.get_echeance_display()} - {self.projet.titre}"
+
+

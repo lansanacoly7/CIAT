@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use, useEffect, useState } from "react";
-import { Badge, ButtonLink, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, ButtonLink, DemoBanner, PageTitle } from "@/components/ui";
 import { getProjetIncubeById, type ProjetIncube } from "@/lib/portal-api";
 
 function formatDate(dateStr: string) {
@@ -38,15 +38,46 @@ function ProjetDetailContent({
   const { id } = use(params);
   const [projet, setProjet] = useState<ProjetIncube | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadProjet = () => {
+    setLoading(true);
+    setError(null);
+    getProjetIncubeById(id)
+      .then((res) => {
+        setProjet(res.item);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Impossible de charger la fiche de ce projet. Le service est momentanément indisponible.");
+        setProjet(null);
+        setIsDemo(false);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     let ignore = false;
-    getProjetIncubeById(id).then((res) => {
-      if (!ignore) {
-        setProjet(res);
-        setLoading(false);
-      }
-    });
+    getProjetIncubeById(id)
+      .then((res) => {
+        if (!ignore) {
+          setProjet(res.item);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Impossible de charger la fiche de ce projet. Le service est momentanément indisponible.");
+          setProjet(null);
+          setIsDemo(false);
+          setLoading(false);
+        }
+      });
 
     return () => {
       ignore = true;
@@ -57,6 +88,19 @@ function ProjetDetailContent({
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <p className="text-sm font-semibold text-brun animate-pulse">Chargement de la fiche projet...</p>
+      </div>
+    );
+  }
+
+  if (error && !projet) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <ApiErrorBanner message={error} onRetry={loadProjet} className="mb-6" />
+        <div className="text-center">
+          <ButtonLink href="/portail/projets" variant="secondary">
+            ← Revenir à l&apos;annuaire des projets
+          </ButtonLink>
+        </div>
       </div>
     );
   }
@@ -81,6 +125,9 @@ function ProjetDetailContent({
 
   return (
     <article className="mx-auto max-w-4xl px-4 py-10 md:py-16">
+      {/* Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner className="mb-6" />}
+
       {/* Fil d'ariane & métadonnées */}
       <div className="mb-6 flex flex-wrap items-center gap-3 text-xs text-texte-doux">
         <ButtonLink href="/portail/projets" variant="secondary" className="!min-h-[36px] px-3 py-1 text-xs">

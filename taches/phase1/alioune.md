@@ -40,3 +40,10 @@ Vérifie `npm run lint` et `npm run build`, et `python manage.py check`. Ouvre t
 5. **Règle sur les fausses données :** pas de données fictives affichées comme réelles. Si tu veux garder `mockData.ts` pour tes essais, mets-le derrière `NEXT_PUBLIC_MODE_DEMO=1` (absente par défaut) avec un bandeau « MODE DÉMONSTRATION » toujours visible.
 
 Ordre conseillé : d'abord le point 4 (`git merge origin/test` sur ta branche pour résoudre les conflits), puis T2, puis le point 2, puis le point 3. Pousse sur ta branche `Alioune` après chaque étape et préviens Lansana quand c'est prêt.
+
+## Corrections pour valider ta Phase 1
+Ton back-end et le branchement à l'API sont bons : les endpoints d'analyse renvoient des chiffres cohérents sur les 62 projets de démonstration et les droits sont corrects. Il reste deux points avant la fusion dans `test` :
+1. **`npm run lint` échoue (2 erreurs) dans `src/app/tableau-de-bord/DashboardContent.tsx`.** Ligne 142 : `setState` appelé directement dans un `useEffect` (règle de React sur les rendus en cascade) : déplace l'initialisation dans l'état initial ou dans un gestionnaire, ou dérive la valeur au rendu. Ligne 181 : une apostrophe non échappée dans le texte (`'` à remplacer par `&apos;` ou `&rsquo;`). Ton rapport ne parlait que de `build` : la règle de l'équipe est que **`lint` et `build` passent tous les deux**.
+2. **Supprime les `layout.tsx` que tu as ajoutés hors de ton module** dans `src/app/assistant/`, `src/app/documents/`, `src/app/galerie/` et `src/app/incubateur/`. Ces pages sont à Maimouna et à Massogui, et `/galerie` est **publique** : elle ne doit pas être entourée de la barre latérale d'administration. Garde `AdminLayout` seulement dans `tableau-de-bord/`. Si tu veux que l'équipe ait un menu d'administration commun, propose-le à Lansana plutôt que de modifier les pages des autres.
+
+Après correction : `git merge origin/test`, puis `npm run lint`, `npm run build` et `python manage.py test apps.analytics`. Pousse sur ta branche `Alioune` et préviens Lansana.

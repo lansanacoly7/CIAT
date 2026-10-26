@@ -143,3 +143,16 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `POST /fiches/{id}/valider/`, `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur |
 | `GET /statistiques/` | Équipe CIAT : `{ total_vues, par_fiche: [{ slug, titre, vues }] }` |
 
+
+## P1 — Compléments de la Phase 3 (`/api/portal/`)
+
+| Route | Description |
+|---|---|
+| `GET /statistiques/` | Équipe CIAT : `{ total_vues, actualites: [{ slug, titre, vues }], projets: [{ id, titre, vues }] }` |
+| Actualités | Nouveau champ `publie` (booléen). Le public ne voit que les actualités publiées ; l'équipe voit tout et peut modifier `publie`. |
+
+## P3 — Export (`/api/analytics/`)
+
+| Route | Description |
+|---|---|
+| `GET /export/?format=xlsx` ou `pdf` | Mêmes filtres et mêmes droits que les autres endpoints d'analyse. Fichier à télécharger. |

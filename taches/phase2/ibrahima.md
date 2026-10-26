@@ -30,3 +30,11 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## Quand tu as fini
 Écris les tests (rapides !), vérifie `check` et `makemigrations --check`. Pousse ta branche et préviens Lansana. Back-end uniquement.
+
+## À corriger pour valider ta Phase 2
+Ta Phase 2 est fusionnée dans `test` et les routes correspondent au contrat. Trois points restent à régler pour la valider définitivement :
+1. **Tests trop lents (bloquant).** `python manage.py test apps.incubator` prend **plus de 5 minutes** (55 tests). Mets en tête de tes classes de test `@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])` (de `django.test`) et, si tes tests créent beaucoup d'utilisateurs, utilise `setUpTestData`. Objectif : moins de 30 secondes. C'est une règle depuis ta Phase 1 : la CI ne peut pas tourner avec des tests aussi lents.
+2. **Branches en trop.** Tu as créé `Kalz-features/p2-t2-jalons-preuves` et `Kalz-features/p2-t3-suivis-export`. La règle est une seule branche personnelle (`Kalz`). Vérifie que leur contenu est bien dans `Kalz` (`git branch -r --merged origin/Kalz`), puis préviens Lansana : il les supprime de GitHub. Ne crée plus d'autres branches.
+3. **Export Excel.** Ajoute un test qui génère le compte rendu `.xlsx`, le rouvre avec `openpyxl` et vérifie que les quatre blocs (projet, objectifs, jalons, bilans) et les accents sont présents.
+
+Fais ces corrections sur ta branche `Kalz`, vérifie `check`, `makemigrations --check` et `test`, puis préviens Lansana.

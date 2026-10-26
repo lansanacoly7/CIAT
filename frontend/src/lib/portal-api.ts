@@ -36,6 +36,10 @@ export type AppelProjet = {
   pieces_demandees: string[];
 };
 
+export function isDemoMode(): boolean {
+  return process.env.NEXT_PUBLIC_MODE_DEMO === "1";
+}
+
 // Données réalistes de référence conformes à l'écosystème ISEP Diamniadio / CIAT
 const MOCK_ACTUALITES: Actualite[] = [
   {
@@ -152,68 +156,114 @@ const MOCK_APPELS: AppelProjet[] = [
 ];
 
 /**
- * Récupère les actualités du portail via l'API ou le fallback conforme.
+ * Récupère les actualités du portail via l'API.
+ * En cas de panne de l'API, renvoie un message d'erreur et une liste vide (zéro fausse donnée).
+ * Les données fictives sont conditionnées strictement à NEXT_PUBLIC_MODE_DEMO=1.
  */
-export async function getActualites(): Promise<{ items: Actualite[]; fromApi: boolean; error: string | null }> {
+export async function getActualites(): Promise<{
+  items: Actualite[];
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Page<Actualite> | Actualite[]>("/portal/actualites/", { auth: false });
-    const items = Array.isArray(res) ? res : res.results;
-    if (items && items.length > 0) {
-      return { items, fromApi: true, error: null };
-    }
+    const items = Array.isArray(res) ? res : (res?.results ?? []);
+    return { items, fromApi: true, isDemo: false, error: null };
   } catch {
-    // Endpoints non encore livrés par Pathé ou erreur réseau : fallback maîtrisé
+    if (isDemoMode()) {
+      return { items: MOCK_ACTUALITES, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      items: [],
+      fromApi: false,
+      isDemo: false,
+      error: "Les actualités sont momentanément indisponibles. Réessayez plus tard.",
+    };
   }
-  return { items: MOCK_ACTUALITES, fromApi: false, error: null };
 }
 
 /**
  * Récupère le détail d'une actualité par son slug ou ID.
  */
-export async function getActualiteBySlug(slug: string): Promise<Actualite | null> {
+export async function getActualiteBySlug(slug: string): Promise<{
+  item: Actualite | null;
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Actualite>(`/portal/actualites/${slug}/`, { auth: false });
-    if (res && res.titre) return res;
+    if (res && res.titre) return { item: res, fromApi: true, isDemo: false, error: null };
+    return { item: null, fromApi: true, isDemo: false, error: null };
   } catch {
-    // Fallback local
+    if (isDemoMode()) {
+      const found = MOCK_ACTUALITES.find((a) => a.slug === slug || String(a.id) === slug);
+      return { item: found ?? null, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      item: null,
+      fromApi: false,
+      isDemo: false,
+      error: "Impossible de charger cette actualité. Le service est momentanément indisponible.",
+    };
   }
-  const found = MOCK_ACTUALITES.find((a) => a.slug === slug || String(a.id) === slug);
-  return found ?? null;
 }
 
 /**
  * Récupère les événements du portail.
  */
-export async function getEvenements(): Promise<{ items: Evenement[]; fromApi: boolean; error: string | null }> {
+export async function getEvenements(): Promise<{
+  items: Evenement[];
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Page<Evenement> | Evenement[]>("/portal/evenements/?a_venir=1", { auth: false });
-    const items = Array.isArray(res) ? res : res.results;
-    if (items && items.length > 0) {
-      return { items, fromApi: true, error: null };
-    }
+    const items = Array.isArray(res) ? res : (res?.results ?? []);
+    return { items, fromApi: true, isDemo: false, error: null };
   } catch {
-    // Fallback local
+    if (isDemoMode()) {
+      return { items: MOCK_EVENEMENTS, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      items: [],
+      fromApi: false,
+      isDemo: false,
+      error: "Les événements sont momentanément indisponibles. Réessayez plus tard.",
+    };
   }
-  return { items: MOCK_EVENEMENTS, fromApi: false, error: null };
 }
 
 /**
  * Récupère la liste des appels à projets.
  */
-export async function getAppelsProjets(): Promise<{ items: AppelProjet[]; fromApi: boolean; error: string | null }> {
+export async function getAppelsProjets(): Promise<{
+  items: AppelProjet[];
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Page<AppelProjet> | AppelProjet[]>("/portal/appels/", { auth: false });
-    const items = Array.isArray(res) ? res : res.results;
-    if (items && items.length > 0) {
-      return { items, fromApi: true, error: null };
-    }
+    const items = Array.isArray(res) ? res : (res?.results ?? []);
+    return { items, fromApi: true, isDemo: false, error: null };
   } catch {
-    // Fallback local
+    if (isDemoMode()) {
+      return { items: MOCK_APPELS, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      items: [],
+      fromApi: false,
+      isDemo: false,
+      error: "Les appels à projets sont momentanément indisponibles. Réessayez plus tard.",
+    };
   }
-  return { items: MOCK_APPELS, fromApi: false, error: null };
 }
 
 export type ProjetIncube = {
+
   id: number;
   titre: string;
   resume: string;
@@ -455,6 +505,7 @@ export type ProjetsResponse = {
   pageSize: number;
   totalPages: number;
   fromApi: boolean;
+  isDemo?: boolean;
   error: string | null;
 };
 
@@ -547,85 +598,108 @@ export async function getProjetsIncubes(params: ProjetsFilterParams = {}): Promi
     const isPaged = res && typeof res === "object" && "results" in res;
     const rawItems = isPaged ? (res as Page<Record<string, unknown>>).results : (res as Record<string, unknown>[]);
     const total = isPaged ? (res as Page<Record<string, unknown>>).count : (rawItems ? rawItems.length : 0);
+    const items = (rawItems || []).map(normalizeProjet);
 
-    if (rawItems && rawItems.length > 0) {
-      const items = rawItems.map(normalizeProjet);
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      fromApi: true,
+      isDemo: false,
+      error: null,
+    };
+  } catch {
+    if (isDemoMode()) {
+      let filtered = [...MOCK_PROJETS_INCUBES];
+
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        filtered = filtered.filter(
+          (p) =>
+            p.titre.toLowerCase().includes(q) ||
+            p.resume.toLowerCase().includes(q) ||
+            p.probleme.toLowerCase().includes(q) ||
+            p.solution.toLowerCase().includes(q) ||
+            p.porteur_nom.toLowerCase().includes(q)
+        );
+      }
+
+      if (domaine) {
+        filtered = filtered.filter(
+          (p) => p.domaine.slug === domaine || String(p.domaine.id) === domaine || p.domaine.nom === domaine
+        );
+      }
+
+      if (cohorte) {
+        filtered = filtered.filter(
+          (p) => String(p.cohorte.annee) === cohorte || String(p.cohorte.id) === cohorte || p.cohorte.nom === cohorte
+        );
+      }
+
+      if (statut) {
+        filtered = filtered.filter((p) => p.statut === statut);
+      }
+
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const currentPage = Math.min(Math.max(1, page), totalPages);
+      const startIndex = (currentPage - 1) * pageSize;
+      const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
+
       return {
-        items,
+        items: paginatedItems,
         total,
-        page,
+        page: currentPage,
         pageSize,
-        totalPages: Math.max(1, Math.ceil(total / pageSize)),
-        fromApi: true,
+        totalPages,
+        fromApi: false,
+        isDemo: true,
         error: null,
       };
     }
-  } catch {
-    // Endpoints non encore disponibles sur le backend : bascule sur le mock certifié
+
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize,
+      totalPages: 1,
+      fromApi: false,
+      isDemo: false,
+      error: "L'annuaire des projets est momentanément indisponible. Réessayez plus tard.",
+    };
   }
-
-  // Filtrage local robuste
-  let filtered = [...MOCK_PROJETS_INCUBES];
-
-  if (search.trim()) {
-    const q = search.toLowerCase().trim();
-    filtered = filtered.filter(
-      (p) =>
-        p.titre.toLowerCase().includes(q) ||
-        p.resume.toLowerCase().includes(q) ||
-        p.probleme.toLowerCase().includes(q) ||
-        p.solution.toLowerCase().includes(q) ||
-        p.porteur_nom.toLowerCase().includes(q)
-    );
-  }
-
-  if (domaine) {
-    filtered = filtered.filter(
-      (p) => p.domaine.slug === domaine || String(p.domaine.id) === domaine || p.domaine.nom === domaine
-    );
-  }
-
-  if (cohorte) {
-    filtered = filtered.filter(
-      (p) => String(p.cohorte.annee) === cohorte || String(p.cohorte.id) === cohorte || p.cohorte.nom === cohorte
-    );
-  }
-
-  if (statut) {
-    filtered = filtered.filter((p) => p.statut === statut);
-  }
-
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(Math.max(1, page), totalPages);
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
-
-  return {
-    items: paginatedItems,
-    total,
-    page: currentPage,
-    pageSize,
-    totalPages,
-    fromApi: false,
-    error: null,
-  };
 }
 
 /**
  * Récupère le détail d'un projet incubé par son identifiant.
  */
-export async function getProjetIncubeById(id: number | string): Promise<ProjetIncube | null> {
+export async function getProjetIncubeById(id: number | string): Promise<{
+  item: ProjetIncube | null;
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Record<string, unknown>>(`/portal/projets-incubes/${id}/`, { auth: false });
-    if (res && res.titre) return normalizeProjet(res);
+    if (res && res.titre) return { item: normalizeProjet(res), fromApi: true, isDemo: false, error: null };
+    return { item: null, fromApi: true, isDemo: false, error: null };
   } catch {
-    // Fallback local
+    if (isDemoMode()) {
+      const found = MOCK_PROJETS_INCUBES.find((p) => String(p.id) === String(id));
+      return { item: found ?? null, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      item: null,
+      fromApi: false,
+      isDemo: false,
+      error: "Impossible de charger la fiche de ce projet. Le service est momentanément indisponible.",
+    };
   }
-
-  const found = MOCK_PROJETS_INCUBES.find((p) => String(p.id) === String(id));
-  return found ?? null;
 }
+
 
 export type Partenaire = {
   id: number;
@@ -816,19 +890,29 @@ export type ContactResponse = {
 /**
  * Récupère la liste des partenaires institutionnels, académiques et industriels.
  */
-export async function getPartenaires(): Promise<{ items: Partenaire[]; fromApi: boolean; error: string | null }> {
+export async function getPartenaires(): Promise<{
+  items: Partenaire[];
+  fromApi: boolean;
+  isDemo: boolean;
+  error: string | null;
+}> {
   try {
     const res = await api<Page<Record<string, unknown>> | Record<string, unknown>[]>("/portal/partenaires/", {
       auth: false,
     });
-    const raw = Array.isArray(res) ? res : res.results;
-    if (raw && raw.length > 0) {
-      return { items: raw.map(normalizePartenaire), fromApi: true, error: null };
-    }
+    const raw = Array.isArray(res) ? res : (res?.results ?? []);
+    return { items: (raw || []).map(normalizePartenaire), fromApi: true, isDemo: false, error: null };
   } catch {
-    // Endpoints non encore livrés par Pathé : repli maîtrisé
+    if (isDemoMode()) {
+      return { items: MOCK_PARTENAIRES, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      items: [],
+      fromApi: false,
+      isDemo: false,
+      error: "La liste des partenaires est momentanément indisponible. Réessayez plus tard.",
+    };
   }
-  return { items: MOCK_PARTENAIRES, fromApi: false, error: null };
 }
 
 /**
@@ -837,28 +921,32 @@ export async function getPartenaires(): Promise<{ items: Partenaire[]; fromApi: 
 export async function getDocumentsPublics(categorie?: string): Promise<{
   items: DocumentPublic[];
   fromApi: boolean;
+  isDemo: boolean;
   error: string | null;
 }> {
   try {
-    const query = categorie ? `?categorie=${encodeURIComponent(categorie)}` : "";
+    const query = categorie && categorie !== "tous" ? `?categorie=${encodeURIComponent(categorie)}` : "";
     const res = await api<Page<Record<string, unknown>> | Record<string, unknown>[]>(
       `/portal/documents/${query}`,
       { auth: false }
     );
-    const raw = Array.isArray(res) ? res : res.results;
-    if (raw && raw.length > 0) {
-      return { items: raw.map(normalizeDocument), fromApi: true, error: null };
-    }
+    const raw = Array.isArray(res) ? res : (res?.results ?? []);
+    return { items: (raw || []).map(normalizeDocument), fromApi: true, isDemo: false, error: null };
   } catch {
-    // Endpoints non encore livrés par Pathé : repli maîtrisé
+    if (isDemoMode()) {
+      let items = [...MOCK_DOCUMENTS];
+      if (categorie && categorie !== "tous") {
+        items = items.filter((d) => d.categorie === categorie);
+      }
+      return { items, fromApi: false, isDemo: true, error: null };
+    }
+    return {
+      items: [],
+      fromApi: false,
+      isDemo: false,
+      error: "L'espace documentaire est momentanément indisponible. Réessayez plus tard.",
+    };
   }
-
-  let items = [...MOCK_DOCUMENTS];
-  if (categorie && categorie !== "tous") {
-    items = items.filter((d) => d.categorie === categorie);
-  }
-
-  return { items, fromApi: false, error: null };
 }
 
 /**
@@ -905,14 +993,15 @@ export async function sendContactMessage(data: ContactFormData): Promise<Contact
       message: res.message || "Votre message a été transmis avec succès à l'équipe du CIAT.",
     };
   } catch {
-    // Si l'endpoint n'est pas encore actif côté backend, on valide la soumission
-    // avec confirmation officielle pour ne jamais pénaliser l'utilisateur
     return {
-      success: true,
-      message:
-        "Votre message a été transmis avec succès au secrétariat du CIAT. Notre équipe vous répondra dans les plus brefs délais.",
+      success: false,
+      message: "Impossible d'envoyer votre message pour le moment. Le service est momentanément indisponible. Veuillez réessayer plus tard.",
+      errors: {
+        form: ["Le serveur est momentanément indisponible. Veuillez réessayer plus tard."],
+      },
     };
   }
 }
+
 
 

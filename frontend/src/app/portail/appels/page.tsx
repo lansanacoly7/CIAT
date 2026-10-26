@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, Button, ButtonLink, Card, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import { getAppelsProjets, type AppelProjet } from "@/lib/portal-api";
 
 function formatDateLimite(dateStr: string) {
@@ -23,6 +23,7 @@ export default function AppelsPage() {
   const [items, setItems] = useState<AppelProjet[]>([]);
   const [loading, setLoading] = useState(true);
   const [fromApi, setFromApi] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAppels = () => {
@@ -32,11 +33,14 @@ export default function AppelsPage() {
       .then((res) => {
         setItems(res.items);
         setFromApi(res.fromApi);
-        if (res.error) setError(res.error);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
         setLoading(false);
       })
       .catch(() => {
-        setError("Impossible de charger les appels à projets. Veuillez réessayer.");
+        setError("Les appels à projets sont momentanément indisponibles. Réessayez plus tard.");
+        setItems([]);
+        setIsDemo(false);
         setLoading(false);
       });
   };
@@ -48,13 +52,16 @@ export default function AppelsPage() {
         if (!ignore) {
           setItems(res.items);
           setFromApi(res.fromApi);
-          if (res.error) setError(res.error);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setError("Impossible de charger les appels à projets. Veuillez réessayer.");
+          setError("Les appels à projets sont momentanément indisponibles. Réessayez plus tard.");
+          setItems([]);
+          setIsDemo(false);
           setLoading(false);
         }
       });
@@ -74,32 +81,31 @@ export default function AppelsPage() {
         subtitle="Rejoignez l'incubateur du CIAT. Chaque appel vous permet de soumettre votre idée, de passer en comité et de bénéficier d'un accompagnement personnalisé."
       />
 
-      {error && (
-        <div className="mb-8 rounded-xl border border-erreur bg-[#f6dedc] p-4 text-sm text-erreur flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="secondary" onClick={fetchAppels} className="!min-h-[36px] text-xs">
-            Réessayer
-          </Button>
-        </div>
-      )}
+      {/* Bandeau Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner />}
+
+      {/* État d'erreur réseau / serveur indisponible */}
+      {error && <ApiErrorBanner message={error} onRetry={fetchAppels} />}
 
       {/* Barre d'état */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-xs text-texte-doux">
-          <span>{ouverts.length} appel(s) ouvert(s)</span>
-          <span>·</span>
-          <span>{clos.length} appel(s) archivé(s)</span>
+      {!error && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-xs text-texte-doux">
+            <span>{ouverts.length} appel(s) ouvert(s)</span>
+            <span>·</span>
+            <span>{clos.length} appel(s) archivé(s)</span>
+          </div>
+          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
+            {fromApi ? "Connecté à l'API" : isDemo ? "Données de démo" : "Hors-ligne"}
+          </Badge>
         </div>
-        <Badge tone={fromApi ? "succes" : "neutre"}>
-          {fromApi ? "Connecté à l'API" : "Référentiel Conforme"}
-        </Badge>
-      </div>
+      )}
 
       {loading ? (
         <div className="rounded-2xl border border-bordure bg-ivoire p-12 text-center">
           <p className="text-sm font-semibold text-brun animate-pulse">Chargement des appels à candidatures...</p>
         </div>
-      ) : items.length === 0 ? (
+      ) : error && items.length === 0 ? null : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun appel à projets répertorié actuellement.</p>
           <p className="mt-2 text-sm text-texte-doux">
@@ -112,6 +118,7 @@ export default function AppelsPage() {
           </div>
         </div>
       ) : (
+
         <div className="space-y-8">
           {/* Section Appels Ouverts */}
           <div>

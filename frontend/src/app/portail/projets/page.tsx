@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Badge, Button, ButtonLink, Card, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, Button, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import {
   getProjetsIncubes,
   type ProjetIncube,
@@ -62,6 +62,7 @@ export default function ProjetsAnnuairePage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [fromApi, setFromApi] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProjets = (paramsOverride?: Partial<ProjetsFilterParams>) => {
@@ -84,11 +85,14 @@ export default function ProjetsAnnuairePage() {
         setTotal(res.total);
         setTotalPages(res.totalPages);
         setFromApi(res.fromApi);
-        if (res.error) setError(res.error);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
         setLoading(false);
       })
       .catch(() => {
-        setError("Impossible de joindre l'annuaire des projets. Veuillez réessayer.");
+        setError("L'annuaire des projets est momentanément indisponible. Réessayez plus tard.");
+        setProjets([]);
+        setIsDemo(false);
         setLoading(false);
       });
   };
@@ -102,13 +106,16 @@ export default function ProjetsAnnuairePage() {
           setTotal(res.total);
           setTotalPages(res.totalPages);
           setFromApi(res.fromApi);
-          if (res.error) setError(res.error);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setError("Impossible de joindre l'annuaire des projets. Veuillez réessayer.");
+          setError("L'annuaire des projets est momentanément indisponible. Réessayez plus tard.");
+          setProjets([]);
+          setIsDemo(false);
           setLoading(false);
         }
       });
@@ -138,11 +145,15 @@ export default function ProjetsAnnuairePage() {
         subtitle="Explorez les projets d'innovation et prototypes technologiques conçus, développés et accompagnés au sein du CIAT à Diamniadio."
       />
 
+      {/* Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner />}
+
       {/* Barre de recherche et de filtres combinés */}
       <div className="mb-8 rounded-2xl border border-bordure bg-white p-5 shadow-sm md:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Recherche textuelle */}
           <div className="lg:col-span-1">
+
             <label htmlFor="search-input" className="mb-1 block text-xs font-bold uppercase tracking-wider text-texte-doux">
               Recherche
             </label>
@@ -268,23 +279,24 @@ export default function ProjetsAnnuairePage() {
 
       {/* État d'erreur réseau */}
       {error && (
-        <div className="mb-8 rounded-xl border border-erreur bg-[#f6dedc] p-4 text-sm text-erreur flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="secondary" onClick={() => fetchProjets()} className="!min-h-[36px] text-xs">
-            Réessayer
-          </Button>
-        </div>
+        <ApiErrorBanner
+          message={error}
+          onRetry={() => fetchProjets()}
+          className="mb-8"
+        />
       )}
 
       {/* Barre d'état source */}
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-xs text-texte-doux">
-          Affichage des projets officiels enregistrés dans l&apos;incubateur CIAT
-        </p>
-        <Badge tone={fromApi ? "succes" : "neutre"}>
-          {fromApi ? "Connecté à l'API" : "Données certifiées CIAT"}
-        </Badge>
-      </div>
+      {!error && (
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-xs text-texte-doux">
+            Affichage des projets officiels enregistrés dans l&apos;incubateur CIAT
+          </p>
+          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
+            {fromApi ? "Connecté à l'API" : isDemo ? "Mode démo" : "CIAT"}
+          </Badge>
+        </div>
+      )}
 
       {/* État de chargement */}
       {loading ? (
@@ -303,7 +315,7 @@ export default function ProjetsAnnuairePage() {
             </div>
           ))}
         </div>
-      ) : projets.length === 0 ? (
+      ) : error && projets.length === 0 ? null : projets.length === 0 ? (
         /* État aucun résultat : Critère d'acceptation obligatoire */
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun projet ne correspond à vos critères de recherche.</p>

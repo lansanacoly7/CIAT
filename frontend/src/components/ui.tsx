@@ -129,3 +129,56 @@ export function PageTitle({
     </div>
   );
 }
+
+/**
+ * Bandeau d'avertissement quand le mode démonstration fictif est explicitement activé via NEXT_PUBLIC_MODE_DEMO=1.
+ */
+export function DemoBanner({ className = "" }: { className?: string }) {
+  return (
+    <div
+      role="alert"
+      className={`mb-6 flex items-center gap-2.5 rounded-xl border border-amber-500/50 bg-[#FFFBEB] px-4 py-3 text-xs font-bold text-amber-900 shadow-xs ${className}`}
+    >
+      <span className="flex h-2.5 w-2.5 rounded-full bg-amber-600 animate-pulse" />
+      <span>MODE DÉMONSTRATION : données fictives</span>
+    </div>
+  );
+}
+
+/**
+ * Bandeau d'indisponibilité en cas de panne de l'API avec bouton "Réessayer".
+ */
+export function ApiErrorBanner({
+  message,
+  onRetry,
+  className = "",
+}: {
+  message: string;
+  onRetry?: () => void;
+  className?: string;
+}) {
+  return (
+    <div
+      role="alert"
+      className={`mb-8 flex flex-col gap-3 rounded-xl border border-erreur/40 bg-[#f6dedc] p-4 text-sm text-erreur sm:flex-row sm:items-center sm:justify-between ${className}`}
+    >
+      <div className="flex items-center gap-2.5">
+        <svg className="h-5 w-5 shrink-0 text-erreur" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <span className="font-medium">{message}</span>
+      </div>
+      {onRetry && (
+        <Button variant="secondary" onClick={onRetry} className="!min-h-[36px] self-start sm:self-auto text-xs font-bold shrink-0">
+          Réessayer
+        </Button>
+      )}
+    </div>
+  );
+}
+
