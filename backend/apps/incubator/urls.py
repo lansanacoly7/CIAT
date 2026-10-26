@@ -1,16 +1,50 @@
+"""Routes d'API pour le module P2 - Gestion de l'incubateur."""
 from django.urls import path
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from .views import (
+    DossierDecisionView,
+    DossierDetailView,
+    DossierEvaluationListCreateView,
+    DossierListCreateView,
+    DossierSoumettreView,
+    GrilleActuelleView,
+    PieceCreateView,
+    PieceDeleteView,
+)
 
-class IncubatorIndex(APIView):
-    """Point d'entrée provisoire du module. À remplacer par les vraies routes."""
+app_name = "incubator"
 
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        return Response({"module": "incubator", "status": "à implémenter"})
-
-
-urlpatterns = [path("", IncubatorIndex.as_view(), name="incubator-index")]
+urlpatterns = [
+    # Dossiers de candidature
+    path("dossiers/", DossierListCreateView.as_view(), name="dossier-list-create"),
+    path("dossiers/<int:pk>/", DossierDetailView.as_view(), name="dossier-detail"),
+    path(
+        "dossiers/<int:pk>/pieces/",
+        PieceCreateView.as_view(),
+        name="dossier-piece-create",
+    ),
+    path(
+        "dossiers/<int:pk>/pieces/<int:piece_id>/",
+        PieceDeleteView.as_view(),
+        name="dossier-piece-delete",
+    ),
+    path(
+        "dossiers/<int:pk>/soumettre/",
+        DossierSoumettreView.as_view(),
+        name="dossier-soumettre",
+    ),
+    # Grille d'évaluation
+    path("grilles/actuelle/", GrilleActuelleView.as_view(), name="grille-actuelle"),
+    # Évaluations du comité
+    path(
+        "dossiers/<int:pk>/evaluations/",
+        DossierEvaluationListCreateView.as_view(),
+        name="dossier-evaluations",
+    ),
+    # Décision motivée
+    path(
+        "dossiers/<int:pk>/decision/",
+        DossierDecisionView.as_view(),
+        name="dossier-decision",
+    ),
+]
