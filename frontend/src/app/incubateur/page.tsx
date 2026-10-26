@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
+import CoordinationHome from "@/components/incubateur/CoordinationHome";
 import { api, ApiError, type Page } from "@/lib/api";
 import type { Dossier } from "@/lib/incubator";
 import FileUploader from "@/components/incubateur/FileUploader";
@@ -222,10 +224,16 @@ function DepotDossier() {
   );
 }
 
+function IncubateurHome() {
+  const { user } = useAuth();
+  const coordination = user?.role === "coordonnateur" || user?.role === "administrateur";
+  return coordination ? <CoordinationHome /> : <DepotDossier />;
+}
+
 export default function IncubateurPage() {
   return (
     <ProtectedRoute allowedRoles={["porteur", "coordonnateur", "administrateur"]}>
-      <DepotDossier />
+      <IncubateurHome />
     </ProtectedRoute>
   );
 }

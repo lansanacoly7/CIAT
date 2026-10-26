@@ -11,14 +11,17 @@ import {
   getJalons,
   getObjectifs,
   getProjetMentor,
+  getProjetSuivis,
   suiviErrorMessage,
   type Jalon,
   type Mentor,
   type Objectif,
+  type SuiviProjet,
 } from "@/lib/incubator";
 import MentorBlock from "@/components/incubateur/suivi/MentorBlock";
 import ObjectifsBlock from "@/components/incubateur/suivi/ObjectifsBlock";
 import JalonsBlock from "@/components/incubateur/suivi/JalonsBlock";
+import BilansSuiviSection from "@/components/incubateur/suivi/BilansSuiviSection";
 
 interface ProjetSuivi {
   id: number;
@@ -36,6 +39,7 @@ function Suivi() {
   const [objectifs, setObjectifs] = useState<Objectif[]>([]);
   const [jalons, setJalons] = useState<Jalon[]>([]);
   const [mentor, setMentor] = useState<Mentor | null>(null);
+  const [suivis, setSuivis] = useState<SuiviProjet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,11 +50,12 @@ function Suivi() {
     let cancelled = false;
     (async () => {
       try {
-        const [p, o, j, m] = await Promise.all([
+        const [p, o, j, m, s] = await Promise.all([
           api<ProjetSuivi>(`/projets/${projetId}/`),
           getObjectifs(projetId),
           getJalons(projetId),
           getProjetMentor(projetId),
+          getProjetSuivis(projetId),
         ]);
         if (cancelled) return;
         setProjet(p);
@@ -59,6 +64,7 @@ function Suivi() {
         if (m?.mentor_details) {
           setMentor(m.mentor_details);
         }
+        setSuivis(s);
         setError(null);
       } catch (err) {
         if (!cancelled) setError(suiviErrorMessage(err, "Impossible de charger le suivi de ce projet. Veuillez réessayer."));
@@ -79,7 +85,9 @@ function Suivi() {
   }, [loading, jalons.length]);
 
   const isEquipe = user?.role === "coordonnateur" || user?.role === "administrateur";
+  const isMentorAffecte = user?.role === "mentor" && mentor?.id === user?.id;
   const canManage = isEquipe || user?.role === "mentor";
+  const canWriteSuivi = isEquipe || isMentorAffecte;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
@@ -110,6 +118,12 @@ function Suivi() {
             <MentorBlock projetId={projet.id} mentor={mentor} canAssign={isEquipe} onAssigned={setMentor} />
             <ObjectifsBlock projetId={projet.id} objectifs={objectifs} canManage={canManage} onChange={load} />
             <JalonsBlock projetId={projet.id} jalons={jalons} canManage={canManage} onChange={load} />
+            <BilansSuiviSection
+              projetId={projet.id}
+              suivis={suivis}
+              canWrite={canWriteSuivi}
+              onCreated={load}
+            />
           </div>
         </>
       )}

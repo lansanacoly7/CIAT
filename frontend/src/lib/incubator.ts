@@ -4,7 +4,7 @@
  * Aucun stockage fictif ou contournement local : toutes les opérations sont reliées à l'API Django REST Framework.
  */
 
-import { api, ApiError, API_URL } from "./api";
+import { api, apiBlob, ApiError, API_URL } from "./api";
 
 export type PieceType =
   | "fiche_projet"
@@ -312,6 +312,31 @@ export interface AlerteJalon {
   en_retard: boolean;
 }
 
+export type EcheanceSuivi = "3_mois" | "6_mois";
+
+export const ECHEANCE_SUIVI_LABELS: Record<EcheanceSuivi, string> = {
+  "3_mois": "Bilan à 3 mois",
+  "6_mois": "Bilan à 6 mois",
+};
+
+export interface SuiviProjet {
+  id: number;
+  projet: number;
+  echeance: EcheanceSuivi;
+  bilan: string;
+  indicateurs: Record<string, string | number>;
+  redige_par: number;
+  redige_par_nom: string | null;
+  cree_le: string;
+  modifie_le: string;
+}
+
+export interface SuiviProjetInput {
+  echeance: EcheanceSuivi;
+  bilan: string;
+  indicateurs?: Record<string, string | number>;
+}
+
 export interface ObjectifInput {
   libelle: string;
   echeance: string | null;
@@ -371,6 +396,15 @@ export const ajouterCommentaire = (jalonId: number, texte: string) =>
 
 export const getAlertes = async () =>
   unwrap(await api<AlerteJalon[] | { results: AlerteJalon[] }>("/incubator/alertes/"));
+
+export const getProjetSuivis = async (projetId: number) =>
+  unwrap(await api<SuiviProjet[] | { results: SuiviProjet[] }>(`/incubator/projets/${projetId}/suivis/`));
+
+export const creerProjetSuivi = (projetId: number, data: SuiviProjetInput) =>
+  api<SuiviProjet>(`/incubator/projets/${projetId}/suivis/`, { method: "POST", body: data });
+
+export const telechargerCompteRendu = (projetId: number) =>
+  apiBlob(`/incubator/projets/${projetId}/compte-rendu/?format=xlsx`);
 
 /** Message français lisible pour une erreur d'API (jamais de données de secours). */
 export function suiviErrorMessage(err: unknown, fallback: string): string {

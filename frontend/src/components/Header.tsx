@@ -75,19 +75,23 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {!loading && user ? (
               <div className="hidden items-center gap-3 md:flex">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce">
+                <Link
+                  href="/compte"
+                  className="group flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-white/10"
+                  title="Accéder à mon compte"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce transition-transform group-hover:scale-105">
                     {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
                   </span>
                   <div className="text-left">
-                    <p className="text-xs font-semibold leading-tight text-white">
+                    <p className="text-xs font-semibold leading-tight text-white transition-colors group-hover:text-beige">
                       {user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.email}
                     </p>
                     <span className="text-[10px] uppercase tracking-wide text-beige">
                       {ROLE_LABELS[user.role] ?? user.role}
                     </span>
                   </div>
-                </div>
+                </Link>
                 <button
                   type="button"
                   onClick={logout}
@@ -146,10 +150,18 @@ export default function Header() {
               <div className="mt-3 border-t border-white/10 pt-3">
                 {!loading && user ? (
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{user.first_name || user.email}</p>
-                      <span className="text-xs text-beige">{ROLE_LABELS[user.role] ?? user.role}</span>
-                    </div>
+                    <Link
+                      href="/compte"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="group flex flex-col"
+                    >
+                      <p className="text-sm font-semibold text-white group-hover:text-beige transition-colors">
+                        {user.first_name || user.email}
+                      </p>
+                      <span className="text-xs text-beige">
+                        Mon compte · {ROLE_LABELS[user.role] ?? user.role}
+                      </span>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => {
