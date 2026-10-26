@@ -1,24 +1,67 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+  TableHTMLAttributes,
+  TdHTMLAttributes,
+  ThHTMLAttributes,
+  ReactNode,
+} from "react";
 
 /**
- * Composants officiels certifiés selon Charte_Graphique_CIAT_ISEP.pdf (Page 09).
- * Respecte l'ergonomie mobile : zone tactile minimale de 44x44px.
+ * =============================================================================
+ * DESIGN SYSTEM OFFICIEL CIAT 360 — COMPOSANTS D'INTERFACE UI PARTAGÉS
+ * =============================================================================
+ * Conforme à la Charte Graphique Écosystème CIAT 360 (v1.0) & WCAG 2.1 AA.
+ *
+ * GUIDE D'UTILISATION RAPIDE :
+ * -----------------------------------------------------------------------------
+ * 1. Boutons (Button / ButtonLink) :
+ *    - variant="primary"   : Action majeure (ex. "Déposer un projet", "Soumettre").
+ *    - variant="secondary" : Action secondaire / contour (ex. "Annuler", "Détails").
+ *    - variant="ia"        : Action assistée par IA (ex. "Générer avec l'IA").
+ *    - variant="danger"    : Action critique / refus (ex. "Supprimer", "Refuser").
+ *    - variant="accent"    : Mise en valeur ocre doré CIAT.
+ *    - Ergonomie tactile   : min-h-[44px] systématique, focus visible au clavier,
+ *                            transitions sobres et respect de `prefers-reduced-motion`.
+ *
+ * 2. Cartes (Card / SimpleCard) :
+ *    - Conteneurs délimités aux teintes de lin et sable doux avec liseré CIAT.
+ *
+ * 3. Badges (Badge / ProjectStatusBadge) :
+ *    - Statuts officiels : "succes", "alerte", "erreur", "info", "neutre", "ia".
+ *
+ * 4. Formulaires (FormField, Input, Select, Textarea) :
+ *    - Champs accessibles avec libellé clair, zone tactile ≥ 44px, bordure lin
+ *      et anneau de focalisation ocre doré sans décalage.
+ *
+ * 5. Tableaux (Table, TableHeader, TableBody, TableRow, TableCell, TableHead) :
+ *    - Structure tabulaire responsive, bordures douces et survol lisible.
+ *
+ * 6. États vides (EmptyState) :
+ *    - Écran d'accueil accueillant lorsqu'une liste ou recherche ne retourne rien.
+ *
+ * 7. Alertes (ApiErrorBanner, DemoBanner) :
+ *    - Bannières d'alerte et de résilience en cas de coupure réseau ou mode démo.
+ * =============================================================================
  */
 
+/* -----------------------------------------------------------------------------
+ * 1. BOUTONS & LIENS D'ACTION
+ * -------------------------------------------------------------------------- */
+
 const BUTTON_BASE =
-  "inline-flex min-h-[44px] items-center justify-center rounded-lg px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68]";
 
 const VARIANTS = {
-  // 1. Bouton Principal (Action clé : Déposer, Valider)
   primary: "bg-brun text-white hover:bg-brun-fonce shadow-sm",
-  // 2. Bouton Action IA / Générer (Intervention d'un service d'IA)
-  ia: "bg-beige text-brun-fonce font-bold hover:brightness-95 border border-[#b88755] shadow-sm",
-  // 3. Bouton Contour (Annuler, Télécharger PDF, Voir détails)
   secondary: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
   outline: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
-  // 4. Accent ocre
-  accent: "bg-beige text-brun-fonce hover:brightness-95",
+  ia: "bg-beige text-brun-fonce font-bold hover:brightness-95 border border-[#b88755] shadow-sm",
+  accent: "bg-beige text-brun-fonce hover:brightness-95 shadow-sm",
+  danger: "bg-erreur text-white hover:brightness-90 shadow-sm",
 } as const;
 
 export type Variant = keyof typeof VARIANTS;
@@ -49,6 +92,10 @@ export function ButtonLink({
   );
 }
 
+/* -----------------------------------------------------------------------------
+ * 2. CARTES & CONTENEURS
+ * -------------------------------------------------------------------------- */
+
 export function Card({
   children,
   className = "",
@@ -58,7 +105,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-bordure bg-ivoire shadow-sm transition-all hover:border-beige ${className}`}
+      className={`overflow-hidden rounded-2xl border border-bordure bg-ivoire shadow-xs transition-all duration-150 motion-reduce:transition-none hover:border-beige ${className}`}
     >
       <div className="h-1.5 w-full bg-beige" />
       <div className="p-6">{children}</div>
@@ -66,12 +113,33 @@ export function Card({
   );
 }
 
+export function SimpleCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-bordure bg-white p-6 shadow-xs ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* -----------------------------------------------------------------------------
+ * 3. BADGES DE STATUT
+ * -------------------------------------------------------------------------- */
+
 const BADGES = {
   succes: "bg-[#e3f1e9] text-succes border border-[#c4e3d1]",
   alerte: "bg-[#f8ebd3] text-alerte border border-[#edd5ab]",
   erreur: "bg-[#f6dedc] text-erreur border border-[#eec0bc]",
   info: "bg-[#e6f0fa] text-info border border-[#bfdbfe]",
   neutre: "bg-white text-brun border border-bordure",
+  ia: "bg-[#FFF7ED] text-[#9A3412] border border-[#FDBA74]",
 } as const;
 
 export function Badge({
@@ -92,9 +160,6 @@ export function Badge({
   );
 }
 
-/**
- * Les 5 Badges d'avancement officiels de la plateforme CIAT (Page 09 de la charte).
- */
 export const PROJECT_STAGES = {
   1: { code: "01. IDÉE SOUMISE", tone: "neutre" },
   2: { code: "02. EN COMITÉ", tone: "info" },
@@ -107,6 +172,10 @@ export function ProjectStatusBadge({ stage }: { stage: keyof typeof PROJECT_STAG
   const item = PROJECT_STAGES[stage];
   return <Badge tone={item.tone}>{item.code}</Badge>;
 }
+
+/* -----------------------------------------------------------------------------
+ * 4. EN-TÊTE DE SECTION
+ * -------------------------------------------------------------------------- */
 
 export function PageTitle({
   title,
@@ -130,24 +199,146 @@ export function PageTitle({
   );
 }
 
-/**
- * Bandeau d'avertissement quand le mode démonstration fictif est explicitement activé via NEXT_PUBLIC_MODE_DEMO=1.
- */
+/* -----------------------------------------------------------------------------
+ * 5. FORMULAIRES & CONTRÔLES ACCESSIBLES
+ * -------------------------------------------------------------------------- */
+
+export function FormField({
+  id,
+  label,
+  required,
+  error,
+  hint,
+  children,
+  className = "",
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      <label htmlFor={id} className="block text-xs font-bold uppercase tracking-wider text-texte-doux">
+        {label} {required && <span className="text-erreur">*</span>}
+      </label>
+      {children}
+      {hint && !error && <p className="text-xs text-texte-doux">{hint}</p>}
+      {error && <p role="alert" className="text-xs font-medium text-erreur">{error}</p>}
+    </div>
+  );
+}
+
+const CONTROL_BASE =
+  "w-full min-h-[44px] rounded-xl border border-bordure bg-white px-3.5 py-2 text-sm text-brun placeholder:text-texte-doux/60 transition-colors focus:border-beige focus:outline-none focus:ring-1 focus:ring-beige disabled:bg-ivoire disabled:cursor-not-allowed";
+
+export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={`${CONTROL_BASE} ${className}`} {...props} />;
+}
+
+export function Select({ className = "", children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select className={`${CONTROL_BASE} ${className}`} {...props}>
+      {children}
+    </select>
+  );
+}
+
+export function Textarea({ className = "", ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      className={`w-full min-h-[100px] rounded-xl border border-bordure bg-white p-3.5 text-sm text-brun placeholder:text-texte-doux/60 transition-colors focus:border-beige focus:outline-none focus:ring-1 focus:ring-beige disabled:bg-ivoire ${className}`}
+      {...props}
+    />
+  );
+}
+
+/* -----------------------------------------------------------------------------
+ * 6. TABLEAUX DE DONNÉES ACCESSIBLES
+ * -------------------------------------------------------------------------- */
+
+export function Table({ className = "", children, ...props }: TableHTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-bordure bg-white shadow-xs">
+      <table className={`w-full text-left text-sm text-brun divide-y divide-bordure ${className}`} {...props}>
+        {children}
+      </table>
+    </div>
+  );
+}
+
+export function TableHeader({ className = "", ...props }: TableHTMLAttributes<HTMLTableSectionElement>) {
+  return <thead className={`bg-ivoire text-xs uppercase tracking-wider font-bold text-texte-doux ${className}`} {...props} />;
+}
+
+export function TableBody({ className = "", ...props }: TableHTMLAttributes<HTMLTableSectionElement>) {
+  return <tbody className={`divide-y divide-bordure bg-white ${className}`} {...props} />;
+}
+
+export function TableRow({ className = "", ...props }: TableHTMLAttributes<HTMLTableRowElement>) {
+  return <tr className={`hover:bg-ivoire/60 transition-colors ${className}`} {...props} />;
+}
+
+export function TableHead({ className = "", ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
+  return <th className={`px-4 py-3.5 font-bold text-texte-doux ${className}`} {...props} />;
+}
+
+export function TableCell({ className = "", ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
+  return <td className={`px-4 py-3.5 text-texte align-middle ${className}`} {...props} />;
+}
+
+/* -----------------------------------------------------------------------------
+ * 7. ÉTATS VIDES (EMPTY STATE)
+ * -------------------------------------------------------------------------- */
+
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+  className = "",
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  icon?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-2xl border border-dashed border-bordure bg-white p-10 text-center ${className}`}>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ivoire text-beige mb-4">
+        {icon || (
+          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        )}
+      </div>
+      <h3 className="text-base font-bold text-brun mb-1.5">{title}</h3>
+      <p className="mx-auto max-w-md text-xs sm:text-sm text-texte-doux leading-relaxed mb-6">{description}</p>
+      {action && <div className="flex justify-center">{action}</div>}
+    </div>
+  );
+}
+
+/* -----------------------------------------------------------------------------
+ * 8. BANNIÈRES D'ALERTE & DE PANNE
+ * -------------------------------------------------------------------------- */
+
 export function DemoBanner({ className = "" }: { className?: string }) {
   return (
     <div
       role="alert"
       className={`mb-6 flex items-center gap-2.5 rounded-xl border border-amber-500/50 bg-[#FFFBEB] px-4 py-3 text-xs font-bold text-amber-900 shadow-xs ${className}`}
     >
-      <span className="flex h-2.5 w-2.5 rounded-full bg-amber-600 animate-pulse" />
+      <span className="flex h-2.5 w-2.5 rounded-full bg-amber-600 animate-pulse motion-reduce:animate-none" />
       <span>MODE DÉMONSTRATION : données fictives</span>
     </div>
   );
 }
 
-/**
- * Bandeau d'indisponibilité en cas de panne de l'API avec bouton "Réessayer".
- */
 export function ApiErrorBanner({
   message,
   onRetry,
@@ -160,7 +351,7 @@ export function ApiErrorBanner({
   return (
     <div
       role="alert"
-      className={`mb-8 flex flex-col gap-3 rounded-xl border border-erreur/40 bg-[#f6dedc] p-4 text-sm text-erreur sm:flex-row sm:items-center sm:justify-between ${className}`}
+      className={`mb-8 flex flex-col gap-3 rounded-2xl border border-erreur/40 bg-[#f6dedc] p-4 text-sm text-erreur sm:flex-row sm:items-center sm:justify-between ${className}`}
     >
       <div className="flex items-center gap-2.5">
         <svg className="h-5 w-5 shrink-0 text-erreur" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,4 +372,3 @@ export function ApiErrorBanner({
     </div>
   );
 }
-
