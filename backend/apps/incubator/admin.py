@@ -114,4 +114,14 @@ class SuiviProjetAdmin(admin.ModelAdmin):
     search_fields = ["projet__titre", "bilan"]
 
 
+from .notifications import AlerteJalonEnvoyee
+
+
+@admin.register(AlerteJalonEnvoyee)
+class AlerteJalonEnvoyeeAdmin(admin.ModelAdmin):
+    list_display = ["id", "jalon", "destinataire", "date_envoi", "cree_le"]
+    list_filter = ["date_envoi", "cree_le"]
+    search_fields = ["jalon__titre", "destinataire__email", "destinataire__last_name", "destinataire__first_name"]
+
+
 

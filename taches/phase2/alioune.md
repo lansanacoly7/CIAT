@@ -35,3 +35,14 @@ Ordre conseillé : T1, puis T2, puis T3. Tu travailles sur ta branche personnell
 
 ## Quand tu as fini
 Vérifie `npm run lint`, `npm run build`, `python manage.py check`, `makemigrations --check` et `test apps.analytics` (tests rapides). Pousse sur ta branche `Alioune` et préviens Lansana.
+
+## À corriger avant fusion dans `test`
+Tu as livré les trois tâches de la Phase 2 et tes contrôles annoncés sont bons. Mais ta branche **ne fusionne pas avec `test`** : elle ne contient pas les derniers commits de l'équipe (tu annonces 25 routes au build, `test` en a 30), et les conflits sont dans ton propre module :
+- `backend/apps/analytics/urls.py`, `views.py` et `tests.py` : **il existe maintenant deux routes `export/`**. Pathé a écrit l'export des analyses (classe `AnalyticsExportView`, Excel et PDF, avec ses tests) et toi `ExportView`. Les deux répondent à `GET /api/analytics/export/?format=xlsx|pdf`, comme le prévoit le contrat. C'est un doublon : on n'en garde qu'un.
+
+À faire, dans cet ordre :
+1. `git fetch origin && git merge origin/test` sur ta branche `Alioune`, puis résous les conflits.
+2. **Garde une seule implémentation de `export/`.** Compare les deux : si la tienne apporte vraiment plus (onglets multiples, mise en forme, mêmes filtres et mêmes droits), garde-la **et** déplace les tests de Pathé qui passent encore ; sinon garde `AnalyticsExportView` de Pathé et retire la tienne avec ses tests. Dans les deux cas : les droits restent identiques aux autres endpoints d'analyse, le format de réponse suit le contrat, et le bouton d'export de ton dashboard fonctionne avec l'implémentation retenue. Écris dans le message de commit laquelle tu as gardée et pourquoi.
+3. Conserve tout le reste de ta Phase 2 : `question/`, `partenariats/`, `financements/`, `partenariats-financements/stats/`. Ajoute les routes que tu as créées au contrat (`taches/CONTRATS_API.md`) s'il en manque (la route de statistiques `partenariats-financements/stats/` n'y figure pas).
+4. Relance `python manage.py check`, `makemigrations --check`, `python manage.py test` (toute la suite, pas seulement `apps.analytics`), puis `npm ci`, `npm run lint` et `npm run build`.
+5. Pousse sur `Alioune` et préviens Lansana avec ces sorties. Je ferai alors un essai réel de la question en langage naturel avec les clés IA.

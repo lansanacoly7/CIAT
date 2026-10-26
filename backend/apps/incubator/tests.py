@@ -1664,8 +1664,8 @@ class IncubateurPhase2SuiviAndExportTests(TestCase):
         self.assertEqual(res_xlsx.status_code, status.HTTP_200_OK)
         self.assertEqual(res_xlsx["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-        # 2. format non supporté (ex: pdf, csv) -> HTTP 400 documenté
-        res_bad_fmt = self.client.get(f"{url_export}?format=pdf")
+        # 2. format non supporté (ex: csv, xml) -> HTTP 400 documenté
+        res_bad_fmt = self.client.get(f"{url_export}?format=csv")
         self.assertEqual(res_bad_fmt.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non supporté", res_bad_fmt.data["detail"])
 

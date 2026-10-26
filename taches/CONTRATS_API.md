@@ -165,6 +165,7 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `GET /partenariats/` | Liste filtrable : `{ id, projet, partenaire, type, date_debut, statut }` |
 | `GET /financements/` | Liste filtrable : `{ id, projet, source, montant, date, statut }` |
 | `GET /financements/resume/` | `{ total_finance, partenariats_actifs }` |
+| `GET /partenariats-financements/stats/` | Indicateurs agrégés : `{ total_finance, financements_decaisses, nombre_financements, nombre_partenariats_actifs, total_partenariats, par_source: [{ source, total, count }], par_type_partenariat: [{ type, type_key, count }], par_domaine: [{ domaine, total, count }] }`. Mêmes filtres et droits d'analyse. |
 
 ### P6 — Filtres réservés de la liste des fiches (ajout de la Phase 2)
 

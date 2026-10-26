@@ -9,6 +9,7 @@ Comprend :
 - L'orchestration des conversations en mode « documents » et « atelier »
 """
 import io
+import json
 import logging
 import re
 import unicodedata
@@ -62,6 +63,10 @@ class ServiceIANonConfigure(Exception):
 
 class ServiceIAIndisponible(Exception):
     """Le service IA externe n'est pas joignable ou a renvoyé une erreur."""
+
+
+class ReponseIAInvalide(Exception):
+    """Le modèle IA a renvoyé un format JSON invalide ou inexploitable après nouvelle tentative."""
 
 
 def normaliser_chaine(texte: str) -> str:
@@ -413,29 +418,26 @@ def traiter_message_assistant(
             reponse_texte = MESSAGE_REFUS_DOCUMENTS
             sources = []
         else:
-            sources = [
-                {
-                    "document_id": p.document_id,
-                    "titre": p.document.titre,
-                    "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-                }
-                for p in passages
-            ]
-
+            # Numérotation explicite des passages transmis [Passage 1], [Passage 2], ...
             extraits_contexte = "\n\n".join(
-                f"[Document #{p.document_id} — {p.document.titre}]\n{p.texte}"
-                for p in passages
+                f"[Passage {idx}] (Document #{p.document_id} — {p.document.titre})\n{p.texte}"
+                for idx, p in enumerate(passages, start=1)
             )
 
             system_prompt = (
-                "Tu es l'assistant virtuel du CIAT (Centre d'Innovation et d'Accélération "
+                "Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation et d'Accélération "
                 "Technologique). Tu réponds aux questions des utilisateurs en te basant "
                 "STRICTEMENT et UNIQUEMENT sur les extraits de documents officiels fournis "
                 "ci-dessous. Tu ne dois rien inventer ni extrapoler.\n"
-                "Consigne essentielle : réponds uniquement à partir de ces passages ; "
-                "si la réponse n'y est pas ou ne s'y trouve pas clairement, dis-le poliment "
-                "et refuse d'inventer.\n"
-                "Réponds en français dans un style clair, courtois et précis."
+                "Consigne essentielle : si la réponse n'y est pas ou ne s'y trouve pas clairement, "
+                "dis-le poliment et refuse d'inventer.\n"
+                "Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :\n"
+                "- \"reponse\" : ta réponse rédigée en français (chaîne de caractères). Si les informations "
+                "ne permettent pas de répondre, dis-le clairement ici.\n"
+                "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont "
+                "les extraits ont réellement été utilisés pour formuler ta réponse. Si aucun extrait ne contient "
+                "la réponse ou n'a été utilisé, renvoie obligatoirement une liste vide [].\n"
+                "Exemple : {\"reponse\": \"Le programme dure 6 mois renouvelable.\", \"passages_utilises\": [1]}"
             )
 
             prompt_utilisateur = (
@@ -447,12 +449,85 @@ def traiter_message_assistant(
                 {"role": "user", "content": prompt_utilisateur}
             ]
 
-            try:
-                reponse_texte = ai.chat(messages_payload, system=system_prompt)
-            except AINotConfigured as exc:
-                raise ServiceIANonConfigure(str(exc)) from exc
-            except AIError as exc:
-                raise ServiceIAIndisponible(str(exc)) from exc
+            reponse_texte = ""
+            numeros_utilises = []
+            derniere_erreur = None
+
+            # Maximum 2 tentatives en cas de JSON invalide ou inexploitable
+            for tentative in range(2):
+                try:
+                    raw_response = ai.chat(
+                        messages_payload,
+                        system=system_prompt,
+                        json_mode=True,
+                        temperature=0.2,
+                    )
+                except AINotConfigured as exc:
+                    raise ServiceIANonConfigure(str(exc)) from exc
+                except AIError as exc:
+                    raise ServiceIAIndisponible(str(exc)) from exc
+                except Exception as exc:
+                    raise ServiceIAIndisponible(f"Erreur inattendue du service IA : {exc}") from exc
+
+                try:
+                    data = json.loads(raw_response)
+                    if not isinstance(data, dict):
+                        raise ValueError("La réponse racine doit être un objet JSON.")
+
+                    rep = data.get("reponse") or data.get("response") or data.get("contenu") or data.get("message")
+                    if isinstance(rep, str):
+                        # Certains modèles échappent deux fois les caractères Unicode : on décode ces séquences.
+                        rep = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m_: chr(int(m_.group(1), 16)), rep)
+                        # ... et parfois une barre oblique inutile devant l'apostrophe ou les guillemets.
+                        rep = rep.replace("\\'", "'").replace('\\"', '"')
+                    if not rep or not isinstance(rep, str) or not rep.strip():
+                        raise ValueError("Le champ 'reponse' est manquant ou vide dans le JSON.")
+
+                    raw_nums = data.get("passages_utilises")
+                    if raw_nums is None:
+                        raw_nums = data.get("sources") or data.get("passages") or []
+
+                    if not isinstance(raw_nums, list):
+                        raise ValueError("Le champ 'passages_utilises' doit être une liste.")
+
+                    reponse_texte = rep.strip()
+                    numeros_utilises = raw_nums
+                    break  # Succès du parsing JSON
+                except (json.JSONDecodeError, ValueError, TypeError) as exc:
+                    derniere_erreur = str(exc)
+                    logger.warning(
+                        "Tentative %d : JSON invalide renvoyé par l'IA de l'assistant (%s)",
+                        tentative + 1,
+                        exc,
+                    )
+
+            if not reponse_texte:
+                raise ReponseIAInvalide(
+                    f"Le modèle IA a renvoyé une réponse invalide après nouvelle tentative ({derniere_erreur})."
+                )
+
+            # Validation stricte côté serveur : seuls les numéros existant parmi les passages transmis sont retenus
+            sources = []
+            vus_doc_ids = set()
+            passages_map = {idx: p for idx, p in enumerate(passages, start=1)}
+            doc_ids_map = {p.document_id: p for p in passages}
+
+            for item in numeros_utilises:
+                try:
+                    num = int(item)
+                except (ValueError, TypeError):
+                    continue  # Numéro non entier ignoré
+
+                # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
+                p = passages_map.get(num) or doc_ids_map.get(num)
+                # Un numéro inconnu est ignoré
+                if p and p.document_id not in vus_doc_ids:
+                    sources.append({
+                        "document_id": p.document_id,
+                        "titre": p.document.titre,
+                        "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+                    })
+                    vus_doc_ids.add(p.document_id)
 
     # Persistance de la réponse de l'assistant
     return MessageAssistant.objects.create(

@@ -11,9 +11,11 @@ Vérifie l'ensemble des exigences du brief et du contrat d'API :
 8. Extraction multi-format (Word, PDF, texte) et découpage en passages
 """
 import io
+import json
 import zipfile
 from unittest.mock import PropertyMock, patch
 
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from rest_framework import status
@@ -38,6 +40,7 @@ class AssistantAPITestCase(TestCase):
     """Tests fonctionnels complets des routes /api/assistant/."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
         # Utilisateurs de test
@@ -103,6 +106,9 @@ class AssistantAPITestCase(TestCase):
 
         # Indexation préalable des documents
         indexer_documents_publics()
+
+    def tearDown(self):
+        cache.clear()
 
     def test_acces_non_authentifie_refuse_401(self):
         """Toutes les routes de l'assistant exigent une authentification."""
@@ -174,9 +180,11 @@ class AssistantAPITestCase(TestCase):
     def test_question_pertinente_repond_avec_source(self, mock_chat, mock_configured):
         """Une question répondable renvoie la réponse IA et cite la bonne source documentaire."""
         mock_configured.return_value = True
-        mock_chat.return_value = (
-            "D'après le Guide d'incubation du CIAT, la durée du programme est de six mois renouvelable."
-        )
+        texte_attendu = "D'après le Guide d'incubation du CIAT, la durée du programme est de six mois renouvelable."
+        mock_chat.return_value = json.dumps({
+            "reponse": texte_attendu,
+            "passages_utilises": [1],
+        })
 
         self.client.force_authenticate(user=self.porteur1)
         conv = Conversation.objects.create(utilisateur=self.porteur1)
@@ -189,13 +197,13 @@ class AssistantAPITestCase(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(resp.data["role"], "assistant")
-        self.assertEqual(resp.data["contenu"], mock_chat.return_value)
+        self.assertEqual(resp.data["contenu"], texte_attendu)
         self.assertIn("avertissement_ia", resp.data)
         self.assertTrue(len(resp.data["avertissement_ia"]) > 0)
 
         # Vérification des sources
         sources = resp.data["sources"]
-        self.assertTrue(len(sources) >= 1)
+        self.assertEqual(len(sources), 1)
         source_doc_ids = [s["document_id"] for s in sources]
         self.assertIn(self.doc_guide.id, source_doc_ids)
 
@@ -217,7 +225,11 @@ class AssistantAPITestCase(TestCase):
         """La question 'Où se trouve le CIAT ?' avec un passage contenant 'situé à Diamniadio'
         doit transmettre ce passage au modèle via l'élargissement lexical / synonymes."""
         mock_configured.return_value = True
-        mock_chat.return_value = "Le CIAT est situé à Diamniadio, pôle urbain de l'innovation."
+        texte_attendu = "Le CIAT est situé à Diamniadio, pôle urbain de l'innovation."
+        mock_chat.return_value = json.dumps({
+            "reponse": texte_attendu,
+            "passages_utilises": [1],
+        })
 
         # Création d'un document spécifique sur la localisation
         doc_loc = DocumentPublic.objects.create(
@@ -240,11 +252,12 @@ class AssistantAPITestCase(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(resp.data["role"], "assistant")
-        self.assertEqual(resp.data["contenu"], mock_chat.return_value)
+        self.assertEqual(resp.data["contenu"], texte_attendu)
         mock_chat.assert_called_once()
 
         # Vérifier que le passage contenant 'situé à Diamniadio' est transmis au modèle
-        messages_sent, _ = mock_chat.call_args
+        messages_sent, kwargs = mock_chat.call_args
+        self.assertTrue(kwargs.get("json_mode"))
         prompt_content = messages_sent[0][-1]["content"]
         self.assertIn("Diamniadio", prompt_content)
         self.assertIn("situé", prompt_content.lower())
@@ -286,10 +299,14 @@ class AssistantAPITestCase(TestCase):
         """Si le score lexical est faible ou nul mais des passages existent, ils sont
         transmis au modèle en lui laissant la décision de refuser via le prompt."""
         mock_configured.return_value = True
-        mock_chat.return_value = (
+        texte_refus = (
             "Désolé, les extraits fournis portent sur l'incubation au CIAT et ne contiennent "
             "pas d'information permettant de répondre à votre question sur la physique quantique."
         )
+        mock_chat.return_value = json.dumps({
+            "reponse": texte_refus,
+            "passages_utilises": [],
+        })
 
         self.client.force_authenticate(user=self.porteur1)
         conv = Conversation.objects.create(utilisateur=self.porteur1)
@@ -302,14 +319,107 @@ class AssistantAPITestCase(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(resp.data["role"], "assistant")
-        self.assertEqual(resp.data["contenu"], mock_chat.return_value)
-        # Le modèle a bien été appelé avec les passages les plus proches
+        self.assertEqual(resp.data["contenu"], texte_refus)
         mock_chat.assert_called_once()
         _, kwargs = mock_chat.call_args
-        system_prompt = kwargs.get("system", "")
-        self.assertIn("si la réponse n'y est pas", system_prompt)
-        self.assertIn("refuse d'inventer", system_prompt)
-        self.assertTrue(len(resp.data["sources"]) >= 1)
+        self.assertTrue(kwargs.get("json_mode"))
+        # Si passages_utilises est vide, sources est vide côté serveur
+        self.assertEqual(resp.data["sources"], [])
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_seules_les_sources_reellement_utilisees_sont_renvoyees(self, mock_chat, mock_configured):
+        """Lorsque plusieurs passages sont transmis dans le contexte, seules les sources
+        dont le numéro est renvoyé dans passages_utilises sont incluses."""
+        mock_configured.return_value = True
+        mock_chat.return_value = json.dumps({
+            "reponse": "D'après le Guide d'incubation CIAT 2026, l'accompagnement dure six mois renouvelable.",
+            "passages_utilises": [1],
+        })
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        payload = {
+            "contenu": "Quelle est la durée de l'incubation et que dit la charte ?",
+            "mode": "documents",
+        }
+        resp = self.client.post(f"/api/assistant/conversations/{conv.id}/messages/", payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        sources = resp.data["sources"]
+        source_doc_ids = [s["document_id"] for s in sources]
+
+        # Le guide d'incubation (passage 1) est cité
+        self.assertIn(self.doc_guide.id, source_doc_ids)
+        # La charte éthique n'a pas été déclarée utilisée donc absente
+        self.assertNotIn(self.doc_charte.id, source_doc_ids)
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_numero_inconnu_ignore(self, mock_chat, mock_configured):
+        """Un numéro de passage inconnu renvoyé par l'IA est ignoré et sources reste vide."""
+        mock_configured.return_value = True
+        mock_chat.return_value = json.dumps({
+            "reponse": "Information sans source reconnue.",
+            "passages_utilises": [999, "invalide"],
+        })
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        resp = self.client.post(
+            f"/api/assistant/conversations/{conv.id}/messages/",
+            {"contenu": "Question test numéro inconnu", "mode": "documents"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["contenu"], "Information sans source reconnue.")
+        self.assertEqual(resp.data["sources"], [])
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_json_invalide_declenche_retry_puis_erreur_502(self, mock_chat, mock_configured):
+        """Un JSON invalide renvoyé par le modèle déclenche une 2e tentative puis une erreur 502 claire."""
+        mock_configured.return_value = True
+        mock_chat.side_effect = ["Réponse brute non JSON", "Deuxième tentative encore non JSON"]
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        resp = self.client.post(
+            f"/api/assistant/conversations/{conv.id}/messages/",
+            {"contenu": "Quelle est la durée de l'incubation ?", "mode": "documents"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_502_BAD_GATEWAY)
+        self.assertEqual(mock_chat.call_count, 2)
+        self.assertIn("detail", resp.data)
+        self.assertIn("invalide", resp.data["detail"].lower())
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_json_invalide_reussit_au_retry(self, mock_chat, mock_configured):
+        """Si la première tentative renvoie un JSON invalide mais la 2e est correcte, la réponse aboutit."""
+        mock_configured.return_value = True
+        mock_chat.side_effect = [
+            "Erreur texte non formaté",
+            json.dumps({
+                "reponse": "Réponse récupérée après nouvelle tentative.",
+                "passages_utilises": [1],
+            }),
+        ]
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        resp = self.client.post(
+            f"/api/assistant/conversations/{conv.id}/messages/",
+            {"contenu": "Quelle est la durée ?", "mode": "documents"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(mock_chat.call_count, 2)
+        self.assertEqual(resp.data["contenu"], "Réponse récupérée après nouvelle tentative.")
+        self.assertEqual(len(resp.data["sources"]), 1)
+
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")

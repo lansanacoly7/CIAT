@@ -119,11 +119,17 @@ export default function Footer() {
         </div>
 
         {/* Ligne inférieure de clôture */}
-        <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-[#a89580] md:flex md:justify-between">
+        <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-[#a89580] md:flex md:items-center md:justify-between">
           <p>© 2026 CIAT · ISEP Amadou Trawaré de Diamniadio. Tous droits réservés.</p>
-          <p className="mt-2 md:mt-0">
-            Conforme à la Charte Graphique Officielle Écosystème CIAT 360 (v1.0).
-          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-4 md:mt-0">
+            <Link href="/mentions-legales" className="transition-colors hover:text-white underline underline-offset-2">
+              Mentions légales
+            </Link>
+            <span aria-hidden="true" className="text-white/20">&bull;</span>
+            <Link href="/confidentialite" className="transition-colors hover:text-white underline underline-offset-2">
+              Confidentialité &amp; Usage IA
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
