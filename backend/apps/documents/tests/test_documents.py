@@ -203,3 +203,55 @@ class DocumentsAPITestCase(TestCase):
         resp2 = self.client.post("/api/documents/generer/", {"modele": self.modele.id}, format="json")
         self.assertEqual(resp2.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("sujet", resp2.json())
+
+    @patch("apps.documents.services.ai.chat")
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    def test_consignes_prompt_priorite_infos_et_interdiction_inventer(self, mock_configured, mock_chat):
+        """Vérifie que le prompt transmis au service IA contient la priorité des infos et l'interdiction d'inventer avec [À COMPLÉTER : ...]."""
+        mock_configured.return_value = True
+
+        mock_response = {
+            s["code"]: f"Contenu section {s['titre']} avec [À COMPLÉTER : date]."
+            for s in self.modele.sections
+        }
+        mock_chat.return_value = json.dumps(mock_response)
+
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "modele": self.modele.id,
+            "sujet": "Convention d'incubation personnalisée",
+            "infos": {
+                "porteur": "Aminata Ndiaye Remplaçante",
+                "delai": "12 mois fermes",
+            },
+            "projet": self.projet.id,
+        }
+
+        resp = self.client.post("/api/documents/generer/", payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Extraction des prompts passés à ai.chat
+        self.assertTrue(mock_chat.called)
+        args, kwargs = mock_chat.call_args
+        messages = args[0] if args else kwargs.get("messages", [])
+        system_prompt = kwargs.get("system", "")
+        user_prompt = "\n".join(m.get("content", "") for m in messages if isinstance(m, dict))
+        full_prompt = f"{system_prompt}\n{user_prompt}"
+
+        # 1. Vérification de la consigne de priorité des « infos » sur le projet lié en cas de conflit
+        self.assertIn("priorité", full_prompt.lower())
+        self.assertIn("infos", full_prompt.lower())
+        self.assertIn("projet", full_prompt.lower())
+        self.assertIn("conflit", full_prompt.lower())
+
+        # 2. Vérification de l'interdiction étendue d'inventer
+        self.assertIn("règles", full_prompt.lower())
+        self.assertIn("obligations", full_prompt.lower())
+        self.assertIn("procédures", full_prompt.lower())
+        self.assertIn("organismes", full_prompt.lower())
+        self.assertIn("délais", full_prompt.lower())
+        self.assertIn("clauses juridiques", full_prompt.lower())
+
+        # 3. Vérification de la consigne d'écriture explicite « [À COMPLÉTER : ...] »
+        self.assertIn("[À COMPLÉTER : ...]", full_prompt)
+

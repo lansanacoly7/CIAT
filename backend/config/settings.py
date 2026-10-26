@@ -152,12 +152,12 @@ AI_PROVIDER_CONFIG = {
     "groq": {
         "base_url": "https://api.groq.com/openai/v1",
         "api_key": os.getenv("GROQ_API_KEY", ""),
-        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        "model": os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
     },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
         "api_key": os.getenv("GEMINI_API_KEY", ""),
-        "model": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        "model": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
     },
 }
 
