@@ -63,13 +63,15 @@ def validate_file_content(file):
         raise ValidationError("Le fichier n'est pas une image JPEG valide.")
     elif ext == "webp" and (not header.startswith(b"RIFF") or b"WEBP" not in header[:16]):
         raise ValidationError("Le fichier n'est pas une image WEBP valide.")
-    elif ext == "docx" and not header.startswith(b"PK\x03\x04"):
-        raise ValidationError("Le fichier n'est pas un document Word DOCX valide.")
-    elif ext == "doc" and not header.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
-        raise ValidationError("Le fichier n'est pas un document Word DOC valide.")
+    elif ext in ("docx", "xlsx") and not header.startswith(b"PK\x03\x04"):
+        format_name = "Word DOCX" if ext == "docx" else "Excel XLSX"
+        raise ValidationError(f"Le fichier n'est pas un document {format_name} valide.")
+    elif ext in ("doc", "xls") and not header.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        format_name = "Word DOC" if ext == "doc" else "Excel XLS"
+        raise ValidationError(f"Le fichier n'est pas un document {format_name} valide.")
 
 
-ALLOWED_PIECE_EXTENSIONS = ["pdf", "doc", "docx", "png", "jpg", "jpeg", "webp"]
+ALLOWED_PIECE_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "webp"]
 
 
 class StatutDossier(models.TextChoices):

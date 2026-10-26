@@ -1,6 +1,6 @@
 # Audit des droits, sécurité et checklist de mise en production — CIAT
 
-Ce document constitue la référence de sécurité pour l'ensemble des modules de la plateforme CIAT (Phase 3 — Tâche T2). Il détaille la matrice des autorisations par rôle et endpoint, la politique anti force-brute (rate limiting), la validation des fichiers déposés, et la checklist préalable au déploiement en production.
+Ce document constitue la référence de sécurité pour l'ensemble des modules de la plateforme CIAT (Phase 3 — Tâche T2). Il détaille la matrice des autorisations par rôle et endpoint, la politique anti force-brute (rate limiting), l'architecture de cache partagé, la validation des fichiers déposés, et la checklist préalable au déploiement en production.
 
 ---
 
@@ -25,11 +25,13 @@ La plateforme CIAT définit 6 rôles utilisateurs distincts (`apps.core.models.R
 Cette matrice est validée automatiquement par la suite de tests automatisée `apps/core/tests/test_droits.py`.
 
 Légende des statuts HTTP retournés :
-- **200 / 201** : Accès autorisé et action exécutée avec succès.
+- **200 / 201 / 204** : Accès autorisé et action exécutée avec succès (création, modification, suppression).
+- **400** : Entrée invalide, formulaire mal formé ou violation de contrainte métier.
 - **401** : Non authentifié (Authentification requise).
 - **403** : Authentifié mais rôle insuffisant ou ressource n'appartenant pas à l'utilisateur.
-- **404** : Ressource non trouvée ou isolée par étanchéité de données.
-- **JAMAIS 500** : Toute requête invalide est interceptée et renvoie une erreur 400 ou 422 standardisée.
+- **404** : Ressource non trouvée ou dissimulée par étanchéité de données (object isolation).
+- **405** : Méthode HTTP non autorisée sur l'endpoint.
+- **JAMAIS 500** : Toute entrée invalide est interceptée et contrôlée sans fuite de traceback ou de secrets internes.
 
 | Endpoint | Méthode | Anonyme | Visiteur | Porteur (proprio) | Porteur (tiers) | Mentor | Comité | Coordonnateur | Admin |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -43,10 +45,14 @@ Légende des statuts HTTP retournés :
 | `/api/cohortes/` | POST | 401 | 403 | 403 | 403 | 403 | 403 | 201 | 201 |
 | `/api/projets/` | GET | 401 | 200 (filtré) | 200 (ses projets) | 200 (ses projets) | 200 (assignés) | 200 (tous) | 200 (tous) | 200 (tous) |
 | `/api/projets/` | POST | 401 | 403 | 201 | 201 | 403 | 403 | 201 | 201 |
+| `/api/projets/{id}/` | PATCH / PUT | 401 | 403/404 | 200 | 403/404 | 403/404 | 403/404 | 200 | 200 |
+| `/api/projets/{id}/` | DELETE | 401 | 403/404 | 204 | 403/404 | 403/404 | 403/404 | 204 | 204 |
 | `/api/incubator/dossiers/` | GET | 401 | 200 (vide) | 200 (ses dossiers) | 200 (ses dossiers) | 200 | 200 | 200 | 200 |
 | `/api/incubator/dossiers/` | POST | 401 | 403 | 201 | 403 (si tiers) | 403 | 403 | 201 | 201 |
 | `/api/incubator/dossiers/{id}/pieces/` | POST | 401 | 403 | 201 | 403 | 403 | 403 | 201 | 201 |
+| `/api/incubator/dossiers/{id}/pieces/{p_id}/` | DELETE | 401 | 403 | 204 | 403/404 | 403 | 403 | 204 | 204 |
 | `/api/incubator/dossiers/{id}/soumettre/` | POST | 401 | 403 | 200 | 403 | 403 | 403 | 200 | 200 |
+| `/api/incubator/dossiers/{id}/evaluations/` | GET | 401 | 403 | 403 | 403 | 403 | 200 | 200 | 200 |
 | `/api/incubator/dossiers/{id}/evaluations/` | POST | 401 | 403 | 403 | 403 | 403 | 201 | 201 | 201 |
 | `/api/incubator/dossiers/{id}/decision/` | POST | 401 | 403 | 403 | 403 | 403 | 403 | 201 | 201 |
 | `/api/incubator/alertes/` | GET | 401 | 403 | 403 | 403 | 200 (assignés) | 403 | 200 | 200 |
@@ -74,6 +80,7 @@ Les endpoints publics (annuaire des projets incubés `/api/portal/projets-incube
    - Aucun numéro de téléphone (`telephone`) n'est exposé.
 2. **Délibérations et scores confidentiels** :
    - Les évaluations individuelles des membres du jury, les notes par critère et les avis internes ne figurent jamais dans les serializers publics.
+   - Les délibérations ne sont exposées qu'aux membres du comité et à l'équipe de coordination CIAT.
 3. **Mots de passe et secrets** :
    - Les champs `password` sont configurés en `write_only=True` (`RegisterSerializer`).
    - Aucun hash (ex. PBKDF2/MD5) n'est jamais présent dans les réponses sérialisées.
@@ -82,7 +89,7 @@ Les endpoints publics (annuaire des projets incubés `/api/portal/projets-incube
 
 ---
 
-## 4. Politique de limitation de débit (Rate Limiting)
+## 4. Politique de limitation de débit (Rate Limiting) et Cache
 
 Pour prémunir la plateforme contre les attaques par force brute et par déni de service (DoS), des limitations sont appliquées via DRF Throttling :
 
@@ -93,26 +100,42 @@ Pour prémunir la plateforme contre les attaques par force brute et par déni de
 | `anon` | **60 requêtes / minute** | Tout endpoint public pour client non authentifié | `HTTP 429 Too Many Requests` |
 | `user` | **300 requêtes / minute** | Utilisateurs authentifiés standard | `HTTP 429 Too Many Requests` |
 
+### Architecture de Cache : Local vs Partagé (Multi-processus)
+
+- **Développement local et tests** : Utilisation automatique de `django.core.cache.backends.locmem.LocMemCache`. Ne nécessite aucune installation de service externe pour exécuter la suite de tests ou lancer le serveur en local.
+- **Production multi-processus (Gunicorn, Uvicorn)** : Lorsque plusieurs workers traitent des requêtes en parallèle, `LocMemCache` ne partage pas les compteurs de throttling entre processus. Pour ces environnements, définir la variable d'environnement :
+  ```env
+  REDIS_URL=redis://redis:6379/1
+  ```
+  Django active alors automatiquement `django.core.cache.backends.redis.RedisCache`. Si Redis est indisponible, le backend applique un fallback sécurisé ou lève une exception configurable pour éviter de dégrader silencieusement la protection.
+- **Défense en profondeur (Reverse-Proxy)** : Le rate limiting DRF constitue la couche applicative. Il est fortement recommandé en production d'associer un rate limiting en amont au niveau du reverse proxy (Nginx `limit_req_zone` ou Cloudflare Rate Limiting Rules) afin de rejeter les attaques volumétriques avant qu'elles n'atteignent les workers Python.
+
 ---
 
 ## 5. Politique de validation et sécurité des fichiers (Uploads)
 
-Pour empêcher l'injection de fichiers malveillants, l'écrasement de fichiers système et les attaques de déni de service :
+Pour empêcher l'injection de fichiers malveillants, l'écrasement de fichiers système et les attaques par déni de service :
 
 1. **Taille maximale autorisée** :
    - Limite stricte : **10 Mo** par fichier (`FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024`).
    - Les fichiers vides (0 octet) sont systématiquement rejetés avec `ValidationError`.
-2. **Extensions interdites et filtrées** :
-   - Seules les extensions approuvées pour les pièces justificatives et preuves sont acceptées : `pdf`, `png`, `jpg`, `jpeg`, `docx`, `xlsx`.
-   - Extensions exécutables (`.exe`, `.sh`, `.bat`, `.cmd`, `.php`, `.js`, `.py`) rejetées dès la validation de formulaire.
-3. **Vérification du contenu binaire (Magic Bytes)** :
-   - Le système ne se fie pas uniquement à l'extension déclarée dans le nom du fichier.
-   - La fonction `validate_file_content` inspecte les premiers octets (signatures binaires) :
-     - Pour un PDF : doit débuter par `%PDF-` (`0x25 0x50 0x44 0x46 0x2D`).
-     - Pour un PNG : doit débuter par `\x89PNG\r\n\x1a\n`.
-     - Pour un JPEG : doit débuter par `\xff\xd8\xff`.
+2. **Extensions autorisées (Harmonisation complète)** :
+   - `ALLOWED_PIECE_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "webp"]`.
+   - Les formats bureautiques et tableurs (`xlsx`, `xls`) sont expressément autorisés pour la pièce `TypePiece.BUDGET_PREVISIONNEL`.
+   - Extensions exécutables (`.exe`, `.sh`, `.bat`, `.cmd`, `.php`, `.js`, `.py`) formellement rejetées dès la validation.
+3. **Contrôle de signature binaire (Magic Bytes)** :
+   - `validate_file_content` inspecte les premiers octets du fichier indépendamment de son extension déclarée :
+     - **PDF** : commence par `%PDF-` (`0x25 0x50 0x44 0x46 0x2D`).
+     - **PNG** : commence par `\x89PNG\r\n\x1a\n`.
+     - **JPEG** : commence par `\xff\xd8\xff`.
+     - **WEBP** : commence par `RIFF` et contient `WEBP`.
+     - **DOCX / XLSX** : conteneurs OpenXML compressés, commencent par `PK\x03\x04`.
+     - **DOC / XLS** : format binaire OLE Compound File, commencent par `\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1`.
+   - *Avertissement de sécurité* : La vérification des magic bytes bloque l'usurpation d'extension (spoofing) et les scripts évidents, mais ne constitue pas une analyse antivirus ou une garantie absolue d'innocuité (un document valide peut contenir des macros ou des payloads intégrés). Un scanner dédié (ClamAV) peut être ajouté en production pour les fichiers critiques.
 4. **Assainissement des noms de fichiers (Path Traversal)** :
-   - Fonction `sanitize_filename()` : élimine les séquences `../`, les séparateurs de dossiers et les caractères non ASCII pour éviter toute tentative d'écriture hors du répertoire média désigné.
+   - Fonction `sanitize_filename()` : élimine les séquences `../`, `..\`, séparateurs de répertoires et caractères spéciaux afin de garantir que les fichiers sont toujours cantonnés à leur sous-dossier d'upload.
+5. **Confidentialité du stockage** :
+   - Les pièces justificatives des dossiers et preuves d'avancement ne sont jamais exposées publiquement par défaut ; elles sont protégées par les contrôles de permissions de l'API.
 
 ---
 
@@ -133,22 +156,24 @@ Avant tout déploiement en environnement de production, vérifier les points sui
 
 - [x] **Clé secrète Django (`SECRET_KEY`)** :
   - Provenance exclusive de la variable d'environnement `DJANGO_SECRET_KEY`.
-  - Blocage strict à l'initialisation si `DEBUG=False` et que la clé est absente ou fixée à la valeur par défaut.
+  - Blocage strict à l'initialisation si `DEBUG=False` et que la clé est absente ou fixée à une valeur faible de développement.
 - [x] **Mode Débogage (`DEBUG`)** :
   - `DJANGO_DEBUG=0` obligatoirement en production.
 - [x] **Hôtes autorisés (`ALLOWED_HOSTS`)** :
-  - Restreint aux noms de domaine et adresses IP exacts de production (ex: `plateforme.ciat.sn`).
+  - Restreint aux noms de domaine et adresses IP exacts de production (ex: `plateforme.ciat.sn`), jamais de wildcard `*`.
 - [x] **En-têtes HTTPS et HSTS** :
   - `SECURE_SSL_REDIRECT = True` (redirection automatique HTTP vers HTTPS).
   - `SESSION_COOKIE_SECURE = True` (transmission des cookies de session uniquement sur HTTPS).
   - `CSRF_COOKIE_SECURE = True` (transmission du cookie CSRF uniquement sur HTTPS).
-  - `SECURE_HSTS_SECONDS = 31536000` (1 an).
+  - `SECURE_HSTS_SECONDS = 31536000` (1 an minimum).
   - `SECURE_HSTS_INCLUDE_SUBDOMAINS = True` et `SECURE_HSTS_PRELOAD = True`.
 - [x] **Protection contre le détournement de clic (Clickjacking) et de type MIME** :
   - `X_FRAME_OPTIONS = "DENY"`.
   - `SECURE_CONTENT_TYPE_NOSNIFF = True`.
   - `XFrameOptionsMiddleware` actif dans `MIDDLEWARE`.
 - [x] **Base de données relationnelle** :
-  - PostgreSQL 16 configuré via `DATABASE_URL` avec utilisateur dédié non-root et mot de passe robuste.
+  - PostgreSQL 16 (ou >= 14 conformément aux exigences Django 5.2) configuré via `DATABASE_URL` avec utilisateur applicatif aux droits minimaux et authentification `scram-sha-256`.
 - [x] **CORS & CSRF** :
-  - Restreints aux domaines du frontend autorisés (`CORS_ALLOWED_ORIGINS`).
+  - Restreints aux domaines du frontend autorisés (`CORS_ALLOWED_ORIGINS` et `CSRF_TRUSTED_ORIGINS`), jamais de wildcard `*`.
+- [x] **Cache et Limitation de débit** :
+  - Redis configuré via `REDIS_URL` en environnement multi-processus.

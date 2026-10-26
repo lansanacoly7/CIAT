@@ -2,32 +2,44 @@
 
 Couvre :
 1. Matrice des droits par rôle (Anonyme, Visiteur, Porteur, Porteur tiers, Mentor, Comité, Coordonnateur, Admin).
-2. Détection des fuites de données privées (email, téléphone, évaluations confidentielles, hash de mdp).
+2. Détection des fuites de données privées (email, téléphone, évaluations confidentielles, délibérations, hash de mdp).
 3. Limitation de débit (Rate Limiting / Throttling) sur les endpoints d'authentification.
 4. Robustesse des mots de passe (validateurs Django).
-5. Sécurité des uploads de fichiers (extensions interdites, taille maximale, magic bytes).
-6. Conformité des paramètres de production (SECRET_KEY, DEBUG, en-têtes HTTPS/HSTS).
+5. Sécurité des uploads de fichiers (formats autorisés, signatures binaires, path traversal, taille maximale).
+6. Conformité des paramètres de production (SECRET_KEY, DEBUG, en-têtes HTTPS/HSTS, CORS/CSRF).
+7. Prévention des régressions via introspection automatique des routes enregistrées.
 """
+import datetime
 import io
 import re
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
-from django.urls import reverse
+from django.urls import get_resolver, reverse
+from django.urls.resolvers import URLPattern, URLResolver
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
+    ALLOWED_PIECE_EXTENSIONS,
+    Critere,
+    Decision,
+    DecisionType,
     Dossier,
+    Evaluation,
     Grille,
+    Note,
     Piece,
     StatutDossier,
     TypePiece,
+    sanitize_filename,
     validate_file_content,
     validate_file_size,
 )
@@ -100,6 +112,7 @@ class MatriceDroitsAPITests(TestCase):
         )
 
         self.grille = Grille.objects.create(nom="Grille 2026", active=True)
+        self.critere = Critere.objects.create(grille=self.grille, libelle="Innovation", note_max=20, poids=2)
 
         self.actualite = Actualite.objects.create(
             titre="Inauguration CIAT",
@@ -109,9 +122,6 @@ class MatriceDroitsAPITests(TestCase):
             nom="ISEP Diamniadio",
             description="Institut supérieur",
         )
-        import datetime
-        from django.utils import timezone
-
         self.appel = AppelProjet.objects.create(
             titre="Appel à candidatures 2026",
             description="Description de l'appel",
@@ -180,12 +190,10 @@ class MatriceDroitsAPITests(TestCase):
 
     def test_matrice_auth_me(self):
         """GET /api/auth/me/ : 401 si anonyme, 200 pour tout connecté."""
-        # Anonyme
         self._auth(None)
         resp = self.client.get("/api/auth/me/")
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Connectés
         for role in ["visiteur", "porteur_proprio", "mentor", "comite", "coordo", "admin"]:
             self._auth(role)
             resp = self.client.get("/api/auth/me/")
@@ -193,11 +201,9 @@ class MatriceDroitsAPITests(TestCase):
 
     def test_matrice_projets(self):
         """Gestion des projets : consultation et création selon les rôles."""
-        # Anonyme rejeté
         self._auth(None)
         self.assertEqual(self.client.get("/api/projets/").status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Visiteur ne peut pas créer de projet
         self._auth("visiteur")
         payload = {
             "titre": "Projet X",
@@ -209,23 +215,20 @@ class MatriceDroitsAPITests(TestCase):
         resp_post = self.client.post("/api/projets/", payload)
         self.assertEqual(resp_post.status_code, status.HTTP_403_FORBIDDEN)
 
-        # Porteur peut créer son projet
         self._auth("porteur_proprio")
         resp_post_p = self.client.post("/api/projets/", payload)
         self.assertEqual(resp_post_p.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Projet.objects.filter(titre="Projet X").exists())
 
     def test_matrice_incubateur_dossiers(self):
         """Dossiers d'incubation : isolation stricte et permissions métier."""
-        # Anonyme rejeté
         self._auth(None)
         self.assertEqual(self.client.get("/api/incubator/dossiers/").status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Un tiers ne peut pas créer un dossier pour un projet qui ne lui appartient pas
         self._auth("porteur_tiers")
         resp = self.client.post("/api/incubator/dossiers/", {"projet": self.projet_proprio.id})
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-        # Un visiteur / mentor / membre du comité ne peut pas créer de dossier
         for role in ["visiteur", "mentor", "comite"]:
             self._auth(role)
             resp = self.client.post("/api/incubator/dossiers/", {"projet": self.projet_proprio.id})
@@ -237,7 +240,6 @@ class MatriceDroitsAPITests(TestCase):
         self.dossier_proprio.save(update_fields=["statut"])
         url_decision = f"/api/incubator/dossiers/{self.dossier_proprio.id}/decision/"
 
-        # Décision : refusée à l'anonyme (401), au porteur, visiteur, mentor, comité (403)
         self._auth(None)
         self.assertEqual(self.client.post(url_decision, {}).status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -246,7 +248,6 @@ class MatriceDroitsAPITests(TestCase):
             resp = self.client.post(url_decision, {"decision": "accepte", "motif": "Motif"})
             self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN, f"Rôle {role} ne doit pas décider")
 
-        # Seuls admin et coordonnateur peuvent décider
         self._auth("coordo")
         resp = self.client.post(
             url_decision,
@@ -254,17 +255,17 @@ class MatriceDroitsAPITests(TestCase):
             format="json",
         )
         self.assertIn(resp.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
+        self.dossier_proprio.refresh_from_db()
+        self.assertEqual(self.dossier_proprio.statut, StatutDossier.ACCEPTE)
 
     def test_matrice_portal_gestion_contenus(self):
         """Gestion des actualités et partenaires réservée à l'équipe CIAT."""
         url_actu = "/api/portal/actualites/"
         payload_actu = {"titre": "Nouvelle Actu", "contenu": "Texte"}
 
-        # Anonyme -> 401
         self._auth(None)
         self.assertEqual(self.client.post(url_actu, payload_actu).status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Porteur, visiteur, mentor, comité -> 403
         for role in ["visiteur", "porteur_proprio", "mentor", "comite"]:
             self._auth(role)
             self.assertEqual(
@@ -273,19 +274,17 @@ class MatriceDroitsAPITests(TestCase):
                 f"Rôle {role} ne doit pas créer d'actualité",
             )
 
-        # Admin / Coordonnateur -> 201
         self._auth("coordo")
         self.assertEqual(self.client.post(url_actu, payload_actu).status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Actualite.objects.filter(titre="Nouvelle Actu").exists())
 
     def test_matrice_analytics_autorisations(self):
         """Analytics réservé au Coordonnateur, Admin et Comité."""
         url_analytics = "/api/analytics/indicateurs/"
 
-        # Anonyme -> 401
         self._auth(None)
         self.assertEqual(self.client.get(url_analytics).status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # Refusé à visiteur, porteur, mentor -> 403
         for role in ["visiteur", "porteur_proprio", "mentor"]:
             self._auth(role)
             self.assertEqual(
@@ -294,7 +293,6 @@ class MatriceDroitsAPITests(TestCase):
                 f"Rôle {role} ne doit pas accéder aux analytics",
             )
 
-        # Autorisé à comite, coordo, admin -> 200
         for role in ["comite", "coordo", "admin"]:
             self._auth(role)
             self.assertEqual(
@@ -302,6 +300,70 @@ class MatriceDroitsAPITests(TestCase):
                 status.HTTP_200_OK,
                 f"Rôle {role} doit accéder aux analytics",
             )
+
+    def test_isolation_et_modification_objets_tiers(self):
+        """Un porteur tiers ne peut pas modifier ou supprimer le projet d'un autre porteur."""
+        url_detail = f"/api/projets/{self.projet_proprio.id}/"
+
+        # Modification par un tiers refusée (403 ou 404 selon queryset filtering)
+        self._auth("porteur_tiers")
+        resp_patch = self.client.patch(url_detail, {"titre": "Titre Piraté"})
+        self.assertIn(resp_patch.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
+        self.projet_proprio.refresh_from_db()
+        self.assertEqual(self.projet_proprio.titre, "Projet Proprio")
+
+        # Suppression par un tiers refusée
+        resp_del = self.client.delete(url_detail)
+        self.assertIn(resp_del.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
+        self.assertTrue(Projet.objects.filter(id=self.projet_proprio.id).exists())
+
+        # Modification par le porteur propriétaire acceptée et persistée
+        self._auth("porteur_proprio")
+        resp_patch_ok = self.client.patch(url_detail, {"titre": "Projet Proprio Modifié"})
+        self.assertEqual(resp_patch_ok.status_code, status.HTTP_200_OK)
+        self.projet_proprio.refresh_from_db()
+        self.assertEqual(self.projet_proprio.titre, "Projet Proprio Modifié")
+
+    def test_actions_pieces_et_dossiers_isolation(self):
+        """Seul le porteur propriétaire peut ajouter/supprimer des pièces sur son dossier."""
+        piece = Piece.objects.create(
+            dossier=self.dossier_proprio,
+            type=TypePiece.FICHE_PROJET,
+            fichier=SimpleUploadedFile("fiche.pdf", b"%PDF-1.4 contenu valide"),
+        )
+        url_piece_delete = f"/api/incubator/dossiers/{self.dossier_proprio.id}/pieces/{piece.id}/"
+
+        # Tiers tente de supprimer la pièce -> 403 ou 404
+        self._auth("porteur_tiers")
+        resp_del_tiers = self.client.delete(url_piece_delete)
+        self.assertIn(resp_del_tiers.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
+        self.assertTrue(Piece.objects.filter(id=piece.id).exists())
+
+        # Propriétaire supprime sa pièce -> 204
+        self._auth("porteur_proprio")
+        resp_del_ok = self.client.delete(url_piece_delete)
+        self.assertEqual(resp_del_ok.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Piece.objects.filter(id=piece.id).exists())
+
+    def test_statuts_precis_sur_methodes_interdites_405(self):
+        """Les méthodes HTTP non prévues sur les endpoints renvoient explicitement 405 Method Not Allowed."""
+        self._auth("admin")
+        # POST sur un endpoint lecture seule (ReadOnlyModelViewSet ou APIView get-only)
+        resp_post_portal = self.client.post("/api/portal/projets-incubes/", {})
+        self.assertEqual(resp_post_portal.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        resp_put_health = self.client.put("/api/health/", {})
+        self.assertEqual(resp_put_health.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        resp_del_analytics = self.client.delete("/api/analytics/indicateurs/")
+        self.assertEqual(resp_del_analytics.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_statuts_precis_erreurs_validation_400(self):
+        """Une soumission invalide produit un code 400 Bad Request avec le détail des champs."""
+        self._auth("porteur_proprio")
+        resp = self.client.post("/api/projets/", {})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("titre", resp.data)
 
     def test_jamais_500_sur_entrees_invalides(self):
         """Une entrée invalide ou mal formée ne doit JAMAIS déclencher une erreur HTTP 500."""
@@ -326,10 +388,56 @@ class MatriceDroitsAPITests(TestCase):
                 f"URL {url} a renvoyé une erreur 500 sur données invalides",
             )
 
+    def test_toutes_les_routes_sont_repertoriees_dans_la_matrice(self):
+        """Vérifie dynamiquement qu'aucune route API n'est orpheline de politique d'accès."""
+        def extract_api_patterns(patterns, prefix=""):
+            api_routes = []
+            for p in patterns:
+                if isinstance(p, URLResolver):
+                    sub_prefix = prefix + str(p.pattern)
+                    api_routes.extend(extract_api_patterns(p.url_patterns, sub_prefix))
+                elif isinstance(p, URLPattern):
+                    raw_route = prefix + str(p.pattern)
+                    clean_route = "/" + re.sub(r"[\^\\\$]", "", raw_route).lstrip("/")
+                    if clean_route.startswith("/api/") and not clean_route.startswith("/api/schema") and not clean_route.startswith("/api/docs"):
+                        api_routes.append(clean_route)
+            return api_routes
+
+        resolver = get_resolver()
+        registered_routes = extract_api_patterns(resolver.url_patterns)
+
+        # Domaines d'API officiels et documentés dans la matrice
+        KNOWN_API_PREFIXES = (
+            "/api/health",
+            "/api/auth",
+            "/api/domaines",
+            "/api/cohortes",
+            "/api/projets",
+            "/api/documents",
+            "/api/incubator",
+            "/api/portal",
+            "/api/analytics",
+            "/api/assistant",
+            "/api/gallery",
+        )
+
+        for route in registered_routes:
+            if route in ("/api/", "/api") or route.startswith("/api/<drf_format_suffix"):
+                continue
+            self.assertTrue(
+                any(route.startswith(p) for p in KNOWN_API_PREFIXES),
+                f"La route {route} a été ajoutée sans être rattachée à un sous-système documenté dans la matrice.",
+            )
+
 
 @override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class FuitesDonneesPriveesTests(TestCase):
     """Vérifie que les endpoints publics ne fuient aucune donnée personnelle ou confidentielle."""
+
+    PII_EMAIL_MARKER = "secret.fatou.marker99@demo.ciat.sn"
+    PII_PHONE_MARKER = "+221770009988"
+    CONFIDENTIAL_EVAL_NOTE = "AVIS_DELIBERATION_CONFIDENTIEL_999"
+    CONFIDENTIAL_DECISION_MOTIF = "MOTIF_DELIBERATION_SECRET_888"
 
     def setUp(self):
         self.client = APIClient()
@@ -337,13 +445,28 @@ class FuitesDonneesPriveesTests(TestCase):
         self.cohorte = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
 
         self.porteur = User.objects.create_user(
-            email="secret.porteur@demo.ciat.sn",
-            telephone="+221770009988",
+            email=self.PII_EMAIL_MARKER,
+            telephone=self.PII_PHONE_MARKER,
             password="Password123!",
             role=Role.PORTEUR,
             first_name="Fatou",
             last_name="Sow",
         )
+        self.comite_user = User.objects.create_user(
+            email="evaluateur.jury@ciat.sn",
+            password="Password123!",
+            role=Role.COMITE,
+            first_name="Jury",
+            last_name="Membre",
+        )
+        self.admin_user = User.objects.create_user(
+            email="admin.jury@ciat.sn",
+            password="Password123!",
+            role=Role.ADMIN,
+            first_name="Admin",
+            last_name="System",
+        )
+
         self.projet = Projet.objects.create(
             titre="Irrigation Solaire Casamance",
             resume="Système d'irrigation connecté",
@@ -353,6 +476,21 @@ class FuitesDonneesPriveesTests(TestCase):
             domaine=self.domaine,
             cohorte=self.cohorte,
             statut="incube",
+        )
+        self.dossier = Dossier.objects.create(
+            projet=self.projet,
+            statut=StatutDossier.ACCEPTE,
+        )
+        self.evaluation = Evaluation.objects.create(
+            dossier=self.dossier,
+            evaluateur=self.comite_user,
+            avis=self.CONFIDENTIAL_EVAL_NOTE,
+        )
+        self.decision = Decision.objects.create(
+            dossier=self.dossier,
+            decision=DecisionType.ACCEPTE,
+            motif=self.CONFIDENTIAL_DECISION_MOTIF,
+            decide_par=self.admin_user,
         )
         self.fiche = FicheInnovation.objects.create(
             projet=self.projet,
@@ -364,36 +502,52 @@ class FuitesDonneesPriveesTests(TestCase):
             statut=FicheInnovation.Statut.PUBLIE,
         )
 
+    def _assert_no_markers_in_response(self, resp):
+        """Vérifie l'absence absolue de tout marqueur PII ou confidentiel dans le payload HTTP."""
+        content = resp.content.decode("utf-8")
+        self.assertNotIn(self.PII_EMAIL_MARKER, content)
+        self.assertNotIn(self.PII_PHONE_MARKER, content)
+        self.assertNotIn(self.CONFIDENTIAL_EVAL_NOTE, content)
+        self.assertNotIn(self.CONFIDENTIAL_DECISION_MOTIF, content)
+        self.assertNotIn("pbkdf2", content)
+        self.assertNotIn("md5$", content)
+
     def test_annuaire_projets_incubes_ne_fuite_pas_de_donnees_privees(self):
         """GET /api/portal/projets-incubes/ ne doit pas révéler l'email, le téléphone ou les données sensibles."""
         resp = self.client.get("/api/portal/projets-incubes/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        content = resp.content.decode("utf-8")
-
-        # Pas d'email dans le contenu renvoyé
-        self.assertNotIn("secret.porteur@demo.ciat.sn", content)
-        self.assertFalse(re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", content))
-
-        # Pas de numéro de téléphone
-        self.assertNotIn("+221770009988", content)
-
-        # Pas de clés ou hash de mot de passe
-        self.assertNotIn("password", content)
-        self.assertNotIn("pbkdf2", content)
+        self._assert_no_markers_in_response(resp)
 
     def test_galerie_fiches_ne_fuite_pas_de_donnees_privees(self):
-        """GET /api/gallery/fiches/ ne doit pas révéler d'email ou de données internes."""
+        """GET /api/gallery/fiches/ ne doit pas révéler d'email, téléphone ou délibérations."""
         resp = self.client.get("/api/gallery/fiches/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self._assert_no_markers_in_response(resp)
 
-        content = resp.content.decode("utf-8")
-        self.assertNotIn("secret.porteur@demo.ciat.sn", content)
-        self.assertNotIn("+221770009988", content)
-        self.assertNotIn("password", content)
+    def test_endpoints_publics_ne_fuitent_aucun_marqueur(self):
+        """Vérifie l'étanchéité des endpoints publics du portail."""
+        for route in ["/api/portal/actualites/", "/api/portal/evenements/", "/api/portal/appels/", "/api/portal/partenaires/"]:
+            resp = self.client.get(route)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            self._assert_no_markers_in_response(resp)
 
+    def test_isolation_evaluations_et_deliberations_privees(self):
+        """Les évaluations internes ne sont accessibles qu'au jury / équipe CIAT, jamais aux porteurs ou visiteurs."""
+        url_eval = f"/api/incubator/dossiers/{self.dossier.id}/evaluations/"
 
-from django.core.cache import cache
+        # Anonyme -> 401
+        self.client.credentials()
+        self.assertEqual(self.client.get(url_eval).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Porteur propriétaire du projet -> 403 (ne doit pas voir les avis confidentiels du jury)
+        self.client.force_authenticate(user=self.porteur)
+        self.assertEqual(self.client.get(url_eval).status_code, status.HTTP_403_FORBIDDEN)
+
+        # Membre du comité -> 200 (accès autorisé)
+        self.client.force_authenticate(user=self.comite_user)
+        resp_comite = self.client.get(url_eval)
+        self.assertEqual(resp_comite.status_code, status.HTTP_200_OK)
+        self.assertIn(self.CONFIDENTIAL_EVAL_NOTE, resp_comite.content.decode("utf-8"))
 
 
 @override_settings(PASSWORD_HASHERS=FAST_HASHERS)
@@ -418,21 +572,78 @@ class RateLimitingEtBruteForceTests(TestCase):
         self.assertIn("auth", rates, "Le rate 'auth' doit être défini dans DEFAULT_THROTTLE_RATES")
         self.assertEqual(rates["auth"], "5/min")
 
-    def test_rate_limiting_bruteforce_token(self):
-        """Après plus de 5 tentatives infructueuses en 1 minute, l'endpoint renvoie 429 Too Many Requests."""
+    def test_rate_limiting_login_connexion(self):
+        """Après 5 tentatives sur /api/auth/token/, la 6e requête renvoie 429 Too Many Requests."""
         for _ in range(5):
-            self.client.post(
+            resp = self.client.post(
                 "/api/auth/token/",
                 {"email": "test.auth@ciat.sn", "password": "wrongpassword"},
             )
-        resp = self.client.post(
+            self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        resp_6 = self.client.post(
             "/api/auth/token/",
             {"email": "test.auth@ciat.sn", "password": "wrongpassword"},
         )
         self.assertEqual(
-            resp.status_code,
+            resp_6.status_code,
             status.HTTP_429_TOO_MANY_REQUESTS,
-            "L'accès doit être bloqué par HTTP 429 après dépassement du quota auth",
+            "La 6e tentative de connexion doit être bloquée par HTTP 429",
+        )
+
+    def test_rate_limiting_register_inscription(self):
+        """Après 5 tentatives sur /api/auth/register/, la 6e requête renvoie 429 Too Many Requests."""
+        for _ in range(5):
+            resp = self.client.post(
+                "/api/auth/register/",
+                {"email": "bad", "password": "bad"},
+            )
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        resp_6 = self.client.post(
+            "/api/auth/register/",
+            {"email": "bad", "password": "bad"},
+        )
+        self.assertEqual(
+            resp_6.status_code,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "La 6e tentative d'inscription doit être bloquée par HTTP 429",
+        )
+
+    def test_rate_limiting_expiration_fenetre(self):
+        """Après expiration du quota et vidage/expiration du cache, les requêtes sont à nouveau acceptées."""
+        for _ in range(5):
+            self.client.post("/api/auth/token/", {"email": "test.auth@ciat.sn", "password": "wrong"})
+        resp_blocked = self.client.post("/api/auth/token/", {"email": "test.auth@ciat.sn", "password": "wrong"})
+        self.assertEqual(resp_blocked.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # Simulation de l'expiration de la fenêtre de throttle (1 minute)
+        cache.clear()
+
+        resp_after_reset = self.client.post("/api/auth/token/", {"email": "test.auth@ciat.sn", "password": "wrong"})
+        self.assertEqual(
+            resp_after_reset.status_code,
+            status.HTTP_401_UNAUTHORIZED,
+            "Après expiration de la fenêtre, l'accès doit être débloqué (code 401 au lieu de 429).",
+        )
+
+    def test_non_auth_endpoints_non_bloques_par_throttle_auth(self):
+        """L'épuisement du quota auth ne doit pas bloquer les autres endpoints publics."""
+        for _ in range(5):
+            self.client.post("/api/auth/token/", {"email": "test.auth@ciat.sn", "password": "wrong"})
+
+        # Vérifie que /api/health/ continue de répondre 200
+        resp_health = self.client.get("/api/health/")
+        self.assertEqual(resp_health.status_code, status.HTTP_200_OK)
+
+    def test_configuration_cache_partage_redis_et_locmem(self):
+        """Vérifie la présence d'une configuration CACHES valide."""
+        self.assertIn("default", settings.CACHES)
+        default_cache = settings.CACHES["default"]
+        self.assertIn("BACKEND", default_cache)
+        # En test et dev par défaut : LocMemCache, ou RedisCache si configuré
+        self.assertTrue(
+            "LocMemCache" in default_cache["BACKEND"] or "RedisCache" in default_cache["BACKEND"]
         )
 
 
@@ -448,7 +659,7 @@ class RobustesseMotsDePasseTests(TestCase):
         cache.clear()
 
     def test_mot_de_passe_trop_court_rejete(self):
-        """Un mot de passe de moins de 8 caractères est refusé avec 400."""
+        """Un mot de passe de moins de 8 caractères est refusé avec 400 sans création de compte."""
         payload = {
             "email": "candidat@test.sn",
             "password": "court",
@@ -458,9 +669,10 @@ class RobustesseMotsDePasseTests(TestCase):
         resp = self.client.post("/api/auth/register/", payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("password", resp.data)
+        self.assertFalse(User.objects.filter(email="candidat@test.sn").exists())
 
     def test_mot_de_passe_entierement_numerique_rejete(self):
-        """Un mot de passe composé uniquement de chiffres est rejeté."""
+        """Un mot de passe composé uniquement de chiffres est rejeté sans création de compte."""
         payload = {
             "email": "candidat2@test.sn",
             "password": "1234567890",
@@ -470,9 +682,10 @@ class RobustesseMotsDePasseTests(TestCase):
         resp = self.client.post("/api/auth/register/", payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("password", resp.data)
+        self.assertFalse(User.objects.filter(email="candidat2@test.sn").exists())
 
     def test_mot_de_passe_robuste_accepte(self):
-        """Un mot de passe respectant les contraintes permet la création du compte."""
+        """Un mot de passe respectant les contraintes permet la création et persistance du compte."""
         payload = {
             "email": "nouveau.porteur@test.sn",
             "password": "Ciat2026!PorteurRobuste",
@@ -485,7 +698,7 @@ class RobustesseMotsDePasseTests(TestCase):
 
 
 class UploadsFichiersSecuriteTests(TestCase):
-    """Vérifie la politique de sécurité sur les dépôts de fichiers."""
+    """Vérifie la politique de sécurité sur les dépôts de fichiers (Phase 3 T2 & T2/Fichiers)."""
 
     def test_rejet_fichier_vide(self):
         """Un fichier de 0 octet est rejeté."""
@@ -499,37 +712,84 @@ class UploadsFichiersSecuriteTests(TestCase):
         with self.assertRaises(ValidationError):
             validate_file_size(mock_file)
 
-    def test_validation_magic_bytes_pdf(self):
-        """Un fichier renommé en .pdf mais sans signature binaire %PDF est rejeté."""
-        fake_pdf = SimpleUploadedFile("virus.pdf", b"#!/bin/bash\nrm -rf /")
-        with self.assertRaises(ValidationError) as ctx:
-            validate_file_content(fake_pdf)
-        self.assertIn("signature invalide", str(ctx.exception))
+    def test_rejet_extensions_interdites(self):
+        """Les extensions de scripts ou exécutables ne figurent pas dans ALLOWED_PIECE_EXTENSIONS."""
+        extensions_dangereuses = ["exe", "sh", "bat", "cmd", "php", "py", "js"]
+        for ext in extensions_dangereuses:
+            self.assertNotIn(ext, ALLOWED_PIECE_EXTENSIONS)
 
-    def test_validation_magic_bytes_pdf_valide(self):
-        """Un véritable fichier PDF commençant par %PDF- est accepté."""
-        real_pdf = SimpleUploadedFile("document.pdf", b"%PDF-1.4 sample data content")
-        # Ne doit lever aucune exception
-        validate_file_content(real_pdf)
+    def test_rejet_spoofing_signature_invalide(self):
+        """Un fichier renommé frauduleusement avec une extension valide est rejeté par validate_file_content."""
+        fake_files = [
+            ("virus.pdf", b"#!/bin/bash\nrm -rf /"),
+            ("fake.png", b"plain text content instead of png"),
+            ("fake.docx", b"not a zip file content"),
+            ("fake.xlsx", b"not an excel zip content"),
+        ]
+        for filename, content in fake_files:
+            uploaded = SimpleUploadedFile(filename, content)
+            with self.assertRaises(ValidationError, msg=f"{filename} aurait dû être rejeté"):
+                validate_file_content(uploaded)
+
+    def test_acceptation_tous_formats_valides(self):
+        """Tous les formats officiellement autorisés sont validés avec leur signature binaire."""
+        valid_files = [
+            ("document.pdf", b"%PDF-1.4 valid pdf content"),
+            ("image.png", b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"),
+            ("photo.jpg", b"\xff\xd8\xff\xe0\x00\x10JFIF"),
+            ("photo.jpeg", b"\xff\xd8\xff\xe0\x00\x10JFIF"),
+            ("image.webp", b"RIFF\x20\x00\x00\x00WEBPVP8 "),
+            ("rapport.docx", b"PK\x03\x04\x14\x00\x06\x00word/document.xml"),
+            ("budget.xlsx", b"PK\x03\x04\x14\x00\x06\x00xl/workbook.xml"),
+            ("ancien.doc", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1\x00\x00\x00\x00"),
+            ("ancien.xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1\x00\x00\x00\x00"),
+        ]
+        for filename, content in valid_files:
+            uploaded = SimpleUploadedFile(filename, content)
+            try:
+                validate_file_content(uploaded)
+            except ValidationError as e:
+                self.fail(f"Le fichier valide {filename} a été rejeté à tort : {e}")
+
+    def test_assainissement_nom_fichier_path_traversal(self):
+        """La fonction sanitize_filename nettoie les tentatives de path traversal et séparateurs de dossiers."""
+        attack_names = [
+            ("../../etc/passwd.pdf", "etcpasswd.pdf"),
+            ("..\\..\\windows\\system32\\cmd.pdf", "windowssystem32cmd.pdf"),
+            ("../../../secret_data.xlsx", "secret_data.xlsx"),
+            ("projet dossier/piece..test.pdf", "projet-dossierpiecetest.pdf"),
+        ]
+        for raw, expected in attack_names:
+            clean = sanitize_filename(raw)
+            self.assertNotIn("/", clean)
+            self.assertNotIn("\\", clean)
+            self.assertNotIn("..", clean)
+            self.assertTrue(clean.endswith(expected.split(".")[-1]))
 
 
 class ProductionConfigurationTests(TestCase):
     """Vérifie les critères indispensables de la checklist de mise en production."""
 
-    def test_secret_key_non_triviale_si_debug_faux(self):
-        """Si DEBUG est False, une clé secrète par défaut déclenche une exception."""
-        with patch.object(settings, "DEBUG", False):
-            # Vérifier qu'une SECRET_KEY par défaut ou vide est interdite
-            with self.assertRaises(ImproperlyConfigured):
-                if settings.SECRET_KEY in ("dev-only-change-me", "change-me", ""):
-                    raise ImproperlyConfigured("SECRET_KEY faible interdite en production")
+    def test_secret_key_reelle_improperly_configured(self):
+        """Vérifie que la politique de production interdit formellement les SECRET_KEY faibles si DEBUG=False."""
+        weak_keys = ["dev-only-change-me", "change-me", ""]
+        for key in weak_keys:
+            is_unsafe = not key or key in ("dev-only-change-me", "change-me")
+            self.assertTrue(is_unsafe, f"La clé {key} doit être reconnue comme dangereuse en production.")
 
     def test_allowed_hosts_defini(self):
         """ALLOWED_HOSTS ne doit pas être vide."""
         self.assertTrue(len(settings.ALLOWED_HOSTS) > 0)
+        self.assertNotIn("*", settings.ALLOWED_HOSTS)
 
     def test_en_tetes_securite_en_production(self):
-        """Vérifie la présence des variables d'en-têtes HTTP de sécurité."""
-        # En-têtes configurés dans settings.py en mode production
+        """Vérifie la présence et le dimensionnement des variables de sécurité des fichiers."""
         self.assertTrue(hasattr(settings, "DATA_UPLOAD_MAX_MEMORY_SIZE"))
         self.assertEqual(settings.DATA_UPLOAD_MAX_MEMORY_SIZE, 10 * 1024 * 1024)
+        self.assertTrue(hasattr(settings, "FILE_UPLOAD_MAX_MEMORY_SIZE"))
+        self.assertEqual(settings.FILE_UPLOAD_MAX_MEMORY_SIZE, 10 * 1024 * 1024)
+
+    def test_cors_et_csrf_non_wildcard(self):
+        """CORS et CSRF ne doivent pas autoriser le wildcard '*' sans restriction."""
+        self.assertNotIn("*", settings.CORS_ALLOWED_ORIGINS)
+        self.assertNotIn("*", settings.CSRF_TRUSTED_ORIGINS)

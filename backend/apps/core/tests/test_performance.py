@@ -168,3 +168,35 @@ class PerformanceListesTests(TestCase):
         with self.assertNumQueries(2):
             resp = self.client.get("/api/analytics/indicateurs/")
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_detection_regression_n_plus_1_si_reintroduit(self):
+        """Vérifie que l'omission d'une jointure sur N éléments produit bien N requêtes et échoue le seuil O(1)."""
+        # Sans select_related, accéder à p.porteur.email sur 15 projets exécute 1 + 15 = 16 requêtes
+        projets_sans_join = list(Projet.objects.all()[:15])
+        with self.assertRaises(AssertionError):
+            with self.assertNumQueries(2):
+                for p in projets_sans_join:
+                    _ = p.porteur.email
+
+    def test_comportement_proprietes_avec_et_sans_prefetch(self):
+        """Vérifie que pieces_manquantes et version_courante renvoient le même résultat avec ou sans cache prefetch."""
+        # 1. Dossier sans prefetch
+        dossier_brut = Dossier.objects.get(id=self.projets[0].dossier.id)
+        manquantes_brut = dossier_brut.pieces_manquantes
+
+        # Dossier avec prefetch
+        dossier_prefetched = Dossier.objects.prefetch_related("pieces").get(id=self.projets[0].dossier.id)
+        manquantes_prefetched = dossier_prefetched.pieces_manquantes
+
+        self.assertEqual(manquantes_brut, manquantes_prefetched)
+
+        # 2. Document sans prefetch
+        doc_brut = Document.objects.first()
+        version_brute = doc_brut.version_courante
+
+        # Document avec prefetch
+        doc_prefetched = Document.objects.prefetch_related("versions").get(id=doc_brut.id)
+        version_prefetched = doc_prefetched.version_courante
+
+        self.assertEqual(version_brute, version_prefetched)
+

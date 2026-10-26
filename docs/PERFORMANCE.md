@@ -1,12 +1,37 @@
 # Optimisation des performances des listes et élimination des requêtes N+1 — CIAT
 
-Ce document synthétise les résultats des profils de requêtes SQL, les optimisations architecturales apportées (jointures anticipées, préchargements mémoire, indexation relationnelle) et les règles d'or pour préserver des temps de réponse ultra-rapides (< 100 ms) sur la plateforme CIAT (Phase 3 — Tâche T3).
+Ce document synthétise les résultats des profils de requêtes SQL, les optimisations architecturales apportées (jointures anticipées `select_related`, préchargements mémoire `prefetch_related`, indexation relationnelle) et le protocole de reproduction sur la plateforme CIAT (Phase 3 — Tâche T3).
 
 ---
 
-## 1. Tableau comparatif Avant / Après
+## 1. Protocole de mesure et environnement de test
 
-Chaque endpoint de liste a été profilé avec `assertNumQueries` dans [apps/core/tests/test_performance.py](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/core/tests/test_performance.py). Les mesures comparent une base contenant $N = 20$ éléments par page.
+### Environnement de référence
+- **Framework** : Django 5.2.18, Django REST Framework 3.15
+- **Moteurs de base de données testés** :
+  - **SQLite 3** (développement local et tests automatisés en mémoire / fichier)
+  - **PostgreSQL 16** (cible recommandée pour la recette d'équipe et la production)
+- **Suite de tests automatisée** : [`backend/apps/core/tests/test_performance.py`](file:///backend/apps/core/tests/test_performance.py)
+- **Commande de reproduction** :
+  ```powershell
+  cd backend
+  .\.venv\Scripts\python manage.py test apps.core.tests.test_performance
+  ```
+
+### Méthodologie et métriques distinguées
+1. **Nombre de requêtes SQL (Prouvé formellement)** :
+   Vérifié de manière déterministe via `self.assertNumQueries(...)` avec un jeu de données de test de 15 projets, 15 dossiers, 30 pièces jointes, 15 fiches d'innovation, 15 jalons, 15 actualités et 10 documents.
+2. **Durée d'exécution SQL et temps de réponse HTTP (Estimations)** :
+   Les temps en millisecondes dépendent des capacités matérielles du serveur hôte, de la latence réseau et de la charge concurrente. Les estimations fournies ci-dessous correspondent à un serveur de production standard avec pool de connexions (`conn_max_age=600`).
+3. **Différences entre SQLite et PostgreSQL** :
+   - SQLite n'engendre aucune latence réseau par requête (appels directs en mémoire C).
+   - Sur PostgreSQL, chaque aller-retour SQL (Round-Trip Time) ajoute généralement 0,5 à 2 ms. Par conséquent, passer de 23 requêtes à 2 requêtes sur `/api/projets/` fait gagner plus de 30 ms de latence réseau brute sur PostgreSQL, là où le gain est principalement CPU sur SQLite.
+
+---
+
+## 2. Tableau comparatif Avant / Après
+
+Les mesures comparent une liste contenant $N = 15$ à $20$ éléments par page.
 
 | Endpoint | Nb requêtes Avant (N=20) | Complexité Avant | Nb requêtes Après | Complexité Après | Gain SQL | Temps estimé Après (PG) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -21,9 +46,9 @@ Chaque endpoint de liste a été profilé avec `assertNumQueries` dans [apps/cor
 
 ---
 
-## 2. Détail des optimisations techniques
+## 3. Détail des optimisations techniques
 
-### A. Élimination des pièges subtils de `values_list()` sur relations préchargées
+### A. Élimination des pièges de `values_list()` sur relations préchargées
 - **Problème identifié** : Dans le modèle `Dossier`, les propriétés `completude` et `pieces_manquantes` exécutaient `self.pieces.values_list("type", flat=True)`. Même avec `prefetch_related("pieces")`, appeler une méthode QuerySet (`.values_list()`, `.filter()`) sur un `RelatedManager` court-circuite le cache préchargé et émet une requête SQL supplémentaire par dossier sérialisé ($N$ requêtes).
 - **Correctif apporté** :
   ```python
@@ -32,7 +57,7 @@ Chaque endpoint de liste a été profilé avec `assertNumQueries` dans [apps/cor
       types_deposes = {p.type for p in self.pieces.all()}
       return [p.value for p in PIECES_OBLIGATOIRES if p.value not in types_deposes]
   ```
-  L'utilisation de `self.pieces.all()` réutilise intégralement le cache préchargé en mémoire vive.
+  L'utilisation de `self.pieces.all()` réutilise intégralement le cache préchargé en mémoire vive sans requête additionnelle, tout en renvoyant un résultat strictement identique lorsqu'aucun prefetch n'a été fait.
 
 ### B. Optimisation de la version courante des documents
 - **Problème identifié** : La sérialisation de la liste des documents (`/api/documents/`) lisait `document.version_courante`, qui appelait `self.versions.order_by("-numero").first()`, générant une requête SQL distincte pour chaque document.
@@ -59,9 +84,9 @@ Chaque endpoint de liste a été profilé avec `assertNumQueries` dans [apps/cor
 
 ---
 
-## 3. Nouveaux index ajoutés en base de données
+## 4. Index de base de données validés
 
-Les champs faisant l'objet de tris (`ORDER BY`) ou de filtres fréquents (`WHERE ... = ...`) ont été indexés via `db_index=True` dans les modèles et répercutés par des migrations Django :
+Les index ont été ajoutés de façon ciblée sur les colonnes subissant des tris fréquents (`ORDER BY`) ou des filtres restrictifs (`WHERE`) pour éviter tout surcoût inutile en écriture :
 
 | Modèle | Champ indexé | Migration | Justification métier et impact SQL |
 | :--- | :--- | :--- | :--- |
@@ -79,12 +104,12 @@ Les champs faisant l'objet de tris (`ORDER BY`) ou de filtres fréquents (`WHERE
 | `portal.AppelProjet` | `date_limite` | `portal.0003` | Calcul dynamique du statut ouvert/clos (`date_limite < NOW()`). |
 | `gallery.FicheInnovation` | `statut` | `gallery.0002` | Filtrage strict des fiches publiques (`statut = 'publie'`). |
 | `gallery.FicheInnovation` | `cree_le` | `gallery.0002` | Tri chronologique des innovations. |
-| `documents.Document` | `statut` | `documents.0003` | Workflow de validation et filtres documentaire. |
+| `documents.Document` | `statut` | `documents.0003` | Workflow de validation et filtres documentaires. |
 | `documents.Document` | `cree_le` | `documents.0003` | Tri chronologique de l'espace documentaire. |
 
 ---
 
-## 4. Règles d'or pour les futurs développements CIAT
+## 5. Règles architecturales pour prévenir les régressions
 
 1. **Toujours combiner `select_related` pour les ForeignKey directes** :
    Dès qu'un serializer affiche un champ lié (ex: `projet.domaine.nom` ou `user.get_full_name`), le queryset de la vue DOIT inclure `select_related("<relation>")`.

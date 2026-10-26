@@ -83,15 +83,6 @@ DATABASES = {
     )
 }
 
-# Support PostgreSQL >= 12 en développement local (Django 5.2 exige PG 14+ par défaut)
-if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
-    try:
-        from django.db.backends.postgresql.base import DatabaseWrapper
-
-        DatabaseWrapper.check_database_version_supported = lambda self: None
-    except Exception:
-        pass
-
 AUTH_USER_MODEL = "core.User"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -149,6 +140,23 @@ REST_FRAMEWORK = {
         "auth": "5/min",
     },
 }
+
+REDIS_URL = os.getenv("REDIS_URL", "")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "ciat-default-cache",
+        }
+    }
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
