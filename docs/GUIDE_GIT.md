@@ -16,13 +16,13 @@
 | Ibrahima | `Kalz` |
 | Pathé | `pathe` |
 | Maimouna | `dev-maimouna` |
-| Alioune | `dev-alioune` |
+| Alioune | `Alioune` |
 | Massogui | `dev-massogui` |
 
 ```
 main
 test
- ├─ dev-alioune                    (ta branche personnelle)
+ ├─ Alioune                    (ta branche personnelle)
  │    ├─ feature/analytics-api     (une tâche)
  │    └─ feature/analytics-graphiques   (une autre tâche)
  └─ dev-massogui
@@ -34,7 +34,7 @@ test
 2. Tu préviens Lansana : « Ma tâche est finie, branche `feature/...` ».
 3. Il la vérifie. Si c'est bon, il la fusionne dans **ta branche personnelle**, puis ta branche personnelle dans `test`.
 4. Sinon, il te signale l'erreur : tu corriges **sur la même branche** de fonctionnalité et tu le préviens à nouveau.
-5. Une fois fusionnée dans ta branche personnelle, ta branche de fonctionnalité est **supprimée** de GitHub par Lansana : ton travail reste dans ta branche personnelle. Il ne doit pas rester de branche de fonctionnalité terminée sur le dépôt.
+5. Ta branche de fonctionnalité **n'est jamais supprimée** après la fusion : elle reste sur GitHub comme preuve de ce que tu as développé, et permet de retrouver ton travail pour le mettre sous `test`.
 
 ## Première fois : récupérer le projet et créer ta branche personnelle
 
@@ -42,8 +42,8 @@ test
 git clone https://github.com/lansanacoly7/CIAT.git
 cd CIAT
 git checkout test
-git checkout -b dev-alioune          # remplace par le nom de ta branche personnelle
-git push -u origin dev-alioune
+git checkout -b Alioune          # remplace par le nom de ta branche personnelle
+git push -u origin Alioune
 ```
 Si ta branche personnelle existe déjà (Ibrahima, Pathé), fais seulement `git checkout Kalz` ou `git checkout pathe`, puis `git pull`.
 
@@ -53,8 +53,8 @@ Ensuite, installe et lance le projet en suivant le `README.md`.
 
 **1. Mettre ta branche personnelle à jour**
 ```bash
-git checkout dev-alioune
-git pull origin dev-alioune
+git checkout Alioune
+git pull origin Alioune
 git merge origin/test        # récupère le travail validé des autres
 ```
 
