@@ -158,7 +158,7 @@ function DepotDossier() {
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-start">
-          <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-4 sm:p-8">
+          <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-sm sm:p-8">
             {!submitted && (
               <div className="mb-8 border-b border-[#EFE4D6] pb-6">
                 <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} />

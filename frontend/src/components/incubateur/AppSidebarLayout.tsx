@@ -79,14 +79,6 @@ function IconLogout({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-function IconPortal({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-  );
-}
-
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -94,7 +86,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
 
   const isCoordonnateur = user?.role === "coordonnateur" || user?.role === "administrateur";
 
-  /* Liens spécifiques selon le rôle */
+  /* Liens spécifiques selon le rôle : Le porteur est 100% centré sur son parcours de candidature */
   const porteurLinks: NavItem[] = [
     { href: "/incubateur", label: "Dépôt de candidature", exact: true, icon: IconDocument },
     { href: "/incubateur/projets", label: "Suivi de mes projets", icon: IconFolder },
@@ -114,30 +106,27 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] lg:flex">
-      {/* 1. SIDEBAR DESKTOP FIXE */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-30 bg-[#24140D] text-white border-r border-[#3D2315] shadow-xl">
-        {/* En-tête Sidebar : Logo CIAT officiel blanc */}
-        <div className="flex h-20 items-center justify-between px-5 border-b border-[#3D2315] bg-[#1a0f0a]">
-          <Link href="/incubateur" className="flex items-center gap-3">
+      {/* 1. SIDEBAR DESKTOP FIXE — Fond unifié et fluide (#1F130B), aucun découpage artificiel */}
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-30 bg-[#1F130B] text-white shadow-xl">
+        {/* En-tête Sidebar : Logo CIAT officiel vectoriel */}
+        <div className="flex h-20 items-center justify-between px-6 pt-2">
+          <Link href="/incubateur" className="flex items-center">
             <Image
-              src="/images/brand/logo_blanc.png"
-              alt="Logo CIAT"
-              width={120}
-              height={43}
+              src="/images/brand/ciat_blanc_horizontal.svg"
+              alt="CIAT - Centre d'Innovation, d'Application et de Transfert"
+              width={140}
+              height={46}
               priority
-              className="h-8 w-auto object-contain"
+              className="h-9 w-auto object-contain"
             />
           </Link>
-          <span className="rounded-full bg-[#C99A68]/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#C99A68] uppercase">
-            {isCoordonnateur ? "Coordo" : "Porteur"}
-          </span>
         </div>
 
-        {/* Navigation principale */}
-        <div className="flex-1 overflow-y-auto px-3 py-6 space-y-6">
+        {/* Navigation principale fluide */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
           <div>
             <span className="px-3 text-[11px] font-bold tracking-wider text-[#A08F80] uppercase">
-              {isCoordonnateur ? "Coordination" : "Espace Candidat"}
+              {isCoordonnateur ? "Coordination Incubateur" : "Espace Candidat"}
             </span>
             <nav className="mt-3 space-y-1.5" aria-label="Menu applicatif">
               {navLinks.map((item) => {
@@ -149,8 +138,8 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-all ${
                       active
-                        ? "bg-[#612D10] text-white shadow-xs border-l-4 border-[#C99A68]"
-                        : "text-[#EBD9C0] hover:bg-white/5 hover:text-white"
+                        ? "bg-[#612D10] text-white shadow-sm border-l-4 border-[#C99A68]"
+                        : "text-[#D6C4B0] hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <Icon className={`h-5 w-5 shrink-0 ${active ? "text-[#C99A68]" : "text-[#A08F80]"}`} />
@@ -162,11 +151,11 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Pied de Sidebar : Profil utilisateur & Déconnexion */}
-        <div className="border-t border-[#3D2315] p-4 bg-[#1a0f0a] space-y-3">
+        {/* Pied de Sidebar unifié : Profil utilisateur & Vrai Bouton Quitter */}
+        <div className="p-4 space-y-3">
           {user && (
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C99A68] text-sm font-bold text-[#24140D]">
+            <div className="flex items-center gap-3 px-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C99A68] text-sm font-bold text-[#1F130B]">
                 {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">
@@ -180,35 +169,25 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-1 border-t border-[#3D2315]/60 text-xs">
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-[#A08F80] hover:text-white transition-colors"
-              title="Retour au portail public du CIAT"
-            >
-              <IconPortal className="h-4 w-4" />
-              <span>Portail public</span>
-            </Link>
-            <button
-              type="button"
-              onClick={logout}
-              className="flex items-center gap-1 text-[#DC2626] hover:text-[#EF4444] font-medium transition-colors"
-              title="Se déconnecter"
-            >
-              <IconLogout className="h-4 w-4" />
-              <span>Quitter</span>
-            </button>
-          </div>
+          {/* Vrai bouton Quitter avec bordure et survol rouge */}
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-[#D6C4B0] transition-all duration-200 hover:border-[#DC2626] hover:bg-[#DC2626] hover:text-white"
+          >
+            <IconLogout className="h-4 w-4" />
+            <span>Quitter</span>
+          </button>
         </div>
       </aside>
 
       {/* 2. TOPBAR MOBILE (< 1024px) */}
-      <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-[#EFE4D6] bg-[#24140D] px-4 text-white lg:hidden">
-        <Link href="/incubateur" className="flex items-center gap-2">
+      <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between bg-[#1F130B] px-4 text-white lg:hidden shadow-md">
+        <Link href="/incubateur" className="flex items-center">
           <Image
-            src="/images/brand/logo_blanc.png"
+            src="/images/brand/ciat_blanc_horizontal.svg"
             alt="Logo CIAT"
-            width={110}
+            width={120}
             height={40}
             priority
             className="h-7 w-auto object-contain"
@@ -217,7 +196,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-[#EBD9C0] hover:bg-white/10"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-[#D6C4B0] hover:bg-white/10"
           aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,10 +213,10 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setMobileOpen(false)} />
-          <div className="relative flex w-4/5 max-w-xs flex-1 flex-col bg-[#24140D] text-white p-5 space-y-6">
-            <div className="flex items-center justify-between border-b border-[#3D2315] pb-4">
+          <div className="relative flex w-4/5 max-w-xs flex-1 flex-col bg-[#1F130B] text-white p-5 space-y-6">
+            <div className="flex items-center justify-between pb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C99A68]">
-                {isCoordonnateur ? "Coordination CIAT" : "Espace Porteur"}
+                {isCoordonnateur ? "Coordination CIAT" : "Espace Candidat"}
               </span>
               <button
                 type="button"
@@ -261,7 +240,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`flex min-h-[44px] items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
-                      active ? "bg-[#612D10] text-white border-l-4 border-[#C99A68]" : "text-[#EBD9C0] hover:bg-white/5"
+                      active ? "bg-[#612D10] text-white border-l-4 border-[#C99A68]" : "text-[#D6C4B0] hover:bg-white/5"
                     }`}
                   >
                     <Icon className="h-5 w-5 shrink-0 text-[#C99A68]" />
@@ -271,25 +250,17 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
               })}
             </nav>
 
-            <div className="border-t border-[#3D2315] pt-4 space-y-3 text-sm">
-              <Link
-                href="/"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 text-[#A08F80] hover:text-white"
-              >
-                <IconPortal className="h-4 w-4" />
-                <span>Retour au portail public</span>
-              </Link>
+            <div className="pt-4">
               <button
                 type="button"
                 onClick={() => {
                   setMobileOpen(false);
                   logout();
                 }}
-                className="flex w-full items-center gap-2 text-[#DC2626] font-semibold"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-[#D6C4B0] hover:border-[#DC2626] hover:bg-[#DC2626] hover:text-white transition-all"
               >
                 <IconLogout className="h-4 w-4" />
-                <span>Déconnexion</span>
+                <span>Quitter</span>
               </button>
             </div>
           </div>
