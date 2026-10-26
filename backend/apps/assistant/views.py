@@ -16,6 +16,7 @@ from .serializers import (
     MessageAssistantSerializer,
 )
 from .services import (
+    ReponseIAInvalide,
     ServiceIAIndisponible,
     ServiceIANonConfigure,
     indexer_documents_publics,
@@ -108,6 +109,14 @@ class MessageListCreateView(APIView):
                     "erreur": str(exc),
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except ReponseIAInvalide as exc:
+            return Response(
+                {
+                    "detail": "Le modèle IA a renvoyé une réponse invalide après nouvelle tentative.",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
             )
         except ServiceIAIndisponible as exc:
             return Response(
