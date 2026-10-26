@@ -34,7 +34,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Header />
           </Suspense>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>
