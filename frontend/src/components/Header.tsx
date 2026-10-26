@@ -31,9 +31,10 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
+  const isAppPage = pathname.startsWith("/incubateur") || pathname === "/compte";
 
-  // Masquer totalement l'en-tête et la barre mobile sur les écrans d'authentification plein écran
-  if (isAuthPage) {
+  // Masquer totalement l'en-tête public du portail sur les écrans d'authentification et les espaces applicatifs avec Sidebar
+  if (isAuthPage || isAppPage) {
     return null;
   }
 
