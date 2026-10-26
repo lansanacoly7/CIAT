@@ -130,97 +130,148 @@ function DepotDossier() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-[#EFE4D6] pb-3">
-        <span className="rounded-lg bg-[#612D10] px-4 py-2 text-xs font-bold text-white shadow-xs">
-          📝 Dépôt de dossier
-        </span>
-        <Link
-          href="/incubateur/projets"
-          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
-        >
-          🎯 Suivi des projets
-        </Link>
-        <Link
-          href="/incubateur/alertes"
-          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
-        >
-          🚨 Alertes de retard
-        </Link>
-        <Link
-          href="/incubateur/evaluation"
-          className="rounded-lg border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#6b5646] hover:bg-[#FAF7F2] hover:text-[#612D10] transition-colors"
-        >
-          ⚖️ Évaluations comité
-        </Link>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE4D6] pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#612D10] sm:text-3xl">Dépôt de dossier</h1>
+          <p className="mt-1 text-sm text-[#6b5646]">Présentez votre projet au CIAT en trois étapes.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {dossier && !submitted && (
+            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#C99A68]/60 bg-[#FAF7F2] px-3 text-xs font-semibold text-[#612D10]">
+              <span aria-hidden className="h-2 w-2 rounded-full bg-[#C99A68]" />
+              Brouillon enregistré · Dossier n°{dossier.id}
+            </span>
+          )}
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex min-h-11 items-center rounded-lg border border-[#EFE4D6] bg-white px-4 text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
+          >
+            Suivi de mes projets
+          </Link>
+        </div>
       </div>
-
-      <h1 className="text-2xl font-bold text-[#612D10] sm:text-3xl">Dépôt de dossier</h1>
-      <p className="mb-6 mt-1 text-sm text-[#6b5646]">Présentez votre projet au CIAT en trois étapes.</p>
 
       {!ready ? (
         <div className="flex justify-center py-16" role="status" aria-label="Chargement">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#C99A68] border-t-[#612D10]" />
         </div>
       ) : (
-        <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-4 sm:p-8">
-          {!submitted && (
-            <div className="mb-6">
-              <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} />
-            </div>
-          )}
-
-          {loadError && (
-            <div role="alert" className="mb-4 rounded-md border border-[#DC2626]/40 bg-[#DC2626]/5 px-3 py-2 text-sm text-[#DC2626]">
-              {loadError}
-            </div>
-          )}
-
-          {step === 0 && (
-            <ProjectInfoStep initial={info} domaines={domaines} saving={saving} error={saveError} onSubmit={saveInfo} />
-          )}
-
-          {step === 1 && dossier && (
-            <div className="space-y-6">
-              <CompletenessGauge completude={dossier.completude} piecesManquantes={dossier.pieces_manquantes} />
-              <FileUploader dossier={dossier} onChange={setDossier} />
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-                <button
-                  type="button"
-                  onClick={() => goTo(0)}
-                  className="min-h-11 rounded-md border-[1.5px] border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
-                >
-                  Retour
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMaxReached(2);
-                    goTo(2);
-                  }}
-                  className="min-h-11 rounded-md bg-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-white transition-colors hover:bg-[#3F1D0A]"
-                >
-                  Continuer vers le récapitulatif
-                </button>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-start">
+          <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-4 sm:p-8">
+            {!submitted && (
+              <div className="mb-8 border-b border-[#EFE4D6] pb-6">
+                <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} />
               </div>
-            </div>
-          )}
+            )}
 
-          {step === 2 && dossier && (
-            <SummaryStep
-              info={info}
-              domaines={domaines}
-              dossier={dossier}
-              submitting={submitting}
-              submitted={submitted}
-              error={submitError}
-              onEdit={goTo}
-              onSubmit={submitDossier}
-            />
-          )}
+            {loadError && (
+              <div role="alert" className="mb-4 rounded-lg border border-[#DC2626]/40 bg-[#DC2626]/5 px-3 py-2 text-sm text-[#DC2626]">
+                {loadError}
+              </div>
+            )}
+
+            {/* L'étape 1 reste montée (simplement masquée) pour ne perdre aucune saisie en navigant. */}
+            <div className={step === 0 ? "" : "hidden"}>
+              <ProjectInfoStep initial={info} domaines={domaines} saving={saving} error={saveError} onSubmit={saveInfo} />
+            </div>
+
+            {step === 1 && dossier && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-[#612D10]">Déposez vos pièces justificatives</h2>
+                  <p className="mt-1 text-sm text-[#6b5646]">
+                    Trois documents sont obligatoires pour que le comité puisse examiner votre candidature.
+                  </p>
+                </div>
+                <CompletenessGauge
+                  completude={dossier.completude}
+                  piecesManquantes={dossier.pieces_manquantes}
+                  pieces={dossier.pieces}
+                />
+                <FileUploader dossier={dossier} onChange={setDossier} />
+                <div className="flex flex-col-reverse gap-3 border-t border-[#EFE4D6] pt-5 sm:flex-row sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={() => goTo(0)}
+                    className="min-h-12 rounded-lg border-[1.5px] border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMaxReached(2);
+                      goTo(2);
+                    }}
+                    className="min-h-12 rounded-lg bg-[#612D10] px-8 font-[family-name:var(--font-title)] font-semibold text-white transition-colors hover:bg-[#3F1D0A]"
+                  >
+                    Continuer vers le récapitulatif
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && dossier && (
+              <SummaryStep
+                info={info}
+                domaines={domaines}
+                dossier={dossier}
+                submitting={submitting}
+                submitted={submitted}
+                error={submitError}
+                onEdit={goTo}
+                onSubmit={submitDossier}
+              />
+            )}
+          </div>
+
+          {!submitted && <ConseilsCiat />}
         </div>
       )}
     </div>
+  );
+}
+
+function ConseilsCiat() {
+  return (
+    <aside
+      aria-labelledby="conseils-titre"
+      className="rounded-xl border border-[#EFE4D6] bg-white p-5 shadow-sm lg:sticky lg:top-24"
+    >
+      <h2 id="conseils-titre" className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
+        Conseils CIAT pour votre candidature
+      </h2>
+      <div className="mt-4 space-y-4 text-sm leading-relaxed text-[#24140D]">
+        <section>
+          <h3 className="font-semibold text-[#612D10]">Problème et solution</h3>
+          <p className="text-[#6b5646]">
+            Partez d&apos;un besoin réel et chiffré si possible. Décrivez qui est concerné, puis ce que votre solution change concrètement.
+          </p>
+        </section>
+        <section>
+          <h3 className="font-semibold text-[#612D10]">Pièces à fournir</h3>
+          <p className="text-[#6b5646]">
+            Fiche de projet, présentation de l&apos;équipe et budget prévisionnel. Formats PDF ou Word, 10 Mo maximum par fichier.
+          </p>
+        </section>
+        <section>
+          <h3 className="font-semibold text-[#612D10]">Ce que le comité examine</h3>
+          <ul className="list-inside list-disc text-[#6b5646]">
+            <li>La pertinence du problème</li>
+            <li>La clarté et l&apos;innovation de la solution</li>
+            <li>La solidité de l&apos;équipe</li>
+            <li>La cohérence du budget</li>
+          </ul>
+        </section>
+        <section className="rounded-lg bg-[#FAF7F2] p-3">
+          <h3 className="font-semibold text-[#612D10]">Brouillon enregistré</h3>
+          <p className="text-[#6b5646]">
+            Vos informations sont enregistrées à chaque étape validée : vous pouvez quitter la page et reprendre plus tard.
+          </p>
+        </section>
+      </div>
+    </aside>
   );
 }
 
