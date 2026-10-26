@@ -68,9 +68,12 @@ def _construire_prompts(
         "Tu rédiges avec un ton institutionnel rigoureux, soutenu, clair et professionnel en langue française.\n"
         "Règles impératives :\n"
         "1. Respecte scrupuleusement la charte éditoriale et graphique du CIAT/ISEP.\n"
-        "2. Interdiction absolue d'inventer des chiffres, budgets, dates, noms de personnes ou organisations "
-        "qui ne figurent pas dans les informations transmises.\n"
-        "3. Rends obligatoirement ta réponse sous la forme d'un objet JSON valide contenant pour chaque "
+        "2. Règle de priorité des informations : Les « infos » saisies par l'utilisateur ont priorité sur les données du projet lié. "
+        "En cas de conflit (par exemple sur le nom du porteur, les dates ou le budget), utilise impérativement les informations fournies dans « infos ».\n"
+        "3. Interdiction formelle d'inventer : Ne jamais inventer de chiffres, budgets, dates, noms de personnes, organismes, règles, obligations, "
+        "procédures, délais ou clauses juridiques absents des données fournies. "
+        "Quand une information nécessaire manque, écris obligatoirement « [À COMPLÉTER : ...] » au lieu de l'inventer.\n"
+        "4. Rends obligatoirement ta réponse sous la forme d'un objet JSON valide contenant pour chaque "
         "code de section requis le texte complet rédigé sous forme de chaîne de caractères.\n"
         "Exemple de format attendu : { \"code_section_1\": \"Texte rédigé...\", \"code_section_2\": \"Texte rédigé...\" }"
     )
@@ -99,9 +102,17 @@ def _construire_prompts(
         )
 
     if infos:
-        user_prompt_lines.append("\n## Informations complémentaires fournies")
+        user_prompt_lines.append("\n## Informations complémentaires fournies par l'utilisateur (« infos »)")
         for k, v in infos.items():
             user_prompt_lines.append(f"- **{k} :** {v}")
+
+    user_prompt_lines.append(
+        "\n## Consignes impératives de rigueur factuelle et de priorité\n"
+        "- Priorité absolue des « infos » : Les « infos » saisies par l'utilisateur ont priorité sur les données du projet lié. "
+        "En cas de conflit (par exemple le nom du porteur ou des dates), utilise les « infos ».\n"
+        "- Interdiction stricte d'inventer : N'invente aucune règle, obligation, procédure, organisme, délai ou clause juridique "
+        "absent des données fournies. Quand une information nécessaire manque, écris obligatoirement « [À COMPLÉTER : ...] » au lieu de l'inventer."
+    )
 
     user_prompt_lines.append("\n## Sections obligatoires à rédiger")
     for sec in modele.sections:
