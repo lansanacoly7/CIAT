@@ -110,6 +110,8 @@ export default function ContactPage() {
           apiErrors[key] = msgs[0];
         }
         setErrors(apiErrors);
+      } else {
+        setErrors({ form: res.message || "Une erreur est survenue lors de l'envoi. Veuillez réessayer." });
       }
     } catch {
       setErrors({ form: "Une erreur est survenue lors de l'envoi. Veuillez réessayer." });

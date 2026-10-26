@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, Button, ButtonLink, Card, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, Badge, Button, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import { getPartenaires, type Partenaire } from "@/lib/portal-api";
 
 const TYPE_CONFIG = {
@@ -16,6 +16,7 @@ export default function PartenairesPage() {
   const [filterType, setFilterType] = useState<string>("tous");
   const [loading, setLoading] = useState(true);
   const [fromApi, setFromApi] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPartenaires = () => {
@@ -25,11 +26,14 @@ export default function PartenairesPage() {
       .then((res) => {
         setItems(res.items);
         setFromApi(res.fromApi);
-        if (res.error) setError(res.error);
+        setIsDemo(Boolean(res.isDemo));
+        setError(res.error);
         setLoading(false);
       })
       .catch(() => {
-        setError("Impossible de charger les partenaires. Veuillez réessayer.");
+        setError("Les partenaires sont momentanément indisponibles. Réessayez plus tard.");
+        setItems([]);
+        setIsDemo(false);
         setLoading(false);
       });
   };
@@ -41,13 +45,16 @@ export default function PartenairesPage() {
         if (!ignore) {
           setItems(res.items);
           setFromApi(res.fromApi);
-          if (res.error) setError(res.error);
+          setIsDemo(Boolean(res.isDemo));
+          setError(res.error);
           setLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setError("Impossible de charger les partenaires. Veuillez réessayer.");
+          setError("Les partenaires sont momentanément indisponibles. Réessayez plus tard.");
+          setItems([]);
+          setIsDemo(false);
           setLoading(false);
         }
       });
@@ -70,57 +77,63 @@ export default function PartenairesPage() {
         subtitle="Institutions régaliennes, pôles universitaires, fonds d'amorçage et industriels engagés aux côtés du CIAT pour dynamiser le transfert de technologie et la valorisation des compétences à Diamniadio."
       />
 
+      {/* Mode Démonstration si activé explicitement */}
+      {isDemo && <DemoBanner className="mb-6" />}
+
+      {/* État d'erreur réseau */}
+      {error && (
+        <ApiErrorBanner
+          message={error}
+          onRetry={fetchPartenaires}
+          className="mb-8"
+        />
+      )}
+
       {/* Barre d'état source */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-xs text-texte-doux">
-          {filteredItems.length} {filteredItems.length > 1 ? "partenaires répertoriés" : "partenaire répertorié"}
-        </p>
-        <Badge tone={fromApi ? "succes" : "neutre"}>
-          {fromApi ? "Connecté à l'API" : "Réseau certifié ISEP / CIAT"}
-        </Badge>
-      </div>
+      {!error && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-xs text-texte-doux">
+            {filteredItems.length} {filteredItems.length > 1 ? "partenaires répertoriés" : "partenaire répertorié"}
+          </p>
+          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
+            {fromApi ? "Connecté à l'API" : isDemo ? "Mode démo" : "CIAT"}
+          </Badge>
+        </div>
+      )}
 
       {/* Filtres par typologie */}
-      <div className="mb-8 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setFilterType("tous")}
-          className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-            filterType === "tous"
-              ? "bg-brun text-white shadow-sm"
-              : "border border-bordure bg-white text-texte hover:bg-ivoire"
-          }`}
-        >
-          Tous les partenaires ({items.length})
-        </button>
+      {!error && items.length > 0 && (
+        <div className="mb-8 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setFilterType("tous")}
+            className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+              filterType === "tous"
+                ? "bg-brun text-white shadow-sm"
+                : "border border-bordure bg-white text-texte hover:bg-ivoire"
+            }`}
+          >
+            Tous les partenaires ({items.length})
+          </button>
 
-        {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
-          const count = items.filter((p) => p.type === key).length;
-          const active = filterType === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setFilterType(key)}
-              className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
-                active
-                  ? "bg-brun text-white shadow-sm"
-                  : "border border-bordure bg-white text-texte hover:bg-ivoire"
-              }`}
-            >
-              {cfg.label} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* État d'erreur */}
-      {error && (
-        <div className="mb-8 rounded-xl border border-erreur bg-[#f6dedc] p-4 text-sm text-erreur flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="secondary" onClick={fetchPartenaires} className="!min-h-[36px] text-xs">
-            Réessayer
-          </Button>
+          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
+            const count = items.filter((p) => p.type === key).length;
+            const active = filterType === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFilterType(key)}
+                className={`min-h-[44px] rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+                  active
+                    ? "bg-brun text-white shadow-sm"
+                    : "border border-bordure bg-white text-texte hover:bg-ivoire"
+                }`}
+              >
+                {cfg.label} ({count})
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -141,7 +154,7 @@ export default function PartenairesPage() {
             </div>
           ))}
         </div>
-      ) : filteredItems.length === 0 ? (
+      ) : error && items.length === 0 ? null : filteredItems.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun partenaire dans cette catégorie pour le moment.</p>
           <div className="mt-4">
