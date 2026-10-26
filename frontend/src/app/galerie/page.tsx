@@ -156,11 +156,22 @@ export default function GaleriePage() {
         {isDemo && <DemoBanner className="mb-6" />}
 
         {/* Titre et Présentation */}
-        <PageTitle
-          tag="Vitrine Technologique CIAT"
-          title="Galerie des Innovations"
-          subtitle="Explorez les solutions technologiques, prototypes validés et projets industriels incubés au Centre d'Innovation, d'Application et de Transfert de l'ISEP Diamniadio."
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <PageTitle
+            tag="Vitrine Technologique CIAT"
+            title="Galerie des Innovations"
+            subtitle="Explorez les solutions technologiques, prototypes validés et projets industriels incubés au Centre d'Innovation, d'Application et de Transfert de l'ISEP Diamniadio."
+          />
+          <div className="shrink-0 mb-8 sm:mb-0">
+            <ButtonLink
+              href="/galerie/gestion"
+              variant="secondary"
+              className="text-xs font-bold shadow-xs"
+            >
+              ⚙️ Espace Porteur & Gestion →
+            </ButtonLink>
+          </div>
+        </div>
 
         {/* Bandeau d'erreur API si panne */}
         {error && (
