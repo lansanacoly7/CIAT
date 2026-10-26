@@ -7,3 +7,6 @@
 3. **README** : « 5 parcours critiques » alors que la liste en contient 6. Corrige le nombre.
 
 Vérifie ensuite `npm run lint`, `npm run build` et pousse `Alioune`.
+
+## Information
+Tes retraits d'emojis dans les pages de l'incubateur sont déjà dans `test`. Maimouna modifie les mêmes pages (`incubateur/page.tsx`, `alertes`, `projets`) : c'est elle qui résoudra les conflits en tirant `test`. Ne retouche plus ces fichiers, ils ne sont pas dans ton domaine.

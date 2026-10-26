@@ -20,3 +20,6 @@
 - **Tu attends :** les corrections ci-dessus fusionnées, et les images de démonstration de Lansana.
 - **Attendu par :** Lansana (livrable maquettes), Massogui (vidéo).
 - **Terminé quand :** chaque écran principal a sa capture desktop et mobile à jour, sans page vide ni erreur.
+
+## Attention : conflits attendus
+Alioune a retiré des emojis dans `incubateur/page.tsx`, `incubateur/alertes/page.tsx` et `incubateur/projets/page.tsx`, déjà fusionné dans `test`. En tirant `test`, tu auras des conflits sur ces fichiers : garde ta version (refonte) et ne remets pas d'emojis.
