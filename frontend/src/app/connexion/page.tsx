@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
+import AuthSplitLayout from "@/components/AuthSplitLayout";
 import {
-  AuthCard,
   Field,
   FormError,
   SubmitButton,
@@ -51,7 +51,7 @@ function ConnexionForm() {
   const inscriptionHref = next ? `/inscription?next=${encodeURIComponent(next)}` : "/inscription";
 
   return (
-    <AuthCard title="Connexion" subtitle="Accédez à votre espace CIAT.">
+    <AuthSplitLayout title="Connexion" subtitle="Accédez à votre espace CIAT.">
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         <FormError message={error} />
         <Field
@@ -83,7 +83,7 @@ function ConnexionForm() {
           S&apos;inscrire
         </Link>
       </p>
-    </AuthCard>
+    </AuthSplitLayout>
   );
 }
 
