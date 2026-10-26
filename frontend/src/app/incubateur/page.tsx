@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
@@ -130,25 +131,45 @@ function DepotDossier() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE4D6] pb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#612D10] sm:text-3xl">Dépôt de dossier</h1>
-          <p className="mt-1 text-sm text-[#6b5646]">Présentez votre projet au CIAT en trois étapes.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {dossier && !submitted && (
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#C99A68]/60 bg-[#FAF7F2] px-3 text-xs font-semibold text-[#612D10]">
-              <span aria-hidden className="h-2 w-2 rounded-full bg-[#C99A68]" />
-              Brouillon enregistré · Dossier n°{dossier.id}
-            </span>
-          )}
-          <Link
-            href="/incubateur/projets"
-            className="inline-flex min-h-11 items-center rounded-lg border border-[#EFE4D6] bg-white px-4 text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
-          >
-            Suivi de mes projets
-          </Link>
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      {/* En-tête immersif et institutionnel */}
+      <div className="mb-8 rounded-2xl border border-[#EFE4D6] bg-white p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#612D10]/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                <span className="h-2 w-2 rounded-full bg-[#C99A68]" />
+                Incubateur CIAT · ISEP Diamniadio
+              </span>
+              <span className="inline-flex items-center rounded-full border border-[#C99A68]/40 bg-[#FAF7F2] px-2.5 py-0.5 text-xs font-semibold text-[#612D10]">
+                Cohorte 2026
+              </span>
+            </div>
+            <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold text-[#612D10] sm:text-3xl">
+              Dépôt de candidature
+            </h1>
+            <p className="text-sm text-[#6b5646] sm:text-base">
+              Candidatez à l’accompagnement du CIAT pour prototyper, valider et accélérer votre innovation technologique.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {dossier && !submitted && (
+              <span className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#C99A68]/50 bg-[#FAF7F2] px-3.5 text-xs font-semibold text-[#612D10]">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-[#2E7D32]" />
+                Brouillon enregistré · Dossier n°{dossier.id}
+              </span>
+            )}
+            <Link
+              href="/incubateur/projets"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#612D10] bg-white px-4 text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Suivi de mes projets
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -157,8 +178,8 @@ function DepotDossier() {
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#C99A68] border-t-[#612D10]" />
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-start">
-          <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-sm sm:p-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)] lg:items-start">
+          <div className="rounded-2xl border border-[#EFE4D6] bg-white p-6 shadow-sm sm:p-8">
             {!submitted && (
               <div className="mb-8 border-b border-[#EFE4D6] pb-6">
                 <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} />
@@ -226,50 +247,121 @@ function DepotDossier() {
             )}
           </div>
 
-          {!submitted && <ConseilsCiat />}
+          {!submitted && <AccompagnementCiat step={step} />}
         </div>
       )}
     </div>
   );
 }
 
-function ConseilsCiat() {
+function AccompagnementCiat({ step }: { step: number }) {
   return (
-    <aside
-      aria-labelledby="conseils-titre"
-      className="rounded-xl border border-[#EFE4D6] bg-white p-5 shadow-sm lg:sticky lg:top-24"
-    >
-      <h2 id="conseils-titre" className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
-        Conseils CIAT pour votre candidature
-      </h2>
-      <div className="mt-4 space-y-4 text-sm leading-relaxed text-[#24140D]">
-        <section>
-          <h3 className="font-semibold text-[#612D10]">Problème et solution</h3>
-          <p className="text-[#6b5646]">
-            Partez d&apos;un besoin réel et chiffré si possible. Décrivez qui est concerné, puis ce que votre solution change concrètement.
-          </p>
-        </section>
-        <section>
-          <h3 className="font-semibold text-[#612D10]">Pièces à fournir</h3>
-          <p className="text-[#6b5646]">
-            Fiche de projet, présentation de l&apos;équipe et budget prévisionnel. Formats PDF ou Word, 10 Mo maximum par fichier.
-          </p>
-        </section>
-        <section>
-          <h3 className="font-semibold text-[#612D10]">Ce que le comité examine</h3>
-          <ul className="list-inside list-disc text-[#6b5646]">
-            <li>La pertinence du problème</li>
-            <li>La clarté et l&apos;innovation de la solution</li>
-            <li>La solidité de l&apos;équipe</li>
-            <li>La cohérence du budget</li>
-          </ul>
-        </section>
-        <section className="rounded-lg bg-[#FAF7F2] p-3">
-          <h3 className="font-semibold text-[#612D10]">Brouillon enregistré</h3>
-          <p className="text-[#6b5646]">
-            Vos informations sont enregistrées à chaque étape validée : vous pouvez quitter la page et reprendre plus tard.
-          </p>
-        </section>
+    <aside aria-labelledby="accompagnement-titre" className="space-y-6 lg:sticky lg:top-8">
+      <div className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white shadow-sm">
+        <div className="relative h-48 w-full bg-[#24140D] sm:h-52">
+          <Image
+            src="/images/ciat-depot-innovation.jpg"
+            alt="Atelier d'innovation et prototypage technologique au CIAT"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1F130B]/90 via-[#1F130B]/30 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <span className="inline-block rounded-md bg-[#C99A68] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1F130B]">
+              Atelier d&apos;Éclosion
+            </span>
+            <p className="mt-1 font-[family-name:var(--font-title)] text-xs font-semibold leading-tight text-white/95">
+              Laboratoire de prototypage & transfert technologique
+            </p>
+          </div>
+        </div>
+
+        <div className="p-5">
+          <h2 id="accompagnement-titre" className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
+            Conseils pour votre candidature
+          </h2>
+
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-[#24140D]">
+            {step === 0 && (
+              <div className="space-y-3">
+                <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    1. Le problème identifié
+                  </h3>
+                  <p className="mt-1 text-xs text-[#6b5646]">
+                    Partez d&apos;un besoin réel du terrain. Précisez qui subit ce dysfonctionnement et quel est son impact concret.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    2. La solution proposée
+                  </h3>
+                  <p className="mt-1 text-xs text-[#6b5646]">
+                    Expliquez en quoi votre prototype ou méthode apporte une réponse plus accessible, performante ou durable.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="space-y-3">
+                <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    Pièces obligatoires (100% requis)
+                  </h3>
+                  <ul className="mt-2 space-y-1.5 text-xs text-[#6b5646]">
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                      <strong>Fiche de projet</strong> : Résumé structuré
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                      <strong>Présentation équipe</strong> : Compétences clés
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                      <strong>Budget prévisionnel</strong> : Estimation claire
+                    </li>
+                  </ul>
+                </div>
+                <p className="text-xs text-[#6b5646]">
+                  Formats acceptés : PDF ou Word (.docx). Limite : 10 Mo par document.
+                </p>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-3">
+                <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    Instruction par le comité
+                  </h3>
+                  <p className="mt-1 text-xs text-[#6b5646]">
+                    Votre dossier sera instruit sous 10 jours ouvrés. Vous recevrez une notification par email dès que l&apos;évaluation sera disponible.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    Mentorat & Prototypage
+                  </h3>
+                  <p className="mt-1 text-xs text-[#6b5646]">
+                    Les projets admis bénéficient de l&apos;accès au FabLab, aux bancs d&apos;essais de l&apos;ISEP et d&apos;un mentor attitré.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-[#EFE4D6] pt-3 text-xs text-[#6b5646]">
+              <p className="flex items-center gap-1.5 font-medium text-[#612D10]">
+                <svg className="h-4 w-4 text-[#2E7D32]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Sauvegarde automatique à chaque étape validée
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   );
