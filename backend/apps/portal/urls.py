@@ -5,6 +5,7 @@ from .views import (
     ActualiteViewSet,
     AppelProjetViewSet,
     DocumentPublicViewSet,
+    EvenementCalendrierICSView,
     EvenementViewSet,
     MessageContactViewSet,
     PartenaireViewSet,
@@ -27,5 +28,6 @@ router.register(r"contact", MessageContactViewSet, basename="contact")
 router.register(r"projets-incubes", ProjetIncubeViewSet, basename="projet-incube")
 
 urlpatterns = [
+    path("evenements/calendrier.ics", EvenementCalendrierICSView.as_view(), name="evenements-calendrier-ics"),
     path("statistiques/", StatistiquesPortailView.as_view(), name="portal-statistiques"),
 ] + router.urls

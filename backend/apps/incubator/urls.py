@@ -3,6 +3,7 @@ from django.urls import path
 
 from .views import (
     AlerteJalonListView,
+    DossierAccuseReceptionView,
     DossierDecisionView,
     DossierDetailView,
     DossierEvaluationListCreateView,
@@ -59,6 +60,11 @@ urlpatterns = [
         "dossiers/<int:pk>/soumettre/",
         DossierSoumettreView.as_view(),
         name="dossier-soumettre",
+    ),
+    path(
+        "dossiers/<int:pk>/accuse/",
+        DossierAccuseReceptionView.as_view(),
+        name="dossier-accuse",
     ),
     # Grille d'évaluation
     path("grilles/actuelle/", GrilleActuelleView.as_view(), name="grille-actuelle"),
