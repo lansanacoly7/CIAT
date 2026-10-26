@@ -112,12 +112,12 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         <div className="flex h-20 items-center justify-between px-6 pt-2">
           <Link href="/incubateur" className="flex items-center">
             <Image
-              src="/images/brand/ciat_blanc_horizontal.svg"
+              src="/images/brand/logo_blanc.png"
               alt="CIAT - Centre d'Innovation, d'Application et de Transfert"
               width={140}
-              height={46}
+              height={51}
               priority
-              className="h-9 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </Link>
         </div>
@@ -185,12 +185,12 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
       <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between bg-[#1F130B] px-4 text-white lg:hidden shadow-md">
         <Link href="/incubateur" className="flex items-center">
           <Image
-            src="/images/brand/ciat_blanc_horizontal.svg"
+            src="/images/brand/logo_blanc.png"
             alt="Logo CIAT"
             width={120}
-            height={40}
+            height={44}
             priority
-            className="h-7 w-auto object-contain"
+            className="h-8 w-auto object-contain"
           />
         </Link>
         <button
