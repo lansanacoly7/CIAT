@@ -8,6 +8,7 @@ Vérifie l'intégralité des critères d'acceptation :
 import shutil
 from datetime import timedelta
 
+from django.test import override_settings
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
