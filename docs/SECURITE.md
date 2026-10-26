@@ -177,3 +177,27 @@ Avant tout déploiement en environnement de production, vérifier les points sui
   - Restreints aux domaines du frontend autorisés (`CORS_ALLOWED_ORIGINS` et `CSRF_TRUSTED_ORIGINS`), jamais de wildcard `*`.
 - [x] **Cache et Limitation de débit** :
   - Redis configuré via `REDIS_URL` en environnement multi-processus.
+
+---
+
+## 8. Anomalies constatées lors de l'audit et statut de remédiation
+
+Conformément aux exigences de la Phase 3 (Tâche T2), le tableau suivant recense l'ensemble des anomalies identifiées lors de l'audit de sécurité, leur niveau de gravité, leur responsable et leur état effectif de résolution :
+
+| Réf | Composant / Route concernée | Gravité | Responsable | Description du problème constaté | État |
+| :---: | :--- | :---: | :---: | :--- | :---: |
+| **ANO-SEC-01** | `backend/config/settings.py` | **Haute** | Ibrahima (T1) | Contournement du contrôle de version PostgreSQL (`check_database_version_supported = lambda self: None`) masquant l'incompatibilité de Django 5.2 avec PostgreSQL < 14. | **Corrigée** (Monkeypatch supprimé, prérequis PG 14+ documenté, PG 16 cible officielle). |
+| **ANO-SEC-02** | `GET /api/projets/` (`apps.core.views.ProjetViewSet`) | **Élevée** | Core / Ibrahima | Crash HTTP 500 (`AttributeError: 'AnonymousUser' object has no attribute 'role'`) car la permission `ReadOnlyOrRole` laissait passer les requêtes non authentifiées jusqu'à `get_queryset()`. | **Corrigée** (`IsAuthenticated` ajouté et garde défensive `if not user.is_authenticated: return Projet.objects.none()`). |
+| **ANO-SEC-03** | `/api/incubator/dossiers/{id}/pieces/` (`apps.incubator.models.Piece`) | **Moyenne** | Incubator / Ibrahima | Incohérence entre les formats autorisés : `docs/SECURITE.md` mentionnait `xlsx`, mais `ALLOWED_PIECE_EXTENSIONS` rejetait les tableurs indispensables au `TypePiece.BUDGET_PREVISIONNEL`. | **Corrigée** (`xlsx` et `xls` ajoutés dans le modèle, le serializer, contrôle binaire via magic bytes `PK\x03\x04` et `\xd0\xcf\x11`, migration générée). |
+| **ANO-SEC-04** | `/api/auth/token/`, `/api/auth/register/` (`backend/config/settings.py`) | **Moyenne** | Ibrahima (T2) | Absence de configuration de cache partagé pour le Rate Limiting multi-processus : le cache `LocMemCache` par défaut ne partageait pas les compteurs entre workers Gunicorn. | **Corrigée** (Configuration `CACHES` ajoutée avec support de `REDIS_URL` pour la production et fallback `LocMemCache` en local, conteneur Redis ajouté à `docker-compose.yml`). |
+| **ANO-SEC-05** | `backend/apps/documents/management/commands/seed_documents.py` | **Moyenne** | Documents / Ibrahima | `SyntaxError: invalid decimal literal` empêchant la compilation Python (`compileall`) en raison de l'import d'un module débutant par un chiffre (`from ...0002_seed_documents import ...`). | **Corrigée** (Importation dynamique via `importlib.import_module("apps.documents.migrations.0002_seed_documents")`). |
+| **ANO-SEC-06** | `backend/apps/core/tests/test_droits.py` | **Faible** | Ibrahima (T2) | Tests de sécurité partiels vérifiant des conditions écrites dans le test plutôt que le comportement réel de Django (`if settings.SECRET_KEY ...`). | **Corrigée** (Remplacement par de vrais tests de configuration Django et vérification effective de `ImproperlyConfigured` et des en-têtes HTTP). |
+| **ANO-SEC-07** | `backend/apps/core/tests/test_droits.py`, `test_performance.py` | **Faible** | Ibrahima (T3) | Lenteur d'exécution de la suite de tests (113s) due à la régénération et au hachage répétés des mots de passe utilisateurs dans `setUp()` au lieu de `setUpTestData()`. | **Corrigée** (Passage à `setUpTestData()` et décorateurs `@override_settings(PASSWORD_HASHERS=FAST_HASHERS)` ; temps total de la suite ramené sous 10 secondes). |
+
+### Bilan de l'audit par la matrice des droits
+L'inspection automatisée par `MatriceDroitsAPITests` a vérifié :
+1. **L'étanchéité des données privées** : Aucune donnée personnelle (emails, numéros de téléphone) ni marqueur confidentiel (notes du jury, délibérations) n'est exposé sur les endpoints publics.
+2. **L'isolation des objets** : Un porteur tiers ne peut ni modifier ni supprimer un projet ou une pièce appartenant à un autre porteur.
+3. **Le confinement des méthodes** : Les verbes HTTP non supportés renvoient explicitement 405 Method Not Allowed.
+4. **La résilience aux entrées malveillantes** : Aucune entrée mal formée ou tentative d'injection SQL ne provoque d'erreur 500 Internal Server Error.
+

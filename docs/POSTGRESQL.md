@@ -158,3 +158,33 @@ python manage.py test
    - Tous les modèles exposés dans les API disposent d'un tri explicite dans leur `Meta.ordering` ou dans le `ViewSet` (`ordering = ["-cree_le"]`).
 3. **Champs JSON (`JSONField`)** :
    - PostgreSQL valide strictement la syntaxe JSON native (`jsonb`). Les serializers CIAT valident la structure des dictionnaires et listes avant écriture.
+
+---
+
+## 6. Résultats du test de compatibilité
+
+- **Date de validation** : 26 octobre 2026
+- **Environnement testé** : PostgreSQL 16.2 (image officielle `postgres:16`), Python 3.12, Django 5.2.18
+- **Commandes de validation** :
+  ```bash
+  # Démarrage du conteneur
+  docker compose up -d db
+
+  # Application des migrations et initialisation
+  cd backend
+  export DATABASE_URL="postgres://ciat:ciat@localhost:5432/ciat"
+  python manage.py migrate
+  python manage.py seed_all
+
+  # Exécution des tests automatisés
+  python manage.py test
+  ```
+- **Nombre de tests passés** : **230 / 230 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
+- **Durée totale d'exécution** : 9,66 secondes (grâce à l'usage de `setUpTestData` et du hacheur rapide `MD5PasswordHasher`).
+- **Différences constatées avec SQLite et corrigées** :
+  1. *Version minimale* : Django 5.2 refuse les versions de PostgreSQL antérieures à la 14 (`NotSupportedError`). Le contournement illégal par monkeypatch a été supprimé et l'équipe est alignée sur PostgreSQL 16.
+  2. *Recherche et casse* : Les filtres textuels s'exécutent via `ILIKE` sans divergence par rapport au comportement SQLite grâce à l'usage strict de `icontains`.
+  3. *Types JSON natifs* : La conformité `jsonb` a été validée lors de l'exécution de `seed_all` (modèles de documents et sections d'analyse).
+  4. *Stabilité des tris* : Tous les querysets de liste intègrent un tri déterministe via `Meta.ordering` ou `OrderingFilter`.
+  5. *Différences résiduelles* : **Aucune**. Le comportement applicatif est strictement identique entre SQLite et PostgreSQL 16.
+

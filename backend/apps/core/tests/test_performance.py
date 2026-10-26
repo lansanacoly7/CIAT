@@ -24,25 +24,23 @@ FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 class PerformanceListesTests(TestCase):
     """Tests de non-régression vérifiant le nombre exact de requêtes SQL générées par chaque liste."""
 
-    def setUp(self):
-        self.client = APIClient()
-
+    @classmethod
+    def setUpTestData(cls):
         # Utilisateur administrateur pour tester les listes complètes
-        self.admin = User.objects.create_user(
+        cls.admin = User.objects.create_user(
             email="admin.perf@ciat.sn",
             password="Password123!",
             role=Role.ADMIN,
             first_name="Admin",
             last_name="Perf",
         )
-        self.client.force_authenticate(user=self.admin)
 
         # Références communes
-        self.domaine = Domaine.objects.create(nom="TIC et Intelligence Artificielle")
-        self.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
+        cls.domaine = Domaine.objects.create(nom="TIC et Intelligence Artificielle")
+        cls.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
 
         # Création de 15 projets avec porteurs distincts
-        self.projets = []
+        cls.projets = []
         for i in range(15):
             porteur = User.objects.create_user(
                 email=f"porteur{i}@perf.ciat.sn",
@@ -56,12 +54,12 @@ class PerformanceListesTests(TestCase):
                 resume=f"Résumé du projet {i}",
                 probleme=f"Problème {i}",
                 solution=f"Solution {i}",
-                domaine=self.domaine,
-                cohorte=self.cohorte,
+                domaine=cls.domaine,
+                cohorte=cls.cohorte,
                 porteur=porteur,
                 statut=Projet.Statut.INCUBE,
             )
-            self.projets.append(p)
+            cls.projets.append(p)
 
             # Création de dossiers avec pièces justificatives rattachées
             dossier = Dossier.objects.create(projet=p, statut=StatutDossier.SOUMIS)
@@ -95,7 +93,7 @@ class PerformanceListesTests(TestCase):
                 titre=f"Jalon Critique {i}",
                 echeance=timezone.now().date() - datetime.timedelta(days=i + 1),
                 statut=StatutJalon.A_FAIRE,
-                cree_par=self.admin,
+                cree_par=cls.admin,
             )
 
         # Création de 15 actualités publiques
@@ -113,10 +111,15 @@ class PerformanceListesTests(TestCase):
             Document.objects.create(
                 titre=f"Document {i}",
                 modele=modele,
-                projet=self.projets[i],
-                auteur=self.admin,
+                projet=cls.projets[i],
+                auteur=cls.admin,
                 statut=Document.Statut.BROUILLON,
             )
+
+    def setUp(self):
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.admin)
+
 
     def test_performance_liste_projets(self):
         """GET /api/projets/ : exactement 2 requêtes (Count paginé + SELECT avec relations)."""

@@ -52,15 +52,14 @@ FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 class MatriceDroitsAPITests(TestCase):
     """Vérifie le code HTTP retourné pour chaque route majeure de l'API selon le rôle."""
 
-    def setUp(self):
-        self.client = APIClient()
-
+    @classmethod
+    def setUpTestData(cls):
         # Références communes
-        self.domaine = Domaine.objects.create(nom="TIC et Données")
-        self.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
+        cls.domaine = Domaine.objects.create(nom="TIC et Données")
+        cls.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
 
         # Utilisateurs pour chaque rôle
-        self.users = {
+        cls.users = {
             "admin": User.objects.create_user(
                 email="admin@ciat.sn", password="Password123!", role=Role.ADMIN, first_name="Ad", last_name="Min"
             ),
@@ -85,55 +84,55 @@ class MatriceDroitsAPITests(TestCase):
         }
 
         # Objets métier
-        self.projet_proprio = Projet.objects.create(
+        cls.projet_proprio = Projet.objects.create(
             titre="Projet Proprio",
             resume="Résumé du projet",
             probleme="Problème adressé",
             solution="Solution proposée",
-            porteur=self.users["porteur_proprio"],
-            domaine=self.domaine,
-            cohorte=self.cohorte,
+            porteur=cls.users["porteur_proprio"],
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
             statut="incube",
         )
-        self.projet_tiers = Projet.objects.create(
+        cls.projet_tiers = Projet.objects.create(
             titre="Projet Tiers",
             resume="Résumé tiers",
             probleme="Problème tiers",
             solution="Solution tierce",
-            porteur=self.users["porteur_tiers"],
-            domaine=self.domaine,
-            cohorte=self.cohorte,
+            porteur=cls.users["porteur_tiers"],
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
             statut="incube",
         )
 
-        self.dossier_proprio = Dossier.objects.create(
-            projet=self.projet_proprio,
+        cls.dossier_proprio = Dossier.objects.create(
+            projet=cls.projet_proprio,
             statut=StatutDossier.BROUILLON,
         )
 
-        self.grille = Grille.objects.create(nom="Grille 2026", active=True)
-        self.critere = Critere.objects.create(grille=self.grille, libelle="Innovation", note_max=20, poids=2)
+        cls.grille = Grille.objects.create(nom="Grille 2026", active=True)
+        cls.critere = Critere.objects.create(grille=cls.grille, libelle="Innovation", note_max=20, poids=2)
 
-        self.actualite = Actualite.objects.create(
+        cls.actualite = Actualite.objects.create(
             titre="Inauguration CIAT",
             contenu="Contenu officiel",
         )
-        self.partenaire = Partenaire.objects.create(
+        cls.partenaire = Partenaire.objects.create(
             nom="ISEP Diamniadio",
             description="Institut supérieur",
         )
-        self.appel = AppelProjet.objects.create(
+        cls.appel = AppelProjet.objects.create(
             titre="Appel à candidatures 2026",
             description="Description de l'appel",
             date_limite=timezone.now() + datetime.timedelta(days=30),
         )
-        self.doc_public = DocumentPublic.objects.create(
+        cls.doc_public = DocumentPublic.objects.create(
             titre="Règlement intérieur",
             categorie="Guides",
             fichier=SimpleUploadedFile("reglement.pdf", b"%PDF-1.4 sample content"),
         )
-        self.fiche_galerie = FicheInnovation.objects.create(
-            projet=self.projet_proprio,
+        cls.fiche_galerie = FicheInnovation.objects.create(
+            projet=cls.projet_proprio,
             titre="Fiche Innovation Solar",
             probleme="Problème solaire",
             solution="Panneaux solaires",
@@ -141,6 +140,10 @@ class MatriceDroitsAPITests(TestCase):
             avancement="MVP",
             statut=FicheInnovation.Statut.PUBLIE,
         )
+
+    def setUp(self):
+        self.client = APIClient()
+
 
     def _auth(self, role_key):
         """Authentifie le client avec l'utilisateur spécifié ou retire l'authentification si None."""
@@ -439,27 +442,27 @@ class FuitesDonneesPriveesTests(TestCase):
     CONFIDENTIAL_EVAL_NOTE = "AVIS_DELIBERATION_CONFIDENTIEL_999"
     CONFIDENTIAL_DECISION_MOTIF = "MOTIF_DELIBERATION_SECRET_888"
 
-    def setUp(self):
-        self.client = APIClient()
-        self.domaine = Domaine.objects.create(nom="Agriculture")
-        self.cohorte = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+    @classmethod
+    def setUpTestData(cls):
+        cls.domaine = Domaine.objects.create(nom="Agriculture")
+        cls.cohorte = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
 
-        self.porteur = User.objects.create_user(
-            email=self.PII_EMAIL_MARKER,
-            telephone=self.PII_PHONE_MARKER,
+        cls.porteur = User.objects.create_user(
+            email=cls.PII_EMAIL_MARKER,
+            telephone=cls.PII_PHONE_MARKER,
             password="Password123!",
             role=Role.PORTEUR,
             first_name="Fatou",
             last_name="Sow",
         )
-        self.comite_user = User.objects.create_user(
+        cls.comite_user = User.objects.create_user(
             email="evaluateur.jury@ciat.sn",
             password="Password123!",
             role=Role.COMITE,
             first_name="Jury",
             last_name="Membre",
         )
-        self.admin_user = User.objects.create_user(
+        cls.admin_user = User.objects.create_user(
             email="admin.jury@ciat.sn",
             password="Password123!",
             role=Role.ADMIN,
@@ -467,33 +470,33 @@ class FuitesDonneesPriveesTests(TestCase):
             last_name="System",
         )
 
-        self.projet = Projet.objects.create(
+        cls.projet = Projet.objects.create(
             titre="Irrigation Solaire Casamance",
             resume="Système d'irrigation connecté",
             probleme="Sécheresse saisonnière",
             solution="Pompes solaires intelligentes",
-            porteur=self.porteur,
-            domaine=self.domaine,
-            cohorte=self.cohorte,
+            porteur=cls.porteur,
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
             statut="incube",
         )
-        self.dossier = Dossier.objects.create(
-            projet=self.projet,
+        cls.dossier = Dossier.objects.create(
+            projet=cls.projet,
             statut=StatutDossier.ACCEPTE,
         )
-        self.evaluation = Evaluation.objects.create(
-            dossier=self.dossier,
-            evaluateur=self.comite_user,
-            avis=self.CONFIDENTIAL_EVAL_NOTE,
+        cls.evaluation = Evaluation.objects.create(
+            dossier=cls.dossier,
+            evaluateur=cls.comite_user,
+            avis=cls.CONFIDENTIAL_EVAL_NOTE,
         )
-        self.decision = Decision.objects.create(
-            dossier=self.dossier,
+        cls.decision = Decision.objects.create(
+            dossier=cls.dossier,
             decision=DecisionType.ACCEPTE,
-            motif=self.CONFIDENTIAL_DECISION_MOTIF,
-            decide_par=self.admin_user,
+            motif=cls.CONFIDENTIAL_DECISION_MOTIF,
+            decide_par=cls.admin_user,
         )
-        self.fiche = FicheInnovation.objects.create(
-            projet=self.projet,
+        cls.fiche = FicheInnovation.objects.create(
+            projet=cls.projet,
             titre="Irrigation Solaire Fiche",
             probleme="Sécheresse",
             solution="Pompes solaires",
@@ -501,6 +504,10 @@ class FuitesDonneesPriveesTests(TestCase):
             avancement="MVP",
             statut=FicheInnovation.Statut.PUBLIE,
         )
+
+    def setUp(self):
+        self.client = APIClient()
+
 
     def _assert_no_markers_in_response(self, resp):
         """Vérifie l'absence absolue de tout marqueur PII ou confidentiel dans le payload HTTP."""
@@ -554,17 +561,21 @@ class FuitesDonneesPriveesTests(TestCase):
 class RateLimitingEtBruteForceTests(TestCase):
     """Vérifie la protection contre le brute-force sur /api/auth/token/ et /api/auth/register/."""
 
-    def setUp(self):
-        cache.clear()
-        self.client = APIClient()
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             email="test.auth@ciat.sn",
             password="GoodPassword2026!",
             role=Role.PORTEUR,
         )
 
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+
     def tearDown(self):
         cache.clear()
+
 
     def test_configuration_throttle_auth_presente(self):
         """Le taux de throttle 'auth' doit être configuré à 5/min dans settings."""
@@ -697,8 +708,10 @@ class RobustesseMotsDePasseTests(TestCase):
         self.assertTrue(User.objects.filter(email="nouveau.porteur@test.sn").exists())
 
 
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class UploadsFichiersSecuriteTests(TestCase):
     """Vérifie la politique de sécurité sur les dépôts de fichiers (Phase 3 T2 & T2/Fichiers)."""
+
 
     def test_rejet_fichier_vide(self):
         """Un fichier de 0 octet est rejeté."""
@@ -767,8 +780,10 @@ class UploadsFichiersSecuriteTests(TestCase):
             self.assertTrue(clean.endswith(expected.split(".")[-1]))
 
 
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class ProductionConfigurationTests(TestCase):
     """Vérifie les critères indispensables de la checklist de mise en production."""
+
 
     def test_secret_key_reelle_improperly_configured(self):
         """Vérifie que la politique de production interdit formellement les SECRET_KEY faibles si DEBUG=False."""
