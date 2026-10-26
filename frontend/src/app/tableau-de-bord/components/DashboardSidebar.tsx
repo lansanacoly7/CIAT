@@ -95,7 +95,7 @@ export function DashboardSidebar() {
               aria-label="CIAT Accueil"
             >
               <Image
-                src="/brand/logo_blanc.png"
+                src="/images/brand/logo_blanc.png"
                 alt="CIAT"
                 width={130}
                 height={46}
@@ -201,7 +201,7 @@ export function DashboardSidebar() {
           {/* Slogan officiel CIAT en pied */}
           <div className="flex items-center gap-2.5 px-5 pb-10 pt-2 text-[10px] text-[#cbb7a3]">
             <Image
-              src="/brand/symbole_blanc.png"
+              src="/images/brand/symbole_blanc.png"
               alt=""
               width={20}
               height={20}
@@ -229,7 +229,7 @@ export function DashboardSidebar() {
         {/* Filigrane emblème CIAT en arrière-plan en bas de la sidebar */}
         <div className="pointer-events-none absolute -bottom-8 -left-6 z-0 select-none opacity-[0.06]">
           <Image
-            src="/brand/symbole_blanc.png"
+            src="/images/brand/symbole_blanc.png"
             alt=""
             width={280}
             height={280}

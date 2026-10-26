@@ -13,6 +13,7 @@ Tous les endpoints acceptent les filtres :
 from datetime import datetime
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
+from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,7 +25,7 @@ def apply_filters(queryset, request):
     """Applique les filtres communs du contrat P3 :
     ?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ&cohorte=&domaine=&statut=
     """
-    params = request.query_params
+    params = getattr(request, "query_params", getattr(request, "GET", {}))
 
     # Filtre sur date de début (création >= début)
     debut = params.get("debut")
@@ -319,3 +320,55 @@ class EvolutionView(APIView):
                 if item["mois"] is not None
             ]
         )
+
+
+# ==============================================================================
+# Phase 3 — T3 : Export Excel et PDF du Tableau de Bord Décisionnel
+# ==============================================================================
+
+class AnalyticsExportView(APIView):
+    """GET /api/analytics/export/?format=xlsx|pdf
+
+    Exporte le rapport complet d'analyse décisionnelle aux formats Excel (.xlsx) ou PDF (.pdf).
+    Prend en compte l'ensemble des filtres actifs (?debut=&fin=&cohorte=&domaine=&statut=)
+    et applique les mêmes règles d'accès que les autres endpoints du tableau de bord.
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def perform_content_negotiation(self, request, force=False):
+        # Empêche DRF d'intercepter le query param ?format= (utilisé pour choisir xlsx ou pdf)
+        renderers = self.get_renderers()
+        return (renderers[0], renderers[0].media_type)
+
+    def get(self, request):
+        fmt = request.query_params.get("format", "").strip().lower()
+        if fmt not in ("xlsx", "pdf"):
+            return Response(
+                {
+                    "detail": "Format d'export invalide ou manquant. Formats supportés : 'xlsx', 'pdf'."
+                },
+                status=400,
+            )
+
+        from apps.analytics.exports import (
+            collecter_donnees_analyses,
+            generer_export_pdf,
+            generer_export_xlsx,
+        )
+
+        data = collecter_donnees_analyses(request)
+        date_str = datetime.now().strftime("%Y%m%d_%H%M")
+
+        if fmt == "xlsx":
+            buf = generer_export_xlsx(data)
+            filename = f"analyses_ciat_{date_str}.xlsx"
+            content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        else:
+            buf = generer_export_pdf(data)
+            filename = f"analyses_ciat_{date_str}.pdf"
+            content_type = "application/pdf"
+
+        response = HttpResponse(buf.getvalue(), content_type=content_type)
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response

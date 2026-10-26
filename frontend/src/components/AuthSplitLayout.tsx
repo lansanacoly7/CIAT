@@ -113,7 +113,7 @@ export default function AuthSplitLayout({
             <div className="mb-5 text-center">
               <Link href="/" className="inline-block" aria-label="Accueil CIAT">
                 <Image
-                  src="/brand/logo_principal.png"
+                  src="/images/brand/logo_principal.png"
                   alt="Logo officiel CIAT — ISEP Diamniadio"
                   width={140}
                   height={54}

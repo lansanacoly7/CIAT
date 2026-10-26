@@ -1,4 +1,4 @@
-"""Configuration des routes pour apps.portal (T1, T2, T3)."""
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
@@ -9,6 +9,7 @@ from .views import (
     MessageContactViewSet,
     PartenaireViewSet,
     ProjetIncubeViewSet,
+    StatistiquesPortailView,
 )
 
 router = DefaultRouter()
@@ -25,4 +26,6 @@ router.register(r"contact", MessageContactViewSet, basename="contact")
 # T3
 router.register(r"projets-incubes", ProjetIncubeViewSet, basename="projet-incube")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("statistiques/", StatistiquesPortailView.as_view(), name="portal-statistiques"),
+] + router.urls

@@ -46,7 +46,7 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
     <div className="mx-auto flex w-full max-w-lg px-4 py-10 sm:py-14">
       <div className="w-full rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-6 shadow-sm sm:p-8">
         <Image
-          src="/brand/logo_principal.png"
+          src="/images/brand/logo_principal.png"
           alt="CIAT — ISEP Diamniadio"
           width={180}
           height={70}
