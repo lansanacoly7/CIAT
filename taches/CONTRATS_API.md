@@ -156,3 +156,12 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | Route | Description |
 |---|---|
 | `GET /export/?format=xlsx` ou `pdf` | Mêmes filtres et mêmes droits que les autres endpoints d'analyse. Fichier à télécharger. |
+
+## P3 — Compléments de la Phase 2 (`/api/analytics/`)
+
+| Route | Description |
+|---|---|
+| `POST /question/` | `{ question }` → `{ reponse, donnees, filtres_utilises }`. Le modèle choisit un endpoint et des filtres dans une liste fermée, jamais de SQL. Mêmes droits que les autres endpoints d'analyse ; `503` sans clé IA. |
+| `GET /partenariats/` | Liste filtrable : `{ id, projet, partenaire, type, date_debut, statut }` |
+| `GET /financements/` | Liste filtrable : `{ id, projet, source, montant, date, statut }` |
+| `GET /financements/resume/` | `{ total_finance, partenariats_actifs }` |
