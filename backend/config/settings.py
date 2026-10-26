@@ -138,9 +138,21 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# Service IA partagé (voir apps/core/ai.py)
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-AI_MODEL = os.getenv("AI_MODEL", "claude-sonnet-5-5")
+# Service IA partagé (voir apps/core/ai.py). Fournisseurs gratuits au format OpenAI-compatible.
+# AI_PROVIDERS = ordre d'essai ; chaque fournisseur a sa clé et son modèle dans .env.
+AI_PROVIDERS = env_list("AI_PROVIDERS", "groq,gemini")
+AI_PROVIDER_CONFIG = {
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
+        "api_key": os.getenv("GROQ_API_KEY", ""),
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+    },
+    "gemini": {
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "api_key": os.getenv("GEMINI_API_KEY", ""),
+        "model": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+    },
+}
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "1") == "1"
