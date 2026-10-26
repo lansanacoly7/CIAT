@@ -80,6 +80,30 @@ Le module **P2 (Gestion de l'incubateur)** est le cœur opérationnel de la plat
     - `accepte` $\rightarrow$ dossier `accepte`, projet `selectionne`.
     - `refuse` $\rightarrow$ dossier `refuse`, projet `rejete`.
 
+### 2.6. `AffectationMentor` (Phase 2 - T1)
+- **Relations :**
+  - `OneToOneField` vers `apps.core.models.Projet` (`related_name="affectation_mentor"`).
+  - `ForeignKey` vers `apps.core.models.User` (`role=Role.MENTOR`).
+  - `ForeignKey` vers `apps.core.models.User` (`affecte_par`).
+- **Règles :**
+  - L'utilisateur affecté doit obligatoirement posséder le rôle `mentor`.
+  - Seuls l'administrateur et le coordonnateur peuvent affecter ou réassigner un mentor.
+  - **Filtrage des projets :** Un mentor accédant à l'endpoint `/api/projets/` ne visualise que les projets qui lui sont explicitement affectés.
+
+### 2.7. `Objectif` (Phase 2 - T1)
+- **Relations :**
+  - `ForeignKey` vers `apps.core.models.Projet` (`related_name="objectifs"`).
+  - `ForeignKey` vers `apps.core.models.User` (`cree_par`).
+- **Statuts possibles (`statut`) :**
+  - `a_faire` (par défaut)
+  - `en_cours`
+  - `atteint`
+  - `annule`
+- **Règles :**
+  - Seul le mentor affecté au projet ou l'équipe CIAT peut créer (`POST`) ou modifier (`PATCH`) un objectif.
+  - Le porteur du projet bénéficie d'un accès en lecture seule (`GET`) pour suivre sa feuille de route, tout refus d'écriture étant sanctuarisé (`HTTP 403`).
+  - Les mentors non affectés au projet se voient refuser l'accès (`HTTP 403`).
+
 ---
 
 ## 3. Matrice des Rôles et Contrats d'API
@@ -88,6 +112,11 @@ Toutes les routes sont sous `/api/incubator/`.
 
 | Méthode | Route | Description & Contrat | Droits d'accès |
 |---|---|---|---|
+| `GET` | `/api/incubator/mentors/` | Liste des mentors disponibles (`MentorUserSerializer`). | Coordonnateur, Administrateur |
+| `POST` | `/api/incubator/projets/{id}/mentor/` | Affecte ou met à jour le mentor (`{ "mentor": <id> }`). | Coordonnateur, Administrateur |
+| `GET` | `/api/incubator/projets/{id}/objectifs/` | Liste des objectifs d'accompagnement du projet. | Équipe, Mentor affecté, Porteur (lecture) |
+| `POST` | `/api/incubator/projets/{id}/objectifs/` | Création d'un objectif d'accompagnement (`libelle`, `echeance`). | Équipe, Mentor affecté |
+| `PATCH` | `/api/incubator/objectifs/{id}/` | Mise à jour d'un objectif (`statut`, `libelle`, `echeance`). | Équipe, Mentor affecté |
 | `GET` | `/api/incubator/dossiers/` | Liste les dossiers. Filtré par porteur pour les porteurs ; complet pour comité et équipe. | Authentifié |
 | `POST` | `/api/incubator/dossiers/` | Crée un dossier : supporte `{ "projet": <id> }` et `{ "projet_id": <id> }`. | Porteur propriétaire, Admin, Coordo |
 | `GET` | `/api/incubator/dossiers/{id}/` | Détail complet d'un dossier. | Propriétaire ou Équipe/Comité/Mentor |
@@ -99,6 +128,7 @@ Toutes les routes sont sous `/api/incubator/`.
 | `GET` | `/api/incubator/dossiers/{id}/evaluations/` | Consultation confidentielle des évaluations et `score_moyen`. | Comité, Mentors, Équipe *(Interdit aux porteurs)* |
 | `POST` | `/api/incubator/dossiers/{id}/evaluations/` | Dépôt de notation sur tous les critères de la grille active. | Membre du comité, Équipe |
 | `POST` | `/api/incubator/dossiers/{id}/decision/` | Dépôt de la décision motivée finale. | Coordonnateur, Administrateur |
+
 
 ---
 
@@ -120,11 +150,20 @@ Toutes les routes sont sous `/api/incubator/`.
 python manage.py check                     # 0 issue
 python manage.py makemigrations --check    # No changes detected
 
-# Suite de tests complète (27 tests automatisés)
+# Suite de tests complète (34 tests automatisés)
 python manage.py test apps.incubator
 ```
 
-**Couverture des 27 tests :**
-- **12 tests d'authentification et de sécurité des rôles :** Rejet anonyme, isolation multi-porteurs, immutabilité de `projet`, confidentialité des jurys, restrictions par rôle.
-- **11 tests de règles métier et cycle de vie :** Parcours complet nominal, interdiction d'évaluation sur brouillon ou après décision, critères d'autres grilles rejetés, complétude des critères, note hors limites, unicité de grille active, double évaluation, double décision, concurrence de soumission.
-- **4 tests de sécurité des fichiers :** Validation de signature PDF, rejet de fichier vide (0 octet), rejet de fichier avec extension spoofée, assainissement anti path traversal.
+**Couverture des 34 tests :**
+- **12 tests d'authentification et de sécurité des rôles (Phase 1) :** Rejet anonyme, isolation multi-porteurs, immutabilité de `projet`, confidentialité des jurys, restrictions par rôle.
+- **11 tests de règles métier et cycle de vie (Phase 1) :** Parcours complet nominal, interdiction d'évaluation sur brouillon ou après décision, critères d'autres grilles rejetés, complétude des critères, note hors limites, unicité de grille active, double évaluation, double décision, concurrence de soumission.
+- **4 tests de sécurité des fichiers (Phase 1) :** Validation de signature PDF, rejet de fichier vide (0 octet), rejet de fichier avec extension spoofée, assainissement anti path traversal.
+- **7 tests Phase 2 - T1 (Mentors & Objectifs) :**
+  1. Restriction de la liste des mentors à l'équipe (`admin`, `coordo`) avec rejet anonyme, porteur et mentor.
+  2. Affectation de mentor par le coordonnateur et rejet avec 400 d'un utilisateur non-mentor.
+  3. Réassignation par l'administrateur.
+  4. Interdiction d'affectation aux porteurs et mentors (403).
+  5. Isolation des projets dans `/api/projets/` : un mentor ne voit que les projets qui lui sont assignés.
+  6. Sanctuarisation des objectifs : le porteur a un accès en lecture seule et ne peut ni POST ni PATCH (403).
+  7. Gestion par le mentor affecté (création et mise à jour) et rejet d'un mentor tiers non affecté (403).
+

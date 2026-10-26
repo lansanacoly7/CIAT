@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import Critere, Decision, Dossier, Evaluation, Grille, Note, Piece
+from .models import (
+    AffectationMentor,
+    Critere,
+    Decision,
+    Dossier,
+    Evaluation,
+    Grille,
+    Note,
+    Objectif,
+    Piece,
+)
 
 
 class PieceInline(admin.TabularInline):
@@ -52,3 +62,17 @@ class EvaluationAdmin(admin.ModelAdmin):
 class DecisionAdmin(admin.ModelAdmin):
     list_display = ["id", "dossier", "decision", "decide_par", "cree_le"]
     list_filter = ["decision", "cree_le"]
+
+
+@admin.register(AffectationMentor)
+class AffectationMentorAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "mentor", "affecte_par", "affecte_le"]
+    search_fields = ["projet__titre", "mentor__email", "mentor__last_name"]
+
+
+@admin.register(Objectif)
+class ObjectifAdmin(admin.ModelAdmin):
+    list_display = ["id", "projet", "libelle", "statut", "echeance", "cree_par", "cree_le"]
+    list_filter = ["statut", "cree_le"]
+    search_fields = ["libelle", "projet__titre"]
+

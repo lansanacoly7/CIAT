@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from apps.core.models import Projet, Role, User
 from .models import (
     ALLOWED_PIECE_EXTENSIONS,
+    AffectationMentor,
     Critere,
     Decision,
     DecisionType,
@@ -13,8 +14,10 @@ from .models import (
     Evaluation,
     Grille,
     Note,
+    Objectif,
     Piece,
     StatutDossier,
+    StatutObjectif,
     TypePiece,
 )
 
@@ -334,3 +337,81 @@ class DecisionSerializer(serializers.ModelSerializer):
             )
             decision.appliquer()
         return decision
+
+
+class MentorUserSerializer(serializers.ModelSerializer):
+    """Représentation publique d'un mentor pour affectation."""
+    nom_complet = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "nom_complet",
+            "telephone",
+            "organisation",
+        ]
+
+    def get_nom_complet(self, obj):
+        return obj.get_full_name() or obj.email
+
+
+class AffectationMentorSerializer(serializers.ModelSerializer):
+    mentor_details = MentorUserSerializer(source="mentor", read_only=True)
+    mentor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = AffectationMentor
+        fields = ["id", "projet", "mentor", "mentor_details", "affecte_le", "affecte_par"]
+        read_only_fields = ["id", "projet", "affecte_le", "affecte_par"]
+
+    def validate_mentor(self, user):
+        if user.role != Role.MENTOR:
+            raise serializers.ValidationError("L'utilisateur affecté doit avoir le rôle mentor.")
+        return user
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        mentor = validated_data["mentor"]
+
+        affectation, _ = AffectationMentor.objects.update_or_create(
+            projet=projet,
+            defaults={"mentor": mentor, "affecte_par": user},
+        )
+        return affectation
+
+
+class ObjectifSerializer(serializers.ModelSerializer):
+    cree_par_nom = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Objectif
+        fields = [
+            "id",
+            "projet",
+            "libelle",
+            "echeance",
+            "statut",
+            "cree_le",
+            "modifie_le",
+            "cree_par",
+            "cree_par_nom",
+        ]
+        read_only_fields = ["id", "projet", "cree_le", "modifie_le", "cree_par"]
+
+    def get_cree_par_nom(self, obj):
+        return obj.cree_par.get_full_name() or obj.cree_par.email
+
+    def validate_libelle(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le libellé de l'objectif est obligatoire.")
+        return value.strip()
+
+    def create(self, validated_data):
+        projet = self.context["projet"]
+        user = self.context["request"].user
+        return Objectif.objects.create(projet=projet, cree_par=user, **validated_data)

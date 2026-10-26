@@ -61,8 +61,10 @@ class ProjetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Projet.objects.select_related("domaine", "cohorte", "porteur")
         user = self.request.user
-        if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR):
+        if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE):
             return qs
+        if user.role == Role.MENTOR:
+            return qs.filter(affectation_mentor__mentor=user)
         return qs.filter(porteur=user)
 
     def perform_create(self, serializer):

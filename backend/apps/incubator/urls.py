@@ -8,13 +8,22 @@ from .views import (
     DossierListCreateView,
     DossierSoumettreView,
     GrilleActuelleView,
+    MentorListView,
+    ObjectifDetailView,
     PieceCreateView,
     PieceDeleteView,
+    ProjetMentorView,
+    ProjetObjectifListCreateView,
 )
 
 app_name = "incubator"
 
 urlpatterns = [
+    # Mentors et affectation
+    path("mentors/", MentorListView.as_view(), name="mentor-list"),
+    path("projets/<int:pk>/mentor/", ProjetMentorView.as_view(), name="projet-mentor"),
+    path("projets/<int:pk>/objectifs/", ProjetObjectifListCreateView.as_view(), name="projet-objectifs"),
+    path("objectifs/<int:pk>/", ObjectifDetailView.as_view(), name="objectif-detail"),
     # Dossiers de candidature
     path("dossiers/", DossierListCreateView.as_view(), name="dossier-list-create"),
     path("dossiers/<int:pk>/", DossierDetailView.as_view(), name="dossier-detail"),

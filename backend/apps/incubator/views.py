@@ -8,23 +8,28 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.core.models import Role
+from apps.core.models import Projet, Role, User
 from apps.core.permissions import HasRole, IsEquipeCIAT
 from .models import (
+    AffectationMentor,
     Critere,
     Decision,
     Dossier,
     Evaluation,
     Grille,
+    Objectif,
     Piece,
     StatutDossier,
 )
 from .serializers import (
+    AffectationMentorSerializer,
     DecisionSerializer,
     DossierSerializer,
     EvaluationCreateSerializer,
     EvaluationSerializer,
     GrilleSerializer,
+    MentorUserSerializer,
+    ObjectifSerializer,
     PieceSerializer,
 )
 
@@ -241,3 +246,89 @@ class DossierDecisionView(APIView):
             serializer.is_valid(raise_exception=True)
             decision = serializer.save()
             return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
+
+
+class MentorListView(generics.ListAPIView):
+    """Liste de tous les mentors disponibles."""
+
+    permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
+    serializer_class = MentorUserSerializer
+    queryset = User.objects.filter(role=Role.MENTOR).order_by("last_name", "first_name")
+
+
+class ProjetMentorView(APIView):
+    """Affectation ou modification du mentor d'un projet."""
+
+    permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
+
+    def post(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        serializer = AffectationMentorSerializer(
+            data=request.data,
+            context={"request": request, "projet": projet},
+        )
+        serializer.is_valid(raise_exception=True)
+        affectation = serializer.save()
+        return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
+
+
+class ProjetObjectifListCreateView(APIView):
+    """Consultation et création des objectifs d'accompagnement d'un projet."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _check_access(self, user, projet, write=False):
+        if user.is_equipe:
+            return True
+
+        is_mentor = hasattr(projet, "affectation_mentor") and projet.affectation_mentor.mentor_id == user.id
+
+        if user.role == Role.MENTOR:
+            if not is_mentor:
+                raise PermissionDenied("Vous n'êtes pas le mentor affecté à ce projet.")
+            return True
+
+        if user.role == Role.PORTEUR and projet.porteur_id == user.id:
+            if write:
+                raise PermissionDenied("Les porteurs de projet ne peuvent pas définir ou modifier les objectifs.")
+            return True
+
+        raise PermissionDenied("Vous n'avez pas accès aux objectifs de ce projet.")
+
+    def get(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=False)
+        objectifs = Objectif.objects.filter(projet=projet).select_related("cree_par")
+        return Response(ObjectifSerializer(objectifs, many=True).data)
+
+    def post(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        self._check_access(request.user, projet, write=True)
+        serializer = ObjectifSerializer(
+            data=request.data,
+            context={"request": request, "projet": projet},
+        )
+        serializer.is_valid(raise_exception=True)
+        obj = serializer.save()
+        return Response(ObjectifSerializer(obj).data, status=status.HTTP_201_CREATED)
+
+
+class ObjectifDetailView(APIView):
+    """Mise à jour d'un objectif d'accompagnement."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        objectif = get_object_or_404(Objectif.objects.select_related("projet__affectation_mentor"), pk=pk)
+        user = request.user
+        projet = objectif.projet
+        is_mentor = hasattr(projet, "affectation_mentor") and projet.affectation_mentor.mentor_id == user.id
+
+        if not (user.is_equipe or (user.role == Role.MENTOR and is_mentor)):
+            raise PermissionDenied("Seul le mentor affecté ou l'équipe CIAT peut modifier un objectif.")
+
+        serializer = ObjectifSerializer(objectif, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+

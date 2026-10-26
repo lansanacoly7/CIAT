@@ -1,26 +1,33 @@
 import concurrent.futures
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection, transaction
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.incubator.models import (
+    AffectationMentor,
     Critere,
     Decision,
     Dossier,
     Evaluation,
     Grille,
+    Objectif,
     Piece,
     StatutDossier,
+    StatutObjectif,
     TypePiece,
 )
 
+FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class IncubateurSecurityAndAuthorizationTests(TestCase):
     def setUp(self):
+
         self.client = APIClient()
 
         # Données de référence
@@ -498,6 +505,7 @@ class IncubateurBusinessRulesAndLifecycleTests(TestCase):
         self.assertEqual(res2.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class IncubateurConcurrencyTests(TransactionTestCase):
     """Tests de concurrence réelle avec transactions atomiques."""
 
@@ -540,6 +548,7 @@ class IncubateurConcurrencyTests(TransactionTestCase):
         self.assertEqual(self.dossier.statut, StatutDossier.SOUMIS)
 
 
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class IncubateurFileSecurityTests(TestCase):
     """Tests de sécurité sur les fichiers téléversés : magic bytes, formats, sanitisation."""
 
@@ -602,3 +611,236 @@ class IncubateurFileSecurityTests(TestCase):
         # Vérifie que le chemin généré ne contient pas '..'
         piece = Piece.objects.get(pk=res.data["id"])
         self.assertNotIn("..", piece.fichier.name)
+
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
+class IncubateurPhase2MentorsObjectifsTests(TestCase):
+    """Tests Phase 2 T1 : Affectation de mentors et gestion des objectifs d'accompagnement."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.domaine = Domaine.objects.create(nom="AgriTech")
+        self.cohorte = Cohorte.objects.create(nom="Cohorte 2026", annee=2026)
+
+        # Users
+        self.admin = User.objects.create_user(
+            email="admin_p2@ciat.sn",
+            password="password123",
+            role=Role.ADMIN,
+            first_name="Admin",
+            last_name="CIAT",
+        )
+        self.coordo = User.objects.create_user(
+            email="coordo_p2@ciat.sn",
+            password="password123",
+            role=Role.COORDONNATEUR,
+            first_name="Coordo",
+            last_name="CIAT",
+        )
+        self.porteur = User.objects.create_user(
+            email="porteur_p2@ciat.sn",
+            password="password123",
+            role=Role.PORTEUR,
+            first_name="Porteur",
+            last_name="Principal",
+        )
+        self.mentor1 = User.objects.create_user(
+            email="mentor1@ciat.sn",
+            password="password123",
+            role=Role.MENTOR,
+            first_name="Amadou",
+            last_name="Ba",
+        )
+        self.mentor2 = User.objects.create_user(
+            email="mentor2@ciat.sn",
+            password="password123",
+            role=Role.MENTOR,
+            first_name="Fatou",
+            last_name="Sow",
+        )
+
+        # Projects
+        self.projet1 = Projet.objects.create(
+            titre="Projet P1",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+        self.projet2 = Projet.objects.create(
+            titre="Projet P2",
+            domaine=self.domaine,
+            cohorte=self.cohorte,
+            porteur=self.porteur,
+            statut=Projet.Statut.SELECTIONNE,
+        )
+
+    def test_liste_mentors_accessible_uniquement_par_equipe(self):
+        """Seuls admin et coordonnateur peuvent lister les mentors."""
+        url = reverse("incubator:mentor-list")
+
+        # Non authentifié -> 401
+        res_anon = self.client.get(url)
+        self.assertEqual(res_anon.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Porteur -> 403
+        self.client.force_authenticate(user=self.porteur)
+        res_porteur = self.client.get(url)
+        self.assertEqual(res_porteur.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Mentor -> 403
+        self.client.force_authenticate(user=self.mentor1)
+        res_mentor = self.client.get(url)
+        self.assertEqual(res_mentor.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Coordonnateur -> 200
+        self.client.force_authenticate(user=self.coordo)
+        res_coordo = self.client.get(url)
+        self.assertEqual(res_coordo.status_code, status.HTTP_200_OK)
+        items = res_coordo.data.get("results", res_coordo.data)
+        emails = [m["email"] for m in items]
+        self.assertIn(self.mentor1.email, emails)
+        self.assertIn(self.mentor2.email, emails)
+
+    def test_affectation_mentor_par_coordo_et_rejet_non_mentor(self):
+        """Le coordonnateur peut affecter un mentor, mais rejette un utilisateur non mentor."""
+        url = reverse("incubator:projet-mentor", kwargs={"pk": self.projet1.id})
+
+        self.client.force_authenticate(user=self.coordo)
+
+        # 1. Tentative d'affecter un porteur comme mentor -> 400
+        res_invalid = self.client.post(url, {"mentor": self.porteur.id}, format="json")
+        self.assertEqual(res_invalid.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 2. Affectation valide avec mentor1
+        res_valid = self.client.post(url, {"mentor": self.mentor1.id}, format="json")
+        self.assertEqual(res_valid.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_valid.data["mentor"], self.mentor1.id)
+
+        affectation = AffectationMentor.objects.get(projet=self.projet1)
+        self.assertEqual(affectation.mentor, self.mentor1)
+        self.assertEqual(affectation.affecte_par, self.coordo)
+
+        # 3. Modification / réaffectation par l'admin vers mentor2
+        self.client.force_authenticate(user=self.admin)
+        res_reassign = self.client.post(url, {"mentor": self.mentor2.id}, format="json")
+        self.assertEqual(res_reassign.status_code, status.HTTP_200_OK)
+        affectation.refresh_from_db()
+        self.assertEqual(affectation.mentor, self.mentor2)
+        self.assertEqual(affectation.affecte_par, self.admin)
+
+    def test_affectation_mentor_interdite_aux_non_autorises(self):
+        """Porteur ou mentor ne peuvent pas affecter de mentor."""
+        url = reverse("incubator:projet-mentor", kwargs={"pk": self.projet1.id})
+
+        self.client.force_authenticate(user=self.porteur)
+        self.assertEqual(
+            self.client.post(url, {"mentor": self.mentor1.id}, format="json").status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+        self.client.force_authenticate(user=self.mentor1)
+        self.assertEqual(
+            self.client.post(url, {"mentor": self.mentor1.id}, format="json").status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_mentor_visibilite_projets_assignes_uniquement(self):
+        """Un mentor accédant à /api/projets/ ne voit que les projets qui lui sont affectés."""
+        # Affecte projet1 à mentor1, projet2 à mentor2
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.admin)
+        AffectationMentor.objects.create(projet=self.projet2, mentor=self.mentor2, affecte_par=self.admin)
+
+        url = "/api/projets/"
+        self.client.force_authenticate(user=self.mentor1)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        projets = res.data.get("results", res.data)
+        ids = [p["id"] for p in projets]
+        self.assertIn(self.projet1.id, ids)
+        self.assertNotIn(self.projet2.id, ids)
+
+    def test_objectifs_porteur_lecture_seule_et_interdiction_ecriture(self):
+        """Le porteur peut voir les objectifs mais ne peut ni en créer ni en modifier."""
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.admin)
+        obj = Objectif.objects.create(
+            projet=self.projet1,
+            libelle="Finaliser le MVP",
+            cree_par=self.mentor1,
+        )
+
+        url_list = reverse("incubator:projet-objectifs", kwargs={"pk": self.projet1.id})
+        url_detail = reverse("incubator:objectif-detail", kwargs={"pk": obj.id})
+
+        self.client.force_authenticate(user=self.porteur)
+
+        # GET -> 200
+        res_get = self.client.get(url_list)
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_get.data), 1)
+        self.assertEqual(res_get.data[0]["libelle"], "Finaliser le MVP")
+
+        # POST -> 403
+        res_post = self.client.post(url_list, {"libelle": "Objectif pirate"}, format="json")
+        self.assertEqual(res_post.status_code, status.HTTP_403_FORBIDDEN)
+
+        # PATCH -> 403
+        res_patch = self.client.patch(url_detail, {"statut": StatutObjectif.ATTEINT}, format="json")
+        self.assertEqual(res_patch.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_objectifs_mentor_affecte_creation_et_modification(self):
+        """Le mentor affecté peut créer et modifier les objectifs de son projet."""
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.admin)
+
+        url_list = reverse("incubator:projet-objectifs", kwargs={"pk": self.projet1.id})
+
+        # Mentor 1 crée un objectif
+        self.client.force_authenticate(user=self.mentor1)
+        res_post = self.client.post(
+            url_list,
+            {"libelle": "Définir la roadmap technique", "echeance": "2026-12-31"},
+            format="json",
+        )
+        self.assertEqual(res_post.status_code, status.HTTP_201_CREATED)
+        obj_id = res_post.data["id"]
+
+        # Mentor 1 modifie l'objectif
+        url_detail = reverse("incubator:objectif-detail", kwargs={"pk": obj_id})
+        res_patch = self.client.patch(
+            url_detail,
+            {"statut": StatutObjectif.EN_COURS},
+            format="json",
+        )
+        self.assertEqual(res_patch.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_patch.data["statut"], StatutObjectif.EN_COURS)
+
+    def test_objectifs_mentor_non_affecte_refuse(self):
+        """Un mentor non affecté au projet ne peut ni lire, ni créer, ni modifier ses objectifs."""
+        AffectationMentor.objects.create(projet=self.projet1, mentor=self.mentor1, affecte_par=self.admin)
+        obj = Objectif.objects.create(
+            projet=self.projet1,
+            libelle="Objectif confidentiel",
+            cree_par=self.mentor1,
+        )
+
+        url_list = reverse("incubator:projet-objectifs", kwargs={"pk": self.projet1.id})
+        url_detail = reverse("incubator:objectif-detail", kwargs={"pk": obj.id})
+
+        self.client.force_authenticate(user=self.mentor2)
+
+        # GET -> 403
+        self.assertEqual(self.client.get(url_list).status_code, status.HTTP_403_FORBIDDEN)
+
+        # POST -> 403
+        self.assertEqual(
+            self.client.post(url_list, {"libelle": "Objectif illégitime"}, format="json").status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+        # PATCH -> 403
+        self.assertEqual(
+            self.client.patch(url_detail, {"statut": StatutObjectif.ATTEINT}, format="json").status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+

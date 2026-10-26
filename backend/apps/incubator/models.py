@@ -335,3 +335,64 @@ class Decision(models.Model):
 
         self.dossier.save(update_fields=["statut", "modifie_le"])
         self.dossier.projet.save(update_fields=["statut", "modifie_le"])
+
+
+class AffectationMentor(models.Model):
+    """Affectation d'un mentor à un projet d'incubation."""
+
+    projet = models.OneToOneField(
+        Projet, on_delete=models.CASCADE, related_name="affectation_mentor"
+    )
+    mentor = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="projets_mentores"
+    )
+    affecte_le = models.DateTimeField(auto_now_add=True)
+    affecte_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="mentors_affectes"
+    )
+
+    class Meta:
+        ordering = ["-affecte_le"]
+        verbose_name = "Affectation de mentor"
+        verbose_name_plural = "Affectations de mentors"
+
+    def __str__(self):
+        return f"{self.mentor} -> {self.projet.titre}"
+
+    def clean(self):
+        if self.mentor.role != Role.MENTOR:
+            raise ValidationError("L'utilisateur affecté doit avoir le rôle mentor.")
+
+
+class StatutObjectif(models.TextChoices):
+    A_FAIRE = "a_faire", "À faire"
+    EN_COURS = "en_cours", "En cours"
+    ATTEINT = "atteint", "Atteint"
+
+
+class Objectif(models.Model):
+    """Objectif fixé pour un projet incubé."""
+
+    projet = models.ForeignKey(
+        Projet, on_delete=models.CASCADE, related_name="objectifs"
+    )
+    libelle = models.CharField(max_length=255)
+    echeance = models.DateField(null=True, blank=True)
+    statut = models.CharField(
+        max_length=20,
+        choices=StatutObjectif.choices,
+        default=StatutObjectif.A_FAIRE,
+    )
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+    cree_par = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="objectifs_crees"
+    )
+
+    class Meta:
+        ordering = ["echeance", "cree_le"]
+        verbose_name = "Objectif de projet"
+        verbose_name_plural = "Objectifs de projets"
+
+    def __str__(self):
+        return f"{self.projet.titre} - {self.libelle} ({self.statut})"
