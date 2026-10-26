@@ -191,10 +191,10 @@ def collecter_donnees_analyses(request):
         for item in par_genre_raw
     ]
 
-    # Synthèse des filtres
     filtres_actifs = []
+    params = getattr(request, "query_params", getattr(request, "GET", {}))
     for param in ("debut", "fin", "cohorte", "domaine", "statut"):
-        val = request.query_params.get(param)
+        val = params.get(param)
         if val:
             filtres_actifs.append(f"{param} : {val}")
     filtres_texte = ", ".join(filtres_actifs) if filtres_actifs else "Aucun (ensemble des projets)"
