@@ -20,6 +20,14 @@ class Actualite(models.Model):
     resume = models.TextField(blank=True)
     contenu = models.TextField()
     image = models.ImageField(upload_to="actualites/", null=True, blank=True)
+    publie = models.BooleanField(
+        default=False,
+        help_text="Seules les actualités publiées sont visibles du public.",
+    )
+    vues = models.PositiveIntegerField(
+        default=0,
+        help_text="Nombre de consultations de l'actualité.",
+    )
     publie_le = models.DateTimeField(default=timezone.now)
     cree_le = models.DateTimeField(auto_now_add=True)
     modifie_le = models.DateTimeField(auto_now=True)

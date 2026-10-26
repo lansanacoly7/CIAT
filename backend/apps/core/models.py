@@ -120,6 +120,7 @@ class Projet(models.Model):
         User, on_delete=models.PROTECT, related_name="projets_portes"
     )
     statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.IDEE)
+    vues = models.PositiveIntegerField(default=0, help_text="Nombre de consultations de la fiche projet.")
     cree_le = models.DateTimeField(auto_now_add=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
