@@ -294,6 +294,7 @@ class IncubateurSecurityAndAuthorizationTests(TestCase):
         self.assertEqual(res_ok.status_code, status.HTTP_201_CREATED)
 
 
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
 class IncubateurBusinessRulesAndLifecycleTests(TestCase):
     def setUp(self):
         self.client = APIClient()
