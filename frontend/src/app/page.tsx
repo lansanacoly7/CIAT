@@ -16,10 +16,10 @@ const PILIERS = [
     titre: "Rigueur & Excellence",
     soustitre: "Ancrage académique ISEP",
     texte:
-      "L'exigence des enseignements professionnels de l'ISEP garantit la robustesse technique, la viabilité et la pertinence industrielle de chaque solution conçue.",
+      "L'exigence professionnelle de l'ISEP garantit la robustesse technique, la viabilité et la pertinence industrielle de chaque solution conçue.",
     badge: "Standards Académiques",
     icon: (
-      <svg className="h-6 w-6 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-5 w-5 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -34,15 +34,15 @@ const PILIERS = [
     titre: "Chaleur & Racines",
     soustitre: "Terre fertile de Diamniadio",
     texte:
-      "Inspiré par les couleurs de la terre cuite et du terroir de Diamniadio, notre accompagnement est profondément bienveillant, humain et ancré au Sénégal.",
+      "Inspiré des teintes chaudes et du terroir de Diamniadio, notre accompagnement est profondément humain, bienveillant et ancré au Sénégal.",
     badge: "Impact Territorial",
     icon: (
-      <svg className="h-6 w-6 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-5 w-5 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={1.8}
-          d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 012 2v2.945M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
     ),
@@ -52,10 +52,10 @@ const PILIERS = [
     titre: "Éclosion & Mentorat",
     soustitre: "De l'idée au prototype viable",
     texte:
-      "Accueillir chaque porteur avec méthode, lui attribuer un mentor expert dédié et rythmer sa maturation jusqu'à l'obtention d'un prototype prêt au déploiement.",
-    badge: "Mentorat 1-to-1",
+      "Accueillir chaque porteur avec méthode, lui attribuer un mentor expert dédié et rythmer sa maturation jusqu'à l'obtention d'un prototype opérationnel.",
+    badge: "Mentorat Expert",
     icon: (
-      <svg className="h-6 w-6 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-5 w-5 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -70,10 +70,10 @@ const PILIERS = [
     titre: "Futurisme & IA",
     soustitre: "Technologie sobre & souveraine",
     texte:
-      "Une chaîne d'innovation démultipliée par l'intelligence artificielle générative et l'analyse décisionnelle, au service de la précision et de la décision humaine.",
+      "Une chaîne d'innovation démultipliée par l'intelligence artificielle générative et l'analyse décisionnelle, au service de la précision et du contrôle humain.",
     badge: "IA Éthique & RAG",
     icon: (
-      <svg className="h-6 w-6 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-5 w-5 text-brun" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -213,222 +213,164 @@ export default function Home() {
   return (
     <>
       {/* =====================================================================
-       * 1. HERO INSTITUTIONNEL MONUMENTAL (CHARTE CIAT PRESTIGE)
+       * 1. HERO SANS DÉFILEMENT FORCÉ : ÉLÉGANT, NET, PUNCHY ET LUMINEUX
+       *    Mise en page split-screen : texte épuré à gauche, photo nette à droite.
        * =================================================================== */}
-      <section className="relative overflow-hidden border-b border-[#3d2315] bg-[#24140D] text-white">
-        {/* Photographie officielle du campus ISEP Diamniadio en couverture intégrale */}
-        <div className="absolute inset-0 -z-0">
-          <Image
-            src="/images/campus-isep.png"
-            alt="Campus de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center scale-[1.02] transition-transform duration-1000"
-          />
-          {/* Double dégradé architectural sombre pour contraster le texte de façon irréprochable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#170B05]/96 via-[#22120A]/90 to-[#170B05]/82" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A0C06] via-transparent to-[#140804]/70" />
-        </div>
+      <section className="border-b border-[#3d2315] bg-[#24140D] text-white py-8 md:py-10 lg:py-12">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            
+            {/* Colonne Gauche (7 cols) : Titre, présentation et actions */}
+            <div className="lg:col-span-7 space-y-4 md:space-y-5">
+              {/* Badge officiel de souveraineté */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3.5 py-1 text-xs font-semibold text-[#C99A68]">
+                <span className="h-2 w-2 rounded-full bg-succes" />
+                <span>ISEP Amadou Traoré · Diamniadio</span>
+              </div>
 
-        {/* Effet d'ambiance thermique et lueur ocre inspirée de Diamniadio */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-20 h-[480px] w-[480px] rounded-full bg-[#C99A68]/15 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-20 bottom-0 h-96 w-96 rounded-full bg-[#612D10]/40 blur-3xl"
-        />
+              {/* Titre calibré pour tenir sans forcer de défilement */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                Centre d&apos;Innovation, d&apos;Application et de Transfert
+                <span className="block mt-1 text-[#C99A68] text-xl sm:text-2xl lg:text-3xl font-semibold">
+                  Pôle d&apos;Incubation &amp; de Prototypage Technologique
+                </span>
+              </h1>
 
-        <div className="relative mx-auto max-w-6xl px-4 py-20 md:py-28 lg:py-32">
-          <div className="max-w-3xl space-y-7">
-            {/* Badge officiel de souveraineté & ancrage républicain */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-[#C99A68]/40 bg-[#1C0D06]/85 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[#EAD8C2] backdrop-blur-md shadow-lg">
-              <span className="inline-block h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
-              <span>RÉPUBLIQUE DU SÉNÉGAL · ISEP AMADOU TRAORÉ DE DIAMNIADIO</span>
+              {/* Paragraphe concis et lisible */}
+              <p className="text-sm sm:text-base leading-relaxed text-[#EAE0D5] max-w-xl">
+                De l&apos;idée brute au prototype industriel opérationnel. Une infrastructure unifiée réunissant ateliers d&apos;ingénierie, assistance IA souveraine et valorisation économique à Diamniadio.
+              </p>
+
+              {/* Boutons d'Action (Même esthétique que le bandeau validé) */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <ButtonLink
+                  href="/portail/incubateur"
+                  variant="accent"
+                  className="px-6 py-3 font-bold text-sm shadow-md"
+                >
+                  Découvrir l&apos;Incubateur →
+                </ButtonLink>
+                <ButtonLink
+                  href="/portail/appels"
+                  variant="secondary"
+                  className="!border-white/30 !bg-transparent !text-white hover:!bg-white/10 px-5 py-3 text-sm"
+                >
+                  Appels à Projets 2026
+                </ButtonLink>
+                <Link
+                  href="/galerie"
+                  className="text-xs font-semibold text-[#C99A68] hover:text-[#EAE0D5] transition-colors py-2 px-1 flex items-center gap-1"
+                >
+                  <span>Galerie des Innovations</span>
+                  <span>→</span>
+                </Link>
+              </div>
+
+              {/* Bandeau compact des 4 chiffres clés en une seule ligne (zéro encombrement) */}
+              <div className="pt-4 border-t border-white/15 grid grid-cols-4 gap-2 text-center sm:text-left">
+                <div>
+                  <span className="block text-2xl font-extrabold text-white">07</span>
+                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Filières clés</span>
+                </div>
+                <div>
+                  <span className="block text-2xl font-extrabold text-white">05</span>
+                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Jalons rigoureux</span>
+                </div>
+                <div>
+                  <span className="block text-2xl font-extrabold text-white">06</span>
+                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Modules 360</span>
+                </div>
+                <div>
+                  <span className="block text-2xl font-extrabold text-white">100%</span>
+                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Prototypage réel</span>
+                </div>
+              </div>
             </div>
 
-            {/* Titre Principal : Typographie ciselée et contrastée */}
-            <h1 className="text-3xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-md">
-              Centre d&apos;Innovation, d&apos;Application et de Transfert
-              <span className="block mt-2 font-serif sm:font-sans font-light italic text-transparent bg-clip-text bg-gradient-to-r from-[#F5E5D3] via-[#C99A68] to-[#EAD8C2] text-2xl sm:text-4xl lg:text-5xl">
-                Le Pôle d&apos;Incubation &amp; de Prototypage Technologique
-              </span>
-            </h1>
-
-            {/* Accroche claire, précise et crédible */}
-            <p className="max-w-2xl text-base leading-relaxed text-[#EAE0D5] md:text-lg font-normal drop-shadow-xs">
-              Transformer l&apos;ingéniosité des apprenants et porteurs de projet en prototypes industriels viables. 
-              Une plateforme unifiée orchestrant accompagnement rigoureux, ateliers spécialisés, assistance IA souveraine et valorisation économique à Diamniadio.
-            </p>
-
-            {/* Rangée de Boutons d'Action Premium */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
-              <ButtonLink
-                href="/portail/incubateur"
-                variant="accent"
-                className="px-6 py-3.5 font-bold text-sm shadow-xl"
-              >
-                Découvrir l&apos;Incubateur →
-              </ButtonLink>
-              <ButtonLink
-                href="/portail/appels"
-                variant="secondary"
-                className="!border-[#C99A68]/50 !bg-white/10 !text-white hover:!bg-white/20 px-5 py-3.5 text-sm backdrop-blur-md shadow-sm"
-              >
-                Appels à Projets 2026
-              </ButtonLink>
-              <ButtonLink
-                href="/galerie"
-                variant="secondary"
-                className="!border-white/30 !bg-white/5 !text-white hover:!bg-white/15 px-5 py-3.5 text-sm backdrop-blur-md"
-              >
-                Galerie des Innovations (TRL)
-              </ButtonLink>
+            {/* Colonne Droite (5 cols) : Photo du Campus NETTE, LUMINEUSE, SANS AUCUN BLUR MUDDY */}
+            <div className="lg:col-span-5">
+              <div className="relative h-[280px] sm:h-[340px] lg:h-[380px] w-full rounded-2xl overflow-hidden border border-white/20 shadow-xl">
+                <Image
+                  src="/images/campus-isep.png"
+                  alt="Campus officiel de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 42vw, 100vw"
+                  className="object-cover object-center"
+                />
+                {/* Bandeau discret d'identification du campus en bas */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3.5 flex items-center justify-between text-xs text-white">
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-succes" />
+                    Campus ISEP Diamniadio
+                  </span>
+                  <span className="text-[11px] text-[#C99A68] font-medium">Cité du Savoir</span>
+                </div>
+              </div>
             </div>
 
-            {/* Repère territorial officiel avec localisation certifiée */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-[#EAE0D5]">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 backdrop-blur-sm font-semibold border border-white/15">
-                <span className="inline-block h-2 w-2 rounded-full bg-succes" />
-                Campus ISEP Diamniadio
-              </span>
-              <span className="text-[#C99A68]">·</span>
-              <span>Cité du Savoir · Pôle Urbain de Diamniadio, Sénégal</span>
-            </div>
-          </div>
-
-          {/* Bento des 4 Indicateurs Clés de l'Écosystème */}
-          <div className="mt-14 grid grid-cols-2 gap-4 border-t border-white/15 pt-10 sm:grid-cols-4">
-            <div className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:border-[#C99A68]/60 hover:bg-white/10 hover:-translate-y-1">
-              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#C99A68] to-transparent absolute top-0 left-0" />
-              <span className="block text-3xl sm:text-4xl font-extrabold text-[#F5E5D3] tracking-tight">07</span>
-              <span className="mt-1.5 block text-xs font-semibold text-[#EAE0D5]">
-                Filières Technologiques Stratégiques
-              </span>
-              <span className="mt-2 block text-[11px] text-[#C99A68] font-medium">Numérique, Énergies, BTP, Agro...</span>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:border-[#C99A68]/60 hover:bg-white/10 hover:-translate-y-1">
-              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#C99A68] to-transparent absolute top-0 left-0" />
-              <span className="block text-3xl sm:text-4xl font-extrabold text-[#F5E5D3] tracking-tight">05</span>
-              <span className="mt-1.5 block text-xs font-semibold text-[#EAE0D5]">
-                Jalons de l&apos;Idée au Marché
-              </span>
-              <span className="mt-2 block text-[11px] text-[#C99A68] font-medium">Contrat d&apos;incubation méthodique</span>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:border-[#C99A68]/60 hover:bg-white/10 hover:-translate-y-1">
-              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#C99A68] to-transparent absolute top-0 left-0" />
-              <span className="block text-3xl sm:text-4xl font-extrabold text-[#F5E5D3] tracking-tight">06</span>
-              <span className="mt-1.5 block text-xs font-semibold text-[#EAE0D5]">
-                Modules Métiers CIAT 360
-              </span>
-              <span className="mt-2 block text-[11px] text-[#C99A68] font-medium">Architecture unifiée temps réel</span>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:border-[#C99A68]/60 hover:bg-white/10 hover:-translate-y-1">
-              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#C99A68] to-transparent absolute top-0 left-0" />
-              <span className="block text-3xl sm:text-4xl font-extrabold text-[#F5E5D3] tracking-tight">100%</span>
-              <span className="mt-1.5 block text-xs font-semibold text-[#EAE0D5]">
-                Prototypage Physique Réel
-              </span>
-              <span className="mt-2 block text-[11px] text-[#C99A68] font-medium">Laboratoires &amp; Ateliers ISEP</span>
-            </div>
           </div>
         </div>
       </section>
 
       {/* =====================================================================
-       * 2. VITRINE DE RÉASSURANCE : SPOTLIGHT SUR LES PROTOTYPES DU CIAT
+       * 2. LES 4 PILIERS DE LA MARQUE (Charte Graphique Page 02)
+       *    Aéré, fond blanc lumineux, typographie épurée.
        * =================================================================== */}
-      <section className="border-b border-[#EFE4D6] bg-[#FAF7F2] py-8">
+      <section className="border-b border-bordure bg-white py-14 md:py-18">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-3 w-3 rounded-full bg-succes animate-ping" />
-              <span className="text-xs font-bold uppercase tracking-[0.14em] text-brun">
-                Showroom R&amp;D en Direct
-              </span>
-              <span className="hidden sm:inline text-xs text-texte-doux">|</span>
-              <span className="hidden sm:inline text-xs text-texte-doux">
-                Prototypes opérationnels issus de l&apos;incubation active
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
-              <Link
-                href="/galerie"
-                className="inline-flex items-center gap-1.5 text-brun hover:text-beige transition-colors"
-              >
-                <span>Consulter les fiches avec QR Code officiel</span>
-                <span className="text-beige font-bold">→</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================================
-       * 3. LES 4 PILIERS DE LA MARQUE (Charte Graphique Page 02)
-       * =================================================================== */}
-      <section className="border-b border-bordure bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="max-w-2xl space-y-2">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-beige">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="max-w-2xl space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
                 Identité de Marque &amp; Valeurs Fondatrices
               </p>
-              <h2 className="text-2xl font-extrabold text-brun sm:text-4xl tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
                 Les 4 Piliers Fondamentaux du CIAT
               </h2>
-              <p className="text-sm leading-relaxed text-texte-doux">
-                Inscrits à la charte officielle de l&apos;ISEP, ces 4 piliers dictent l&apos;éthique de nos jurys, 
-                la rigueur de nos laboratoires et l&apos;excellence technique de chaque brevet ou prototype.
+              <p className="text-sm text-texte-doux">
+                Inscrits à la charte officielle, ces 4 piliers guident la rigueur de nos laboratoires et l&apos;excellence technique de chaque projet.
               </p>
             </div>
             <div className="shrink-0">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-bordure bg-[#FAF7F2] px-3.5 py-2 text-xs font-bold text-brun">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-bordure bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-bold text-brun">
                 <span className="h-2 w-2 rounded-full bg-beige" />
-                Norme CIAT 360 · Écosystème Qualité
+                Norme CIAT 360
               </span>
             </div>
           </div>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {PILIERS.map((p) => (
               <div
                 key={p.code}
-                className="group relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FAF7F2]/60 p-6 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#C99A68] hover:bg-white hover:shadow-[0_16px_32px_-6px_rgba(97,45,16,0.1)]"
+                className="group relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FAF7F2] p-5.5 shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:border-beige hover:bg-white hover:shadow-md"
               >
-                <div className="h-1 w-0 bg-gradient-to-r from-brun via-beige to-brun transition-all duration-300 group-hover:w-full absolute top-0 left-0 rounded-t-2xl" />
-                
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brun font-[family-name:var(--font-title)] text-xs font-extrabold text-white shadow-sm group-hover:scale-105 transition-transform">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brun font-[family-name:var(--font-title)] text-xs font-extrabold text-white">
                       {p.code}
                     </span>
-                    <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5 shadow-2xs group-hover:border-beige/50 transition-colors">
+                    <div className="rounded-lg bg-white p-2 border border-bordure/60">
                       {p.icon}
                     </div>
                   </div>
 
-                  <span className="mt-5 inline-block text-[10px] font-bold uppercase tracking-wider text-beige">
+                  <span className="mt-4 inline-block text-[10px] font-bold uppercase tracking-wider text-beige">
                     {p.badge}
                   </span>
-                  <h3 className="mt-1 text-lg font-bold text-brun group-hover:text-brun-fonce">
+                  <h3 className="mt-1 text-base font-bold text-brun">
                     {p.titre}
                   </h3>
                   <p className="text-xs font-semibold text-texte-doux">
                     {p.soustitre}
                   </p>
-                  <p className="mt-3 text-xs leading-relaxed text-texte-doux">
+                  <p className="mt-2.5 text-xs leading-relaxed text-texte-doux">
                     {p.texte}
                   </p>
                 </div>
 
-                <div className="mt-6 border-t border-bordure/60 pt-3.5 flex items-center justify-between text-[11px] font-bold text-brun">
-                  <span>Engagement institutionnel</span>
+                <div className="mt-5 border-t border-bordure/60 pt-3 text-[11px] font-semibold text-brun flex items-center justify-between">
+                  <span>Engagement ISEP</span>
                   <span className="text-beige group-hover:translate-x-1 transition-transform">→</span>
                 </div>
               </div>
@@ -438,65 +380,63 @@ export default function Home() {
       </section>
 
       {/* =====================================================================
-       * 4. LES 7 DOMAINES D'APPLICATION PRIORITAIRES (Cahier des charges ISEP)
+       * 3. LES 7 FILIÈRES TECHNOLOGIQUES PRIORITAIRES (Cahier des charges ISEP)
+       *    Fond ivoire doux, cartes blanches nettes, aérées.
        * =================================================================== */}
-      <section className="border-b border-bordure bg-[#FAF7F2] py-16 md:py-24">
+      <section className="border-b border-bordure bg-[#FAF7F2] py-14 md:py-18">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div className="max-w-2xl space-y-2">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-beige">
+            <div className="max-w-2xl space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
                 Pôles Technologiques &amp; Sectoriels
               </p>
-              <h2 className="text-2xl font-extrabold text-brun sm:text-4xl tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
                 Les 7 Filières d&apos;Intervention Prioritaires
               </h2>
               <p className="text-sm text-texte-doux">
-                Définis selon les besoins stratégiques du Sénégal et du tissu industriel ouest-africain, 
-                ces 7 pôles encadrent l&apos;accès aux laboratoires et financements du CIAT.
+                Définis selon les besoins stratégiques nationaux, ces 7 pôles encadrent l&apos;accès aux ateliers et financements du CIAT.
               </p>
             </div>
             <ButtonLink
               href="/portail/domaines"
               variant="secondary"
-              className="shrink-0 text-xs shadow-xs"
+              className="shrink-0 text-xs shadow-2xs"
             >
               Consulter le détail des 7 filières →
             </ButtonLink>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {DOMAINES_CARDS.map((d) => (
               <Link
                 key={d.id}
                 href={`/portail/projets?domaine=${d.id}`}
-                className="group relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#C99A68] hover:shadow-[0_16px_36px_-6px_rgba(97,45,16,0.1)]"
+                className="group relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:border-beige hover:shadow-md"
               >
-                <div className="h-0.5 w-0 bg-gradient-to-r from-beige to-brun transition-all duration-300 group-hover:w-full absolute top-0 left-0" />
-
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-beige/20 text-xs font-extrabold text-brun">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-beige/20 text-xs font-extrabold text-brun">
                       0{d.id}
                     </span>
-                    <span className="rounded-lg bg-[#FAF7F2] p-2 text-brun-fonce opacity-70 group-hover:opacity-100 group-hover:text-beige transition-colors border border-bordure/60">
+                    <span className="rounded-lg bg-[#FAF7F2] p-1.5 text-brun-fonce opacity-70 group-hover:opacity-100 group-hover:text-beige transition-colors">
                       {d.icon}
                     </span>
                   </div>
 
-                  <span className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-beige">
+                  <span className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-beige">
                     {d.tags}
                   </span>
-                  <h3 className="mt-1 text-base font-bold text-brun group-hover:text-brun-fonce">
+                  <h3 className="mt-1 text-sm font-bold text-brun group-hover:text-brun-fonce">
                     {d.nom}
                   </h3>
-                  <p className="mt-2.5 text-xs leading-relaxed text-texte-doux">
+                  <p className="mt-2 text-xs leading-relaxed text-texte-doux">
                     {d.resume}
                   </p>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between border-t border-bordure/70 pt-3.5 text-[11px] font-bold text-brun">
-                  <span>Explorer les projets incubés</span>
-                  <span className="text-beige group-hover:translate-x-1.5 transition-transform duration-200">→</span>
+                <div className="mt-5 flex items-center justify-between border-t border-bordure/60 pt-3 text-[11px] font-semibold text-brun">
+                  <span>Explorer les projets</span>
+                  <span className="text-beige group-hover:translate-x-1 transition-transform">→</span>
                 </div>
               </Link>
             ))}
@@ -505,34 +445,32 @@ export default function Home() {
       </section>
 
       {/* =====================================================================
-       * 5. LE PARCOURS D'INCUBATION EN 5 JALONS CONTRACTUELS (Page 09 Charte)
+       * 4. LE PARCOURS D'INCUBATION EN 5 JALONS CONTRACTUELS (Page 09 Charte)
        * =================================================================== */}
-      <section className="border-b border-bordure bg-white py-16 md:py-24">
+      <section className="border-b border-bordure bg-white py-14 md:py-18">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div className="max-w-2xl space-y-2">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-beige">
+            <div className="max-w-2xl space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
                 Méthodologie Contractuelle &amp; Maturation
               </p>
-              <h2 className="text-2xl font-extrabold text-brun sm:text-4xl tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
                 Le Parcours d&apos;Incubation en 5 Jalons
               </h2>
               <p className="text-sm text-texte-doux">
-                De la première esquisse jusqu&apos;à la signature partenariale, chaque porteur franchit des étapes validées
-                garantissant la fiabilité technique et la valeur marchande du prototype.
+                De la première esquisse jusqu&apos;au transfert industriel, chaque porteur franchit des étapes validées par le comité.
               </p>
             </div>
-            <ButtonLink href="/portail/incubateur" variant="primary" className="shrink-0 text-xs shadow-sm">
+            <ButtonLink href="/portail/incubateur" variant="primary" className="shrink-0 text-xs shadow-2xs">
               Guide complet du parcours →
             </ButtonLink>
           </div>
 
-          {/* Stepper / Timeline avec cartes architecturales */}
-          <div className="mt-12 grid gap-5 md:grid-cols-5">
+          <div className="mt-10 grid gap-4 md:grid-cols-5">
             {ETAPES_ACCUEIL.map((e) => (
               <div
                 key={e.stage}
-                className="relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FAF7F2] p-5.5 transition-all duration-300 hover:border-beige hover:bg-white hover:shadow-md"
+                className="relative flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FAF7F2] p-5 transition-all duration-200 hover:border-beige hover:bg-white hover:shadow-xs"
               >
                 <div>
                   <div className="flex items-center justify-between">
@@ -544,11 +482,11 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <div className="mt-4">
+                  <div className="mt-3.5">
                     <ProjectStatusBadge stage={e.stage} />
                   </div>
 
-                  <h3 className="mt-3 text-base font-bold text-brun">
+                  <h3 className="mt-3 text-sm font-bold text-brun">
                     {e.nom}
                   </h3>
                   <p className="mt-2 text-xs leading-relaxed text-texte-doux">
@@ -556,8 +494,8 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="mt-5 border-t border-bordure/60 pt-3 text-[11px] font-semibold text-brun">
-                  <span className="text-beige">✔</span> Validation obligatoire
+                <div className="mt-4 border-t border-bordure/60 pt-3 text-[11px] font-semibold text-brun">
+                  <span className="text-beige">✔</span> Validation jury
                 </div>
               </div>
             ))}
@@ -566,28 +504,28 @@ export default function Home() {
       </section>
 
       {/* =====================================================================
-       * 6. LES 6 MODULES DE LA PLATEFORME UNIFIÉE (CIAT 360)
+       * 5. LES 6 MODULES DE LA PLATEFORME UNIFIÉE (CIAT 360)
        * =================================================================== */}
-      <section className="mx-auto max-w-6xl px-4 py-16 md:py-24">
-        <div className="mb-12 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="max-w-2xl space-y-2">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-beige">
+      <section className="mx-auto max-w-6xl px-4 py-14 md:py-18">
+        <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-2xl space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
               Écosystème Numérique Intégré
             </p>
-            <h2 className="text-2xl font-extrabold text-brun sm:text-4xl tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
               Les 6 Modules Interconnectés du CIAT
             </h2>
             <p className="text-sm text-texte-doux">
-              Une seule base de données unifiée partagée en temps réel entre porteurs, comités, mentors et direction générale.
+              Une seule base de données unifiée partagée en temps réel entre porteurs, comités, mentors et direction.
             </p>
           </div>
           <Badge tone="info">Architecture Unifiée 6-en-1</Badge>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {MODULES.map((m, idx) => (
             <Link key={m.slug} href={m.href} className="group block transition-transform hover:-translate-y-1">
-              <Card className="flex h-full flex-col justify-between transition-all duration-300 group-hover:border-beige group-hover:shadow-[0_16px_36px_-6px_rgba(97,45,16,0.12)]">
+              <Card className="flex h-full flex-col justify-between transition-all duration-200 group-hover:border-beige group-hover:shadow-md">
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="flex h-6.5 w-14 items-center justify-center rounded-lg bg-beige/20 text-[11px] font-extrabold uppercase tracking-wider text-brun">
@@ -598,16 +536,16 @@ export default function Home() {
                       <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </span>
                   </div>
-                  <h3 className="mt-4 text-lg font-bold text-brun group-hover:text-brun-fonce">
+                  <h3 className="mt-3.5 text-base font-bold text-brun group-hover:text-brun-fonce">
                     {m.titre}
                   </h3>
-                  <p className="mt-2.5 text-xs leading-relaxed text-texte-doux">
+                  <p className="mt-2 text-xs leading-relaxed text-texte-doux">
                     {m.description}
                   </p>
                 </div>
-                <div className="mt-6 border-t border-bordure pt-3.5 text-[11px] font-semibold text-texte-doux flex items-center justify-between">
+                <div className="mt-5 border-t border-bordure pt-3 text-[11px] font-semibold text-texte-doux flex items-center justify-between">
                   <span>Module CIAT 360</span>
-                  <span className="text-[10px] uppercase font-bold text-beige">Prêt</span>
+                  <span className="text-[10px] uppercase font-bold text-beige">Opérationnel</span>
                 </div>
               </Card>
             </Link>
@@ -616,21 +554,21 @@ export default function Home() {
       </section>
 
       {/* =====================================================================
-       * 7. BANDEAU D'APPEL À L'ACTION & CANDIDATURE
+       * 6. BANDEAU D'APPEL À L'ACTION & CANDIDATURE
+       *    Exactement le design validé et apprécié par l'utilisateur.
        * =================================================================== */}
-      <section className="border-t border-[#3d2315] bg-gradient-to-r from-[#24140D] via-[#3D1D10] to-[#24140D] text-white py-16 md:py-20 shadow-inner">
+      <section className="border-t border-[#3d2315] bg-[#24140D] text-white py-14 md:py-16">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-            <div className="max-w-2xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-beige/40 bg-white/10 px-3.5 py-1 text-xs font-bold text-beige backdrop-blur-sm">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div className="max-w-2xl space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-[#C99A68]">
                 Orientation &amp; Sélection Continue 2026
               </div>
-              <h2 className="text-2xl font-extrabold !text-white sm:text-4xl tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-extrabold !text-white tracking-tight">
                 Vous avez un projet innovant ou un besoin de prototypage ?
               </h2>
               <p className="text-sm leading-relaxed text-[#EAE0D5]">
-                Que vous soyez apprenant de l&apos;ISEP, diplômé en insertion ou entreprise partenaire, 
-                le CIAT met à votre disposition ses ateliers, ses bancs de test et son réseau de mentors à Diamniadio.
+                Que vous soyez apprenant de l&apos;ISEP, diplômé en insertion ou entreprise partenaire, le CIAT met à votre disposition ses ateliers, ses bancs de test et son réseau de mentors à Diamniadio.
               </p>
             </div>
 
@@ -638,14 +576,14 @@ export default function Home() {
               <ButtonLink
                 href="/connexion?next=/incubateur"
                 variant="accent"
-                className="font-bold text-sm px-6 py-3.5 shadow-xl"
+                className="font-bold text-sm px-6 py-3"
               >
                 Déposer une Candidature
               </ButtonLink>
               <ButtonLink
                 href="/portail/contact"
                 variant="secondary"
-                className="!text-white !border-white/50 !bg-white/10 hover:!bg-white/20 text-sm px-5 py-3.5 backdrop-blur-sm"
+                className="!text-white !border-white/30 !bg-transparent hover:!bg-white/10 text-sm px-5 py-3"
               >
                 Contacter le Secrétariat
               </ButtonLink>
