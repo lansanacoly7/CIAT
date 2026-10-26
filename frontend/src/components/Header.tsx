@@ -10,10 +10,9 @@ const NAV_LINKS = [
   { href: "/", label: "Accueil" },
   { href: "/portail/ciat", label: "Le CIAT" },
   { href: "/portail/incubateur", label: "L'Incubateur" },
+  { href: "/incubateur/projets", label: "Suivi Projets" },
+  { href: "/documents", label: "Documents IA" },
   { href: "/portail/domaines", label: "7 Domaines" },
-  { href: "/portail/projets", label: "Projets incubés" },
-  { href: "/portail/actualites", label: "Actualités" },
-  { href: "/portail/evenements", label: "Événements" },
   { href: "/portail/appels", label: "Appels à projets" },
 ];
 
@@ -45,7 +44,7 @@ export default function Header() {
           {/* Logo officiel blanc aligné sur la marque */}
           <Link href="/" aria-label="CIAT Accueil" className="flex items-center gap-3">
             <Image
-              src="/brand/logo_blanc.png"
+              src="/images/brand/logo_blanc.png"
               alt="Logo CIAT - Centre d'Innovation, d'Application et de Transfert"
               width={130}
               height={47}

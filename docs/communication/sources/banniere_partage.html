@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Bannière de Partage Réseaux Sociaux (1200x630)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1200px;
+      height: 630px;
+      background: #24140D;
+      color: #FAF7F2;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Panneau gauche : Contenu & Identité */
+    .left-pane {
+      width: 58%;
+      height: 100%;
+      padding: 55px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+      background: linear-gradient(90deg, #24140D 80%, rgba(36,20,13,0.92) 92%, transparent 100%);
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo {
+      height: 65px;
+      width: auto;
+    }
+    .badge {
+      background: rgba(212, 170, 112, 0.18);
+      border: 1px solid #D4AA70;
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    .center-text {
+      margin: 20px 0;
+    }
+    .tagline {
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 34px;
+      line-height: 1.2;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #EBD9C0;
+      font-size: 15px;
+      line-height: 1.45;
+      max-width: 560px;
+    }
+
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .url-chip {
+      background: #D4AA70;
+      color: #24140D;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 8px 18px;
+      border-radius: 10px;
+    }
+    .slogan {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: #CBB69E;
+    }
+
+    /* Panneau droit : Photo du campus avec transition douce */
+    .right-pane {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 48%;
+      height: 100%;
+      z-index: 1;
+    }
+    .right-pane img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center left;
+    }
+    .right-pane::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #24140D 0%, rgba(36,20,13,0.4) 30%, transparent 100%),
+                  linear-gradient(180deg, rgba(36,20,13,0.2) 0%, rgba(36,20,13,0.6) 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="left-pane">
+    <div class="top-meta">
+      <img src="../assets/logo_blanc.png" alt="CIAT" class="logo">
+      <div class="badge">ISEP Diamniadio</div>
+    </div>
+
+    <div class="center-text">
+      <div class="tagline">Plateforme Numérique Officielle</div>
+      <h1>L'Incubation &amp; le Transfert Technologique</h1>
+      <p>
+        Accompagnement de projets, prototypage de pointe, galerie d'innovations validées et intelligence artificielle éthique au service de l'écosystème sénégalais.
+      </p>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="url-chip">ciat.isepdiamniadio.sn</div>
+      <div class="slogan">Innovation &bull; Incubation &bull; Impact</div>
+    </div>
+  </div>
+
+  <div class="right-pane">
+    <img src="../assets/campus-isep.png" alt="Campus ISEP Diamniadio">
+  </div>
+</body>
+</html>

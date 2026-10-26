@@ -8,8 +8,8 @@ import importlib
 from django.core.management.base import BaseCommand
 from apps.documents.models import ModeleDocument, TypeDocument
 
-seed_module = importlib.import_module("apps.documents.migrations.0002_seed_documents")
-INITIAL_DATA = seed_module.INITIAL_DATA
+migration_0002 = importlib.import_module("apps.documents.migrations.0002_seed_documents")
+INITIAL_DATA = migration_0002.INITIAL_DATA
 
 
 

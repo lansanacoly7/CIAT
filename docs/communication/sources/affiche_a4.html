@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Affiche Officielle A4 — Lancement Plateforme CIAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    body {
+      width: 1240px;
+      height: 1754px;
+      background: #FAF7F2;
+      color: #24140D;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* En-tête officiel */
+    .header {
+      background: #24140D;
+      color: #FAF7F2;
+      padding: 40px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 4px solid #D4AA70;
+    }
+    .header-logo {
+      height: 75px;
+      width: auto;
+      object-contain: contain;
+    }
+    .header-institution {
+      text-align: right;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(212, 170, 112, 0.2);
+      border: 1px solid #D4AA70;
+      color: #D4AA70;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #EBD9C0;
+    }
+
+    /* Section Hero Visuel */
+    .hero {
+      position: relative;
+      height: 480px;
+      overflow: hidden;
+      background: #24140D;
+    }
+    .hero-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.82;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(36,20,13,0.3) 0%, rgba(36,20,13,0.85) 85%, #24140D 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 40px 60px;
+    }
+    .hero-tag {
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .hero-h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 46px;
+      line-height: 1.15;
+      color: #FFFFFF;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      margin-bottom: 12px;
+    }
+    .hero-sub {
+      color: #EBD9C0;
+      font-size: 20px;
+      font-weight: 500;
+      max-width: 850px;
+      line-height: 1.4;
+    }
+
+    /* Corps de l'affiche : Piliers */
+    .content {
+      padding: 45px 60px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .section-title h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      color: #5A3A22;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .section-title p {
+      color: #6B5646;
+      font-size: 16px;
+      margin-top: 6px;
+    }
+
+    .grid-piliers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    .card-pilier {
+      background: #FFFFFF;
+      border: 1.5px solid #E5D7C5;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 4px 14px rgba(90, 58, 34, 0.05);
+      position: relative;
+    }
+    .pilier-badge {
+      display: inline-block;
+      background: #5A3A22;
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .card-pilier h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 19px;
+      color: #24140D;
+      margin-bottom: 8px;
+    }
+    .card-pilier p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #5A4333;
+    }
+
+    /* Bloc Appel & QR Code */
+    .cta-banner {
+      background: linear-gradient(135deg, #5A3A22 0%, #3D2315 100%);
+      border-radius: 20px;
+      padding: 30px 40px;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid #D4AA70;
+      box-shadow: 0 10px 25px rgba(36,20,13,0.15);
+    }
+    .cta-text {
+      max-width: 720px;
+    }
+    .cta-text h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      color: #D4AA70;
+      margin-bottom: 8px;
+    }
+    .cta-text p {
+      font-size: 15px;
+      color: #FAF7F2;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .cta-url {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #FFFFFF;
+      background: rgba(212, 170, 112, 0.25);
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: inline-block;
+      border: 1px dashed #D4AA70;
+    }
+
+    .cta-qr-box {
+      text-align: center;
+      background: #FFFFFF;
+      padding: 14px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .cta-qr-box img {
+      width: 140px;
+      height: 140px;
+      display: block;
+    }
+    .cta-qr-box span {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: #24140D;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Pied de page */
+    .footer {
+      background: #24140D;
+      color: #CBB69E;
+      padding: 24px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      border-top: 2px solid #5A3A22;
+    }
+    .footer-slogan {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      color: #D4AA70;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- En-tête officiel -->
+  <header class="header">
+    <img src="../assets/logo_blanc.png" alt="CIAT — ISEP Diamniadio" class="header-logo">
+    <div class="header-institution">
+      <div class="header-badge">Pôle Urbain de Diamniadio</div>
+      <div class="header-title">Institut Supérieur d'Enseignement Professionnel Amadou Traoré</div>
+    </div>
+  </header>
+
+  <!-- Section Hero Visuel -->
+  <section class="hero">
+    <img src="../assets/campus-isep.png" alt="Campus ISEP Diamniadio" class="hero-img">
+    <div class="hero-overlay">
+      <div class="hero-tag">Plateforme Officielle &bull; Écosystème CIAT 360</div>
+      <h1 class="hero-h1">L'Innovation &amp; l'Incubation Technologique</h1>
+      <p class="hero-sub">
+        Accompagner les porteurs de projets, étudiants et chercheurs de l'idée jusqu'au prototype validé et au transfert industriel.
+      </p>
+    </div>
+  </section>
+
+  <!-- Corps : Piliers et missions -->
+  <main class="content">
+    <div class="section-title">
+      <h2>Les 4 Piliers d'Accompagnement de l'Incubateur</h2>
+      <p>Une méthodologie contractuelle rigoureuse, ancrée dans l'excellence professionnelle sénégalaise</p>
+    </div>
+
+    <div class="grid-piliers">
+      <div class="card-pilier">
+        <span class="pilier-badge">Pilier 01</span>
+        <h3>Rigueur &amp; Ancrage ISEP</h3>
+        <p>L'expertise technique et académique des filières professionnelles pour garantir la faisabilité et la qualité de chaque solution.</p>
+      </div>
+
+      <div class="card-pilier">
+        <span class="pilier-badge">Pilier 02</span>
+        <h3>Éclosion &amp; Mentorat Dédié</h3>
+        <p>Attribution d'un mentor expert, définition de jalons précis et suivi régulier avec bilans d'étape personnalisés.</p>
+      </div>
+
+      <div class="card-pilier">
+        <span class="pilier-badge">Pilier 03</span>
+        <h3>Assistance Documentaire &amp; IA</h3>
+        <p>Génération assistée de conventions d'incubation, fiches synthétiques et assistant documentaire sourcé sous validation humaine.</p>
+      </div>
+
+      <div class="card-pilier">
+        <span class="pilier-badge">Pilier 04</span>
+        <h3>Galerie &amp; Valorisation Marché</h3>
+        <p>Vitrine publique des prototypes fonctionnels, diffusion de QR codes certifiés et mise en relation avec l'écosystème partenarial.</p>
+      </div>
+    </div>
+
+    <!-- Bloc d'Appel à Projets & QR Code -->
+    <div class="cta-banner">
+      <div class="cta-text">
+        <h3>Rejoignez la Prochaine Cohorte d'Incubation !</h3>
+        <p>
+          Déposez votre dossier de candidature en ligne avec vos pièces justificatives, suivez son évaluation par le comité et accédez à l'espace porteur dédié.
+        </p>
+        <div class="cta-url">https://ciat.isepdiamniadio.sn</div>
+      </div>
+      <div class="cta-qr-box">
+        <img src="../assets/qr_galerie.png" alt="QR Code Galerie des Innovations">
+        <span>Flashez la Galerie</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Pied de page officiel -->
+  <footer class="footer">
+    <div>
+      <strong>CIAT</strong> &bull; Centre d'Innovation, d'Application et de Transfert &bull; ISEP Diamniadio, Sénégal
+    </div>
+    <div class="footer-slogan">
+      Innovation &bull; Incubation &bull; Impact
+    </div>
+  </footer>
+
+</body>
+</html>

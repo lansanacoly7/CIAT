@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('portal', '0002_documentpublic_messagecontact_partenaire'),
+        ('portal', '0003_actualite_publie_actualite_vues'),
     ]
 
     operations = [

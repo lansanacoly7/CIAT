@@ -122,6 +122,7 @@ class Projet(models.Model):
     statut = models.CharField(
         max_length=20, choices=Statut.choices, default=Statut.IDEE, db_index=True
     )
+    vues = models.PositiveIntegerField(default=0, help_text="Nombre de consultations de la fiche projet.")
     cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
     modifie_le = models.DateTimeField(auto_now=True)
 
