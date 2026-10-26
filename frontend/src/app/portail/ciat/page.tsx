@@ -1,9 +1,10 @@
+import Image from "next/image";
 import { ButtonLink, Card, PageTitle } from "@/components/ui";
 
 export const metadata = {
   title: "Le CIAT et sa mission",
   description:
-    "Découvrez le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Trawaré de Diamniadio : missions, vision et ancrage territorial.",
+    "Découvrez le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Traoré de Diamniadio : missions, vision et ancrage territorial.",
 };
 
 const PILIERS = [
@@ -53,22 +54,40 @@ export default function CiatPresentationPage() {
       <PageTitle
         tag="Institution & Vision"
         title="Le Centre d'Innovation, d'Application et de Transfert"
-        subtitle="Catalyseur technologique et entrepreneurial de l'ISEP Amadou Trawaré de Diamniadio, au service de l'insertion et du développement économique."
+        subtitle="Catalyseur technologique et entrepreneurial de l'ISEP Amadou Traoré de Diamniadio, au service de l'insertion et du développement économique."
       />
 
-      {/* Section Présentation Institutionnelle */}
-      <section className="mb-14 rounded-2xl border border-bordure bg-ivoire p-8 md:p-10">
-        <h2 className="text-2xl font-bold text-brun">Un pôle stratégique à Diamniadio</h2>
-        <div className="mt-4 space-y-4 text-base leading-relaxed text-texte">
-          <p>
-            Créé au sein de l&apos;<strong>Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Trawaré</strong>,
-            le <strong>CIAT</strong> est le pôle d&apos;accélération technologique dédié aux apprenants, enseignants-chercheurs
-            et innovateurs du Sénégal.
-          </p>
-          <p>
-            Installé dans la ville moderne et innovante de Diamniadio, le centre offre un cadre propice à l&apos;expérimentation,
-            à l&apos;application pratique des compétences acquises et à l&apos;émergence de solutions à fort impact territorial.
-          </p>
+      {/* Section Présentation Institutionnelle avec Photo du Campus */}
+      <section className="mb-14 overflow-hidden rounded-2xl border border-bordure bg-ivoire shadow-sm">
+        <div className="grid gap-6 md:grid-cols-12 md:items-center">
+          <div className="p-8 md:p-10 md:col-span-7">
+            <span className="text-xs font-bold uppercase tracking-wider text-beige">
+              Ancrage Territorial
+            </span>
+            <h2 className="mt-1 text-2xl font-bold text-brun">Un pôle stratégique à Diamniadio</h2>
+            <div className="mt-4 space-y-4 text-base leading-relaxed text-texte">
+              <p>
+                Créé au sein de l&apos;<strong>Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Traoré</strong>,
+                le <strong>CIAT</strong> est le pôle d&apos;accélération technologique dédié aux apprenants, enseignants-chercheurs
+                et innovateurs du Sénégal.
+              </p>
+              <p>
+                Installé dans la ville moderne et innovante de Diamniadio, le centre offre un cadre propice à l&apos;expérimentation,
+                à l&apos;application pratique des compétences acquises et à l&apos;émergence de solutions à fort impact territorial.
+              </p>
+            </div>
+          </div>
+          <div className="relative h-64 md:h-full md:min-h-[280px] md:col-span-5">
+            <Image
+              src="/images/campus-isep.png"
+              alt="Campus de l'ISEP Amadou Traoré de Diamniadio"
+              fill
+              className="object-cover object-center"
+            />
+            <div className="absolute bottom-3 left-3 rounded-md bg-[#24140D]/85 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+              Campus ISEP Diamniadio · Siège du CIAT
+            </div>
+          </div>
         </div>
       </section>
 

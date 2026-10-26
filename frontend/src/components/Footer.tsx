@@ -21,7 +21,7 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="inline-block">
               <Image
-                src="/brand/logo_blanc.png"
+                src="/images/brand/logo_blanc.png"
                 alt="CIAT - ISEP Diamniadio"
                 width={140}
                 height={51}

@@ -34,9 +34,11 @@ class ActualiteSerializer(serializers.ModelSerializer):
             "resume",
             "contenu",
             "image",
+            "publie",
+            "vues",
             "publie_le",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "vues"]
 
 
 class EvenementSerializer(serializers.ModelSerializer):
@@ -152,5 +154,6 @@ class ProjetIncubeSerializer(serializers.ModelSerializer):
             "domaine_nom",
             "cohorte_nom",
             "statut",
+            "vues",
         ]
         read_only_fields = fields

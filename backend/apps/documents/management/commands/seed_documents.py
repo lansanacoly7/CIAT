@@ -4,9 +4,12 @@
 
 Idempotent : recharge ou met à jour les 4 types et 12 modèles de documents.
 """
+import importlib
 from django.core.management.base import BaseCommand
-from apps.documents.migrations.0002_seed_documents import INITIAL_DATA
 from apps.documents.models import ModeleDocument, TypeDocument
+
+migration_0002 = importlib.import_module("apps.documents.migrations.0002_seed_documents")
+INITIAL_DATA = migration_0002.INITIAL_DATA
 
 
 class Command(BaseCommand):

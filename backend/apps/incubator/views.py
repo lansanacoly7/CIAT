@@ -275,9 +275,28 @@ class MentorListView(generics.ListAPIView):
 
 
 class ProjetMentorView(APIView):
-    """Affectation ou modification du mentor d'un projet."""
+    """Affectation ou consultation du mentor d'un projet."""
 
-    permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.IsAuthenticated()]
+        return [HasRole(Role.ADMIN, Role.COORDONNATEUR)()]
+
+    def get(self, request, pk):
+        projet = get_object_or_404(Projet, pk=pk)
+        affectation = AffectationMentor.objects.filter(projet=projet).select_related("mentor").first()
+        user = request.user
+        # Seuls l'équipe CIAT, le comité, le porteur du projet et son mentor affecté peuvent consulter l'affectation.
+        autorise = (
+            user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE)
+            or projet.porteur_id == user.id
+            or (affectation is not None and affectation.mentor_id == user.id)
+        )
+        if not autorise:
+            raise PermissionDenied("Vous ne pouvez pas consulter le mentor de ce projet.")
+        if not affectation:
+            return Response(None, status=status.HTTP_200_OK)
+        return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
         projet = get_object_or_404(Projet, pk=pk)

@@ -332,6 +332,122 @@ def rechercher_passages(question: str, top_k: int = 3) -> list[PassageDocument]:
     return [p for _, p in scores[:top_k]]
 
 
+def reponse_est_un_refus(reponse_texte: str) -> bool:
+    """Détecte si la réponse de l'assistant constitue un refus ou une absence d'information."""
+    if not reponse_texte:
+        return True
+
+    texte_clean = reponse_texte.lower().strip()
+    if texte_clean == MESSAGE_REFUS_DOCUMENTS.lower().strip():
+        return True
+
+    indicateurs_refus = [
+        "ne contiennent pas d'information",
+        "ne contient pas d'information",
+        "ne permettent pas de répondre",
+        "ne permet pas de répondre",
+        "ne permettent pas d'y répondre",
+        "ne permet pas d'y répondre",
+        "ne figure pas dans les extraits",
+        "ne figurent pas dans les extraits",
+        "ne se trouve pas dans les extraits",
+        "ne se trouvent pas dans les extraits",
+        "ne dispose pas d'informations",
+        "ne disposent pas d'informations",
+        "aucun extrait ne",
+        "aucun des extraits ne",
+        "pas d'information permettant de répondre",
+        "pas d'informations permettant de répondre",
+        "impossible de répondre à partir des extraits",
+        "les documents fournis ne mentionnent pas",
+        "les extraits fournis ne mentionnent pas",
+        "ne mentionnent pas d'information",
+        "ne mentionne pas d'information",
+    ]
+    for ind in indicateurs_refus:
+        if ind in texte_clean:
+            return True
+
+    if ("désolé" in texte_clean or "desole" in texte_clean) and (
+        "ne " in texte_clean or "pas d'information" in texte_clean or "aucun" in texte_clean
+    ):
+        return True
+
+    return False
+
+
+def passage_est_utilise(passage: PassageDocument, reponse_texte: str) -> bool:
+    """Détermine si un extrait documentaire a réellement été exploité dans la réponse."""
+    if not reponse_texte:
+        return False
+
+    reponse_lower = reponse_texte.lower()
+
+    # 1. Référence directe à l'identifiant du document dans la réponse
+    if f"document #{passage.document_id}".lower() in reponse_lower:
+        return True
+
+    # 2. Mention directe du titre du document (ou d'une portion significative du titre)
+    titre = passage.document.titre.lower().strip()
+    if len(titre) > 5 and titre in reponse_lower:
+        return True
+
+    mots_titre = [m for m in extraire_mots_cles(titre) if len(m) >= 4]
+    if len(mots_titre) >= 2:
+        mots_titre_trouves = sum(1 for m in mots_titre if m in reponse_lower)
+        if mots_titre_trouves >= max(2, len(mots_titre) - 1):
+            return True
+
+    # 3. Recoupement lexical significatif avec le texte du passage
+    mots_passage = [m for m in extraire_mots_cles(passage.texte) if len(m) >= 4]
+    if not mots_passage:
+        return False
+
+    mots_trouves = set(m for m in mots_passage if m in reponse_lower)
+    if len(mots_trouves) >= 2:
+        return True
+
+    # 4. Séquence exacte d'au moins 12 caractères consécutifs
+    texte_passage_clean = " ".join(passage.texte.lower().split())
+    reponse_clean = " ".join(reponse_lower.split())
+    for i in range(0, len(texte_passage_clean) - 15, 10):
+        sous_chaine = texte_passage_clean[i : i + 15]
+        if len(sous_chaine) >= 12 and sous_chaine in reponse_clean:
+            return True
+
+    return False
+
+
+def filtrer_sources_utilisees(passages: list[PassageDocument], reponse_texte: str) -> list[dict]:
+    """Ne conserve dans les sources que les passages réellement utilisés par le modèle."""
+    if not passages or reponse_est_un_refus(reponse_texte):
+        return []
+
+    sources_utilisees = []
+    vus = set()
+
+    for p in passages:
+        if passage_est_utilise(p, reponse_texte):
+            if p.document_id not in vus:
+                sources_utilisees.append({
+                    "document_id": p.document_id,
+                    "titre": p.document.titre,
+                    "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+                })
+                vus.add(p.document_id)
+
+    # Si un seul passage a été transmis et que la réponse n'est pas un refus
+    if not sources_utilisees and len(passages) == 1:
+        p = passages[0]
+        sources_utilisees.append({
+            "document_id": p.document_id,
+            "titre": p.document.titre,
+            "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+        })
+
+    return sources_utilisees
+
+
 # ==============================================================================
 # 4. Traitement conversationnel (mode documents & mode atelier)
 # ==============================================================================
@@ -413,15 +529,6 @@ def traiter_message_assistant(
             reponse_texte = MESSAGE_REFUS_DOCUMENTS
             sources = []
         else:
-            sources = [
-                {
-                    "document_id": p.document_id,
-                    "titre": p.document.titre,
-                    "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-                }
-                for p in passages
-            ]
-
             extraits_contexte = "\n\n".join(
                 f"[Document #{p.document_id} — {p.document.titre}]\n{p.texte}"
                 for p in passages
@@ -453,6 +560,9 @@ def traiter_message_assistant(
                 raise ServiceIANonConfigure(str(exc)) from exc
             except AIError as exc:
                 raise ServiceIAIndisponible(str(exc)) from exc
+
+            # Filtrage strict : seules les sources réellement mobilisées par le modèle sont renvoyées
+            sources = filtrer_sources_utilisees(passages, reponse_texte)
 
     # Persistance de la réponse de l'assistant
     return MessageAssistant.objects.create(

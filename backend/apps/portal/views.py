@@ -12,13 +12,15 @@ Endpoints :
 - T3 :
   - /api/portal/projets-incubes/ (public, statut incube|prototype|termine, filtres et recherche)
 """
-from django.db.models import Q
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, status, viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import NotFound
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role
 from apps.core.permissions import IsEquipeCIAT, ReadOnlyOrRole
@@ -66,8 +68,45 @@ class ActualiteViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnlyOrRole(Role.ADMIN, Role.COORDONNATEUR)]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["titre", "resume", "contenu"]
-    ordering_fields = ["publie_le", "cree_le", "titre"]
+    ordering_fields = ["publie_le", "cree_le", "titre", "vues"]
     ordering = ["-publie_le"]
+
+    def get_queryset(self):
+        user = getattr(self.request, "user", None)
+        is_equipe = bool(
+            user and user.is_authenticated and (
+                getattr(user, "is_superuser", False)
+                or getattr(user, "role", None) in (Role.ADMIN, Role.COORDONNATEUR)
+            )
+        )
+        if is_equipe:
+            return Actualite.objects.all()
+        return Actualite.objects.filter(publie=True)
+
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        lookup_val = self.kwargs.get(lookup_url_kwarg)
+
+        obj = None
+        if lookup_val is not None:
+            if str(lookup_val).isdigit():
+                obj = queryset.filter(Q(pk=int(lookup_val)) | Q(slug=lookup_val)).first()
+            else:
+                obj = queryset.filter(slug=lookup_val).first()
+
+        if not obj:
+            raise NotFound("Aucune actualité trouvée correspondant à cet identifiant ou slug.")
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        Actualite.objects.filter(pk=instance.pk).update(vues=F("vues") + 1)
+        instance.refresh_from_db(fields=["vues"])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 @extend_schema_view(
@@ -310,3 +349,76 @@ class ProjetIncubeViewSet(viewsets.ReadOnlyModelViewSet):
                 queryset = queryset.none()
 
         return queryset
+
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        lookup_val = self.kwargs.get(lookup_url_kwarg)
+
+        obj = None
+        if lookup_val is not None:
+            if str(lookup_val).isdigit():
+                obj = queryset.filter(pk=int(lookup_val)).first()
+            else:
+                obj = queryset.filter(Q(domaine__slug=lookup_val) | Q(titre__iexact=lookup_val)).first()
+
+        if not obj:
+            raise NotFound("Aucun projet incubé trouvé correspondant à cet identifiant.")
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        Projet.objects.filter(pk=instance.pk).update(vues=F("vues") + 1)
+        instance.refresh_from_db(fields=["vues"])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+# ==============================================================================
+# Phase 3 — T2 : Statistiques de consultation du portail
+# ==============================================================================
+
+class StatistiquesPortailView(APIView):
+    """GET /api/portal/statistiques/ : Réservé à l'équipe CIAT.
+
+    Renvoie le total des vues du portail ainsi que le détail des vues par
+    actualité et par projet incubé.
+    Format : {
+        "total_vues": int,
+        "actualites": [{"slug": str, "titre": str, "vues": int}],
+        "projets": [{"id": int, "titre": str, "vues": int}]
+    }
+    """
+
+    permission_classes = [IsAuthenticated, IsEquipeCIAT]
+
+    def get(self, request):
+        actualites = list(
+            Actualite.objects.values("slug", "titre", "vues").order_by("-vues", "titre")
+        )
+
+        statuts_autorises = [
+            Projet.Statut.INCUBE,
+            Projet.Statut.PROTOTYPE,
+            Projet.Statut.TERMINE,
+        ]
+        projets = list(
+            Projet.objects.filter(statut__in=statuts_autorises)
+            .values("id", "titre", "vues")
+            .order_by("-vues", "titre")
+        )
+
+        total_actu = sum(a["vues"] for a in actualites)
+        total_proj = sum(p["vues"] for p in projets)
+        total_vues = total_actu + total_proj
+
+        return Response(
+            {
+                "total_vues": total_vues,
+                "actualites": actualites,
+                "projets": projets,
+            },
+            status=status.HTTP_200_OK,
+        )

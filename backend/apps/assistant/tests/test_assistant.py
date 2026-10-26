@@ -309,7 +309,38 @@ class AssistantAPITestCase(TestCase):
         system_prompt = kwargs.get("system", "")
         self.assertIn("si la réponse n'y est pas", system_prompt)
         self.assertIn("refuse d'inventer", system_prompt)
-        self.assertTrue(len(resp.data["sources"]) >= 1)
+        # La réponse étant un refus explicite d'inventer, aucune source n'a été utilisée
+        self.assertEqual(resp.data["sources"], [])
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
+    def test_seules_les_sources_reellement_utilisees_sont_renvoyees(self, mock_chat, mock_configured):
+        """Lorsque plusieurs passages sont transmis dans le contexte, seules les sources
+        dont le contenu est effectivement mobilisé dans la réponse sont renvoyées."""
+        mock_configured.return_value = True
+        # Réponse qui n'utilise que le guide d'incubation (durée, six mois) et pas la charte éthique
+        mock_chat.return_value = (
+            "D'après le Guide d'incubation CIAT 2026, l'accompagnement dure six mois renouvelable."
+        )
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        payload = {
+            "contenu": "Quelle est la durée de l'incubation et que dit la charte ?",
+            "mode": "documents",
+        }
+        resp = self.client.post(f"/api/assistant/conversations/{conv.id}/messages/", payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        sources = resp.data["sources"]
+        source_doc_ids = [s["document_id"] for s in sources]
+
+        # Le guide d'incubation est cité / utilisé
+        self.assertIn(self.doc_guide.id, source_doc_ids)
+        # La charte n'a pas été mobilisée dans la réponse donc elle n'apparaît pas
+        self.assertNotIn(self.doc_charte.id, source_doc_ids)
+
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")

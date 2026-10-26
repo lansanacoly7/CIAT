@@ -10,15 +10,17 @@ Vérifie :
 5. Robustesse aux cas limites (base vide, 0 division)
 """
 from datetime import date, timedelta
+from decimal import Decimal
+import io
 from unittest.mock import patch
+import openpyxl
+
+from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from decimal import Decimal
-from django.core.exceptions import ValidationError
-from django.core.management import call_command
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.analytics.models import (
@@ -75,7 +77,6 @@ class AnalyticsSecurityAndRBACPermissionsTests(TestCase):
             reverse("analytics-par-cohorte"),
             reverse("analytics-par-genre"),
             reverse("analytics-evolution"),
-            reverse("analytics-export"),
         ]
 
 
@@ -350,80 +351,145 @@ class AnalyticsEndpointsAndDataTests(TestCase):
         self.assertEqual(data["taux_selection"], 0.0)
 
 
+# ==============================================================================
+# TESTS T3 — Export Excel et PDF du Tableau de Bord Décisionnel
+# ==============================================================================
+
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class AnalyticsExportTests(TestCase):
-    """Tests des exports Excel (.xlsx) et PDF (.pdf) du tableau de bord."""
+    """Vérification des exports XLSX et PDF avec respect de la charte CIAT et des filtres."""
 
     def setUp(self):
         self.client = APIClient()
+
         self.coordo = User.objects.create_user(
             email="coordo.export@ciat.sn",
             password="pwd",
             role=Role.COORDONNATEUR,
+        )
+        self.admin = User.objects.create_user(
+            email="admin.export@ciat.sn",
+            password="pwd",
+            role=Role.ADMIN,
+        )
+        self.comite = User.objects.create_user(
+            email="comite.export@ciat.sn",
+            password="pwd",
+            role=Role.COMITE,
         )
         self.porteur = User.objects.create_user(
             email="porteur.export@ciat.sn",
             password="pwd",
             role=Role.PORTEUR,
         )
-        self.url = reverse("analytics-export")
 
-        # Jeu de test avec projets
-        cohorte = Cohorte.objects.create(nom="Cohorte Export 2026", annee=2026)
-        domaine = Domaine.objects.create(nom="Santé & Numérique", slug="sante-numerique")
-        porteur_f = User.objects.create_user(
-            email="f.export@ciat.sn", password="pwd", role=Role.PORTEUR, genre="F"
-        )
-        Projet.objects.create(
-            titre="Projet Santé 1",
-            resume="Desc",
-            porteur=porteur_f,
-            domaine=domaine,
-            cohorte=cohorte,
+        self.domaine_tic = Domaine.objects.create(nom="TIC & Numérique", slug="tic-numerique")
+        self.domaine_agri = Domaine.objects.create(nom="AgriTech", slug="agritech")
+        self.cohorte_2025 = Cohorte.objects.create(nom="Cohorte 2025", annee=2025)
+
+        # Création de quelques projets avec caractères accentués
+        self.p1 = Projet.objects.create(
+            titre="Système d'irrigation intelligente à énergie solaire",
+            resume="Projet innovant pour les agriculteurs sénégalais.",
+            domaine=self.domaine_agri,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur,
             statut=Projet.Statut.INCUBE,
         )
+        self.p2 = Projet.objects.create(
+            titre="Plateforme médicale de télémédecine rurale",
+            resume="Consultation à distance.",
+            domaine=self.domaine_tic,
+            cohorte=self.cohorte_2025,
+            porteur=self.porteur,
+            statut=Projet.Statut.PROTOTYPE,
+        )
 
-
-    def test_export_invalid_format_returns_400(self):
-        """Un format non supporté retourne HTTP 400 Bad Request."""
+    def test_export_xlsx_valide(self):
+        """GET /api/analytics/export/?format=xlsx génère un fichier Excel valide avec la charte CIAT."""
         self.client.force_authenticate(user=self.coordo)
-        res = self.client.get(self.url, {"format": "docx"})
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Format non supporté", res.json().get("detail", ""))
+        res = self.client.get(reverse("analytics-export"), {"format": "xlsx"})
 
-
-
-    def test_export_xlsx_success(self):
-        """L'export format=xlsx génère un fichier binaire Excel valide avec entêtes."""
-        self.client.force_authenticate(user=self.coordo)
-        res = self.client.get(self.url, {"format": "xlsx"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(
             res["Content-Type"],
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        self.assertTrue(res["Content-Disposition"].startswith("attachment; filename="))
-        self.assertTrue(len(res.content) > 1000)
+        self.assertIn("attachment; filename=", res["Content-Disposition"])
+        self.assertTrue(res["Content-Disposition"].endswith('.xlsx"'))
 
-    def test_export_pdf_success(self):
-        """L'export format=pdf génère un document PDF valide aux normes CIAT."""
-        self.client.force_authenticate(user=self.coordo)
-        res = self.client.get(self.url, {"format": "pdf"})
+        # Lecture du fichier via openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(res.content))
+        self.assertIn("Analyses CIAT", wb.sheetnames)
+        ws = wb["Analyses CIAT"]
+
+        # Vérification de l'en-tête institutionnel et des accents
+        self.assertIn("CENTRE D'INNOVATION", str(ws["A1"].value))
+        self.assertIn("Tableau de Bord", str(ws["A2"].value))
+
+        # Vérification qu'il y a des lignes de données
+        textes_cellules = [str(cell.value) for row in ws.iter_rows() for cell in row if cell.value]
+        self.assertTrue(any("INDICATEURS CLÉS" in t for t in textes_cellules))
+        self.assertTrue(any("AgriTech" in t for t in textes_cellules))
+
+    def test_export_pdf_valide(self):
+        """GET /api/analytics/export/?format=pdf génère un fichier PDF valide avec pagination et charte."""
+        self.client.force_authenticate(user=self.admin)
+        res = self.client.get(reverse("analytics-export"), {"format": "pdf"})
+
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res["Content-Type"], "application/pdf")
-        self.assertTrue(res["Content-Disposition"].startswith("attachment; filename="))
-        self.assertTrue(res.content.startswith(b"%PDF-"))
-        self.assertTrue(len(res.content) > 1000)
+        self.assertIn("attachment; filename=", res["Content-Disposition"])
+        self.assertTrue(res["Content-Disposition"].endswith('.pdf"'))
 
-    def test_export_with_filters(self):
-        """L'export applique fidèlement les filtres demandés."""
+        # Header magic bytes PDF
+        self.assertTrue(res.content.startswith(b"%PDF"))
+        self.assertGreater(len(res.content), 1000)
+
+    def test_export_avec_filtres_actifs(self):
+        """Les filtres (domaine, cohorte, statut) s'appliquent correctement aux exports."""
         self.client.force_authenticate(user=self.coordo)
         res = self.client.get(
-            self.url,
-            {"format": "xlsx", "cohorte": "2026", "domaine": "sante-numerique"},
+            reverse("analytics-export"),
+            {"format": "xlsx", "domaine": "agritech", "statut": "incube"},
         )
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(res.content) > 1000)
+
+        wb = openpyxl.load_workbook(io.BytesIO(res.content))
+        ws = wb["Analyses CIAT"]
+        # Vérifie que la ligne de métadonnées mentionne le filtre
+        self.assertIn("agritech", str(ws["A3"].value))
+
+    def test_export_format_invalide_ou_manquant_renvoie_400(self):
+        """Un format inconnu ou manquant renvoie 400 Bad Request."""
+        self.client.force_authenticate(user=self.coordo)
+
+        # Format manquant
+        res_manquant = self.client.get(reverse("analytics-export"))
+        self.assertEqual(res_manquant.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Format d'export invalide", res_manquant.json()["detail"])
+
+        # Format invalide
+        res_invalide = self.client.get(reverse("analytics-export"), {"format": "csv"})
+        self.assertEqual(res_invalide.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("xlsx", res_invalide.json()["detail"])
+
+    def test_export_refuse_au_porteur(self):
+        """Un porteur de projet n'a pas accès à l'export des analyses (403)."""
+        self.client.force_authenticate(user=self.porteur)
+        res = self.client.get(reverse("analytics-export"), {"format": "xlsx"})
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_autorise_au_comite(self):
+        """Un membre du comité de sélection a accès à l'export (200)."""
+        self.client.force_authenticate(user=self.comite)
+        res = self.client.get(reverse("analytics-export"), {"format": "xlsx"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_export_refuse_aux_anonymes(self):
+        """Un visiteur non connecté est rejeté (401)."""
+        res = self.client.get(reverse("analytics-export"), {"format": "xlsx"})
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
@@ -1035,4 +1101,5 @@ class AnalyticsSeedAnalyticsCommandTests(TestCase):
 
         self.assertEqual(nb_part_1, nb_part_2)
         self.assertEqual(nb_fin_1, nb_fin_2)
+
 

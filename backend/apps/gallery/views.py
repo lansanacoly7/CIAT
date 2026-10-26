@@ -65,12 +65,29 @@ class FicheListCreateView(APIView):
         return [IsAuthenticated()]
 
     def get(self, request):
-        # Point d'attention absolu : SEULES les fiches au statut 'publie' sont visibles
-        queryset = (
-            FicheInnovation.objects.filter(statut=FicheInnovation.Statut.PUBLIE)
-            .select_related("projet", "projet__domaine", "projet__cohorte")
-            .order_by("-cree_le")
-        )
+        # Point d'attention absolu : SEULES les fiches au statut 'publie' sont visibles publiquement.
+        # Les utilisateurs authentifiés autorisés peuvent consulter leurs propres fiches ou les fiches en validation.
+        mes_fiches = request.query_params.get("mes_fiches") == "1"
+        en_validation = request.query_params.get("en_validation") == "1"
+
+        if en_validation and _est_equipe_ciat(request.user):
+            queryset = (
+                FicheInnovation.objects.filter(statut=FicheInnovation.Statut.EN_VALIDATION)
+                .select_related("projet", "projet__domaine", "projet__cohorte")
+                .order_by("-cree_le")
+            )
+        elif mes_fiches and request.user.is_authenticated:
+            queryset = (
+                FicheInnovation.objects.filter(projet__porteur_id=request.user.id)
+                .select_related("projet", "projet__domaine", "projet__cohorte")
+                .order_by("-cree_le")
+            )
+        else:
+            queryset = (
+                FicheInnovation.objects.filter(statut=FicheInnovation.Statut.PUBLIE)
+                .select_related("projet", "projet__domaine", "projet__cohorte")
+                .order_by("-cree_le")
+            )
 
         # Filtre domaine
         domaine = request.query_params.get("domaine")
