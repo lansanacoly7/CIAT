@@ -1,10 +1,10 @@
 /**
  * Client API et modèles pour le module P2 Incubateur (Dépôt de dossier).
- * Conforme aux spécifications de taches/CONTRATS_API.md.
- * Inclut un mécanisme de fallback local si le backend d'Ibrahima est en cours de dev.
+ * Conforme aux spécifications de taches/CONTRATS_API.md et docs/INCUBATEUR_P2.md.
+ * Aucun stockage fictif ou contournement local : toutes les opérations sont reliées à l'API Django REST Framework.
  */
 
-import { api, ApiError } from "./api";
+import { api } from "./api";
 
 export type PieceType =
   | "fiche_projet"
@@ -83,9 +83,10 @@ export interface Dossier {
   soumis_le: string | null;
 }
 
-const LOCAL_DOSSIER_KEY = "ciat_mock_dossier";
-
-function calculateCompletude(pieces: Piece[]): { completude: number; manquantes: PieceType[] } {
+/**
+ * Calcule la complétude locale à partir des pièces retournées par le serveur
+ */
+export function calculateCompletude(pieces: Piece[]): { completude: number; manquantes: PieceType[] } {
   const typesPresents = new Set(pieces.map((p) => p.type));
   const manquantes = PIECES_OBLIGATOIRES.filter((type) => !typesPresents.has(type));
   const fourniesCount = PIECES_OBLIGATOIRES.length - manquantes.length;
@@ -93,16 +94,33 @@ function calculateCompletude(pieces: Piece[]): { completude: number; manquantes:
   return { completude, manquantes };
 }
 
-function getInitialMockDossier(): Dossier {
+/**
+ * Récupère le dossier du porteur connecté depuis le backend DRF.
+ * Si aucun dossier n'existe encore, retourne un modèle initial vide (non persisté).
+ */
+export async function getMonDossier(): Promise<Dossier> {
+  const dossiers = await api<{ results?: Dossier[] } | Dossier[]>("/incubator/dossiers/");
+  const list = Array.isArray(dossiers) ? dossiers : dossiers.results ?? [];
+  if (list.length > 0) {
+    const d = list[0];
+    const { completude, manquantes } = calculateCompletude(d.pieces ?? []);
+    return {
+      ...d,
+      completude: d.completude ?? completude,
+      pieces_manquantes: d.pieces_manquantes ?? manquantes,
+      pieces: d.pieces ?? [],
+    };
+  }
+
+  // Modèle initial vierge pour nouveau porteur
   return {
-    id: 1,
+    id: 0,
     projet: {
-      id: 1,
       titre: "",
       resume: "",
       probleme: "",
       solution: "",
-      domaine_nom: "AgriTech",
+      domaine_nom: "Général",
     },
     statut: "brouillon",
     completude: 0,
@@ -112,71 +130,60 @@ function getInitialMockDossier(): Dossier {
   };
 }
 
-function getStoredMockDossier(): Dossier {
-  if (typeof window === "undefined") return getInitialMockDossier();
-  const raw = localStorage.getItem(LOCAL_DOSSIER_KEY);
-  if (!raw) {
-    const init = getInitialMockDossier();
-    localStorage.setItem(LOCAL_DOSSIER_KEY, JSON.stringify(init));
-    return init;
-  }
-  try {
-    return JSON.parse(raw) as Dossier;
-  } catch {
-    return getInitialMockDossier();
-  }
-}
-
-function saveStoredMockDossier(dossier: Dossier) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(LOCAL_DOSSIER_KEY, JSON.stringify(dossier));
-  }
-}
-
 /**
- * Récupère le dossier du porteur connecté
+ * Enregistre ou met à jour les informations du projet (Étape 1) via l'API réelle.
  */
-export async function getMonDossier(): Promise<Dossier> {
-  try {
-    const dossiers = await api<{ results?: Dossier[] } | Dossier[]>("/incubator/dossiers/");
-    const list = Array.isArray(dossiers) ? dossiers : dossiers.results ?? [];
-    if (list.length > 0) return list[0];
-  } catch {
-    // Backend pas encore prêt, on utilise le mock
+export async function saveProjetInfo(data: ProjetData, dossierId?: number): Promise<Dossier> {
+  let projetId = data.id;
+
+  if (projetId) {
+    await api(`/projets/${projetId}/`, { method: "PATCH", body: data });
+  } else {
+    const nouveauProjet = await api<ProjetData>("/projets/", { method: "POST", body: data });
+    projetId = nouveauProjet.id;
   }
-  return getStoredMockDossier();
+
+  // Si le dossier n'existe pas encore, le créer avec le projet rattaché
+  if (!dossierId || dossierId === 0) {
+    const nouveauDossier = await api<Dossier>("/incubator/dossiers/", {
+      method: "POST",
+      body: { projet_id: projetId },
+    });
+    const { completude, manquantes } = calculateCompletude(nouveauDossier.pieces ?? []);
+    return {
+      ...nouveauDossier,
+      completude,
+      pieces_manquantes: manquantes,
+      pieces: nouveauDossier.pieces ?? [],
+    };
+  }
+
+  // Recharger le dossier à jour
+  return await getDossier(dossierId);
 }
 
 /**
- * Enregistre ou met à jour les informations du projet (Étape 1)
+ * Récupère un dossier spécifique par son ID
  */
-export async function saveProjetInfo(data: ProjetData): Promise<Dossier> {
-  try {
-    if (data.id) {
-      await api(`/projets/${data.id}/`, { method: "PATCH", body: data });
-    } else {
-      const p = await api<ProjetData>("/projets/", { method: "POST", body: data });
-      data.id = p.id;
-    }
-  } catch {
-    // Mode hors-ligne / mock
-  }
-
-  const dossier = getStoredMockDossier();
-  dossier.projet = { ...dossier.projet, ...data };
-  saveStoredMockDossier(dossier);
-  return dossier;
+export async function getDossier(dossierId: number): Promise<Dossier> {
+  const dossier = await api<Dossier>(`/incubator/dossiers/${dossierId}/`);
+  const { completude, manquantes } = calculateCompletude(dossier.pieces ?? []);
+  return {
+    ...dossier,
+    completude: dossier.completude ?? completude,
+    pieces_manquantes: dossier.pieces_manquantes ?? manquantes,
+    pieces: dossier.pieces ?? [],
+  };
 }
 
 /**
- * Dépose une pièce justificative (Étape 2)
+ * Dépose une pièce justificative (Étape 2) en multipart/form-data via l'API DRF.
  */
 export async function uploadPiece(
   dossierId: number,
   type: PieceType,
   file: File
 ): Promise<{ dossier: Dossier; piece: Piece }> {
-  // Validation stricte de la taille (10 Mo)
   if (file.size > 10 * 1024 * 1024) {
     throw new Error("Le fichier dépasse la taille maximale autorisée de 10 Mo.");
   }
@@ -185,86 +192,37 @@ export async function uploadPiece(
   formData.append("type", type);
   formData.append("fichier", file);
 
-  let newPiece: Piece | null = null;
-  try {
-    newPiece = await api<Piece>(`/incubator/dossiers/${dossierId}/pieces/`, {
-      method: "POST",
-      body: formData,
-    });
-  } catch {
-    // Fallback Mock
-    const formatSize = (bytes: number) => {
-      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
-      return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-    };
+  const piece = await api<Piece>(`/incubator/dossiers/${dossierId}/pieces/`, {
+    method: "POST",
+    body: formData,
+  });
 
-    newPiece = {
-      id: Date.now(),
-      type,
-      nom: file.name,
-      fichier: URL.createObjectURL(file),
-      depose_le: new Date().toISOString(),
-      taille: formatSize(file.size),
-    };
-  }
-
-  const dossier = getStoredMockDossier();
-  // Remplacer si même type pour les pièces uniques obligatoires
-  const filtered = dossier.pieces.filter((p) => p.type !== type || type === "autre");
-  dossier.pieces = [...filtered, newPiece];
-
-  const { completude, manquantes } = calculateCompletude(dossier.pieces);
-  dossier.completude = completude;
-  dossier.pieces_manquantes = manquantes;
-  saveStoredMockDossier(dossier);
-
-  return { dossier, piece: newPiece };
+  const dossierAjour = await getDossier(dossierId);
+  return { dossier: dossierAjour, piece };
 }
 
 /**
- * Supprime une pièce justificative
+ * Supprime une pièce justificative via l'API DRF.
  */
 export async function deletePiece(dossierId: number, pieceId: number): Promise<Dossier> {
-  try {
-    await api(`/incubator/dossiers/${dossierId}/pieces/${pieceId}/`, {
-      method: "DELETE",
-    });
-  } catch {
-    // Mode mock
-  }
-
-  const dossier = getStoredMockDossier();
-  dossier.pieces = dossier.pieces.filter((p) => p.id !== pieceId);
-  const { completude, manquantes } = calculateCompletude(dossier.pieces);
-  dossier.completude = completude;
-  dossier.pieces_manquantes = manquantes;
-  saveStoredMockDossier(dossier);
-
-  return dossier;
+  await api(`/incubator/dossiers/${dossierId}/pieces/${pieceId}/`, {
+    method: "DELETE",
+  });
+  return await getDossier(dossierId);
 }
 
 /**
- * Soumet définitivement le dossier (Étape 3)
+ * Soumet définitivement le dossier (Étape 3) via l'API DRF.
  */
 export async function soumettreDossier(dossierId: number): Promise<Dossier> {
-  const dossier = getStoredMockDossier();
-  if (dossier.pieces_manquantes.length > 0) {
-    throw new ApiError(400, {
-      detail: "Impossible de soumettre : des pièces obligatoires sont manquantes.",
-      pieces_manquantes: dossier.pieces_manquantes,
-    });
-  }
-
-  try {
-    const res = await api<Dossier>(`/incubator/dossiers/${dossierId}/soumettre/`, {
-      method: "POST",
-    });
-    return res;
-  } catch {
-    // Fallback mock
-    dossier.statut = "soumis";
-    dossier.soumis_le = new Date().toISOString();
-    saveStoredMockDossier(dossier);
-    return dossier;
-  }
+  const res = await api<Dossier>(`/incubator/dossiers/${dossierId}/soumettre/`, {
+    method: "POST",
+  });
+  const { completude, manquantes } = calculateCompletude(res.pieces ?? []);
+  return {
+    ...res,
+    completude,
+    pieces_manquantes: manquantes,
+    pieces: res.pieces ?? [],
+  };
 }

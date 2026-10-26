@@ -5,7 +5,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { api, ApiError, type Page } from "@/lib/api";
 import type { Dossier, ProjetData } from "@/lib/incubator";
-import { getDossiersComite, getEvaluationsDossier } from "@/lib/evaluation";
 import EvaluationDossierList, { type DossierEval } from "@/components/incubateur/EvaluationDossierList";
 import DossierDetailCard, { type EvaluationsSummary } from "@/components/incubateur/DossierDetailCard";
 import ScoringGrid from "@/components/incubateur/ScoringGrid";
@@ -31,15 +30,11 @@ function EvaluationBoard() {
 
   const loadDossiers = useCallback(async () => {
     try {
-      let list: Dossier[] = [];
-      try {
-        const page = await api<Page<Dossier> | Dossier[]>("/incubator/dossiers/");
-        list = (Array.isArray(page) ? page : page.results).filter((d) => d.statut !== "brouillon");
-      } catch {
-        list = await getDossiersComite();
-      }
+      const page = await api<Page<Dossier> | Dossier[]>("/incubator/dossiers/");
+      const rawList = Array.isArray(page) ? page : page.results ?? [];
+      const list = rawList.filter((d) => d.statut !== "brouillon");
 
-      // Le contrat ne renvoie que {id, titre} pour le projet : on récupère domaine, porteur et textes.
+      // Enrichissement des détails du projet si disponible
       const enriched = await Promise.all(
         list.map(async (d): Promise<DossierEval> => {
           try {
@@ -53,7 +48,7 @@ function EvaluationBoard() {
       setDossiers(enriched);
       setError(null);
     } catch (err) {
-      setError(message(err, "Impossible de charger les dossiers. Veuillez réessayer."));
+      setError(message(err, "Impossible de charger les dossiers."));
     } finally {
       setLoading(false);
     }
@@ -73,9 +68,7 @@ function EvaluationBoard() {
     setEvalsLoading(true);
     setEvalsError(null);
     try {
-      const res = await api<EvaluationsSummary | EvaluationsSummary["evaluations"]>(`/incubator/dossiers/${id}/evaluations/`).catch(async () => {
-        return await getEvaluationsDossier(id);
-      });
+      const res = await api<EvaluationsSummary | EvaluationsSummary["evaluations"]>(`/incubator/dossiers/${id}/evaluations/`);
       const summary: EvaluationsSummary = Array.isArray(res)
         ? { score_moyen: null, evaluations: res }
         : { score_moyen: res.score_moyen ?? null, evaluations: res.evaluations ?? [] };

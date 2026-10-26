@@ -107,34 +107,13 @@ function DepotDossier() {
       setProjetId(projet.id);
       setInfo(values);
       if (!dossier) {
-        setDossier(await api<Dossier>("/incubator/dossiers/", { method: "POST", body: { projet: projet.id } }));
+        const nouveauDossier = await api<Dossier>("/incubator/dossiers/", { method: "POST", body: { projet: projet.id } });
+        setDossier(nouveauDossier);
       }
       setStep(1);
       setMaxReached((m) => Math.max(m, 1));
-    } catch {
-      // Fallback si le backend incubator n'est pas encore démarré
-      const pid = projetId ?? 1;
-      setProjetId(pid);
-      setInfo(values);
-      if (!dossier) {
-        setDossier({
-          id: 1,
-          projet: {
-            id: pid,
-            titre: values.titre,
-            resume: values.resume,
-            probleme: values.probleme,
-            solution: values.solution,
-          },
-          statut: "brouillon",
-          completude: 0,
-          pieces: [],
-          pieces_manquantes: ["fiche_projet", "presentation_equipe", "budget_previsionnel"],
-          soumis_le: null,
-        });
-      }
-      setStep(1);
-      setMaxReached((m) => Math.max(m, 1));
+    } catch (err) {
+      setSaveError(errorMessage(err, "Impossible d'enregistrer le projet. Veuillez vérifier les informations et réessayer."));
     } finally {
       setSaving(false);
     }
@@ -147,8 +126,8 @@ function DepotDossier() {
     try {
       await api(`/incubator/dossiers/${dossier.id}/soumettre/`, { method: "POST" });
       setSubmitted(true);
-    } catch {
-      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(errorMessage(err, "Impossible de soumettre le dossier. Veuillez vérifier que toutes les pièces sont fournies et réessayer."));
     } finally {
       setSubmitting(false);
     }
