@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Post 3 — Galerie des Innovations & QR Code (1080x1080)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1080px;
+      height: 1080px;
+      background: #24140D;
+      color: #FAF7F2;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      height: 65px;
+      width: auto;
+    }
+    .badge {
+      background: rgba(212, 170, 112, 0.2);
+      border: 1.5px solid #D4AA70;
+      color: #D4AA70;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* Section Centrale avec Bloc QR */
+    .center-content {
+      display: flex;
+      align-items: center;
+      gap: 50px;
+      background: #341C11;
+      border: 2px solid #5A3A22;
+      border-radius: 28px;
+      padding: 45px 50px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .qr-card {
+      background: #FFFFFF;
+      padding: 24px;
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      shrink: 0;
+    }
+    .qr-card img {
+      width: 250px;
+      height: 250px;
+      display: block;
+    }
+    .qr-card span {
+      display: block;
+      margin-top: 12px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: #24140D;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-pane {
+      flex: 1;
+    }
+    .tagline {
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 36px;
+      line-height: 1.2;
+      color: #FFFFFF;
+      margin-bottom: 14px;
+    }
+    p {
+      color: #EBD9C0;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .domains-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      background: rgba(212, 170, 112, 0.15);
+      border: 1px solid rgba(212, 170, 112, 0.4);
+      color: #D4AA70;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 8px;
+    }
+
+    /* Footer Bar */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1.5px solid #5A3A22;
+      padding-top: 24px;
+    }
+    .url-chip {
+      background: #D4AA70;
+      color: #24140D;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .slogan {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #CBB69E;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="topbar">
+    <img src="../assets/logo_blanc.png" alt="CIAT" class="logo">
+    <div class="badge">Vitrine Technologique</div>
+  </div>
+
+  <!-- Center Content avec QR Code -->
+  <div class="center-content">
+    <div class="qr-card">
+      <img src="../assets/qr_galerie.png" alt="QR Code Galerie">
+      <span>Scannez &amp; Visitez</span>
+    </div>
+    <div class="info-pane">
+      <div class="tagline">Galerie Publique des Innovations</div>
+      <h1>Explorez nos prototypes d'excellence.</h1>
+      <p>
+        Agroalimentaire, santé numérique, énergie propre, logistique : découvrez les fiches détaillées,
+        vidéos de démonstration et équipes de recherche formées à l'ISEP Diamniadio.
+      </p>
+      <div class="domains-pills">
+        <span class="pill">&bull; AgriTech</span>
+        <span class="pill">&bull; HealthTech</span>
+        <span class="pill">&bull; Énergies Vertes</span>
+        <span class="pill">&bull; Numérique &amp; IA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer bar -->
+  <div class="footer-bar">
+    <div class="url-chip">ciat.isepdiamniadio.sn/galerie</div>
+    <div class="slogan">Innovation &bull; Incubation &bull; Impact</div>
+  </div>
+</body>
+</html>
