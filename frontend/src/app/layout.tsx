@@ -24,10 +24,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={`${montserrat.variable} ${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-zinc-50">
         <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <div className="flex flex-1 flex-col lg:pl-64">
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
