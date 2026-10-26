@@ -1,3 +1,5 @@
+> **Document historique (version du début du projet).** Les priorités, les rôles et les tâches à jour sont dans [../taches/00_PRIORITES.md](../taches/00_PRIORITES.md) et dans les fiches par phase du dossier `taches/`. Les consignes Git sont dans [GUIDE_GIT.md](GUIDE_GIT.md).
+
 # Plateforme CIAT — Plan d'équipe
 
 > Écrit pour toute l'équipe Teranga Labs.
