@@ -1,17 +1,20 @@
 import { AlertCircle, Inbox, RotateCcw } from "lucide-react";
 
-/** Skeleton pour les 6 cartes KPI */
+/** Skeleton pour les 6 cartes KPI compactes */
 export function KpiSkeletonGrid() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={`kpi-skeleton-${i}`}
-          className="h-28 animate-pulse rounded-lg border border-zinc-200 bg-white p-5"
+          className="h-[78px] animate-pulse rounded-xl border border-zinc-200/80 bg-white p-3 sm:p-3.5"
         >
-          <div className="h-3 w-24 rounded bg-zinc-100" />
-          <div className="mt-4 h-7 w-16 rounded bg-zinc-200" />
-          <div className="mt-3 h-2.5 w-32 rounded bg-zinc-100" />
+          <div className="flex items-center justify-between">
+            <div className="h-2.5 w-16 rounded bg-zinc-200" />
+            <div className="h-5 w-5 rounded bg-zinc-100" />
+          </div>
+          <div className="mt-2.5 h-6 w-12 rounded bg-zinc-200" />
+          <div className="mt-2 h-2 w-20 rounded bg-zinc-100" />
         </div>
       ))}
     </div>

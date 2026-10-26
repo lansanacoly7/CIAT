@@ -94,8 +94,8 @@ export function DashboardContent() {
   const hasNoData = data.indicateurs.idees_recues === 0;
 
   return (
-    <div className="min-h-full bg-[#fcfbf9]/90 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="min-h-full bg-[#fcfbf9]/90 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-5">
         {/* =========================================================================
             1. BANNIÈRE INSTITUTIONNELLE CIAT (Mockup Officiel)
            ========================================================================= */}
@@ -126,9 +126,9 @@ export function DashboardContent() {
         {error ? (
           <ErrorState message={error} onRetry={handleRefresh} />
         ) : isLoading ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             <KpiSkeletonGrid />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <ChartSkeleton />
               <ChartSkeleton />
             </div>
@@ -136,9 +136,9 @@ export function DashboardContent() {
         ) : hasNoData ? (
           <EmptyState onReset={handleResetFilters} />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             {/* =========================================================================
-                4. LES 6 CARTES KPI AVEC ICÔNES THÉMATIQUES & MICRO-ANIMATIONS
+                4. LES 6 CARTES KPI COMPACTES & GAIN DE PLACE (6 COLONNES DESKTOP)
                ========================================================================= */}
             <section
               aria-labelledby="kpis-title"
@@ -148,7 +148,7 @@ export function DashboardContent() {
               <h2 id="kpis-title" className="sr-only">
                 Indicateurs clés de performance
               </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
                 <KpiCard
                   label="Idées reçues"
                   value={data.indicateurs.idees_recues}
