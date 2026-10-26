@@ -8,17 +8,59 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 
+import os
+import re
+from django.utils.text import slugify
+
 from apps.core.models import Projet, Role, User
 
 
+def sanitize_filename(filename):
+    """Nettoie le nom de fichier pour éviter les attaques de path traversal et caractères dangereux."""
+    basename = os.path.basename(filename)
+    name, ext = os.path.splitext(basename)
+    clean_name = slugify(name) or "piece"
+    clean_ext = re.sub(r"[^a-zA-Z0-9]", "", ext.lower())
+    return f"{clean_name}.{clean_ext}" if clean_ext else clean_name
+
+
 def piece_upload_path(instance, filename):
-    return f"incubator/pieces/{instance.dossier_id}/{filename}"
+    clean_file = sanitize_filename(filename)
+    return f"incubator/pieces/{instance.dossier_id}/{clean_file}"
 
 
 def validate_file_size(value):
     max_size = 10 * 1024 * 1024  # 10 Mo
+    if value.size == 0:
+        raise ValidationError("Le fichier est vide (0 octet).")
     if value.size > max_size:
         raise ValidationError("Le fichier ne doit pas dépasser 10 Mo.")
+
+
+def validate_file_content(file):
+    """Vérifie la signature binaire (magic bytes) du fichier pour éviter le spoofing d'extension."""
+    if file.size == 0:
+        raise ValidationError("Le fichier est vide (0 octet).")
+
+    pos = file.tell() if hasattr(file, "tell") else 0
+    file.seek(0)
+    header = file.read(16)
+    file.seek(pos)
+
+    ext = file.name.split(".")[-1].lower() if "." in file.name else ""
+
+    if ext == "pdf" and not header.startswith(b"%PDF-"):
+        raise ValidationError("Le fichier n'est pas un document PDF valide (signature invalide).")
+    elif ext == "png" and not header.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValidationError("Le fichier n'est pas une image PNG valide.")
+    elif ext in ("jpg", "jpeg") and not header.startswith(b"\xff\xd8\xff"):
+        raise ValidationError("Le fichier n'est pas une image JPEG valide.")
+    elif ext == "webp" and (not header.startswith(b"RIFF") or b"WEBP" not in header[:16]):
+        raise ValidationError("Le fichier n'est pas une image WEBP valide.")
+    elif ext == "docx" and not header.startswith(b"PK\x03\x04"):
+        raise ValidationError("Le fichier n'est pas un document Word DOCX valide.")
+    elif ext == "doc" and not header.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        raise ValidationError("Le fichier n'est pas un document Word DOC valide.")
 
 
 ALLOWED_PIECE_EXTENSIONS = ["pdf", "doc", "docx", "png", "jpg", "jpeg", "webp"]
@@ -89,7 +131,11 @@ class Dossier(models.Model):
         return len(self.pieces_manquantes) == 0
 
     def soumettre(self):
-        """Valide et soumet le dossier."""
+        """Valide et soumet officiellement le dossier."""
+        if self.statut != StatutDossier.BROUILLON:
+            raise ValidationError(
+                f"Ce dossier a déjà été soumis (statut actuel : {self.statut})."
+            )
         if not self.est_complet:
             raise ValidationError(
                 {
@@ -100,11 +146,18 @@ class Dossier(models.Model):
             )
         self.statut = StatutDossier.SOUMIS
         self.soumis_le = timezone.now()
-        self.save()
+        self.save(update_fields=["statut", "soumis_le", "modifie_le"])
+
         # Met à jour le statut du projet associé si encore à l'état idée
         if self.projet.statut == Projet.Statut.IDEE:
             self.projet.statut = Projet.Statut.DEPOSE
             self.projet.save(update_fields=["statut", "modifie_le"])
+
+    def commencer_evaluation(self):
+        """Transitionne le dossier vers l'état en_evaluation dès la première notation."""
+        if self.statut in (StatutDossier.SOUMIS, StatutDossier.COMPLET):
+            self.statut = StatutDossier.EN_EVALUATION
+            self.save(update_fields=["statut", "modifie_le"])
 
 
 class Piece(models.Model):
@@ -119,6 +172,7 @@ class Piece(models.Model):
         upload_to=piece_upload_path,
         validators=[
             validate_file_size,
+            validate_file_content,
             FileExtensionValidator(allowed_extensions=ALLOWED_PIECE_EXTENSIONS),
         ],
     )
@@ -139,7 +193,7 @@ class Piece(models.Model):
 
 
 class Grille(models.Model):
-    """Grille d'évaluation du comité."""
+    """Grille d'évaluation du comité. Une seule grille peut être active à un instant donné."""
 
     nom = models.CharField(max_length=150)
     active = models.BooleanField(default=True)
@@ -147,9 +201,22 @@ class Grille(models.Model):
 
     class Meta:
         ordering = ["-cree_le"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["active"],
+                condition=models.Q(active=True),
+                name="unique_grille_active",
+            )
+        ]
 
     def __str__(self):
         return self.nom
+
+    def save(self, *args, **kwargs):
+        # Si cette grille est déclarée active, désactive automatiquement les autres
+        if self.active:
+            Grille.objects.exclude(pk=self.pk).filter(active=True).update(active=False)
+        super().save(*args, **kwargs)
 
 
 class Critere(models.Model):
@@ -197,14 +264,13 @@ class Evaluation(models.Model):
 
     @property
     def score(self):
-        """Calcule la note moyenne pondérée sur 20."""
+        """Calcule la note moyenne pondérée normalisée sur 20."""
         notes = self.notes.select_related("critere").all()
         if not notes:
             return 0.0
         total_points = 0.0
         total_poids = 0
         for n in notes:
-            # Ramène chaque note sur 20 selon la note_max du critère
             note_sur_20 = (float(n.note) / n.critere.note_max) * 20
             total_points += note_sur_20 * n.critere.poids
             total_poids += n.critere.poids
@@ -259,7 +325,7 @@ class Decision(models.Model):
         return f"Décision {self.decision} pour {self.dossier}"
 
     def appliquer(self):
-        """Met à jour le statut du dossier et du projet associé."""
+        """Met à jour le statut du dossier et du projet associé de façon atomique."""
         if self.decision == DecisionType.ACCEPTE:
             self.dossier.statut = StatutDossier.ACCEPTE
             self.dossier.projet.statut = Projet.Statut.SELECTIONNE

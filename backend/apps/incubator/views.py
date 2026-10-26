@@ -1,4 +1,5 @@
 """Vues DRF pour le module P2 - Gestion de l'incubateur."""
+from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
@@ -29,16 +30,18 @@ from .serializers import (
 
 
 def can_access_dossier(user, dossier):
-    """Vérifie si l'utilisateur a le droit d'accéder à ce dossier."""
+    """Vérifie si l'utilisateur a le droit de consulter ce dossier."""
     if not user or not user.is_authenticated:
         return False
     if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR):
         return True
-    return dossier.projet.porteur_id == user.id
+    if user.role == Role.PORTEUR:
+        return dossier.projet.porteur_id == user.id
+    return False
 
 
 class DossierListCreateView(generics.ListCreateAPIView):
-    """Liste les dossiers (filtrés pour le porteur) et permet au porteur d'en créer un."""
+    """Liste les dossiers selon le rôle de l'utilisateur et permet au porteur autorisé d'en créer un."""
 
     serializer_class = DossierSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -48,12 +51,19 @@ class DossierListCreateView(generics.ListCreateAPIView):
         qs = Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
         if user.role == Role.PORTEUR:
             return qs.filter(projet__porteur=user)
-        # Équipe, comité et mentors voient tous les dossiers
-        return qs
+        if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR):
+            return qs.all()
+        return qs.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role not in (Role.PORTEUR, Role.ADMIN, Role.COORDONNATEUR):
+            raise PermissionDenied("Votre rôle ne vous permet pas de créer un dossier de candidature.")
+        serializer.save()
 
 
 class DossierDetailView(generics.RetrieveUpdateAPIView):
-    """Consultation et modification d'un dossier."""
+    """Consultation et modification sécurisée d'un dossier."""
 
     serializer_class = DossierSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -70,21 +80,29 @@ class DossierDetailView(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         dossier = self.get_object()
         user = self.request.user
+
+        # Seul le propriétaire ou l'équipe CIAT peut modifier un dossier
+        if not (user.is_equipe or (user.role == Role.PORTEUR and dossier.projet.porteur_id == user.id)):
+            raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce dossier.")
+
         if user.role == Role.PORTEUR and dossier.statut != StatutDossier.BROUILLON:
             raise ValidationError("Un dossier déjà soumis ne peut plus être modifié.")
+
         serializer.save()
 
 
 class PieceCreateView(APIView):
-    """Dépôt d'une pièce jointe en multipart/form-data."""
+    """Dépôt sécurisé d'une pièce jointe en multipart/form-data."""
 
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         dossier = get_object_or_404(Dossier, pk=pk)
-        if not can_access_dossier(request.user, dossier):
-            raise PermissionDenied("Vous n'avez pas accès à ce dossier.")
+
+        # Contrôle strict : seul le porteur propriétaire ou l'équipe CIAT peut déposer des pièces
+        if not (request.user.is_equipe or (request.user.role == Role.PORTEUR and dossier.projet.porteur_id == request.user.id)):
+            raise PermissionDenied("Seul le porteur du projet ou l'équipe CIAT peut déposer des pièces.")
 
         if dossier.statut != StatutDossier.BROUILLON and not request.user.is_equipe:
             raise ValidationError("Impossible d'ajouter des pièces à un dossier déjà soumis.")
@@ -96,14 +114,16 @@ class PieceCreateView(APIView):
 
 
 class PieceDeleteView(APIView):
-    """Suppression d'une pièce d'un dossier non soumis."""
+    """Suppression sécurisée d'une pièce d'un dossier non soumis."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk, piece_id):
         dossier = get_object_or_404(Dossier, pk=pk)
-        if not can_access_dossier(request.user, dossier):
-            raise PermissionDenied("Vous n'avez pas accès à ce dossier.")
+
+        # Contrôle strict : seul le porteur propriétaire ou l'équipe CIAT peut supprimer des pièces
+        if not (request.user.is_equipe or (request.user.role == Role.PORTEUR and dossier.projet.porteur_id == request.user.id)):
+            raise PermissionDenied("Seul le porteur du projet ou l'équipe CIAT peut supprimer des pièces.")
 
         if dossier.statut != StatutDossier.BROUILLON and not request.user.is_equipe:
             raise ValidationError("Impossible de supprimer une pièce d'un dossier déjà soumis.")
@@ -114,32 +134,37 @@ class PieceDeleteView(APIView):
 
 
 class DossierSoumettreView(APIView):
-    """Soumission finale d'un dossier avec vérification des pièces obligatoires."""
+    """Soumission officielle d'un dossier avec verrouillage transactionnel anti-concurrence."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
-        dossier = get_object_or_404(Dossier, pk=pk)
-        if not can_access_dossier(request.user, dossier):
-            raise PermissionDenied("Vous n'avez pas accès à ce dossier.")
-
-        if dossier.statut not in (StatutDossier.BROUILLON,):
-            return Response(
-                {"detail": f"Ce dossier a déjà été soumis (statut : {dossier.statut})."},
-                status=status.HTTP_400_BAD_REQUEST,
+        with transaction.atomic():
+            dossier = get_object_or_404(
+                Dossier.objects.select_for_update().select_related("projet"), pk=pk
             )
 
-        if not dossier.est_complet:
-            return Response(
-                {
-                    "detail": "Le dossier est incomplet. Toutes les pièces obligatoires doivent être fournies.",
-                    "pieces_manquantes": dossier.pieces_manquantes,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            # Contrôle strict d'autorisation
+            if not (request.user.is_equipe or (request.user.role == Role.PORTEUR and dossier.projet.porteur_id == request.user.id)):
+                raise PermissionDenied("Seul le porteur du projet ou l'équipe CIAT peut soumettre ce dossier.")
 
-        dossier.soumettre()
-        return Response(DossierSerializer(dossier).data, status=status.HTTP_200_OK)
+            if dossier.statut != StatutDossier.BROUILLON:
+                return Response(
+                    {"detail": f"Ce dossier a déjà été soumis (statut : {dossier.statut})."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not dossier.est_complet:
+                return Response(
+                    {
+                        "detail": "Le dossier est incomplet. Toutes les pièces obligatoires doivent être fournies.",
+                        "pieces_manquantes": dossier.pieces_manquantes,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            dossier.soumettre()
+            return Response(DossierSerializer(dossier).data, status=status.HTTP_200_OK)
 
 
 class GrilleActuelleView(APIView):
@@ -150,10 +175,8 @@ class GrilleActuelleView(APIView):
     def get(self, request):
         grille = Grille.objects.filter(active=True).prefetch_related("criteres").first()
         if not grille:
-            grille = Grille.objects.prefetch_related("criteres").first()
-        if not grille:
             return Response(
-                {"detail": "Aucune grille d'évaluation configurée."},
+                {"detail": "Aucune grille d'évaluation active configurée."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         serializer = GrilleSerializer(grille)
@@ -161,7 +184,7 @@ class GrilleActuelleView(APIView):
 
 
 class DossierEvaluationListCreateView(APIView):
-    """Consultation des évaluations (avec score moyen) et dépôt d'une évaluation."""
+    """Consultation et saisie des évaluations avec verrouillage transactionnel."""
 
     permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR)]
 
@@ -185,31 +208,36 @@ class DossierEvaluationListCreateView(APIView):
         )
 
     def post(self, request, pk):
-        # Seul un membre du comité ou l'équipe CIAT peut évaluer
         if request.user.role not in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE):
             raise PermissionDenied("Seuls les membres du comité peuvent évaluer un dossier.")
 
-        dossier = get_object_or_404(Dossier, pk=pk)
-        serializer = EvaluationCreateSerializer(
-            data=request.data,
-            context={"request": request, "dossier": dossier},
-        )
-        serializer.is_valid(raise_exception=True)
-        evaluation = serializer.save()
-        return Response(EvaluationSerializer(evaluation).data, status=status.HTTP_201_CREATED)
+        with transaction.atomic():
+            dossier = get_object_or_404(
+                Dossier.objects.select_for_update().select_related("projet"), pk=pk
+            )
+            serializer = EvaluationCreateSerializer(
+                data=request.data,
+                context={"request": request, "dossier": dossier},
+            )
+            serializer.is_valid(raise_exception=True)
+            evaluation = serializer.save()
+            return Response(EvaluationSerializer(evaluation).data, status=status.HTTP_201_CREATED)
 
 
 class DossierDecisionView(APIView):
-    """Décision motivée du comité (réservée au coordonnateur et à l'administrateur)."""
+    """Décision motivée du comité avec verrouillage transactionnel et validation des statuts."""
 
     permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
 
     def post(self, request, pk):
-        dossier = get_object_or_404(Dossier, pk=pk)
-        serializer = DecisionSerializer(
-            data=request.data,
-            context={"request": request, "dossier": dossier},
-        )
-        serializer.is_valid(raise_exception=True)
-        decision = serializer.save()
-        return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
+        with transaction.atomic():
+            dossier = get_object_or_404(
+                Dossier.objects.select_for_update().select_related("projet"), pk=pk
+            )
+            serializer = DecisionSerializer(
+                data=request.data,
+                context={"request": request, "dossier": dossier},
+            )
+            serializer.is_valid(raise_exception=True)
+            decision = serializer.save()
+            return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
