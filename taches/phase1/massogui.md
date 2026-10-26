@@ -35,3 +35,12 @@ Ordre conseillé : T1, puis T2, puis T3, puis T4.
 
 ## Quand tu as fini
 Vérifie `npm run lint` et `npm run build`. Ouvre ta demande de fusion et préviens Lansana : la tâche suivante te sera donnée après validation.
+
+## À corriger : fausses données affichées en cas de panne
+Ton portail est complet et fusionné dans `test`, bravo. Un point doit être corrigé avant la livraison : dans `src/lib/portal-api.ts`, quand l'API ne répond pas, le site affiche de **fausses données de secours** (`MOCK_ACTUALITES`, `MOCK_EVENEMENTS`, `MOCK_APPELS`, `MOCK_PROJETS_INCUBES`). Un visiteur ou le jury verrait de fausses actualités, de faux appels à projets (avec de fausses dates limites) et de faux projets comme s'ils étaient réels.
+
+1. **Supprime l'affichage des fausses données quand l'API échoue.** À la place, affiche un message clair (« Les actualités sont momentanément indisponibles. Réessayez plus tard. ») avec un bouton « Réessayer ». Une liste vide quand l'API répond, mais sans résultat, reste « Aucun résultat » : ce sont deux cas différents.
+2. **Si tu veux garder ces données pour tes essais sans serveur**, mets-les derrière une variable `NEXT_PUBLIC_MODE_DEMO=1`, absente par défaut et jamais activée sur `test`. Quand elle est active, un bandeau « MODE DÉMONSTRATION : données fictives » doit rester visible sur chaque page concernée.
+3. **Vérifie** : avec le serveur arrêté, aucune fausse actualité ni faux projet ne s'affiche, seulement le message d'erreur ; avec le serveur lancé et le jeu de données (`seed_demo`, `seed_portal`), les vraies données s'affichent ; `npm run lint` et `npm run build` passent.
+
+Fais cette correction sur une branche de fonctionnalité créée depuis `dev-massogui` (par exemple `feature/portail-sans-fausses-donnees`), puis préviens Lansana.
