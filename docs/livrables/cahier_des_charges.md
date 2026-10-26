@@ -2,8 +2,9 @@
 
 > **Plateforme Numérique Intégrée du CIAT et de son Incubateur**  
 > **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Traoré, Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
-> **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)  
+> **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (fonctionnement en local et en intégration continue). L'ensemble des données injectées sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** soumis à quotas et aléas réseau.
 
 ---
 
@@ -94,11 +95,11 @@ La plateforme repose sur une segmentation stricte en **6 rôles d'utilisateurs**
 
 ### 4.2 Performance et Disponibilité
 - **Temps de réponse API :** Objectif de réponses rapides sur les requêtes standards, grâce à l'optimisation des requêtes Django (aucune mesure de charge n'a encore été réalisée) (`select_related`, `prefetch_related`, agrégations SQL natives).
-- **Vitesse de la suite de tests :** Exécution complète de la suite de tests automatisée en moins de 20 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
-- **Tolérance aux pannes des services d'IA :** Mécanisme de fallback ordonné multi-fournisseurs (Groq ➔ Gemini) avec gestion gracieuse des erreurs (`503 Service Unavailable` ou `502 Bad Gateway` avec messages clairs en français).
+- **Vitesse de la suite de tests :** Exécution complète de la suite de 183 tests automatisés en environ 21 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
+- **Tolérance aux pannes des services d'IA :** Mécanisme de fallback ordonné multi-fournisseurs (Groq ➔ Gemini) avec gestion gracieuse des erreurs (`503 Service Unavailable` ou `502 Bad Gateway` avec messages clairs en français). Les services d'IA reposent sur des quotas gratuits de fournisseurs tiers et demeurent soumis à des limites de requêtes ou des indisponibilités ponctuelles.
 
 ### 4.3 Ergonomie et Identité Visuelle
-- **Conformité à la charte ISEP/CIAT :** Respect rigoureux de la palette chromatique officielle (Brun ISEP `#8B4513`, Ocre Terre `#C68642`, Vert Espoir `#2E7D32`), de la typographie et des règles de contraste WCAG AA.
+- **Conformité à la charte ISEP/CIAT :** Respect rigoureux de la palette chromatique officielle définie dans l'application (Brun CIAT `#612D10`, Brun Nuit `#24140D`, Ocre Doré CIAT `#C99A68`, Vert `#2E7D32`), de la typographie et des règles de contraste WCAG AA.
 - **Accessibilité et Réactivité :** Interface responsive adaptée aux ordinateurs de bureau, tablettes et smartphones (cibles tactiles >= 44x44px).
 
 ---

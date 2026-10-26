@@ -1,8 +1,9 @@
 # Guide d'Utilisation de la Plateforme CIAT
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3  
-> **Référence :** Livrable Obligatoire N° 7 (Instructions détaillées pour chaque rôle utilisateur)
+> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Référence :** Livrable Obligatoire N° 7 (Instructions détaillées pour chaque rôle utilisateur)  
+> **Avertissement :** La plateforme est un environnement de travail et d'évaluation non déployé en production. Toutes les données de démonstration sont fictives. Les fonctionnalités d'IA reposent sur des quotas gratuits de services externes susceptibles d'être temporairement indisponibles.
 
 ---
 
@@ -26,7 +27,7 @@ Le portail public du CIAT est accessible sans création de compte préalable. Il
 3. Accédez à l'onglet **Événements** pour visualiser les dates des futurs hackathons, journées portes ouvertes et ateliers de démonstration.
 
 ### 1.2 Explorer l'Annuaire et la Galerie des Innovations
-1. Accédez à la **Galerie des innovations** (`/galerie`) ou à l'**Annuaire public des projets** (`/portail`).
+1. Accédez à la **Galerie des innovations** (`/galerie`) ou à l'**Annuaire public des projets** (`/portail/projets` ou `/portail`).
 2. Filtrez les projets par domaine technologique (ex. *Agriculture & Environnement*, *TIC & IA*, *Énergie*), par cohorte ou par niveau d'avancement.
 3. Cliquez sur une fiche pour découvrir :
    - Le problème socio-économique résolu et la solution technologique apportée.
@@ -50,7 +51,7 @@ Le portail public du CIAT est accessible sans création de compte préalable. Il
 Le porteur de projet dispose d'un espace sécurisé lui permettant de gérer son projet, de soumettre son dossier de sélection et de piloter son incubation au quotidien.
 
 ### 2.1 Inscription et Accès à l'Espace Porteur
-1. Cliquez sur **« S'inscrire »** (`/connexion`), renseignez votre nom, prénom, email institutionnel ou professionnel, mot de passe sécurisé et domaine d'activité.
+1. Cliquez sur **« S'inscrire »** (`/inscription`) ou **« Se connecter »** (`/connexion`), renseignez votre nom, prénom, email institutionnel ou professionnel, mot de passe sécurisé et domaine d'activité.
 2. Connectez-vous avec vos identifiants JWT. Vous êtes automatiquement dirigé vers votre tableau de bord personnel.
 
 ### 2.2 Créer et Renseigner sa Fiche Projet
@@ -87,6 +88,7 @@ Le porteur de projet dispose d'un espace sécurisé lui permettant de gérer son
 1. Cliquez sur l'onglet **Assistant IA** (`/assistant`).
 2. Sélectionnez le mode **« Atelier de rédaction »**.
 3. Sollicitez l'assistant pour structurer un pitch percutant, formaliser une matrice SWOT ou rédiger un argumentaire. L'assistant respecte scrupuleusement vos données et utilise des balises `[À COMPLÉTER]` pour vous signaler les points restant à chiffrer.
+4. **Remarque opérationnelle :** L'assistant fait appel à des fournisseurs d'IA externes gratuits (Groq, Google Gemini) via `apps.core.ai` ; ses réponses sont soumises aux quotas de requêtes et à la connectivité externe.
 
 ---
 
@@ -210,10 +212,11 @@ L'administrateur système a la charge de la sécurité technique, du maintien op
    ```bash
    python manage.py seed_all
    ```
-2. Cette commande exécute séquentiellement et de manière **100 % idempotente** le peuplement de l'ensemble des modules (utilisateurs, projets, dossiers, pièces jointes, évaluations, décisions, mentors, jalons, galerie, documents et contenus du portail).
+2. Cette commande exécute séquentiellement et de manière **100 % idempotente** le peuplement de l'ensemble des modules avec des données de démonstration **strictement fictives** (64 projets, 8 domaines, 4 cohortes, 43 porteurs dont 16 femmes, 58 dossiers, 174 pièces obligatoires, 109 évaluations, 53 décisions, 49 affectations mentors, 147 objectifs, 147 jalons, 70 bilans de suivi, 49 partenariats, 50 financements, 23 fiches de galerie et 6 documents institutionnels).
 3. Vérifiez la conformité du système en lançant les contrôles qualité :
    ```bash
    python manage.py check
    python manage.py makemigrations --check
    python manage.py test apps
    ```
+   Ces contrôles valident 183 tests automatisés (100 % passants) en ~21 secondes, sans aucun avertissement système ni migration en attente.

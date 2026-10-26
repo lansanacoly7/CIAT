@@ -36,6 +36,9 @@ erDiagram
     PROJET ||--o{ DOCUMENT : "lié à (optionnel)"
     DOCUMENT ||--o{ VERSION_DOCUMENT : "versionné par"
 
+    PROJET ||--o{ PARTENARIAT : "conclut"
+    PROJET ||--o{ FINANCEMENT : "bénéficie de"
+
     DOCUMENT_PUBLIC ||--o{ PASSAGE_DOCUMENT : "découpé et indexé en"
     USER ||--o{ CONVERSATION : "échange dans"
     CONVERSATION ||--o{ MESSAGE_ASSISTANT : "contient"
@@ -333,7 +336,41 @@ erDiagram
 
 ---
 
-## 8. Synthèse des Tables et Modèles
+## 8. Module Analytics et Financements (`apps.analytics`)
+
+### 8.1 Modèle `Partenariat`
+- **Table :** `analytics_partenariat` | **Description :** Accords de partenariat formalisés ou en cours pour les projets incubés.
+
+| Champ | Type Django | Contraintes | Description |
+|---|---|---|---|
+| `id` | `BigAutoField` | PK, Not Null | Identifiant unique du partenariat. |
+| `projet` | `ForeignKey(Projet)` | CASCADE, Not Null | Projet bénéficiaire de la collaboration (statuts acceptés : `selectionne`, `incube`, `prototype`, `termine`). |
+| `partenaire` | `CharField(200)` | Not Null | Raison sociale de l'organisation ou de l'entreprise partenaire. |
+| `type` | `CharField(30)` | Choices, Not Null | `technique`, `financier`, `commercial`, `academique`, `institutionnel`, `autre`. |
+| `date_debut` | `DateField` | Not Null | Date d'entrée en vigueur de l'accord. |
+| `statut` | `CharField(30)` | Choices, Not Null | `en_discussion`, `signe`, `actif`, `clos`. |
+| `description` | `TextField` | Blank | Modalités, apports attendus ou périmètre de l'accord. |
+| `cree_le` | `DateTimeField` | Auto now add | Horodatage de création. |
+| `modifie_le` | `DateTimeField` | Auto now | Horodatage de dernière mise à jour. |
+
+### 8.2 Modèle `Financement`
+- **Table :** `analytics_financement` | **Description :** Fonds et subventions instruits, accordés ou décaissés pour les projets du CIAT.
+
+| Champ | Type Django | Contraintes | Description |
+|---|---|---|---|
+| `id` | `BigAutoField` | PK, Not Null | Identifiant unique du financement. |
+| `projet` | `ForeignKey(Projet)` | CASCADE, Not Null | Projet bénéficiaire (interdit aux projets en `idee` ou `depose`). |
+| `source` | `CharField(200)` | Not Null | Origine des fonds (ex : DER/FJ, 3FPT, FONGIP, CIAT, Donateur). |
+| `montant` | `DecimalField(14, 0)` | Not Null, > 0 | Montant total en Francs CFA (FCFA). |
+| `date` | `DateField` | Not Null | Date d'octroi ou de versement. |
+| `statut` | `CharField(30)` | Choices, Not Null | `en_cours`, `accorde`, `decaisse`, `refuse`. |
+| `description` | `TextField` | Blank | Objet et affectation du financement (prototypage, équipements, etc.). |
+| `cree_le` | `DateTimeField` | Auto now add | Horodatage de création. |
+| `modifie_le` | `DateTimeField` | Auto now | Horodatage de dernière modification. |
+
+---
+
+## 9. Synthèse des Tables et Modèles
 
 | Module Applicatif | Modèles Définis | Nombre de Tables | Rôle Principal |
 |---|---|---|---|
@@ -343,5 +380,5 @@ erDiagram
 | **Documents (`apps.documents`)** | `TypeDocument`, `ModeleDocument`, `Document`, `VersionDocument` | 4 | Générateur de documents officiels ISEP/CIAT assisté par IA. |
 | **Assistant (`apps.assistant`)** | `PassageDocument`, `Conversation`, `MessageAssistant` | 3 | RAG documentaire strict et atelier d'assistance aux porteurs. |
 | **Galerie (`apps.gallery`)** | `FicheInnovation` | 1 | Valorisation publique, QR codes dynamiques et statistiques. |
-| **Analytics (`apps.analytics`)** | Exploite les modèles `apps.core` | 0 | Agrégations SQL haute performance et visualisations décisionnelles. |
-| **TOTAL** | **31 Modèles** | **31 Tables** | **Architecture modulaire, cohérente et scalable.** |
+| **Analytics (`apps.analytics`)** | `Partenariat`, `Financement` | 2 | Suivi des partenariats et des financements mobilisés, agrégations décisionnelles. |
+| **TOTAL** | **33 Modèles** | **33 Tables** | **Architecture modulaire, cohérente et scalable.** |
