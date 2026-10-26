@@ -282,6 +282,37 @@ class AssistantAPITestCase(TestCase):
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")
+    def test_score_faible_ou_nul_envoie_quand_meme_passages_au_modele(self, mock_chat, mock_configured):
+        """Si le score lexical est faible ou nul mais des passages existent, ils sont
+        transmis au modèle en lui laissant la décision de refuser via le prompt."""
+        mock_configured.return_value = True
+        mock_chat.return_value = (
+            "Désolé, les extraits fournis portent sur l'incubation au CIAT et ne contiennent "
+            "pas d'information permettant de répondre à votre question sur la physique quantique."
+        )
+
+        self.client.force_authenticate(user=self.porteur1)
+        conv = Conversation.objects.create(utilisateur=self.porteur1)
+
+        payload = {
+            "contenu": "Explique-moi les principes de la physique quantique.",
+            "mode": "documents",
+        }
+        resp = self.client.post(f"/api/assistant/conversations/{conv.id}/messages/", payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["role"], "assistant")
+        self.assertEqual(resp.data["contenu"], mock_chat.return_value)
+        # Le modèle a bien été appelé avec les passages les plus proches
+        mock_chat.assert_called_once()
+        _, kwargs = mock_chat.call_args
+        system_prompt = kwargs.get("system", "")
+        self.assertIn("si la réponse n'y est pas", system_prompt)
+        self.assertIn("refuse d'inventer", system_prompt)
+        self.assertTrue(len(resp.data["sources"]) >= 1)
+
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    @patch("apps.core.ai.AIService.chat")
     def test_mode_atelier_redaction_sans_sources_obligatoires(self, mock_chat, mock_configured):
         """Le mode atelier assiste à la rédaction avec consigne [À COMPLÉTER] et interdiction d'inventer."""
         mock_configured.return_value = True
