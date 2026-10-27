@@ -211,7 +211,7 @@ export default function Home() {
             
             {/* Badge officiel de localisation */}
             <div className="inline-flex items-center rounded-lg border border-white/20 bg-black/30 backdrop-blur-xs px-3.5 py-1 text-xs sm:text-sm font-medium text-white/90 shadow-sm">
-              ISEP Amadou Traoré · Diamniadio · CIAT
+              ISEP Amadou Trawaré · Diamniadio · CIAT
             </div>
 
             {/* Grand Titre net, massif et percutant en BLANC PUR STRICT */}
@@ -407,7 +407,7 @@ export default function Home() {
                   Des Équipements de Pointe pour chaque Filière
                 </h3>
                 <p className="text-xs sm:text-sm text-texte-doux leading-relaxed">
-                  Contrairement aux incubateurs généralistes, le CIAT s&apos;appuie sur l&apos;infrastructure technique complète de l&apos;ISEP Amadou Traoré pour matérialiser chaque prototype.
+                  Contrairement aux incubateurs généralistes, le CIAT s&apos;appuie sur l&apos;infrastructure technique complète de l&apos;ISEP Amadou Trawaré pour matérialiser chaque prototype.
                 </p>
               </div>
 
