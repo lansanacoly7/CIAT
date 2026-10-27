@@ -1,7 +1,7 @@
 # Vidéo de Démonstration Officielle — CIAT 360 (Phase 4 — T2)
 
 > **Livrable obligatoire n° 9 :** Vidéo de démonstration : présentation courte des fonctionnalités essentielles de la plateforme.  
-> **Responsable :** El Hadji Massogui Diop (Front-end Lead)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent vidéo : El Hadji Massogui Diop)  
 > **Durée :** 4 à 5 minutes  
 > **Résolution :** Full HD 1080p (1920 × 1080 px, format MP4)  
 > **Scénario de référence :** [`scenario.md`](scenario.md)  

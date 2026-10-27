@@ -43,10 +43,10 @@ class Command(BaseCommand):
             },
         )
 
-        actu2, _ = Actualite.objects.get_or_create(
+        actu2, created_actu2 = Actualite.objects.get_or_create(
             slug="partenariat-strategique-transfert-technologique",
             defaults={
-                "titre": "Signature d'un accord-cadre de transfert technologique avec le PTN",
+                "titre": "[Exemple] Signature d'un accord-cadre de transfert technologique avec le PTN",
                 "resume": (
                     "Le CIAT et le Parc des Technologies Numériques de Diamniadio unissent leurs "
                     "capacités de calcul et de prototypage pour accélérer l'industrialisation des projets incubés."
@@ -55,11 +55,23 @@ class Command(BaseCommand):
                     "Ce partenariat stratégique permet aux incubés du CIAT d'accéder directement aux bancs "
                     "de test avancés du Data Center Tier III de Diamniadio et aux infrastructures cloud nationales.\n\n"
                     "Les premiers prototypes en incubation dans la filière 'TIC & IA' et 'Énergies Renouvelables' "
-                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN."
+                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN.\n\n"
+                    "Actualité d'exemple pour la démonstration."
                 ),
                 "publie_le": now - timedelta(days=12),
             },
         )
+        if not created_actu2:
+            actu2.titre = "[Exemple] Signature d'un accord-cadre de transfert technologique avec le PTN"
+            if "Actualité d'exemple pour la démonstration" not in actu2.contenu:
+                actu2.contenu = (
+                    "Ce partenariat stratégique permet aux incubés du CIAT d'accéder directement aux bancs "
+                    "de test avancés du Data Center Tier III de Diamniadio et aux infrastructures cloud nationales.\n\n"
+                    "Les premiers prototypes en incubation dans la filière 'TIC & IA' et 'Énergies Renouvelables' "
+                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN.\n\n"
+                    "Actualité d'exemple pour la démonstration."
+                )
+            actu2.save()
 
         # 2. Événements
         Evenement.objects.get_or_create(
@@ -149,27 +161,9 @@ class Command(BaseCommand):
             },
         )
 
-        # 5. Documents publics
-        DocumentPublic.objects.get_or_create(
-            titre="Dossier de Candidature Officiel — Cohorte d'Incubation 2026",
-            defaults={
-                "categorie": "Candidatures & Formulaires",
-            },
-        )
-
-        DocumentPublic.objects.get_or_create(
-            titre="Charte de Propriété Intellectuelle & Transfert Technologique",
-            defaults={
-                "categorie": "Règlements & Chartes",
-            },
-        )
-
-        DocumentPublic.objects.get_or_create(
-            titre="Règlement Intérieur de l'Incubateur & Sécurité des Ateliers",
-            defaults={
-                "categorie": "Règlements & Chartes",
-            },
-        )
+        # 5. Documents publics réels (PDF de 2 à 4 pages, ReportLab, idempotents)
+        from apps.portal.portal_documents_pdf import generer_tous_documents_portail
+        generer_tous_documents_portail(stdout=self.stdout)
 
         # 6. Images de démonstration locales (Pillow)
         from apps.core.demo_images import generer_image_actualite, generer_logo_partenaire

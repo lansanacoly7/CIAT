@@ -58,13 +58,15 @@ Les étudiants et créateurs d'entreprises peuvent désormais soumettre leurs do
   },
   {
     id: 2,
-    titre: "Partenariat stratégique pour le transfert technologique à Diamniadio",
+    titre: "[Exemple] Accord-cadre de transfert technologique avec le PTN",
     slug: "partenariat-strategique-transfert-technologique",
     resume:
       "Le CIAT renforce ses liens avec le tissu industriel local pour accélérer le prototypage et l'insertion professionnelle des diplômés.",
     contenu: `Dans le cadre de sa mission de transfert technologique, le CIAT a formalisé de nouvelles coopérations avec des acteurs majeurs des énergies renouvelables et de l'agro-industrie implantés à Diamniadio.
 
-Ce partenariat permettra aux projets incubés d'accéder à des plateaux techniques spécialisés, des bancs de tests industriels et des opportunités d'expérimentation en conditions réelles.`,
+Ce partenariat permettra aux projets incubés d'accéder à des plateaux techniques spécialisés, des bancs de tests industriels et des opportunités d'expérimentation en conditions réelles.
+
+Actualité d'exemple pour la démonstration.`,
     image: null,
     publie_le: "2026-10-18T14:30:00Z",
   },
@@ -432,7 +434,7 @@ export const MOCK_PROJETS_INCUBES: ProjetIncube[] = [
       annee: 2026,
     },
     statut: "incube",
-    porteur_nom: "Khadija Ba & Teranga Dev",
+    porteur_nom: "Khadija Ba & Équipe Tech",
     cree_le: "2026-02-20T08:00:00Z",
     impact_attendu: "+35% de revenus nets pour les coopératives et suppression des intermédiaires informels.",
     technologies: ["React Native", "PostgreSQL", "Node.js", "SMS Gateway"],
@@ -815,7 +817,7 @@ export const MOCK_DOCUMENTS: DocumentPublic[] = [
     taille: "1.4 Mo",
     format: "PDF",
     date_publication: "2026-01-15T00:00:00Z",
-    fichier_url: "#",
+    fichier_url: "/media/documents_publics/dossier_candidature_incubation_2026.pdf",
   },
   {
     id: 2,
@@ -837,7 +839,7 @@ export const MOCK_DOCUMENTS: DocumentPublic[] = [
     taille: "850 Ko",
     format: "PDF",
     date_publication: "2025-11-10T00:00:00Z",
-    fichier_url: "#",
+    fichier_url: "/media/documents_publics/reglement_interieur_incubateur_ciat.pdf",
   },
   {
     id: 4,
@@ -848,7 +850,7 @@ export const MOCK_DOCUMENTS: DocumentPublic[] = [
     taille: "1.1 Mo",
     format: "PDF",
     date_publication: "2025-12-05T00:00:00Z",
-    fichier_url: "#",
+    fichier_url: "/media/documents_publics/charte_propriete_intellectuelle_ciat.pdf",
   },
   {
     id: 5,

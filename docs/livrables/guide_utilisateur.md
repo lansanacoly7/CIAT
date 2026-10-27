@@ -1,7 +1,7 @@
 # Guide d'Utilisation de la Plateforme CIAT
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Référence :** Livrable Obligatoire N° 7 (Instructions détaillées pour chaque rôle utilisateur)  
 > **Avertissement :** La plateforme est un environnement de travail et d'évaluation non déployé en production. Toutes les données de démonstration sont fictives. Les fonctionnalités d'IA reposent sur des quotas gratuits de services externes susceptibles d'être temporairement indisponibles.
 
