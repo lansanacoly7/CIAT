@@ -37,7 +37,7 @@ DATABASE_URL=
 
 ### Mode B : PostgreSQL 16 via Docker (Recommandé pour l'équipe)
 
-Un conteneur PostgreSQL 16 est configuré dans le fichier `docker-compose.yml` à la racine du projet :
+Un conteneur PostgreSQL 16 et un conteneur Redis sont configurés dans le fichier `docker-compose.yml` à la racine du projet :
 
 ```yaml
 services:
@@ -45,18 +45,26 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: ciat
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ciat_dev_password}
+      POSTGRES_PASSWORD: ciat
       POSTGRES_DB: ciat
     ports:
       - "5432:5432"
     volumes:
       - ciat_pg:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  ciat_pg:
 ```
 
-**Démarrage du service** :
+**Démarrage des services** :
 ```bash
 # À la racine du projet
-docker compose up -d db
+docker compose up -d
 
 # Vérification de l'état
 docker compose ps
@@ -64,7 +72,7 @@ docker compose ps
 
 **Configuration dans `backend/.env`** :
 ```env
-DATABASE_URL=postgres://ciat:ciat_dev_password@localhost:5432/ciat
+DATABASE_URL=postgres://ciat:ciat@localhost:5432/ciat
 ```
 
 ---
@@ -161,30 +169,219 @@ python manage.py test
 
 ---
 
-## 6. Résultats du test de compatibilité
+## 6. Résultats des tests et état réel de compatibilité
 
-- **Date de validation** : 26 octobre 2026
-- **Environnement testé** : PostgreSQL 16.2 (image officielle `postgres:16`), Python 3.12, Django 5.2.18
-- **Commandes de validation** :
-  ```bash
-  # Démarrage du conteneur
-  docker compose up -d db
+### A. Constat d'exécution sur l'environnement de développement local
 
-  # Application des migrations et initialisation
-  cd backend
-  export DATABASE_URL="postgres://ciat:ciat@localhost:5432/ciat"
-  python manage.py migrate
-  python manage.py seed_all
+Conformément à la directive stricte de transparence (« on n'écrit que ce qui est mesuré »), voici l'état factuel relevé sur la machine locale :
 
-  # Exécution des tests automatisés
-  python manage.py test
-  ```
-- **Nombre de tests passés** : **230 / 230 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
-- **Durée totale d'exécution** : 9,66 secondes (grâce à l'usage de `setUpTestData` et du hacheur rapide `MD5PasswordHasher`).
-- **Différences constatées avec SQLite et corrigées** :
-  1. *Version minimale* : Django 5.2 refuse les versions de PostgreSQL antérieures à la 14 (`NotSupportedError`). Le contournement illégal par monkeypatch a été supprimé et l'équipe est alignée sur PostgreSQL 16.
-  2. *Recherche et casse* : Les filtres textuels s'exécutent via `ILIKE` sans divergence par rapport au comportement SQLite grâce à l'usage strict de `icontains`.
-  3. *Types JSON natifs* : La conformité `jsonb` a été validée lors de l'exécution de `seed_all` (modèles de documents et sections d'analyse).
-  4. *Stabilité des tris* : Tous les querysets de liste intègrent un tri déterministe via `Meta.ordering` ou `OrderingFilter`.
-  5. *Différences résiduelles* : **Aucune**. Le comportement applicatif est strictement identique entre SQLite et PostgreSQL 16.
+**Environnement de mesure** :
+- **Système d'exploitation** : Windows 11 Professionnel (hôte x86_64)
+- **Version exacte de PostgreSQL hôte** : `PostgreSQL 12.22, compiled by Visual C++ build 1942, 64-bit` (mesuré via `SELECT version();`)
+- **Version de Python** : `Python 3.13.9`
+- **Version de Django** : `Django 5.2.18`
+- **Date de mesure** : 27 octobre 2026
+
+1. **Rejet conforme de PostgreSQL 12.22 par Django 5.2** :
+   - Service détecté sur l'hôte : `PostgreSQL 12.22`.
+   - Tentative d'exécution de `python manage.py test` avec `DATABASE_URL=postgres://ciat:ciat@localhost:5432/ciat` :
+     ```text
+     Traceback (most recent call last):
+       ...
+       File "django/db/backends/base/base.py", line 201, in check_database_version_supported
+         raise NotSupportedError(
+     django.db.utils.NotSupportedError: PostgreSQL 14 or later is required (found 12.22).
+     ```
+   - **Conclusion** : Le contournement illégal par monkeypatch (`check_database_version_supported = lambda self: None`) a été intégralement éradiqué. Django 5.2 protège désormais le projet contre les versions obsolètes de PostgreSQL.
+2. **Conteneur Docker PostgreSQL 16** :
+   - Sur cette machine hôte Windows, Docker Desktop nécessite le composant optionnel WSL2 (`WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED`). En l'absence de ce composant activé sur l'hôte, le conteneur `postgres:16` n'a pas pu être lancé.
+   - Par honnêteté technique, **l'affirmation préliminaire « 230 / 230 tests réussis sur PostgreSQL 16 » a été formellement retirée**.
+   - Les anciennes mentions non quantifiées sur les différences constatées avec SQLite (ILIKE, jsonb, tris stables, aucune différence résiduelle) ont également été retirées car elles n'ont pas fait l'objet d'une mesure instrumentée lors de cette session.
+   - **Résultat sur PostgreSQL 16** : *Non exécuté sur PostgreSQL 16 sur cette machine locale (à compléter par Lansana ou par un environnement disposant de Docker / PostgreSQL 16).*
+3. **Exécution réelle et mesurée de la suite de tests (SQLite — base de repli standard)** :
+   - **Date d'exécution** : 27 octobre 2026
+   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test`
+   - **Résultat réel obtenu** :
+     ```text
+     Found 268 test(s).
+     System check identified no issues (0 silenced).
+     ................................................................................
+     ----------------------------------------------------------------------
+     Ran 268 tests in 37.278s
+
+     OK
+     ```
+   - **Nombre de tests réussis** : **268 / 268 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
+   - **Durée réelle mesurée** : **37,28 secondes** (optimisé via `setUpTestData` et `MD5PasswordHasher`).
+
+---
+
+### B. Procédure de validation sur PostgreSQL 16 en intégration continue / production
+
+Pour tout serveur ou environnement disposant de Docker ou d'un service PostgreSQL >= 14 (recommandé : 16) :
+
+```bash
+# 1. Démarrage des conteneurs
+docker compose up -d
+
+# 2. Exécution des migrations et chargement des données
+cd backend
+export DATABASE_URL="postgres://ciat:ciat@localhost:5432/ciat"
+python manage.py migrate
+python manage.py seed_all
+
+# 3. Lancement de la suite complète de tests
+python manage.py test
+```
+
+---
+
+## 7. Sauvegarde et restauration de la base de données
+
+Deux scripts d'exploitation sont disponibles dans le répertoire `scripts/` :
+- [../scripts/sauvegarde_bd.sh](../scripts/sauvegarde_bd.sh)
+- [../scripts/restauration_bd.sh](../scripts/restauration_bd.sh)
+- [../scripts/verifier_sauvegarde_restauration.sh](../scripts/verifier_sauvegarde_restauration.sh)
+
+> [!CAUTION]
+> **Confidentialité et données personnelles** :
+> Les sauvegardes (`.dump`, `.sql`) contiennent des données à caractère personnel (porteurs, évaluations, dossiers). Elles sont automatiquement exclues du dépôt Git via `.gitignore`. **Ne jamais les publier sur Git ni les transférer par messagerie instantanée.**
+
+### 7.1 Script de sauvegarde (`scripts/sauvegarde_bd.sh`)
+
+Le script utilise `pg_dump` avec le format d'archive personnalisée (`--format=custom` ou `-Fc`), qui génère un fichier binaire compressé avec métadonnées de schéma.
+
+**Usage standard** :
+```bash
+# Sauvegarde automatique horodatée dans ./backups/ (ex: ./backups/ciat_backup_YYYYMMDD_HHMMSS.dump)
+./scripts/sauvegarde_bd.sh
+
+# Sauvegarde incluant également l'archive des pièces téléversées (backend/media)
+./scripts/sauvegarde_bd.sh --avec-media
+
+# Sauvegarde vers un fichier spécifique
+./scripts/sauvegarde_bd.sh /chemin/vers/sauvegarde_personnalisee.dump
+```
+
+**Variables d'environnement prises en compte** :
+- `DATABASE_URL` : URL de connexion (supporte les mots de passe encodés `%40`, `%3A`, `%2F` via parsing `urllib.parse`).
+- Ou variables standard PostgreSQL : `PGHOST` (défaut : `localhost`), `PGPORT` (défaut : `5432`), `PGUSER` (défaut : `ciat`), `PGPASSWORD` (défaut : `ciat`), `PGDATABASE` (défaut : `ciat`).
+- `BACKUP_DIR` : Répertoire de destination (défaut : `./backups`).
+- `BACKUP_KEEP` : Nombre de sauvegardes automatiques à conserver (défaut : 14). Les sauvegardes plus anciennes sont purgées automatiquement (sauf les fichiers passés explicitement en argument).
+- `USE_DOCKER` : Si défini à `1`, exécute `pg_dump` directement dans le conteneur Docker `db` (`docker compose exec -T db pg_dump ...`), évitant tout problème d'incompatibilité de version client/serveur.
+
+**Sécurité de génération** :
+Le script écrit d'abord dans un fichier temporaire `<fichier>.partiel`, valide son intégrité via `pg_restore --list`, puis le renomme de façon atomique. Si `pg_dump` est interrompu ou échoue, le fichier partiel est supprimé et le script sort avec un code d'erreur non nul.
+
+---
+
+### 7.2 Script de restauration (`scripts/restauration_bd.sh`)
+
+Le script prend en charge les archives custom `pg_dump` (`.dump`) et les fichiers SQL textuels (`.sql`).
+
+**Usage standard** :
+```bash
+# Restauration automatique de la dernière sauvegarde disponible dans ./backups/
+./scripts/restauration_bd.sh
+
+# Restauration d'un fichier dump précis
+./scripts/restauration_bd.sh ./backups/ciat_backup_20261027_005500.dump
+
+# Restauration automatisée sans invite de confirmation (CI/CD ou crontab)
+./scripts/restauration_bd.sh ./backups/ciat_backup_20261027_005500.dump --yes
+
+# Restauration incluant l'extraction des médias associés
+./scripts/restauration_bd.sh ./backups/ciat_backup_20261027_005500.dump --yes --avec-media
+```
+
+**Garanties de restauration** :
+1. **Validation préalable stricte** : Le script teste la structure du fichier avec `pg_restore --list` avant toute action. Si le fichier est corrompu ou invalide, l'opération est abandonnée immédiatement avec un code d'erreur `1`, **sans toucher à la base de données**.
+2. **Atomicité et arrêt sur erreur** : La restauration est exécutée avec `--single-transaction` et `--exit-on-error` (ainsi que `--clean --if-exists --no-owner --no-privileges`). Toute erreur annule l'intégralité de la transaction.
+3. **Codes de retour stricts** : Le message `[SUCCÈS]` n'est affiché que si l'outil de restauration a retourné strictement le code `0`.
+
+---
+
+### 7.3 Vérification de bout en bout (`scripts/verifier_sauvegarde_restauration.sh`)
+
+Pour valider formellement qu'une sauvegarde puis une restauration restituent rigoureusement l'ensemble des données, le script `scripts/verifier_sauvegarde_restauration.sh` :
+1. Relève le compte exact de lignes de chaque table du schéma `public` via `information_schema.tables`.
+2. Génère une sauvegarde complète vers un fichier temporaire.
+3. Simule une perte de données en vidant une table métier (`TRUNCATE TABLE incubator_dossier CASCADE;`).
+4. Lance la restauration via `scripts/restauration_bd.sh --yes`.
+5. Relève à nouveau les comptes et compare table par table.
+
+**Sortie réelle mesurée lors de l'exécution de validation (27 octobre 2026 sur PostgreSQL 12.22 local)** :
+```text
+==========================================================
+ CIAT — Test de vérification Sauvegarde / Restauration
+==========================================================
+ Base testée : ciat sur localhost:5432
+ Mode        : Local
+----------------------------------------------------------
+=> Étape 1 : Relevé initial des lignes de chaque table...
+   40 tables analysées dans le schéma public.
+=> Étape 2 : Lancement de sauvegarde_bd.sh...
+=> Étape 3 : Altération volontaire (TRUNCATE incubator_dossier CASCADE)...
+   Lignes dans incubator_dossier après troncature : 0
+=> Étape 4 : Lancement de restauration_bd.sh...
+=> Étape 5 : Relevé des lignes après restauration...
+----------------------------------------------------------
+Table                                    | Avant      | Après     | Résultat 
+----------------------------------------------------------
+assistant_conversation                   | 0          | 0          | OK        
+assistant_messageassistant               | 0          | 0          | OK        
+assistant_passagedocument                | 0          | 0          | OK        
+auth_group                               | 0          | 0          | OK        
+auth_group_permissions                   | 0          | 0          | OK        
+auth_permission                          | 144        | 144        | OK        
+core_cohorte                             | 3          | 3          | OK        
+core_domaine                             | 7          | 7          | OK        
+core_projet                              | 62         | 62         | OK        
+core_user                                | 45         | 45         | OK        
+core_user_groups                         | 0          | 0          | OK        
+core_user_user_permissions               | 0          | 0          | OK        
+django_admin_log                         | 0          | 0          | OK        
+django_content_type                      | 36         | 36         | OK        
+django_migrations                        | 36         | 36         | OK        
+django_session                           | 0          | 0          | OK        
+documents_document                       | 0          | 0          | OK        
+documents_modeledocument                 | 12         | 12         | OK        
+documents_typedocument                   | 4          | 4          | OK        
+documents_versiondocument                | 0          | 0          | OK        
+gallery_ficheinnovation                  | 0          | 0          | OK        
+incubator_affectationmentor              | 0          | 0          | OK        
+incubator_commentairejalon               | 0          | 0          | OK        
+incubator_critere                        | 5          | 5          | OK        
+incubator_decision                       | 0          | 0          | OK        
+incubator_dossier                        | 0          | 0          | OK        
+incubator_evaluation                     | 0          | 0          | OK        
+incubator_grille                         | 1          | 1          | OK        
+incubator_jalon                          | 0          | 0          | OK        
+incubator_note                           | 0          | 0          | OK        
+incubator_objectif                       | 0          | 0          | OK        
+incubator_piece                          | 0          | 0          | OK        
+incubator_preuvejalon                    | 0          | 0          | OK        
+incubator_suiviprojet                    | 0          | 0          | OK        
+portal_actualite                         | 2          | 2          | OK        
+portal_appelprojet                       | 2          | 2          | OK        
+portal_documentpublic                    | 3          | 3          | OK        
+portal_evenement                         | 2          | 2          | OK        
+portal_messagecontact                    | 0          | 0          | OK        
+portal_partenaire                        | 3          | 3          | OK        
+----------------------------------------------------------
+Verdict : IDENTIQUE
+==========================================================
+```
+
+### 7.4 Synthèse des éléments testés et non testés
+
+| Élément | État de validation | Détail |
+| :--- | :---: | :--- |
+| Sauvegarde nominale (`sauvegarde_bd.sh`) | **Testé (Succès)** | Validé avec création de dump et vérification `pg_restore --list`. |
+| Restauration nominale (`restauration_bd.sh`) | **Testé (Succès)** | Validé avec réimport intégral des 40 tables et données. |
+| Rejet de dump corrompu / poubelle | **Testé (Succès)** | Rejet immédiat (code 1, base non touchée, aucun message de succès erroné). |
+| Parsing credentials encodés dans `DATABASE_URL` | **Testé (Succès)** | Validé avec mots de passe contenant `%40` (`@`), `%3A` (`:`), `%2F` (`/`). |
+| Protection environnement de vérification | **Testé (Succès)** | Refus catégorique d'exécuter la troncature de test si l'hôte n'est pas `localhost` / `127.0.0.1`. |
+| Exclusion Git des dumps et backups | **Testé (Succès)** | Vérifié via `git check-ignore -v backups/x.dump`. |
+| Sauvegarde / Restauration via Docker PostgreSQL 16 | *Non testé en local* | En attente de déploiement sur environnement disposant de WSL2 / Linux Docker. |
 
