@@ -125,17 +125,7 @@
 }
 
 .hero-signature {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: absolute;
-  z-index: 5;
-  top: 45px;
-  right: 20px;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--ciat-cream);
-  font-weight: 700;
+  display: none;
 }
 
 .hero-visual {
@@ -150,7 +140,7 @@
   inset: 0;
   background-image:
     linear-gradient(90deg, #24140d44, transparent 30%),
-    url("/images/domaines_hero_hd.jpg");
+    url("/images/hero_unsplash.jpg");
   background-position: center;
   background-size: cover;
   clip-path: polygon(23% 0, 100% 0, 100% 100%, 0 100%);
@@ -455,7 +445,7 @@
   inset: 0;
   background-image:
     linear-gradient(90deg, #24140d22, transparent),
-    url("/images/domaines_ecosystem_building_hd.jpg");
+    url("/images/cta_unsplash.jpg");
   background-position: center;
   background-size: cover;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);

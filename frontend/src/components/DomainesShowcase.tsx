@@ -22,7 +22,7 @@ const domains: DomaineData[] = [
     title: "TIC, numérique, intelligence artificielle et données",
     description:
       "Développer des solutions numériques et des systèmes intelligents pour une société connectée, inclusive et performante.",
-    image: "/images/domaine_01_card_hd.jpg",
+    image: "/images/d01_unsplash.jpg",
     className: "domain-card--large",
     enjeuxComplets:
       "Souveraineté numérique nationale, valorisation des données publiques sénégalaises, modèles d'intelligence artificielle adaptés aux langues nationales (Wolof, Pulaar, Sérère), vision par ordinateur et cybersécurité des systèmes critiques.",
@@ -39,7 +39,7 @@ const domains: DomaineData[] = [
     title: "Mécanique, fabrication et maintenance",
     description:
       "Accompagner la montée en compétences et le développement d’une industrie locale compétitive, agile et durable.",
-    image: "/images/domaine_02_card_hd.jpg",
+    image: "/images/d02_unsplash.jpg",
     className: "domain-card--large",
     enjeuxComplets:
       "Rupture de la dépendance aux importations de pièces détachées industrielles par l'usinage numérique CNC de haute précision, la fabrication additive sur métaux/polymères et la maintenance prédictive.",
@@ -56,7 +56,7 @@ const domains: DomaineData[] = [
     title: "Agriculture, transformation et environnement",
     description:
       "Soutenir l’innovation agricole et la valorisation des ressources naturelles pour une meilleure sécurité alimentaire.",
-    image: "/images/domaine_03_card_hd.jpg",
+    image: "/images/d03_unsplash.jpg",
     className: "domain-card--large",
     enjeuxComplets:
       "Sécurité alimentaire durable par la maîtrise des ressources hydriques, la mécanisation adaptée des filières céréalières et maraîchères des Niayes, et la réduction des pertes post-récolte par le séchage solaire.",
@@ -73,7 +73,7 @@ const domains: DomaineData[] = [
     title: "Énergie, efficacité énergétique et énergies renouvelables",
     description:
       "Promouvoir des solutions énergétiques propres, autonomes et accessibles pour le développement durable des territoires.",
-    image: "/images/domaine_04_card_hd.jpg",
+    image: "/images/d04_unsplash.jpg",
     className: "domain-card--small",
     enjeuxComplets:
       "Valorisation optimale de l'irradiance solaire du Sénégal, stabilisation des micro-réseaux ruraux autonomes (microgrids) et certification technique des équipements photovoltaïques en climat sahélien.",
@@ -90,7 +90,7 @@ const domains: DomaineData[] = [
     title: "Pharmaceutique et biomédical",
     description:
       "Renforcer l’innovation en santé et les technologies médicales adaptées pour répondre aux besoins prioritaires des populations.",
-    image: "/images/domaine_05_card_hd.jpg",
+    image: "/images/d05_unsplash.jpg",
     className: "domain-card--small",
     enjeuxComplets:
       "Souveraineté sanitaire nationale par la fabrication locale de dispositifs médicaux d'urgence réparables, la télémédecine solaire décentralisée pour postes de santé de brousse et l'extraction validée de principes actifs.",
@@ -107,7 +107,7 @@ const domains: DomaineData[] = [
     title: "Éducation, formation professionnelle et insertion",
     description:
       "Former les talents d’aujourd’hui et de demain aux métiers d'avenir pour stimuler l’employabilité et l’entrepreneuriat.",
-    image: "/images/domaine_06_card_hd.jpg",
+    image: "/images/d06_unsplash.jpg",
     className: "domain-card--small",
     enjeuxComplets:
       "Transformation de l'apprentissage technique par les technologies immersives (VR), simulateurs d'ateliers sans risque et passerelles directes pour l'insertion des diplômés de l'ISEP dans l'industrie.",
@@ -124,7 +124,7 @@ const domains: DomaineData[] = [
     title: "Services aux collectivités, entrepreneuriat et incubation",
     description:
       "Accompagner les initiatives locales et transformer les idées à fort impact en entreprises innovantes et pérennes.",
-    image: "/images/domaine_07_card_hd.jpg",
+    image: "/images/d07_unsplash.jpg",
     className: "domain-card--small",
     enjeuxComplets:
       "Modernisation des collectivités territoriales, transition vers des villes durables (Pôle Urbain de Diamniadio), optimisation de la gestion des déchets et traçabilité de la fiscalité locale.",
@@ -168,13 +168,6 @@ export default function DomainesShowcase() {
             Découvrir nos domaines
             <span className="link-arrow">↗</span>
           </a>
-
-          <div className="hero-signature" aria-hidden="true">
-            <span>INNOVER</span>
-            <span>FORMER</span>
-            <span>ENTREPRENDRE</span>
-            <span>TRANSFÉRER</span>
-          </div>
         </div>
 
         <div className="hero-visual">
