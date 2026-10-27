@@ -99,61 +99,46 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function Home() {
   return (
     <main>
-      {/* 1. HERO PLEIN ÉCRAN CINÉMATIQUE */}
+      {/* HERO ACCUEIL CIAT — DESIGN ORIGINAL RESTAURÉ */}
       <section className="hero">
-        <div className="hero-overlay-gradient" aria-hidden="true" />
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <h1>
-              Innover aujourd’hui pour
-              <br />
-              <span className="hero-highlight-gold">transformer demain</span>
-            </h1>
+        <div className="hero-copy">
+          <SectionLabel>INNOVER&nbsp; · &nbsp;INCUBER&nbsp; · &nbsp;TRANSFÉRER</SectionLabel>
 
-            <p>
-              Le CIAT et son incubateur accompagnent les porteurs de projets et
-              favorisent l’innovation au service du développement de l’ISEP et
-              de son environnement à Diamniadio.
-            </p>
+          <h1>
+            Le CIAT,
+            <span>un écosystème au service</span>
+            <span>de l’innovation et de</span>
+            <span>l’entrepreneuriat</span>
+          </h1>
 
-            <div className="hero-buttons">
-              <ButtonLink href="/portail/ciat" variant="primary">
-                Découvrir le CIAT
-                <ArrowRight size={16} className="ml-2" />
-              </ButtonLink>
-              <ButtonLink
-                href="/galerie"
-                variant="secondary"
-                className="!text-white !border-white/40 !bg-white/10 hover:!bg-white/20 backdrop-blur-sm"
-              >
-                Nos projets incubés
-                <ArrowRight size={16} className="ml-2" />
-              </ButtonLink>
-            </div>
+          <p>
+            Le Centre d’Innovation, d’Application et de Transfert accompagne
+            les porteurs de projets, les startups et les acteurs de
+            l’innovation pour transformer les idées en solutions concrètes au sein
+            de l’ISEP Amadou Trawaré de Diamniadio.
+          </p>
+
+          <div className="hero-buttons">
+            <Link className="button" href="/portail/ciat">
+              Découvrir le CIAT
+              <ArrowRight size={15} strokeWidth={1.8} />
+            </Link>
+            <Link className="button button-outline" href="/galerie">
+              Nos projets incubés
+              <ArrowRight size={15} strokeWidth={1.8} />
+            </Link>
           </div>
+        </div>
 
-          {/* Barre flottante de métriques & ancrage territorial */}
-          <div className="hero-glass-kpi">
-            <div className="hero-kpi-item">
-              <strong>+50</strong>
-              <span className="kpi-label">Projets Accompagnés</span>
-              <span className="kpi-sub">Idéation, prototypage et maturation</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>+20</strong>
-              <span className="kpi-label">Startups &amp; Prototypes</span>
-              <span className="kpi-sub">Solutions technologiques viables</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>7 <span>Filières</span></strong>
-              <span className="kpi-label">Domaines Stratégiques</span>
-              <span className="kpi-sub">Numérique, Agro, Énergie, Santé</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>Diamniadio</strong>
-              <span className="kpi-label">Campus ISEP Amadou Trawaré</span>
-              <span className="kpi-sub">Ateliers technologiques &amp; FabLab</span>
-            </div>
+        <div className="hero-visual">
+          <img
+            src="/images/campus-isep.png"
+            alt="Campus de l’ISEP Amadou Trawaré de Diamniadio"
+          />
+          <div className="hero-caption">
+            <span>Innovation</span>
+            <span>Application</span>
+            <span>Transfert</span>
           </div>
         </div>
       </section>

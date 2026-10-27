@@ -108,182 +108,159 @@
 }
 
 /* =============================================================================
- * HERO PLEIN ÉCRAN CINÉMATIQUE — CIAT / ISEP AMADOU TRAWARÉ
+ * BOUTONS HOMEPAGE CIAT (DESIGN SYSTEM OFFICIEL)
+ * ============================================================================= */
+.button {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 24px;
+  border: 1px solid var(--color-primary, #612D10);
+  border-radius: 40px;
+  background: var(--color-primary, #612D10);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: var(--font-title, 'Plus Jakarta Sans', sans-serif);
+  cursor: pointer;
+  transition: all .2s ease;
+  box-sizing: border-box;
+}
+
+.button:hover {
+  background: var(--color-primary-dark, #24140D);
+  border-color: var(--color-primary-dark, #24140D);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.button-outline {
+  background: transparent;
+  color: var(--color-primary, #612D10);
+  border: 1px solid var(--color-primary, #612D10);
+}
+
+.button-outline:hover {
+  background: var(--color-primary, #612D10);
+  color: #FFFFFF;
+}
+
+/* =============================================================================
+ * HERO HOMEPAGE — ACCUEIL CIAT (SPLIT DESIGN ORIGINAL RESTAURÉ)
  * ============================================================================= */
 .hero {
+  min-height: 440px;
+  display: grid;
+  grid-template-columns: 47% 53%;
   position: relative;
-  width: 100%;
-  min-height: calc(90vh - 80px);
-  display: flex;
-  align-items: center;
-  background-color: #140A06;
-  background-image: url('/images/campus-isep.png');
-  background-size: cover;
-  background-position: center right;
-  background-repeat: no-repeat;
-  border-bottom: 1px solid rgba(201, 154, 104, 0.2);
   overflow: hidden;
-}
-
-.hero-overlay-gradient {
-  position: absolute;
-  inset: 0;
-  background: 
-    linear-gradient(
-      90deg,
-      rgba(20, 10, 6, 0.94) 0%,
-      rgba(20, 10, 6, 0.85) 45%,
-      rgba(20, 10, 6, 0.45) 72%,
-      rgba(20, 10, 6, 0.18) 100%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(20, 10, 6, 0.50) 0%,
-      transparent 25%,
-      transparent 70%,
-      rgba(20, 10, 6, 0.80) 100%
-    );
-  pointer-events: none;
-  z-index: 1;
-}
-
-.hero-inner {
-  max-width: var(--content);
-  width: 100%;
-  margin: 0 auto;
-  padding: 80px max(5vw, calc((100vw - var(--content)) / 2)) 48px;
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
+  background:
+    radial-gradient(ellipse at 46% 60%, rgba(218, 193, 162, .22), transparent 38%),
+    var(--color-bg-soft, #FAF7F2);
+  border-bottom: 1px solid var(--color-border, #EFE4D6);
 }
 
 .hero-copy {
-  max-width: 680px;
+  padding: 50px 20px 40px max(6.1vw, calc((100vw - var(--content)) / 2));
+  position: relative;
+  z-index: 2;
+  align-self: center;
 }
 
-.hero-eyebrow-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(201, 154, 104, 0.4);
-  backdrop-filter: blur(8px);
-  padding: 6px 16px;
-  border-radius: 9999px;
-  font-family: var(--font-title);
-  font-size: 11px;
+.eyebrow {
+  display: block;
+  color: #8b5939;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 2.2px;
+  line-height: 1.6;
+  font-family: var(--font-title, 'Plus Jakarta Sans', sans-serif);
   text-transform: uppercase;
-  color: #E2A76F;
-  margin-bottom: 22px;
-}
-
-.hero-pulse-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #C99A68;
-  box-shadow: 0 0 0 3px rgba(201, 154, 104, 0.35);
-  animation: pulse-dot 2s infinite ease-in-out;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.7; }
 }
 
 .hero h1 {
-  font-family: var(--font-title);
-  font-size: clamp(38px, 4.4vw, 58px);
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0 0 20px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  font-size: clamp(36px, 3.35vw, 49px);
+  line-height: 1.04;
+  letter-spacing: -1.8px;
+  margin: 18px 0 18px;
+  font-weight: 700;
+  max-width: 650px;
+  color: var(--color-primary-dark, #24140D);
+  font-family: var(--font-title, 'Plus Jakarta Sans', sans-serif);
 }
 
-.hero h1 .hero-highlight-gold {
-  color: #F4C494;
-  display: inline;
+.hero h1 span {
+  display: block;
+  color: var(--color-accent, #C99A68);
 }
 
 .hero-copy > p {
-  font-family: var(--font-body);
-  font-size: clamp(15px, 1.15vw, 17px);
+  max-width: 540px;
+  font-size: 13.5px;
   line-height: 1.7;
-  color: #E8DBD1;
-  margin: 0 0 32px;
-  max-width: 580px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: #47423d;
+  margin: 0 0 23px;
+  font-family: var(--font-body, 'Inter', sans-serif);
 }
 
 .hero-buttons {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 48px;
+  gap: 14px;
 }
 
-/* Barre de KPIs flottante en verre */
-.hero-glass-kpi {
-  background: rgba(26, 14, 8, 0.70);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 20px 28px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  width: 100%;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-}
-
-.hero-kpi-item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.hero-visual {
+  min-height: 440px;
   position: relative;
+  overflow: hidden;
+  clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%, 12% 67%, 20% 27%);
 }
 
-.hero-kpi-item:not(:last-child)::after {
+.hero-visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-visual::before {
   content: '';
   position: absolute;
-  right: -12px;
-  top: 15%;
-  height: 70%;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(250, 247, 242, .5), transparent 35%);
+  pointer-events: none;
 }
 
-.hero-kpi-item strong {
-  font-family: var(--font-title);
-  font-size: clamp(20px, 2vw, 26px);
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.1;
-}
-
-.hero-kpi-item strong span {
-  color: #C99A68;
-}
-
-.hero-kpi-item .kpi-label {
-  font-family: var(--font-title);
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #F4C494;
-  line-height: 1.2;
-}
-
-.hero-kpi-item .kpi-sub {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: #cbb69e;
-  line-height: 1.3;
+.hero-caption {
+  position: absolute;
+  z-index: 2;
+  right: 7%;
+  bottom: 12%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-left: 2px solid var(--color-accent, #C99A68);
+  padding-left: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-primary-dark, #24140D);
+  font-family: var(--font-title, 'Plus Jakarta Sans', sans-serif);
+  background: rgba(250, 248, 244, 0.90);
+  backdrop-filter: blur(4px);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-right: 14px;
+  border-radius: 0 6px 6px 0;
+  box-shadow: 0 4px 12px rgba(36, 20, 13, 0.08);
 }
 
 /* SECTION PADDING UNIFIÉ */
@@ -1092,6 +1069,10 @@
     width: 92%;
   }
 
+  .hero {
+    grid-template-columns: 50% 50%;
+  }
+
   .ecosystem {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -1148,26 +1129,28 @@
   }
 
   .hero {
+    display: flex;
+    flex-direction: column;
     min-height: auto;
   }
 
-  .hero-inner {
-    padding: 48px 6% 36px;
+  .hero-copy {
+    padding: 38px 6% 32px;
   }
 
   .hero h1 {
-    font-size: clamp(30px, 7vw, 42px);
+    font-size: clamp(32px, 8vw, 44px);
+    letter-spacing: -1.5px;
   }
 
-  .hero-glass-kpi {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    padding: 16px 20px;
-    margin-top: 36px;
+  .hero-visual {
+    min-height: 280px;
+    clip-path: none;
   }
 
-  .hero-kpi-item:not(:last-child)::after {
-    display: none;
+  .hero-caption {
+    right: 6%;
+    bottom: 8%;
   }
 
   .section-padding {
