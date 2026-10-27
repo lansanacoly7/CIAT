@@ -102,7 +102,7 @@ export default function ContactPage() {
           alt="Accueil et réception du CIAT · Université et Centre d'Innovation"
           fill
           priority
-          sizes="100vw"
+          unoptimized
           className="object-cover object-center"
         />
 
