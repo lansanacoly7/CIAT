@@ -143,93 +143,90 @@ export default function CiatPresentationPage() {
   return (
     <div className="bg-[#FAF7F2] text-[#24140D] min-h-screen font-sans antialiased selection:bg-[#C99A68]/30">
       {/* =====================================================================
-       * SECTION 1 — HERO OFFICIEL DU CIAT
-       * Conforme à la Charte Graphique Officielle et aux directives Master.md
-       * Palette : Brun Nuit #24140D, Brun CIAT #612D10, Ocre Doré #C99A68, Sable #FAF7F2
+       * SECTION 1 — HERO CINÉMATIQUE PLEIN ÉCRAN ALIGNÉ À GAUCHE (SUR LE CÔTÉ)
+       * Cohérent avec les héros de la page Accueil et de la page Incubateur
+       * Palette : Brun Nuit #24140D, Brun CIAT #612D10, Ocre Doré #C99A68, Blanc Pur
        * ===================================================================== */}
-      <section className="relative overflow-hidden border-b border-[#EFE4D6] pt-10 pb-14 md:pt-14 md:pb-20 bg-[#FAF7F2]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
-            {/* Colonne Gauche : Titre éditorial, description & actions officielles */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
-                  LE CIAT DIAMNIADIO
-                </span>
-                <span className="h-[2px] w-12 bg-[#C99A68]" />
-              </div>
+      <section className="relative w-full min-h-[calc(100vh-72px)] flex items-center overflow-hidden bg-[#24140D]">
+        {/* Photographie panoramique plein écran du Campus CIAT Diamniadio */}
+        <Image
+          src="/images/ciat-header-panoramique.jpg"
+          alt="Campus et Centre d'Innovation et d'Accélération Technologique (CIAT) à Diamniadio"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[46px] font-extrabold text-[#24140D] tracking-tight leading-[1.12]">
-                Un catalyseur d’
-                <span className="text-[#612D10]">innovation</span> au service de l’
-                <span className="text-[#612D10]">entrepreneuriat</span> et de l’
-                <span className="text-[#612D10]">impact</span>.
-              </h1>
+        {/* Dégradé cinématographique asymétrique : sombre à gauche pour contraste parfait, ouvert à droite sur l'architecture */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-[#24140D]/95 via-[#24140D]/85 to-[#24140D]/40 pointer-events-none"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-[#24140D]/90 via-transparent to-black/40 pointer-events-none"
+        />
 
-              <p className="text-sm sm:text-base leading-relaxed text-[#6B5646] max-w-xl font-normal">
-                Le Centre d’Innovation, d’Application et de Transfert (CIAT) de l’ISEP Amadou Trawaré de
-                Diamniadio est un espace dédié à l’entrepreneuriat, à l’innovation et au transfert de
-                technologies. Il accompagne les projets, soutient l’incubation de startups et favorise la
-                mise en œuvre de solutions concrètes pour répondre aux défis du territoire et de l’Afrique.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  href="/connexion?next=/incubateur"
-                  className="inline-flex items-center justify-center rounded-xl bg-[#612D10] hover:bg-[#48210B] px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all active:scale-95"
-                >
-                  Candidater à l&apos;Incubateur
-                  <ArrowRight size={16} className="ml-2 text-[#C99A68]" />
-                </Link>
-
-                <a
-                  href="#missions"
-                  className="inline-flex items-center justify-center rounded-xl border border-[#D5C9BB] bg-white hover:bg-[#F5EFE6] px-6 py-3.5 text-sm font-semibold text-[#24140D] transition-all shadow-2xs"
-                >
-                  Découvrir nos missions
-                </a>
-              </div>
-
-              {/* Piliers officiels */}
-              <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-[#6B5646] font-medium border-t border-[#EFE4D6]/80">
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#612D10]" />
-                  FabLab & Ateliers Makerspace
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#612D10]" />
-                  Bancs d&apos;Essai Photovoltaïques
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#612D10]" />
-                  Incubation & Transfert TRL 4-8
-                </span>
-              </div>
+        {/* Contenu textuel calé sur le côté gauche (cohérence globale avec Accueil & Incubateur) */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+          <div className="max-w-2xl lg:max-w-3xl flex flex-col items-start text-left">
+            {/* Badge institutionnel officiel */}
+            <div className="inline-flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-1.5 border border-white/20 backdrop-blur-md mb-6">
+              <span className="h-2 w-2 rounded-full bg-[#C99A68]" />
+              <span className="text-xs font-bold tracking-[0.2em] text-[#C99A68] uppercase">
+                LE CIAT DIAMNIADIO • ISEP AMADOU TRAWARÉ
+              </span>
             </div>
 
-            {/* Colonne Droite : Photographie officielle du Campus ISEP Diamniadio */}
-            <div className="lg:col-span-5 flex flex-col items-end">
-              <div className="mb-3 text-right">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-[#6B5646]">
-                  INNOVER · FORMER · ENTREPRENDRE · TRANSFÉRER
-                </span>
-              </div>
+            {/* Titre monumental aligné à gauche */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
+              Un catalyseur d’<span className="text-[#C99A68]">innovation</span> au service de l’impact
+            </h1>
 
-              <div className="relative w-full aspect-[16/11] rounded-2xl overflow-hidden border border-[#EFE4D6] shadow-xl bg-white">
-                <Image
-                  src="/images/ciat-header-panoramique.jpg"
-                  alt="Campus de l'ISEP Amadou Trawaré et Centre d'Innovation CIAT à Diamniadio"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 45vw"
-                  className="object-cover object-center"
-                />
-              </div>
+            {/* Sous-titre narratif */}
+            <p className="mt-5 text-sm sm:text-base lg:text-lg text-white/90 max-w-2xl leading-relaxed font-normal">
+              Le Centre d’Innovation et d’Accélération Technologique réunit porteurs de projets,
+              chercheurs et industriels au cœur de la Cité du Savoir pour transformer les idées
+              scientifiques en prototypes validés et en entreprises viables.
+            </p>
 
-              <div className="mt-3 flex items-center gap-2 text-xs text-[#7A6A5E] font-medium">
-                <span className="h-2 w-2 rounded-full bg-[#C99A68]" />
-                <span>Cité du Savoir • Diamniadio, Sénégal</span>
-              </div>
+            {/* Actions côte à côte alignées à gauche */}
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                href="/connexion?next=/incubateur"
+                className="inline-flex items-center justify-center rounded-xl bg-[#612D10] hover:bg-[#7D3A15] px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-xl hover:shadow-2xl transition-all active:scale-95 border border-[#C99A68]/40"
+              >
+                Candidater à l&apos;Incubateur
+                <ArrowRight size={16} className="ml-2 text-[#C99A68]" />
+              </Link>
+
+              <a
+                href="#missions"
+                className="inline-flex items-center justify-center rounded-xl border border-white/35 bg-white/10 hover:bg-white/20 px-7 py-3.5 text-xs sm:text-sm font-semibold text-white transition-all backdrop-blur-sm active:scale-95"
+              >
+                Découvrir nos missions
+              </a>
+            </div>
+
+            {/* Micro-puces de réassurance alignées à gauche */}
+            <div className="mt-12 pt-6 border-t border-white/15 flex flex-wrap items-center gap-6 text-xs text-white/80 font-medium">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                FabLab 4.0 & Prototypage
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                Bancs d&apos;Essai Solaires
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                Homologation TRL 1-8
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                Cité du Savoir • Diamniadio
+              </span>
             </div>
           </div>
         </div>
