@@ -10,6 +10,7 @@ import {
   Card,
   DemoBanner,
 } from "@/components/ui";
+import CardImage from "@/components/CardImage";
 import {
   getFicheBySlug,
   getFicheQrUrl,
@@ -236,17 +237,17 @@ function FicheDetailContent({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Colonne Principale (Contenu et Médias) */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Galerie de Photos */}
-            {photos.length > 0 && (
-              <section aria-label="Galerie photos" className="overflow-hidden rounded-2xl border border-bordure bg-white shadow-xs">
-                <div className="relative aspect-video w-full overflow-hidden bg-black/5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photos[activePhotoIndex].url}
-                    alt={`${fiche.titre} — photo ${activePhotoIndex + 1}`}
-                    className="h-full w-full object-cover transition-all duration-300"
-                  />
-                </div>
+            {/* Galerie de Photos avec aspect-video réservé et repli visuel propre */}
+            <section aria-label="Galerie photos" className="overflow-hidden rounded-2xl border border-bordure bg-white shadow-xs">
+              <div className="relative aspect-video w-full overflow-hidden bg-black/5">
+                <CardImage
+                  src={photos[activePhotoIndex]?.url}
+                  alt={`${fiche.titre} — photo ${activePhotoIndex + 1}`}
+                  aspectRatio="aspect-video"
+                  fallbackCategory={fiche.domaine?.nom || "Prototype CIAT"}
+                  fallbackIcon="prototype"
+                />
+              </div>
 
                 {photos.length > 1 && (
                   <div className="flex gap-2 p-3 bg-ivoire overflow-x-auto border-t border-bordure/60">
@@ -270,7 +271,6 @@ function FicheDetailContent({
                   </div>
                 )}
               </section>
-            )}
 
             {/* Problème Adressé */}
             <Card>

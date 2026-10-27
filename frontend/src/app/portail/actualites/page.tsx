@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiErrorBanner, Badge, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
+import CardImage from "@/components/CardImage";
 import { getActualites, type Actualite } from "@/lib/portal-api";
 
 function formatDate(dateStr: string) {
@@ -119,17 +120,16 @@ export default function ActualitesPage() {
           {items.map((actu) => (
             <Card key={actu.id} className="flex h-full flex-col justify-between overflow-hidden">
               <div>
-                {actu.image && (
-                  <div className="-mx-6 -mt-6 mb-4 h-44 overflow-hidden border-b border-bordure bg-ivoire">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={actu.image}
-                      alt={actu.titre}
-                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
+                {/* Image d'actualité avec aspect-ratio réservé (Constat C5) et repli visuel propre (T2) */}
+                <div className="-mx-6 -mt-6 mb-4 overflow-hidden border-b border-bordure bg-ivoire">
+                  <CardImage
+                    src={actu.image}
+                    alt={actu.titre}
+                    aspectRatio="aspect-[16/9]"
+                    fallbackCategory="Actualité CIAT"
+                    fallbackIcon="news"
+                  />
+                </div>
                 <div className="flex items-center justify-between text-xs text-texte-doux">
                   <span>{formatDate(actu.publie_le)}</span>
                   <span className="font-semibold text-beige">CIAT</span>

@@ -29,6 +29,14 @@ const ROLE_LABELS: Record<string, string> = {
   visiteur: "Visiteur",
 };
 
+function isActiveRoute(href: string, pathname: string) {
+  if (href === "/") return pathname === "/";
+  if (href === "/portail/ciat") return pathname === "/portail/ciat" || pathname === "/ciat";
+  if (href === "/portail/incubateur") return pathname === "/portail/incubateur";
+  if (href === "/portail/contact") return pathname === "/portail/contact" || pathname === "/contact";
+  return pathname.startsWith(href);
+}
+
 export default function Header() {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
@@ -64,10 +72,7 @@ export default function Header() {
         {/* Navigation principale Desktop — Sobre, épurée, sans gadget */}
         <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => {
-            const active =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+            const active = isActiveRoute(link.href, pathname);
 
             return (
               <Link
@@ -147,10 +152,7 @@ export default function Header() {
         <div className="border-t border-[#EFE4D6] bg-white px-4 pb-6 pt-3 md:hidden shadow-md">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
-              const active =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(link.href);
+              const active = isActiveRoute(link.href, pathname);
 
               return (
                 <Link

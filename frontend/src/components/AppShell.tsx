@@ -31,6 +31,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
     pathname === "/" ||
     pathname === "/contact" ||
     pathname === "/ciat" ||
+    pathname === "/actualites" ||
+    pathname === "/partenaires" ||
     pathname.startsWith("/portail") ||
     pathname === "/mentions-legales" ||
     pathname === "/confidentialite" ||

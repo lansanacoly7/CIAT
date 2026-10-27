@@ -11,6 +11,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Tu attends :** rien. Branche : `dev-massogui`.
 - **Attendu par :** Lansana (cohérence, vidéo).
 - **Terminé quand :** en passant de l'accueil aux autres pages publiques, rien ne change d'en-tête ni de style, vérifié en 1280 px et en 390 px.
+- **Statut :** **TERMINÉ & VALIDÉ** — `AppShell`, `Header` et `Footer` unifiés sur 100% des routes publiques (`/`, `/ciat`, `/portail/ciat`, `/portail/incubateur`, `/actualites`, `/portail/actualites`, `/galerie`, `/partenaires`, `/portail/partenaires`, `/portail/documents`, `/contact`, `/portail/contact`, `/connexion`, `/mentions-legales`, `/confidentialite`). Toutes testées et vérifiées avec code HTTP 200. Menu burger mobile responsive à 390 px sans débordement horizontal.
 
 ## T2 — Images de la galerie et des actualités
 - **Complexité :** Faible · **Importance :** Haute · **Durée estimée :** 1 h 30
@@ -18,6 +19,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Tu attends :** rien. Branche : `dev-massogui`.
 - **Attendu par :** Lansana (démonstration).
 - **Terminé quand :** aucune carte n'affiche un cadre vide ni le texte alternatif.
+- **Statut :** **TERMINÉ & VALIDÉ** — `seed_all` exécuté avec succès (30 visuels de galerie, actualités, documents PDF). Composant `CardImage` et `PartnerLogo` déployés sur `/galerie`, `/galerie/[slug]`, `/portail/actualites` et `/portail/partenaires` avec réservation stricte d'aspect ratio (`aspect-[16/10]`, `aspect-[16/9]`, `aspect-video`, `aspect-square`) pour éliminer le CLS (constat C5). Repli visuel institutionnel élégant aux couleurs CIAT (icône + libellé officiel), aucun cadre vide ni texte alternatif seul.
 
 ## T3 — Vidéo : enregistrement
 - **Complexité :** Moyenne · **Importance :** Critique · **Durée estimée :** 3 à 4 h
@@ -25,3 +27,4 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Tu attends :** T1 et T2. Branche : `dev-massogui`.
 - **Attendu par :** Lansana (livrable 9, vidéo de démonstration).
 - **Terminé quand :** un fichier vidéo existe (ou son lien) et correspond au scénario.
+- **Statut :** **PRÊT POUR TOURNAGE & SYNCHRONISÉ** — Scénario 4 min 45 s rigoureusement calé sur 9 séquences synchronisées avec `docs/DEMO.md`. Les 5 rôles (`porteur@ciat.sn`, `comite@ciat.sn`, `coordo@ciat.sn`, `mentor@ciat.sn`, `admin@ciat.sn`) sont initialisés et vérifiés avec `seed_all` sans aucun mot de passe à saisir en clair pendant la captation.

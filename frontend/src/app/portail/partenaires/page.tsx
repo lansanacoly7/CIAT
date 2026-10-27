@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ApiErrorBanner, Badge, Button, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
+import { PartnerLogo } from "@/components/CardImage";
 import { getPartenaires, type Partenaire } from "@/lib/portal-api";
 
 const TYPE_CONFIG = {
@@ -175,21 +176,11 @@ export default function PartenairesPage() {
               <Card key={partenaire.id} className="flex h-full flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    {partenaire.logo ? (
-                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-bordure bg-white p-1 shadow-2xs">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={partenaire.logo}
-                          alt={partenaire.nom}
-                          className="h-full w-full object-contain"
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xs font-black tracking-wider text-beige">
-                        {partenaire.sigle || "PARTENAIRE"}
-                      </span>
-                    )}
+                    <PartnerLogo
+                      src={partenaire.logo}
+                      alt={partenaire.nom}
+                      sigle={partenaire.sigle}
+                    />
                     <Badge tone={typeInfo.tone} className="text-[11px]">
                       {typeInfo.label}
                     </Badge>
