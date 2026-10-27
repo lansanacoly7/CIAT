@@ -26,13 +26,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Écrans d'authentification plein écran
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
 
-  // Utilisateur connecté ou route tableau de bord
+  // Utilisateur connecté
   const isAuthenticated = Boolean(user);
-  const isDashboardRoute = pathname.startsWith("/tableau-de-bord");
 
-  // La barre latérale unifiée officielle est active dès qu'un utilisateur est connecté
-  // (administrateur, coordonnateur, membre de comité, mentor, porteur) ainsi que sur le tableau de bord
-  const showSidebar = !isAuthPage && (isAuthenticated || isDashboardRoute);
+  // La barre latérale unifiée n'est JAMAIS visible si l'utilisateur n'est pas connecté
+  const showSidebar = !isAuthPage && isAuthenticated;
 
   if (isAuthPage) {
     return <main className="flex-1">{children}</main>;
