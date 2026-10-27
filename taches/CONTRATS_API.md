@@ -173,3 +173,24 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 |---|---|
 | `GET /api/gallery/fiches/?mes_fiches=1` | Connecté : toutes les fiches de **ses** projets, quel que soit leur statut. Anonyme : ignoré (fiches publiées seulement). |
 | `GET /api/gallery/fiches/?en_validation=1` | Équipe CIAT (administrateur, coordonnateur) : les fiches « en validation ». Pour les autres : ignoré (fiches publiées seulement). |
+
+## P2 / P1 — Ajouts des Phases 4 et 5 (Pathé)
+
+### Accusé de réception et export compte-rendu (`/api/incubator/`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes d'erreur |
+|---|---|---|---|---|
+| `/dossiers/{id}/accuse/` | `GET` | Aucun | Télécharge l'accusé de réception officiel en PDF (`application/pdf`) reprenant les métadonnées officielles du dossier (référence `CIAT-AR-XXXXX`), l'équipe, la complétude, la liste des pièces justificatives et les mentions obligatoires du comité. **Droits :** porteur du projet, équipe CIAT ou membre du comité. | `400` : dossier encore en brouillon ; `403` : utilisateur non autorisé ; `404` : dossier inexistant. |
+| `/projets/{id}/compte-rendu/` | `GET` | `?format=xlsx` (défaut) ou `?format=pdf` | Génère et télécharge le compte rendu complet d'un projet incubé sous forme de document structuré en 4 blocs (Projet & Identité, Objectifs, Jalons clés, Bilans de suivi). **Droits :** porteur du projet, mentor affecté ou équipe CIAT. | `400` : format non supporté (seuls `xlsx` et `pdf` sont valides) ; `403` : utilisateur non autorisé ; `404` : projet inexistant. |
+
+### Calendrier des événements (`/api/portal/`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes de retour |
+|---|---|---|---|---|
+| `/evenements/calendrier.ics` | `GET` | `?a_venir=1` (optionnel) | Flux iCalendar conforme RFC 5545 (`text/calendar; charset=utf-8`) exportable dans Google Agenda, Outlook ou Apple Calendar. Si `?a_venir=1`, seuls les événements futurs sont renvoyés. **Droits :** Public (aucun token requis). | `200` : fichier `.ics` téléchargeable. |
+
+### Notifications et emails transactionnels (`Phase 5`)
+
+- **Soumission de dossier :** Lors de l'appel à `POST /api/incubator/dossiers/{id}/soumettre/`, un email de confirmation contenant la référence officielle et le lien direct vers l'accusé de réception (`/api/incubator/dossiers/{id}/accuse/`) est automatiquement transmis au porteur de projet.
+- **Décision du comité :** Lors de l'appel à `POST /api/incubator/dossiers/{id}/decision/`, un email notifiant l'acceptation ou le refus du dossier ainsi que le motif officiel saisi est envoyé au porteur de projet.
+- **Alertes de retard jalons :** La commande `python manage.py envoyer_alertes_retard` avertit quotidiennement les porteurs et mentors des échéances dépassées non validées (idempotence journalière garantie en base via le modèle `AlerteJalonEnvoyee`).

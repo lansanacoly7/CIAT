@@ -15,7 +15,7 @@ Endpoints :
 from django.db.models import F, Q, Sum
 from django.http import HttpResponse
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -429,6 +429,24 @@ class StatistiquesPortailView(APIView):
 # Phase 4 — T3 : Export iCalendar (.ics) des événements du CIAT
 # ==============================================================================
 
+@extend_schema(
+    summary="Flux calendrier iCalendar (.ics) des événements du CIAT",
+    description="Génère un flux d'agenda iCalendar conforme RFC 5545 contenant les événements officiels du CIAT, directement importable dans Google Agenda, Outlook ou Apple Calendar.",
+    parameters=[
+        OpenApiParameter(
+            name="a_venir",
+            type=int,
+            location=OpenApiParameter.QUERY,
+            description="Filtrer uniquement les événements à venir (1 pour oui, 0 ou absent pour tous)",
+            required=False,
+            enum=[0, 1],
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(description="Flux d'événements iCalendar (text/calendar)"),
+    },
+    tags=["Portail — Événements"],
+)
 class EvenementCalendrierICSView(APIView):
     """GET /api/portal/evenements/calendrier.ics : Flux iCalendar RFC 5545 public.
 
