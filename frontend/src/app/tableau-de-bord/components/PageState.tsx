@@ -1,20 +1,20 @@
 import { AlertCircle, Inbox, RotateCcw } from "lucide-react";
 
-/** Skeleton pour les 6 cartes KPI compactes */
+/** Skeleton pour les 8 cartes KPI (4 colonnes x 2 lignes) */
 export function KpiSkeletonGrid() {
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
-      {Array.from({ length: 6 }).map((_, i) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={`kpi-skeleton-${i}`}
-          className="h-[78px] animate-pulse rounded-xl border border-zinc-200/80 bg-white p-3 sm:p-3.5"
+          className="h-28 animate-pulse rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <div className="h-2.5 w-16 rounded bg-zinc-200" />
-            <div className="h-5 w-5 rounded bg-zinc-100" />
+            <div className="h-3 w-20 rounded bg-[rgba(60,35,20,0.08)]" />
+            <div className="h-4 w-12 rounded bg-[rgba(60,35,20,0.06)]" />
           </div>
-          <div className="mt-2.5 h-6 w-12 rounded bg-zinc-200" />
-          <div className="mt-2 h-2 w-20 rounded bg-zinc-100" />
+          <div className="h-9 w-24 rounded bg-[rgba(60,35,20,0.1)]" />
+          <div className="h-2.5 w-32 rounded bg-[rgba(60,35,20,0.06)]" />
         </div>
       ))}
     </div>

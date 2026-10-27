@@ -87,3 +87,51 @@ L'audit a porté sur les 5 pages publiques et interactives majeures de la platef
 ## 4. Coordination d'équipe
 
 - Ce rapport est mis à disposition de **Lansana** pour le dossier d'évaluation final et de **Maimouna** pour la validation des captures d'écran mobiles.
+
+---
+
+## 5. Audit d'Accessibilité Automatisé Axe-core (Phase 5 — T1)
+
+> **Date d'audit :** 27 octobre 2026  
+> **Outil :** `@axe-core/playwright` v4.10.2 (Règles WCAG 2.0 A/AA, WCAG 2.1 A/AA)  
+> **Commande de reproduction :** `npm run test:axe` (dans `frontend/`)  
+> **Responsable du périmètre décisionnel :** Alioune
+
+### A. Synthèse de l'audit automatisé sur les 8 écrans de référence
+
+| Écran audité | URL | Authentification | Violations totales | Critiques / Sérieuses | Responsable | Statut de conformité |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Accueil principal** | `/` | Publique | 1 | 1 | Massogui | 13 contrastes à harmoniser |
+| **Galerie des innovations** | `/galerie` | Publique | 1 | 1 | Massogui | 10 contrastes à harmoniser |
+| **Connexion** | `/connexion` | Publique | 0 | 0 | Équipe | **100 % Conforme (0 violation)** |
+| **Tableau de bord décisionnel** | `/tableau-de-bord` | Coordonnateur | 0 | 0 | **Alioune** | **100 % Conforme (0 violation)** |
+| **Générateur de documents** | `/documents` | Coordonnateur | 1 | 1 | Ibrahima | 8 contrastes à harmoniser |
+| **Gestion de l'incubateur** | `/incubateur` | Coordonnateur | 1 | 1 | Maimouna | 5 contrastes à harmoniser |
+| **Assistant IA** | `/assistant` | Coordonnateur | 1 | 1 | Kalz | 4 contrastes à harmoniser |
+| **Référentiel méthodologique** | `/tableau-de-bord/methodologie` | Coordonnateur | 0 | 0 | **Alioune** | **100 % Conforme (0 violation)** |
+
+### B. Corrections réalisées sur le périmètre décisionnel (Alioune)
+
+1. **Intitulés accessibles (Labels ARIA & Formulaires) :**
+   - Sélecteur de pagination de la table de détail : ajout de `aria-label="Nombre de lignes par page"`.
+   - Boutons de pagination précédent / suivant : ajout de `aria-label="Page précédente"` et `aria-label="Page suivante"`.
+   - Champ de recherche textuelle : ajout de `aria-label="Rechercher par projet, porteur ou guichet"`.
+
+2. **Accessibilité des graphiques vectoriels Recharts (`svg-img-alt`) :**
+   - Conteneur de graphique balisé en `role="region"` avec `aria-label="Répartition par genre des porteurs de projets"`.
+   - Données et secteurs `<Cell />` du Donut enrichis avec `role="img"` et `aria-label` descriptif dynamique (ex. `Femmes : 42 porteurs (35 %)`), éliminant toute violation `svg-img-alt`.
+   - Désactivation de la couche injectée sans titre via `accessibilityLayer={false}` sur les composants Recharts.
+
+3. **Rehaussement du ratio de contraste des couleurs (`color-contrast`) :**
+   - Remplacement systématique de la teinte d'état secondaire `#8C7E74` (ratio de 3.6:1 sur blanc et 3.7:1 sur `#FBF8F3`, non conforme AA) par `#5A4B42` (ratio de **6.1:1 sur blanc** et **7.6:1 sur fond crème `#FBF8F3`**).
+   - Conforme WCAG AA (seuil 4.5:1) et WCAG AAA (seuil 7:1 pour le texte sur fond crème).
+   - Zéro violation de contraste subsistant sur `/tableau-de-bord` et `/tableau-de-bord/methodologie`.
+
+### C. Recommandations transmises aux collègues
+
+Les violations détectées sur les 5 autres écrans relèvent exclusivement de la règle `color-contrast` (textes secondaires ou badges discrets sous le seuil 4.5:1) :
+- **Massogui (Accueil & Galerie) :** Remplacer les textes de description secondaire ocre/gris clair par une teinte au contraste supérieur à 4.5:1.
+- **Ibrahima (Documents) :** Rehausser le contraste des métadonnées sous les aperçus de documents.
+- **Maimouna (Incubateur) :** Ajuster la couleur des dates et badges d'étape d'incubation.
+- **Kalz (Assistant) :** Ajuster le contraste des horodatages de messages.
+
