@@ -244,7 +244,7 @@ function FicheDetailContent({
                   src={photos[activePhotoIndex]?.url}
                   alt={`${fiche.titre} — photo ${activePhotoIndex + 1}`}
                   aspectRatio="aspect-video"
-                  fallbackCategory={fiche.domaine?.nom || "Prototype CIAT"}
+                  fallbackCategory="Prototype CIAT"
                   fallbackIcon="prototype"
                 />
               </div>

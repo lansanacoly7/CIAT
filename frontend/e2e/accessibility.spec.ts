@@ -63,7 +63,14 @@ test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
         .analyze();
 
-      const criticalViolations = results.violations.filter(
+interface AxeViolation {
+  id: string;
+  impact?: string | null;
+  description: string;
+  nodes: Array<{ target: unknown; html: string; failureSummary?: string }>;
+}
+
+      const criticalViolations = (results.violations as AxeViolation[]).filter(
         (v) => v.impact === "critical" || v.impact === "serious"
       );
 
