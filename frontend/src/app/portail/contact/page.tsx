@@ -147,8 +147,8 @@ export default function ContactPage() {
 
                 <div className="relative z-10 h-full w-full overflow-hidden rounded-t-[140px] sm:rounded-t-[180px] rounded-br-3xl rounded-bl-[60px] border border-[#EFE4D6] shadow-xl bg-[#FAF7F2]">
                   <Image
-                    src="/images/campus-isep.png"
-                    alt="Façade moderne du CIAT · ISEP Amadou Trawaré"
+                    src="/images/contact/contact-accueil-campus.jpg"
+                    alt="Accueil moderne du CIAT · ISEP Amadou Trawaré"
                     fill
                     priority
                     unoptimized
@@ -463,8 +463,8 @@ export default function ContactPage() {
                 {/* Photo supérieure de la table de travail / réunion */}
                 <div className="relative h-56 w-full bg-[#24140D]">
                   <Image
-                    src="/images/auth-incubateur.jpg"
-                    alt="Espace de travail et réunion d'innovation au CIAT"
+                    src="/images/contact/contact-equipe-ciat.jpg"
+                    alt="Équipe d'accompagnement et d'accueil du CIAT"
                     fill
                     unoptimized
                     className="object-cover object-center"

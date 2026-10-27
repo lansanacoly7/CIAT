@@ -248,8 +248,8 @@ export default function CiatPresentationPage() {
             <div className="lg:col-span-4 flex justify-center">
               <div className="relative w-full max-w-sm aspect-[4/5] rounded-3xl overflow-hidden border border-[#EFE4D6] shadow-lg bg-[#FAF7F2]">
                 <Image
-                  src="/images/auth-incubateur.jpg"
-                  alt="Session de travail d'innovateurs avec leur mentor au CIAT"
+                  src="/images/ciat/ciat-gouvernance-direction.jpg"
+                  alt="Direction collégiale et session de travail au CIAT"
                   fill
                   unoptimized
                   className="object-cover object-center"
@@ -296,8 +296,8 @@ export default function CiatPresentationPage() {
             <div className="lg:col-span-4">
               <div className="relative aspect-[4/3] sm:aspect-[16/11] rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
                 <Image
-                  src="/images/ciat-depot-innovation.jpg"
-                  alt="Laboratoire de prototypage et bancs d'essai du CIAT"
+                  src="/images/ciat/ciat-ateliers-prototypage.jpg"
+                  alt="Laboratoire de prototypage, makerspace et bancs d'essai du CIAT"
                   fill
                   unoptimized
                   className="object-cover object-center brightness-90"
@@ -411,8 +411,8 @@ export default function CiatPresentationPage() {
             <div className="lg:col-span-4 flex justify-center">
               <div className="relative w-full max-w-sm aspect-[4/5] rounded-t-[140px] sm:rounded-t-[180px] rounded-b-2xl overflow-hidden border border-[#EFE4D6] shadow-xl bg-[#FAF7F2]">
                 <Image
-                  src="/images/ciat-header-panoramique.jpg"
-                  alt="Vue aérienne du campus ISEP Diamniadio"
+                  src="/images/ciat/ciat-ecosysteme-diamniadio.jpg"
+                  alt="Écosystème technologique et campus de Diamniadio"
                   fill
                   unoptimized
                   className="object-cover object-center"

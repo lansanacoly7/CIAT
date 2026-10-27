@@ -51,27 +51,27 @@ const ETAPES = [
 
 const PROJETS_INCUBES = [
   {
-    titre: "SunuRekolt",
+    titre: "SunuRekolt & AgriTech",
     tag: "AgriTech",
     desc: "Station IoT agrométéo et régulation solaire de micro-irrigation pour les maraîchers de la zone des Niayes.",
     lieu: "Niayes & Vallée, Sénégal",
-    image: "/images/innovations/agrisol-iot.jpg",
+    image: "/images/incubateur/incubateur-projet-agro.jpg",
     href: "/galerie",
   },
   {
-    titre: "EduTrack AI",
-    tag: "Numérique & IA",
-    desc: "Plateforme d'apprentissage adaptatif et de télé-maintenance 3D pour ateliers techniques professionnels.",
+    titre: "SunuGrid & Solaire Modulaire",
+    tag: "Énergies Propres",
+    desc: "Mini-réseaux intelligents et kits solaires modulaires pour ateliers artisanaux et fermes maraîchères.",
     lieu: "Diamniadio, Sénégal",
-    image: "/images/ciat-depot-innovation.jpg",
+    image: "/images/incubateur/incubateur-projet-solaire.jpg",
     href: "/galerie",
   },
   {
-    titre: "VITALE & SunuDoc",
-    tag: "Santé & Biomédical",
-    desc: "Station de télé-diagnostic médical de proximité avec constantes physiologiques pour postes de santé ruraux.",
+    titre: "Mobilité Éco-Fret",
+    tag: "Logistique & Mobilité",
+    desc: "Tricycles utilitaires électriques et gestion logistique du dernier kilomètre pour les marchés urbains.",
     lieu: "Dakar & Régions, Sénégal",
-    image: "/images/innovations/telemedical-device.jpg",
+    image: "/images/incubateur/incubateur-projet-mobilite.jpg",
     href: "/galerie",
   },
 ];

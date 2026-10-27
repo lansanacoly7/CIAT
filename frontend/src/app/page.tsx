@@ -78,7 +78,7 @@ const news = [
   {
     category: "Énergies Propres",
     title: "Éco-Séchoir Hybride : Optimisation thermique et séchage agroalimentaire",
-    image: "/images/ciat-depot-innovation.jpg",
+    image: "/images/innovations/eco-sechoir-solaire.jpg",
     href: "/galerie",
   },
 ];
