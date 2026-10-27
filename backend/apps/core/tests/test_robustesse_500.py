@@ -14,6 +14,7 @@ Règle stricte : Le code de retour HTTP doit TOUJOURS être compris dans
 [400, 401, 403, 404, 409, 429], et JAMAIS 500 (Internal Server Error).
 """
 import json
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from rest_framework import status
@@ -54,12 +55,53 @@ ALLOWED_ERROR_STATUSES = {
 @override_settings(
     PASSWORD_HASHERS=FAST_HASHERS,
     DISABLE_THROTTLING="1",
+    REST_FRAMEWORK={
+        "DEFAULT_AUTHENTICATION_CLASSES": (
+            "rest_framework_simplejwt.authentication.JWTAuthentication",
+        ),
+        "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+        "DEFAULT_FILTER_BACKENDS": (
+            "django_filters.rest_framework.DjangoFilterBackend",
+            "rest_framework.filters.SearchFilter",
+            "rest_framework.filters.OrderingFilter",
+        ),
+        "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+        "PAGE_SIZE": 20,
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+        "DEFAULT_THROTTLE_CLASSES": (),
+        "DEFAULT_THROTTLE_RATES": {
+            "anon": "100000/min",
+            "user": "100000/min",
+            "ai": "100000/min",
+            "auth": "100000/min",
+        },
+        "EXCEPTION_HANDLER": "apps.core.logging.custom_exception_handler",
+    },
 )
 class RobustesseApiAucuneErreur500Tests(APITestCase):
     """Vérification systématique de la résilience du back-end face aux anomalies."""
 
     @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cache.clear()
+
+    @classmethod
+    def tearDownClass(cls):
+        cache.clear()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+        super().tearDown()
+
+    @classmethod
     def setUpTestData(cls):
+        cache.clear()
         # 1. Utilisateurs socles
         cls.admin = User.objects.create_user(
             email="admin_rob@ciat.sn",
