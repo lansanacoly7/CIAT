@@ -2,7 +2,7 @@
 
 > **Développement de Solutions Numériques pour le CIAT et son Incubateur**  
 > **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 6)  
 > **Volume documentaire :** 6 pages réelles (conforme à l'exigence académique de 5 à 10 pages)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (environnement de développement local, conteneurs et tests automatisés). Les données de test et de démonstration sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** (Groq, Google Gemini) soumis à quotas de requêtes et aléas de disponibilité.
@@ -29,6 +29,17 @@ Implanté au sein de l'ISEP Amadou Trawaré de Diamniadio, le **Centre d'Innovat
 
 ### 1.2 Objectif de l'Évaluation Pratique
 Dans le cadre du cours d'Intelligence Artificielle Générative, l'objectif assigné à l'équipe technique était de concevoir, développer, tester et documenter une solution logicielle complète, interconnectée et immédiatement opérationnelle. Le résultat dépasse le stade d'un prototype jetable : la plateforme CIAT intègre l'ensemble des modules métiers requis, repose sur des bases de données relationnelles consistantes, intègre des garde-fous de sécurité avancés et encadre l'IA générative dans un cadre de confiance strict.
+
+### 1.3 Organisation de l'Équipe et Contribution de Chaque Membre
+Le projet est réalisé par un groupe de six apprenants réunis autour d'une organisation technique rigoureuse, avec une répartition explicite des rôles et des responsabilités par personne :
+- **Lansana Coly** : coordination, architecture, socle, services d'IA, intégration, tests de bout en bout et livrables ;
+- **Pape Alioune Sène** : tableau de bord, données, indicateurs, qualité des données, tests de l'interface ;
+- **Maimouna Sall** : parcours du porteur, générateur de documents, suivi et alertes, maquettes ;
+- **El Hadji Massogui Diop** : site public, galerie, assistant, communication et vidéo ;
+- **Ibrahima Khalilou Diallo** : module incubateur, base de données, sécurité, PostgreSQL ;
+- **Pathé Fall** : portail, exports et PDF, statistiques, notifications.
+
+Les documents de démonstration portent systématiquement la mention : *« Version de démonstration rédigée par l'équipe du projet, à valider par l'ISEP »*.
 
 ---
 

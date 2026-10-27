@@ -2,7 +2,7 @@
 
 > **Projet :** Plateforme Numérique du Centre d'Innovation, d'Application et de Transfert (CIAT)  
 > **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio  
-> **Auteur :** El Hadji Massogui Diop (Front-end Lead)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent vidéo : El Hadji Massogui Diop)  
 > **Durée totale ciblée :** 4 minutes 45 secondes (entre 4 et 5 minutes)  
 > **Résolution de capture :** 1080p (1920 × 1080 px à 60 fps)  
 > **Format audio :** Voix off claire en français, sans musique intrusive  

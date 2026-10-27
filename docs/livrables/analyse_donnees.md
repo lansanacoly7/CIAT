@@ -1,6 +1,6 @@
 # Rapport d'Analyse des Données et Recommandations Stratégiques (CIAT)
 
-> **Auteur :** Alioune (Pape Alioune Sène) — Data Analyst & Ingénieur Front-end, Équipe CIAT  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent analyse : Pape Alioune Sène)  
 > **Livrable :** Phase 3 — Tâche T2 (`docs/livrables/analyse_donnees.md`)  
 > **Destinataires :** Lansana (Chef de Projet), Comité de Sélection, Direction du CIAT  
 > **Référence d'API :** Endpoints REST `/api/analytics/` (`seed_all`) et `/api/analytics/indicateurs/definitions/`  

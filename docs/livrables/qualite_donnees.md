@@ -2,7 +2,7 @@
 
 > **Module :** P3 — Tableau de bord décisionnel & Analyse de données  
 > **Livrable :** Phase 3 — Tâche T1 (Data Analyst)  
-> **Responsable :** Alioune (Pape Alioune Sène)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent qualité : Pape Alioune Sène)  
 > **Outil :** `python manage.py controle_qualite_donnees` (`backend/apps/analytics/management/commands/controle_qualite_donnees.py`)  
 > **Statut :** Validé — 0 anomalie sur le jeu officiel `seed_all` (62 projets, 47 utilisateurs, 58 dossiers, 147 jalons, 50 financements, 48 partenariats)
 

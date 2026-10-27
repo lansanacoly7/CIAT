@@ -2,7 +2,7 @@
 
 > **Plateforme Numérique Intégrée du CIAT et de son Incubateur**  
 > **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Trawaré, Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (fonctionnement en local et en intégration continue). L'ensemble des données injectées sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** soumis à quotas et aléas réseau.
 
@@ -19,6 +19,17 @@ L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Dia
 ### 1.2 Problématique et Besoins Numériques
 Jusqu'alors, les flux de candidatures, les délibérations de jurys, le suivi du mentorat et la valorisation des prototypes souffraient d'un fractionnement des outils (fichiers bureautiques non versionnés, échanges d'emails non sécurisés, absence de statistiques consolidées en temps réel).  
 La plateforme numérique CIAT a été conçue pour fédérer l'intégralité du cycle de vie de l'innovation au sein d'une architecture applicative unique, robuste, ergonomique et augmentée par des fonctionnalités d'**intelligence artificielle générative** strictement encadrées.
+
+### 1.3 Équipe Projet et Contribution de Chaque Membre
+Le développement de la plateforme CIAT est mené par un groupe de six apprenants (deux groupes de trois fusionnés), avec une spécialisation claire par membre du groupe :
+- **Lansana Coly** : coordination, architecture, socle, services d'IA, intégration, tests de bout en bout et livrables ;
+- **Pape Alioune Sène** : tableau de bord, données, indicateurs, qualité des données, tests de l'interface ;
+- **Maimouna Sall** : parcours du porteur, générateur de documents, suivi et alertes, maquettes ;
+- **El Hadji Massogui Diop** : site public, galerie, assistant, communication et vidéo ;
+- **Ibrahima Khalilou Diallo** : module incubateur, base de données, sécurité, PostgreSQL ;
+- **Pathé Fall** : portail, exports et PDF, statistiques, notifications.
+
+*Mention légale des documents de démonstration :* « Version de démonstration rédigée par l'équipe du projet, à valider par l'ISEP ».
 
 ---
 
