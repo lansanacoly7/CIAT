@@ -17,3 +17,12 @@ Ordre conseillé : T1, puis T2.
 - **Tu attends :** rien. Branche : `Alioune`.
 - **Attendu par :** Lansana (démonstration).
 - **Terminé quand :** les dates sont en français, aucun graphique ne reste vide sans message, et l'export est testé.
+
+> **T1 et T2 validées et fusionnées dans `test`** (audit axe sur 8 écrans, dates en français, test d'export). Fais `git pull origin test`.
+
+## T3 — Images de la galerie et des actualités (reprise de la tâche de Massogui)
+- **Complexité :** Faible · **Importance :** Haute · **Durée estimée :** 1 h 30
+- **À faire :** après `python manage.py seed_all` (qui génère les images de démonstration), vérifie que chaque carte de la galerie, des actualités et des partenaires affiche son image. Réserve la place des images (`aspect-ratio`) pour éviter les sauts de page (constat C5 de la recette : sur 390 px, les cartes du bas de la galerie apparaissent en retard). En cas d'image manquante : un repli visuel propre, jamais le texte alternatif seul. Massogui garde l'unification de l'en-tête et la vidéo : ne touche pas à l'en-tête.
+- **Tu attends :** rien. Branche : `Alioune`.
+- **Attendu par :** Lansana (démonstration).
+- **Terminé quand :** aucune carte n'affiche un cadre vide ni le texte alternatif, en 1280 px et en 390 px.
