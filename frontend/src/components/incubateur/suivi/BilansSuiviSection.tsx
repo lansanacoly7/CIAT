@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui";
 import {
   creerProjetSuivi,
@@ -126,14 +127,23 @@ export default function BilansSuiviSection({
   return (
     <section
       aria-label="Bilans de suivi et compte rendu"
-      className="rounded-xl border border-bordure bg-white p-6 shadow-xs"
+      className="rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-7 shadow-xs"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-brun">Bilans de suivi périodiques</h2>
-          <p className="text-xs text-texte-doux">
-            Évaluations d&apos;étape à 3 et 6 mois menées par le mentor et la coordination.
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#F2E8DC] pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#522504] text-[#F7EFE6] shadow-xs">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="font-[family-name:var(--font-title)] text-base sm:text-lg font-bold text-[#3D1A04]">
+              Bilans de suivi périodiques
+            </h2>
+            <p className="text-xs text-[#7C6353]">
+              Évaluations à 3 et 6 mois menées par le mentor et la coordination.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -142,7 +152,7 @@ export default function BilansSuiviSection({
             type="button"
             onClick={() => handleExport("pdf")}
             disabled={exporting !== null}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-[#612D10]/30 bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#F2E7DC] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#612D10]/25 bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#F2E7DC] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {exporting === "pdf" ? (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
@@ -159,7 +169,7 @@ export default function BilansSuiviSection({
             type="button"
             onClick={() => handleExport("xlsx")}
             disabled={exporting !== null}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-[#2E7D32]/40 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#2E7D32]/35 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {exporting === "xlsx" ? (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#2E7D32]/40 border-t-[#2E7D32]" />
@@ -175,7 +185,7 @@ export default function BilansSuiviSection({
           {canWrite && echeanceDisponible && (
             <Button
               variant={showForm ? "outline" : "primary"}
-              className="min-h-11 px-3.5 py-1.5 text-xs"
+              className="min-h-10 px-3.5 py-1.5 text-xs font-semibold"
               onClick={() => {
                 setEcheance(echeanceDisponible);
                 setShowForm((v) => !v);
@@ -191,34 +201,56 @@ export default function BilansSuiviSection({
       {exportError && (
         <div
           role="alert"
-          className="mt-4 rounded-lg border border-[#DC2626]/30 bg-[#DC2626]/5 p-3 text-xs text-[#DC2626]"
+          className="mt-4 rounded-xl border border-[#DC2626]/30 bg-[#DC2626]/5 p-3 text-xs text-[#DC2626]"
         >
           {exportError}
         </div>
       )}
 
-      {/* Indicateur de bilans manquants */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div
-          className={`flex items-center justify-between rounded-lg border p-3 text-xs ${
-            aSuivi3Mois
-              ? "border-[#2E7D32]/30 bg-[#2E7D32]/5 text-[#2E7D32]"
-              : "border-[#D97706]/40 bg-[#D97706]/5 text-[#D97706]"
-          }`}
-        >
-          <span className="font-semibold">Bilan à 3 mois</span>
-          <span>{aSuivi3Mois ? "✓ Enregistré" : "⚠ Bilan en attente"}</span>
+      {/* Cartes récapitulatives des 2 échéances de bilan */}
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div className="flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FBF7F2] p-4 transition-colors hover:bg-white">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FAF4EC] text-[#522504] border border-[#EFE4D6]">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+              </svg>
+            </div>
+            <span className="font-bold text-[#3D1A04] text-sm">Bilan à 3 mois</span>
+          </div>
+          <div>
+            {aSuivi3Mois ? (
+              <span className="inline-flex items-center rounded-md bg-[#2E7D32]/10 px-2.5 py-1 text-xs font-semibold text-[#2E7D32]">
+                ✓ Enregistré
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-md bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-1 text-xs font-semibold text-[#92400E]">
+                En attente
+              </span>
+            )}
+          </div>
         </div>
 
-        <div
-          className={`flex items-center justify-between rounded-lg border p-3 text-xs ${
-            aSuivi6Mois
-              ? "border-[#2E7D32]/30 bg-[#2E7D32]/5 text-[#2E7D32]"
-              : "border-[#6B5646]/30 bg-[#FAF7F2] text-texte-doux"
-          }`}
-        >
-          <span className="font-semibold">Bilan à 6 mois</span>
-          <span>{aSuivi6Mois ? "✓ Enregistré" : "Échéance future ou à compléter"}</span>
+        <div className="flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FBF7F2] p-4 transition-colors hover:bg-white">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FAF4EC] text-[#522504] border border-[#EFE4D6]">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+              </svg>
+            </div>
+            <span className="font-bold text-[#3D1A04] text-sm">Bilan à 6 mois</span>
+          </div>
+          <div>
+            {aSuivi6Mois ? (
+              <span className="inline-flex items-center rounded-md bg-[#2E7D32]/10 px-2.5 py-1 text-xs font-semibold text-[#2E7D32]">
+                ✓ Enregistré
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-md bg-white border border-[#EFE4D6] px-2.5 py-1 text-xs font-semibold text-[#7C6353]">
+                Échéance future ou à compléter
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -241,7 +273,7 @@ export default function BilansSuiviSection({
               id="suivi-echeance"
               value={echeance}
               onChange={(e) => setEcheance(e.target.value as EcheanceSuivi)}
-              className="min-h-11 w-full rounded border border-bordure bg-white px-3 py-2 text-sm text-texte outline-none focus:border-brun"
+              className="min-h-11 w-full rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-2 text-sm text-[#24140D] outline-none transition-all hover:border-[#C99A68] focus:border-[#A35926] focus:ring-2 focus:ring-[#C99A68]/20 cursor-pointer"
             >
               {!aSuivi3Mois && <option value="3_mois">Bilan à 3 mois</option>}
               {!aSuivi6Mois && <option value="6_mois">Bilan à 6 mois</option>}
@@ -333,9 +365,29 @@ export default function BilansSuiviSection({
       {/* Liste des bilans enregistrés */}
       <div className="mt-5 space-y-4">
         {suivis.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-bordure py-6 text-center text-xs text-texte-doux">
-            Aucun bilan de suivi n&apos;a encore été rédigé pour ce projet.
-          </p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#FAF4EC] text-[#B89C82] shadow-xs">
+              <svg className="h-12 w-12" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="10" y="24" width="44" height="30" rx="4" fill="#FAF4EC" stroke="#8A7261" />
+                <path d="M10 28 L32 28 L36 22 L54 22 C56 22 58 24 58 26 L58 32 L6 32 L6 26 C6 24 8 22 10 22 L24 22 L28 28" fill="#F7EFE6" stroke="#8A7261" />
+                <rect x="18" y="14" width="28" height="26" rx="2" fill="#FFFFFF" stroke="#D9C3AB" />
+                <line x1="24" y1="20" x2="40" y2="20" stroke="#D9C3AB" strokeWidth={1.5} strokeLinecap="round" />
+                <line x1="24" y1="26" x2="36" y2="26" stroke="#D9C3AB" strokeWidth={1.5} strokeLinecap="round" />
+                <path d="M8 32 L56 32 L50 54 L14 54 Z" fill="#EFE4D6" stroke="#522504" />
+              </svg>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-[#7C6353]">
+              Aucun bilan de suivi n&apos;a encore été rédigé pour ce projet.
+            </p>
+            <div className="mt-3">
+              <Link
+                href="/incubateur/projets"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#612D10] underline hover:text-[#3D1A04]"
+              >
+                ← Retour à mes projets
+              </Link>
+            </div>
+          </div>
         ) : (
           suivis.map((s) => (
             <article

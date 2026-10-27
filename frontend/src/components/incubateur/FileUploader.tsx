@@ -2,6 +2,17 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
+  FileText,
+  Users,
+  CircleDollarSign,
+  FilePlus,
+  Upload,
+  Check,
+  Eye,
+  Trash2,
+  AlertCircle,
+} from "lucide-react";
+import {
   PIECES_OBLIGATOIRES,
   PIECE_LABELS,
   deletePiece,
@@ -20,10 +31,6 @@ interface FileUploaderProps {
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
-/**
- * Extensions acceptées par le serveur (ALLOWED_PIECE_EXTENSIONS dans backend/apps/incubator/models.py).
- * Pour accepter Excel ou PowerPoint, il faut d'abord élargir cette liste côté back-end, puis ici.
- */
 const BASE_EXTENSIONS = ["pdf", "doc", "docx"];
 const ACCEPTED: Record<PieceType, string[]> = {
   fiche_projet: BASE_EXTENSIONS,
@@ -32,13 +39,23 @@ const ACCEPTED: Record<PieceType, string[]> = {
   autre: [...BASE_EXTENSIONS, "png", "jpg", "jpeg", "webp"],
 };
 
-const CARD_TYPES: PieceType[] = [...PIECES_OBLIGATOIRES, "autre"];
+const ICONS: Record<PieceType, React.ComponentType<{ className?: string }>> = {
+  fiche_projet: FileText,
+  presentation_equipe: Users,
+  budget_previsionnel: CircleDollarSign,
+  autre: FilePlus,
+};
 
 const formatsLabel = (type: PieceType) =>
-  ACCEPTED[type].map((e) => (e === "doc" || e === "docx" ? "Word" : e.toUpperCase())).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+  ACCEPTED[type]
+    .map((e) => (e === "doc" || e === "docx" ? "Word" : e.toUpperCase()))
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join(", ");
 
 function formatSize(bytes: number) {
-  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+  return bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} Ko`
+    : `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
 function validate(file: File, type: PieceType): string | null {
@@ -78,6 +95,7 @@ function PieceCard({
   const required = type !== "autre";
   const provided = pieces.length > 0;
   const single = required && provided;
+  const Icon = ICONS[type] ?? FileText;
 
   const pick = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,49 +111,74 @@ function PieceCard({
 
   return (
     <div
-      className={`rounded-xl border-2 bg-white p-4 shadow-sm transition-colors ${
-        provided && required ? "border-[#2E7D32]" : "border-[#E2D4C3]"
+      className={`flex flex-col justify-between gap-3 rounded-xl border p-3.5 sm:p-4 shadow-2xs transition-all ${
+        provided && required
+          ? "border-[#2E7D32]/40 bg-white"
+          : !required
+          ? "border-dashed border-[#D6C7B7] bg-[#FCFAF7]"
+          : "border-[#E5D8C9] bg-white hover:border-[#C99A68]/80"
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-3">
-          {provided && required ? (
-            <span aria-hidden className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2E7D32] text-white">
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </span>
-          ) : (
-            <span aria-hidden className="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-[#C99A68]" />
-          )}
+      {/* Haut de la carte : Icône + Titre + Description + Badge */}
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="flex min-w-0 items-start gap-2.5">
+          <div
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+              provided && required
+                ? "border-[#2E7D32]/30 bg-[#E3F1E9] text-[#2E7D32]"
+                : !required
+                ? "border-[#E2D7CC] bg-white text-[#786555]"
+                : "border-[#EFE4D6] bg-[#FAF7F2] text-[#612D10]"
+            }`}
+          >
+            {provided && required ? (
+              <Check className="h-4 w-4 stroke-[2.5]" />
+            ) : (
+              <Icon className="h-4 w-4 stroke-[1.75]" />
+            )}
+          </div>
           <div className="min-w-0">
-            <h4 className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
+            <h4 className="font-[family-name:var(--font-title)] text-xs sm:text-sm font-bold text-[#24140D] leading-tight">
               {PIECE_LABELS[type].label}
             </h4>
-            <p className="mt-0.5 text-xs leading-relaxed text-[#6b5646]">{PIECE_LABELS[type].description}</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[#6B5646]">
+              {PIECE_LABELS[type].description}
+            </p>
           </div>
         </div>
+
+        {/* Badge de statut */}
         {required ? (
           <span
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-              provided ? "bg-[#E3F1E9] text-[#2E7D32]" : "bg-[#C99A68]/20 text-[#612D10]"
+            className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold ${
+              provided
+                ? "border border-[#2E7D32]/25 bg-[#E3F1E9] text-[#2E7D32]"
+                : "border border-[#A35926]/25 bg-[#FDF4E7] text-[#A35926]"
             }`}
           >
             {provided ? "Déposé" : "À fournir"}
           </span>
         ) : (
-          <span className="shrink-0 rounded-full bg-[#FAF7F2] px-3 py-1 text-xs font-bold text-[#6b5646]">Facultatif</span>
+          <span className="shrink-0 rounded-md border border-[#E2D7CC] bg-[#F3EFE9] px-2 py-0.5 text-[10px] font-bold text-[#786555]">
+            {provided ? "Déposé (optionnel)" : "Facultatif"}
+          </span>
         )}
       </div>
 
+      {/* Liste des pièces déposées */}
       {pieces.length > 0 && (
-        <ul className="mt-3 space-y-2">
+        <ul className="space-y-1.5" aria-label={`Fichiers déposés pour ${PIECE_LABELS[type].label}`}>
           {pieces.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-[#FAF7F2] p-2.5">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#24140D]">{p.nom}</p>
+            <li
+              key={p.id}
+              className="flex items-center justify-between gap-2 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-2 text-xs"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-[#24140D]">{p.nom}</p>
                 {(sizes[p.id] ?? p.taille) && (
-                  <p className="text-xs text-[#6b5646]">{sizes[p.id] ? formatSize(sizes[p.id]) : p.taille}</p>
+                  <p className="text-[10px] text-[#8C6D4F]">
+                    {sizes[p.id] ? formatSize(sizes[p.id]) : p.taille}
+                  </p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -144,9 +187,10 @@ function PieceCard({
                     href={mediaUrl(p.fichier)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-[#612D10] hover:bg-white"
+                    className="inline-flex min-h-8 items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold text-[#612D10] hover:bg-white hover:text-[#3F1D0A]"
                   >
-                    Aperçu
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>Aperçu</span>
                   </a>
                 )}
                 {!disabled && (
@@ -155,14 +199,12 @@ function PieceCard({
                     disabled={deletingId === p.id}
                     onClick={() => onDelete(p.id)}
                     aria-label={`Supprimer ${p.nom}`}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[#DC2626] hover:bg-[#DC2626]/10 disabled:opacity-50"
+                    className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-md text-[#DC2626] hover:bg-[#DC2626]/10 disabled:opacity-50"
                   >
                     {deletingId === p.id ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#DC2626] border-t-transparent" />
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#DC2626] border-t-transparent" />
                     ) : (
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="h-3.5 w-3.5" />
                     )}
                   </button>
                 )}
@@ -172,6 +214,7 @@ function PieceCard({
         </ul>
       )}
 
+      {/* Zone de dépôt interactive */}
       {!single && (
         <div
           onDragOver={(e) => {
@@ -180,8 +223,12 @@ function PieceCard({
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={drop}
-          className={`mt-3 flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-3 py-4 text-center transition-colors ${
-            dragging ? "border-[#612D10] bg-[#FAF7F2]" : "border-[#EFE4D6]"
+          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-dashed px-3 py-2.5 transition-colors ${
+            dragging
+              ? "border-[#612D10] bg-[#FAF7F2]"
+              : !required
+              ? "border-[#D6C7B7] bg-white"
+              : "border-[#DCCBB9] bg-[#FAF7F2]"
           }`}
         >
           <input
@@ -192,25 +239,51 @@ function PieceCard({
             className="hidden"
             disabled={disabled || busy}
           />
+          <div className="text-[10.5px] text-[#7A6655] leading-snug">
+            <span className="font-semibold text-[#24140D]">
+              {formatsLabel(type)}
+            </span>
+            {type === "budget_previsionnel" && (
+              <span className="text-[9.5px] text-[#A35926] ml-1">
+                (Excel non supporté par l&apos;API)
+              </span>
+            )}
+            <div className="text-[10px] text-[#8C6D4F]">
+              10 Mo max · Glisser-déposer disponible
+            </div>
+          </div>
+
           <button
             type="button"
             disabled={disabled || busy}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#612D10] px-5 text-sm font-semibold text-white hover:bg-[#3F1D0A] disabled:cursor-not-allowed disabled:opacity-60"
+            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-2xs transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${
+              !required
+                ? "bg-[#786555] hover:bg-[#5C4D41]"
+                : "bg-[#612D10] hover:bg-[#3F1D0A]"
+            }`}
           >
-            {busy && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
-            {busy ? "Envoi en cours…" : "Choisir un fichier"}
+            {busy ? (
+              <>
+                <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                <span>Envoi…</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-3.5 w-3.5" />
+                <span>Choisir un fichier</span>
+              </>
+            )}
           </button>
-          <p className="text-xs text-[#6b5646]">
-            ou glissez-le ici · {formatsLabel(type)} · 10 Mo maximum
-          </p>
         </div>
       )}
 
+      {/* Message d'erreur localisé */}
       {error && (
-        <p role="alert" className="mt-3 rounded-lg border border-[#DC2626]/40 bg-[#DC2626]/5 px-3 py-2 text-sm text-[#DC2626]">
-          {error}
-        </p>
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-[#DC2626]/40 bg-[#DC2626]/5 px-2.5 py-1.5 text-xs text-[#DC2626]">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
     </div>
   );
@@ -259,21 +332,62 @@ export function FileUploader({ dossier, onChange, disabled = false }: FileUpload
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {CARD_TYPES.map((type) => (
-        <PieceCard
-          key={type}
-          type={type}
-          pieces={pieces.filter((p) => p.type === type)}
-          sizes={sizes}
-          busy={busyType === type}
-          deletingId={deletingId}
-          error={errors[type] ?? null}
-          disabled={disabled}
-          onFile={handleFile}
-          onDelete={handleDelete}
-        />
-      ))}
+    <div className="space-y-4">
+      {/* 1. Documents obligatoires (3) */}
+      <div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8C6D4F]">
+            Documents obligatoires (3 requis)
+          </span>
+          <span className="text-[10px] font-semibold text-[#A35926]">
+            Formats : PDF, Word (DOC/DOCX) · 10 Mo max
+          </span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PIECES_OBLIGATOIRES.map((type) => (
+            <PieceCard
+              key={type}
+              type={type}
+              pieces={pieces.filter((p) => p.type === type)}
+              sizes={sizes}
+              busy={busyType === type}
+              deletingId={deletingId}
+              error={errors[type] ?? null}
+              disabled={disabled}
+              onFile={handleFile}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 2. Document complémentaire (1) */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#8C6D4F]">
+            Document complémentaire (optionnel)
+          </span>
+          <span className="text-[10px] font-semibold text-[#8C6D4F]">
+            Facultatif · Non bloquant
+          </span>
+        </div>
+
+        <div>
+          <PieceCard
+            key="autre"
+            type="autre"
+            pieces={pieces.filter((p) => p.type === "autre")}
+            sizes={sizes}
+            busy={busyType === "autre"}
+            deletingId={deletingId}
+            error={errors["autre"] ?? null}
+            disabled={disabled}
+            onFile={handleFile}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
     </div>
   );
 }

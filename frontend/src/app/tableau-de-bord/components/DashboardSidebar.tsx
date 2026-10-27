@@ -75,22 +75,10 @@ const PORTEUR_ITEMS = [
     icon: Layers,
   },
   {
-    slug: "documents",
-    href: "/documents",
-    titre: "Générateur de documents",
-    icon: FileText,
-  },
-  {
     slug: "assistant",
     href: "/assistant",
     titre: "Assistant IA",
     icon: MessageSquare,
-  },
-  {
-    slug: "galerie",
-    href: "/galerie",
-    titre: "Galerie des innovations",
-    icon: Globe,
   },
   {
     slug: "compte",
@@ -249,86 +237,84 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          {/* 4. Séparateur discret */}
-          <div className="mx-4 my-3 border-t border-white/10" />
-
-          {/* 5. Page d'accueil */}
-          <div className="px-3">
-            <Link
-              href="/"
-              onClick={onItemClick}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                isHomeActive
-                  ? "bg-[#523624] font-semibold text-white"
-                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
-              <span>Page d&apos;accueil</span>
-            </Link>
-          </div>
+          {/* 4. Page d'accueil (uniquement pour le staff, le logo CIAT servant de retour pour le porteur) */}
+          {!isPorteur && (
+            <>
+              <div className="mx-4 my-3 border-t border-white/10" />
+              <div className="px-3">
+                <Link
+                  href="/"
+                  onClick={onItemClick}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                    isHomeActive
+                      ? "bg-[#523624] font-semibold text-white"
+                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
+                  <span>Page d&apos;accueil</span>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Partie basse : Filigrane + Profil Administrateur + Slogan */}
-        <div className="mt-8">
+        {/* Partie basse : Profil Utilisateur & Déconnexion au format compact uniforme */}
+        <div className="mt-8 pb-5 px-3">
           {/* Ligne de séparation */}
-          <div className="mx-4 mb-3 border-t border-white/10" />
+          <div className="mx-1 mb-3 border-t border-white/10" />
 
-          {/* Profil Administrateur avec Déconnexion directe */}
-          <div className="px-3 pb-2">
-            <div className="group flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-2 transition-colors hover:bg-white/10">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] font-bold text-sm shadow-sm">
-                  {user ? userInitial : <User className="h-5 w-5 fill-current" />}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">
-                    {userDisplayName}
+          {/* Deux boutons au format compact parfaitement uniformes */}
+          <div className="space-y-2">
+            {/* 1. Bouton Profil Utilisateur (format compact identique à Déconnexion) */}
+            {user ? (
+              <Link
+                href="/compte"
+                onClick={onItemClick}
+                className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-white/10"
+                title="Mon profil & Compte"
+                aria-label="Mon profil & Compte"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] text-[11px] font-bold">
+                    {userInitial}
                   </div>
-                  <div className="text-[11px] text-[#cbb7a3] truncate">
-                    {roleLabel}
+                  <div className="min-w-0 text-left">
+                    <p className="truncate font-semibold">{userDisplayName}</p>
+                    <p className="text-[10px] text-[#cbb7a3] truncate">({roleLabel})</p>
                   </div>
                 </div>
-              </div>
-              {user ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onItemClick) onItemClick();
-                    logout();
-                  }}
-                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
-                  title="Déconnexion"
-                  aria-label="Déconnexion"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              ) : (
-                <Link
-                  href="/connexion"
-                  onClick={onItemClick}
-                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
-                  title="Se connecter"
-                  aria-label="Se connecter"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-          </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/60" />
+              </Link>
+            ) : null}
 
-          {/* Slogan officiel CIAT en pied */}
-          <div className="flex items-center gap-2.5 px-5 pb-10 pt-2 text-[10px] text-[#cbb7a3]">
-            <Image
-              src="/images/brand/symbole_blanc.png"
-              alt=""
-              width={20}
-              height={20}
-              className="h-3.5 w-auto object-contain"
-            />
-            <span className="font-semibold text-white">CIAT</span>
-            <span className="text-white/30">|</span>
-            <span className="truncate">Innovation &bull; Incubation &bull; Impact</span>
+            {/* 2. Bouton Déconnexion (format compact) */}
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onItemClick) onItemClick();
+                  logout();
+                }}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[#ebd9c0] shadow-xs transition-all hover:border-[#6B2020] hover:bg-[#3B1414] hover:text-[#FCA5A5] active:scale-[0.99]"
+                title="Déconnexion"
+                aria-label="Déconnexion"
+              >
+                <LogOut className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+                <span>Déconnexion</span>
+              </button>
+            ) : (
+              <Link
+                href="/connexion"
+                onClick={onItemClick}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[#ebd9c0] hover:bg-white/10 hover:text-white transition-colors"
+                title="Se connecter"
+                aria-label="Se connecter"
+              >
+                <User className="h-4 w-4" />
+                <span>Se connecter</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -119,18 +119,46 @@ export default function ObjectifsBlock({
 
   return (
     <Block
-      title="Objectifs"
+      title="Objectifs du projet"
+      icon={
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="5" />
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+        </svg>
+      }
       action={
         canManage && !adding ? (
-          <Button variant="secondary" className="!min-h-11" onClick={() => setAdding(true)}>
-            Ajouter un objectif
+          <Button variant="secondary" className="!min-h-9 !py-1 !px-3 !text-xs font-semibold" onClick={() => setAdding(true)}>
+            + Ajouter
           </Button>
-        ) : undefined
+        ) : (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF4EC] text-[#8A7261] transition-transform hover:translate-x-0.5">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </span>
+        )
       }
     >
-      {objectifs.length === 0 && !adding && <p className="text-sm text-texte-doux">Aucun objectif défini pour ce projet.</p>}
+      {objectifs.length === 0 && !adding && (
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#FAF4EC] text-[#B89C82]">
+            <svg className="h-8 w-8" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="32" cy="32" r="24" stroke="#D9C3AB" strokeDasharray="3 3" />
+              <circle cx="32" cy="32" r="16" fill="#F7EFE6" stroke="#8A7261" />
+              <circle cx="32" cy="32" r="8" fill="#FAF4EC" stroke="#522504" />
+              <circle cx="32" cy="32" r="3" fill="#522504" />
+              <path d="M44 20 L52 12 M52 12 L47 12 M52 12 L52 17" stroke="#A35926" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <p className="max-w-[200px] text-xs font-medium text-[#7C6353]">
+            Aucun objectif défini pour ce projet.
+          </p>
+        </div>
+      )}
 
-      <ul className="space-y-3">
+      <ul className="space-y-2.5">
         {objectifs.map((o) =>
           editing === o.id ? (
             <li key={o.id}>
@@ -146,18 +174,20 @@ export default function ObjectifsBlock({
               />
             </li>
           ) : (
-            <li key={o.id} className="flex flex-col gap-2 rounded-lg border border-bordure p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="font-medium text-texte">{o.libelle}</p>
-                <p className="text-xs text-texte-doux">Échéance : {formatDateFr(o.echeance)}</p>
+            <li key={o.id} className="flex flex-col gap-2 rounded-xl border border-[#EFE4D6] bg-[#FBF7F2] p-3 transition-colors hover:bg-white sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-[#3D1A04] text-xs sm:text-sm">{o.libelle}</p>
+                {o.echeance && (
+                  <p className="text-[11px] text-[#7C6353]">Échéance : {formatDateFr(o.echeance)}</p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Badge tone={TONES[o.statut]}>{OBJECTIF_STATUTS[o.statut]}</Badge>
                 {canManage && (
                   <button
                     type="button"
                     onClick={() => setEditing(o.id)}
-                    className="min-h-11 px-2 text-sm font-semibold text-brun underline hover:text-brun-fonce"
+                    className="min-h-8 px-2 text-xs font-semibold text-[#612D10] underline hover:text-[#3D1A04]"
                   >
                     Modifier
                   </button>
@@ -169,7 +199,7 @@ export default function ObjectifsBlock({
       </ul>
 
       {adding && (
-        <div className="mt-4">
+        <div className="mt-3">
           <ObjectifForm
             initial={{ libelle: "", echeance: null, statut: "a_faire" }}
             submitLabel="Ajouter"
