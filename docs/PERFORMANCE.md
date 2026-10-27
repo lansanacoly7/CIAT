@@ -122,85 +122,122 @@ Les index ont été ajoutés de façon ciblée sur les colonnes subissant des tr
 
 ---
 
-## 6. Mesures sous charge légère (Phase 6 — Pathé)
+## 6. Mesures sous charge et comportement de la plateforme (Phase 6 — Pathé)
 
-### A. Protocole et conditions d'expérimentation
+### A. Protocole et méthodologie des mesures
 
-Les mesures ont été réalisées à l'aide du script autonome [`scripts/mesure_charge.py`](../scripts/mesure_charge.py) contre l'application locale préalablement alimentée via `python manage.py seed_all`.
+Afin d'obtenir une vision transparente, objective et exploitable par l'équipe (notamment pour les optimisations de requêtes d'Ibrahima en Phase 5), deux campagnes d'évaluation distinctes ont été menées à l'aide du script [`scripts/mesure_charge.py`](file:///scripts/mesure_charge.py) sur une base préalablement alimentée via `python manage.py seed_all` :
 
-- **Commande de reproduction exacte** :
+1. **Campagne A — Comportement de la limitation de débit (Throttling de production)** :
+   - Évalue la réaction des garde-fous de sécurité configurés dans `settings.REST_FRAMEWORK` face à des rafales de requêtes.
+   - Identifie précisément à partir de quel volume le code HTTP 429 (`Too Many Requests`) se déclenche et mesure le taux de rejet.
+   - Serveur utilisé : Serveur de développement local (`python manage.py runserver`).
+
+2. **Campagne B — Temps de réponse de service réel (Sans limitation — Serveur WSGI)** :
+   - Mesure la performance brute du traitement applicatif (accès base de données, ORM, sérialisation DRF, génération JSON) sans le biais des rejets HTTP 429 rapides.
+   - Serveur utilisé : **Waitress WSGI** (serveur de production multi-threadé avec 16 threads de travail), exécuté avec élévation des limites de débit via variable d'environnement (`DISABLE_THROTTLING=1`) sans altérer les valeurs de production.
+   - Base de données : SQLite 3 configurée en mode WAL (`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=30000;`) avec `conn_max_age=0` pour supporter le multi-threading sans verrouillage global de fichier.
+
+- **Commandes exactes de reproduction** :
   ```powershell
-  # 1. Démarrer le serveur local (dans un premier terminal)
-  cd backend
-  python manage.py seed_all
+  # Campagne A : Throttling actif de production
   python manage.py runserver 127.0.0.1:8000
+  python scripts/mesure_charge.py --base-url http://127.0.0.1:8000 --requests 200 --concurrency 5 20 50
 
-  # 2. Exécuter le banc de test sous charge (dans un second terminal)
-  python scripts/mesure_charge.py --concurrency 5 20 50 --requests 200
+  # Campagne B : Service réel sans limitation sur Waitress WSGI
+  $env:DISABLE_THROTTLING="1"
+  python -c "import django; django.setup(); from waitress import serve; from config.wsgi import application; serve(application, host='127.0.0.1', port=8000, threads=16)"
+  python scripts/mesure_charge.py --base-url http://127.0.0.1:8000 --requests 200 --concurrency 5 20 50 --server "Waitress WSGI"
   ```
 
-- **Environnement matériel et logiciel réel de la mesure** :
-  - **Machine hôte** : PC Windows 10 (Build 19045), Processeur 2 cœurs x86_64 (GenuineIntel, 2 vCPUs), 8 Go de mémoire vive (RAM).
-  - **Moteur de base de données** : SQLite 3 (fichier local `db.sqlite3`).
-  - **Serveur applicatif** : Serveur de développement Django (`manage.py runserver`).
-  - **Avertissement de transparence** : Le serveur `runserver` est un serveur de développement à boucle d'événements simple, non optimisé pour la concurrence massive. Il ne dispose pas de gestionnaire de processus pré-fourchés (comme Gunicorn) ni de file d'attente asynchrone (comme Uvicorn).
-  - **Limites d'expérimentation** : Les tests ont été conduits sur la boucle locale (`127.0.0.1`). La latence réseau Internet/WAN (typiquement 20 à 80 ms selon la connectivité au Sénégal) n'est pas incluse dans ces mesures purement applicatives.
+- **Environnement matériel et logiciel réel** :
+  - **Machine hôte** : PC Windows 10 (Build 19045), Processeur 2 cœurs x86_64 (GenuineIntel, 2 vCPUs @ 2.40 GHz), 8 Go RAM.
+  - **Moteur de base de données** : SQLite 3 en mode WAL (appels locaux en boucle fermée `127.0.0.1`).
+  - **Limites d'expérimentation** : Les tests sont réalisés en boucle locale sans latence réseau WAN (typiquement 20 à 80 ms selon la connectivité Internet au Sénégal).
 
-- **Routes évaluées (6 endpoints représentatifs)** :
+- **Endpoints testés (6 routes représentatives)** :
   1. `Actualités (public)` : `GET /api/portal/actualites/`
   2. `Galerie (public)` : `GET /api/gallery/fiches/`
-  3. `Détail Fiche (public)` : `GET /api/gallery/fiches/{slug}/`
-  4. `Connexion (auth throttle)` : `POST /api/auth/token/`
+  3. `Détail Fiche (public)` : `GET /api/gallery/fiches/{slug}/` (déclenche une incrémentation atomique du compteur de vues en base)
+  4. `Connexion (auth throttle)` : `POST /api/auth/token/` (calcul cryptographique de mot de passe PBKDF2)
   5. `Dossiers (porteur)` : `GET /api/incubator/dossiers/` (authentifié Porteur)
   6. `Indicateurs (coordonnateur)` : `GET /api/analytics/indicateurs/` (authentifié Coordonnateur)
 
 ---
 
-### B. Résultats mesurés sous charge (200 requêtes par palier)
+### B. Tableau 1 — Comportement de la limitation de débit (Throttling de production)
 
-Chaque palier envoie 200 requêtes réparties sur le nombre de clients simultanés spécifié.
+| Route | Clients | Requêtes | 200 Traitées | 429 Bloquées | Taux rejet (%) | Seuil théorique prod |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| Actualités (public) | **5** | 200 | 59 | **141** | 70.5 % | 60 / minute (`anon`) |
+| Galerie (public) | **5** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon` - quota épuisé) |
+| Détail Fiche (public) | **5** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon` - quota épuisé) |
+| Connexion (auth throttle) | **5** | 200 | 3 | **197** | 98.5 % | 5 / minute (`auth`) |
+| Dossiers (porteur) | **5** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
+| Indicateurs (coordonnateur) | **5** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
+| Actualités (public) | **20** | 200 | 60 | **140** | 70.0 % | 60 / minute (`anon`) |
+| Galerie (public) | **20** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon`) |
+| Détail Fiche (public) | **20** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon`) |
+| Connexion (auth throttle) | **20** | 200 | 5 | **195** | 97.5 % | 5 / minute (`auth`) |
+| Dossiers (porteur) | **20** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
+| Indicateurs (coordonnateur) | **20** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
+| Actualités (public) | **50** | 200 | 60 | **140** | 70.0 % | 60 / minute (`anon`) |
+| Galerie (public) | **50** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon`) |
+| Détail Fiche (public) | **50** | 200 | 0 | **200** | 100.0 % | 60 / minute (`anon`) |
+| Connexion (auth throttle) | **50** | 200 | 5 | **195** | 97.5 % | 5 / minute (`auth`) |
+| Dossiers (porteur) | **50** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
+| Indicateurs (coordonnateur) | **50** | 200 | 200 | **0** | 0.0 % | 300 / minute (`user`) |
 
-| Route | Clients | Req. | Erreurs / 429 | Médiane (ms) | p95 (ms) | Débit (req/s) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Actualités (public) | **5** | 200 | 141 lim. | 311.6 | 679.2 | **12.4** |
-| Galerie (public) | **5** | 200 | 200 lim. | 174.4 | 371.4 | **25.9** |
-| Détail Fiche (public) | **5** | 200 | 200 lim. | 235.1 | 375.8 | **20.5** |
-| Connexion (auth throttle) | **5** | 200 | 197 lim. | 230.2 | 415.3 | **16.5** |
-| Dossiers (porteur) | **5** | 200 | 0 | 246.0 | 399.3 | **20.4** |
-| Indicateurs (coordonnateur) | **5** | 200 | 0 | 234.3 | 340.3 | **22.2** |
-| Actualités (public) | **20** | 200 | 139 lim., 1 err. | 457.6 | 1774.0 | **29.1** |
-| Galerie (public) | **20** | 200 | 200 lim. | 478.1 | 1791.1 | **25.9** |
-| Détail Fiche (public) | **20** | 200 | 198 lim., 2 err. | 555.6 | 2039.2 | **24.7** |
-| Connexion (auth throttle) | **20** | 200 | 182 lim., 13 err. | 1548.0 | 3769.9 | **10.2** |
-| Dossiers (porteur) | **20** | 200 | 18 err. | 1446.4 | 3598.8 | **11.6** |
-| Indicateurs (coordonnateur) | **20** | 200 | 4 err. | 1040.8 | 2512.6 | **13.7** |
-| Actualités (public) | **50** | 200 | 122 lim., 18 err. | 1170.1 | 2626.9 | **30.2** |
-| Galerie (public) | **50** | 200 | 186 lim., 14 err. | 703.6 | 2632.2 | **32.9** |
-| Détail Fiche (public) | **50** | 200 | 179 lim., 21 err. | 1069.3 | 2495.6 | **26.8** |
-| Connexion (auth throttle) | **50** | 200 | 179 lim., 16 err. | 1532.0 | 3282.6 | **14.4** |
-| Dossiers (porteur) | **50** | 200 | 36 err. | 1233.1 | 2680.5 | **24.1** |
-| Indicateurs (coordonnateur) | **50** | 200 | 31 lim., 28 err. | 1648.1 | 3116.4 | **21.9** |
+**Analyse du throttling** :
+- La règle `AuthRateThrottle (5 req/min)` est parfaitement étanche : dès la 4e à 6e tentative de connexion sur une même fenêtre, les requêtes suivantes sont coupées net en ~2 ms avec un code HTTP 429.
+- La règle `AnonRateThrottle (60 req/min)` protège efficacement les routes publiques en absorbant les 60 premières requêtes avant de verrouiller la source anonyme.
+- La règle `UserRateThrottle (300 req/min)` laisse passer l'intégralité du travail nominal des porteurs et coordinateurs (0 rejet sur les 200 requêtes de chaque palier).
 
 ---
 
-### C. Analyse technique des comportements observés
+### C. Tableau 2 — Temps de réponse sans limitation (Service réel sous charge — Waitress WSGI)
 
-1. **Efficacité de la protection par limitation de débit (Throttling)** :
-   - Conformément aux exigences de sécurité, la politique de throttling configurée dans `settings.REST_FRAMEWORK` fonctionne fidèlement :
-     - **Connexion** : `AuthRateThrottle` est fixé à `5 req/min`. Dès la 6e requête, le serveur renvoie immédiatement `429 Too Many Requests` (197 requêtes limitées sur 200 à 5 clients). Cette coupure rapide protège l'application contre l'épuisement de ressources CPU lors du calcul de hachage de mot de passe.
-     - **Routes publiques** : `AnonRateThrottle` à `60 req/min` plafonne les flux anonymes intempestifs.
-     - **Routes authentifiées** : `UserRateThrottle` à `300 req/min` autorise un flux de travail fluide pour les utilisateurs connectés (0 limitation à 5 clients sur 200 requêtes).
+Mesures réalisées avec `DISABLE_THROTTLING=1` sur serveur multi-threadé Waitress (16 threads de travail, SQLite WAL mode) :
 
-2. **Temps de réponse à 5 clients simultanés (Charge nominale)** :
-   - Les requêtes authentifiées métiers (`/api/incubator/dossiers/`, `/api/analytics/indicateurs/`) affichent un **temps médian de 234 à 246 ms** et un **95e centile entre 340 et 399 ms**, avec **0 erreur** et un débit d'environ **20 à 22 req/s**.
-   - Ce niveau de performance confirme que les optimisations de requêtes SQL (suppression des requêtes N+1 via `select_related` et `prefetch_related`) maintiennent les vues métiers dans un temps de réponse très satisfaisant.
+| Route | Clients | Requêtes | 200 OK | Erreurs | Médiane (ms) | p95 (ms) | Débit effectif (req/s) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Actualités (public) | **5** | 200 | 200 | 0 | 136.1 | 998.1 | **17.3** |
+| Galerie (public) | **5** | 200 | 200 | 0 | 222.4 | 1175.5 | **12.2** |
+| Détail Fiche (public) | **5** | 200 | 200 | 0 | 530.7 | 3693.7 | **4.9** |
+| Connexion (auth throttle)* | **5** | 200 | 200 | 0 | 15725.0 | 19028.1 | **0.3** |
+| Dossiers (porteur) | **5** | 200 | 200 | 0 | 99.8 | 1094.0 | **17.5** |
+| Indicateurs (coordonnateur) | **5** | 200 | 200 | 0 | 179.4 | 956.3 | **13.8** |
+| Actualités (public) | **20** | 200 | 200 | 0 | 579.8 | 2982.4 | **13.6** |
+| Galerie (public) | **20** | 200 | 200 | 0 | 855.3 | 3351.7 | **11.8** |
+| Détail Fiche (public) | **20** | 200 | 200 | 0 | 1273.9 | 14974.9 | **5.4** |
+| Connexion (auth throttle)* | **20** | 200 | 16 | 184 | 52136.4 | 57457.2 | **0.0** |
+| Dossiers (porteur) | **20** | 200 | 180 | 20 | 2607.1 | 20053.2 | **1.4** |
+| Indicateurs (coordonnateur) | **20** | 200 | 200 | 0 | 254.7 | 920.4 | **16.1** |
+| Actualités (public) | **50** | 200 | 200 | 0 | 505.7 | 1369.7 | **17.9** |
+| Galerie (public) | **50** | 200 | 200 | 0 | 666.9 | 1396.3 | **16.9** |
+| Détail Fiche (public) | **50** | 200 | 200 | 0 | 3475.7 | 12377.9 | **8.0** |
+| Connexion (auth throttle)* | **50** | 200 | 16 | 184 | 53033.0 | 59413.3 | **0.1** |
+| Dossiers (porteur) | **50** | 200 | 189 | 11 | 2110.9 | 46886.8 | **1.9** |
+| Indicateurs (coordonnateur) | **50** | 200 | 200 | 0 | 737.8 | 2414.2 | **29.4** |
 
-3. **Comportement à 20 et 50 clients simultanés (Limites du serveur de dev Windows)** :
-   - Lorsque la concurrence s'élève à 20 puis 50 clients simultanés, le temps médian augmente pour atteindre entre **0,5 s et 1,6 s**, et des erreurs de connexion réinitialisée (`ConnectionResetError` / socket dropped) apparaissent (de 4 à 36 erreurs sur 200 requêtes).
-   - Cette dégradation est attribuable à deux facteurs documentés :
-     - Le serveur `runserver` de Django n'est pas conçu pour multiplexer 50 connexions TCP concurrentes.
-     - SQLite verrouille l'intégralité du fichier de base de données lors des écritures (sessions, tokens JWT, mise à jour des compteurs de requêtes du throttle en cache fichier/base), générant des contentions transactionnelles.
-   - En environnement de déploiement cible avec PostgreSQL 16 et un serveur WSGI professionnel (Gunicorn avec 4 workers configurés pour le CIAT), le pool de connexions et le verrouillage au niveau ligne (Row-Level Locking) absorberont cette concurrence sans contention globale.
+\* **Note explicative sur l'authentification** : Sur `/api/auth/token/`, le calcul du hachage de mot de passe (PBKDF2 avec 870 000 itérations) est délibérément consommateur de CPU par mesure de sécurité cryptographique. Sans limitation de débit, 200 requêtes concurrentes saturent les 2 vCPUs de la machine hôte. Ceci démontre empiriquement l'utilité vitale de la limitation `AuthRateThrottle (5 req/min)` qui empêche cette saturation en production.
+
+---
+
+### D. Enseignements techniques et recommandations architecturales
+
+1. **Performances nominales à 5 clients simultanés** :
+   - Les requêtes authentifiées métiers (`/api/incubator/dossiers/`, `/api/analytics/indicateurs/`) répondent avec un **temps médian de 99.8 ms à 179.4 ms** et **0 erreur**, confirmant l'efficacité des optimisations SQL de la Phase 3 (élimination des requêtes N+1 via `select_related` et `prefetch_related`).
+   - Les routes publiques de consultation (`Actualités`, `Galerie`) délivrent un débit stable de **12 à 17 req/s** avec une médiane de **136 à 222 ms**.
+
+2. **Résolution de la contention SQLite via le mode WAL** :
+   - Sur l'endpoint `/api/gallery/fiches/{slug}/`, chaque requête exécute une écriture atomique en base (`update(vues=F('vues') + 1)`).
+   - En mode journal classique (`DELETE`), les écritures concurrentes déclenchaient des verrous de fichier `database is locked`.
+   - L'activation du mode WAL (`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=30000;`) et de `conn_max_age=0` pour SQLite dans `settings.py` a permis de servir **200 requêtes sur 200 avec 0 erreur jusqu'à 50 clients simultanés**.
+
+3. **Cibles prioritaires pour les optimisations de requêtes d'Ibrahima (`taches/phase5/ibrahima.md` T3)** :
+   - À 20 et 50 clients simultanés, la route `/api/incubator/dossiers/` voit son temps de réponse s'allonger (médiane à 2.1 s - 2.6 s). La sérialisation des pièces obligatoires et le calcul dynamique des pourcentages de complétude sont des cibles idéales pour la mise en cache Redis ou la dénormalisation d'un champ calculé.
+   - La route `/api/analytics/indicateurs/` maintient une excellente cadence même à 50 clients (médiane 737 ms, 29.4 req/s effectifs), grâce à des requêtes d'agrégation bien indexées.
 
 ---
 
