@@ -672,39 +672,59 @@ export default function GaleriePage() {
   return (
     <div className="bg-[#FAF7F2] min-h-screen text-[#24140D] font-sans antialiased selection:bg-[#C99A68]/30">
       {/* ================================================================= */}
-      {/* EN-TÊTE ÉDITORIAL SOBRE & ÉPURÉ — SANS AUCUN HERO ARTIFICIEL      */}
-      {/* Conforme à la Charte Graphique CIAT : Typographie noble & aérée   */}
+      {/* 1. HERO CINÉMATIQUE DÉDIÉ — GALERIE DE L'INNOVATION CIAT          */}
+      {/* Visuel 100% unique, haute définition et non utilisé ailleurs      */}
       {/* ================================================================= */}
-      <header className="border-b border-[#E8DFD3] bg-white/70 backdrop-blur-xs pt-10 pb-8 sm:pt-14 sm:pb-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-[#612D10] uppercase mb-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
-                CAMPUS & RÉALISATIONS • CIAT DIAMNIADIO
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#24140D] tracking-tight leading-[1.12]">
-                Galerie de l&apos;Innovation
-              </h1>
-              <p className="mt-3 text-sm sm:text-base text-[#6B5A4E] leading-relaxed font-normal">
-                Immersion photographique au cœur de nos espaces, de nos ateliers technologiques,
-                de nos événements et de nos prototypes à l&apos;ISEP Amadou Trawaré.
-              </p>
+      <section className="relative w-full h-[340px] sm:h-[400px] lg:h-[440px] overflow-hidden bg-[#24140D]">
+        <Image
+          src="/images/galerie/hero-galerie-innovations-unique.jpg"
+          alt="Showroom technologique et galerie d'innovations du CIAT"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+
+        {/* Voile dégradé doux et chaleureux mettant en valeur la photo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent pointer-events-none" />
+
+        {/* Contenu textuel noble et aligné sur la charte CIAT */}
+        <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
+              <span className="text-xs font-bold tracking-[0.2em] text-[#F3CA9C] uppercase drop-shadow-sm">
+                SHOWROOM TECHNOLOGIQUE & PROTOTYPES • CIAT DIAMNIADIO
+              </span>
             </div>
 
-            {/* Accès rapide vers l'espace porteurs & homologation */}
-            <div className="shrink-0 flex items-center gap-3">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.12] drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+              Galerie de l&apos;Innovation
+            </h1>
+
+            <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/95 max-w-2xl font-normal leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
+              Immersion photographique au cœur de nos espaces, de nos ateliers technologiques 4.0,
+              de nos événements d&apos;émulation et de nos prototypes valorisés à l&apos;ISEP Amadou Trawaré.
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link
                 href="/galerie/gestion"
-                className="inline-flex items-center gap-2 rounded-xl border border-[#D5C9BB] bg-white hover:bg-[#FAF7F2] px-4 py-2.5 text-xs font-bold text-[#612D10] transition-all shadow-2xs hover:border-[#612D10]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#C99A68] hover:bg-[#D5A97A] px-5 py-2.5 text-xs font-bold text-[#24140D] transition-all shadow-md active:scale-95"
               >
-                <span>Fiches Prototypes & QR Code</span>
-                <span className="text-[#C99A68]">→</span>
+                <span>Fiches Prototypes &amp; QR Code</span>
+                <span>→</span>
               </Link>
+              <div className="flex items-center gap-3 text-xs text-white/80 font-medium">
+                <span className="inline-block h-1 w-1 rounded-full bg-[#C99A68]" />
+                <span>28 Moments photographiques</span>
+                <span className="inline-block h-1 w-1 rounded-full bg-[#C99A68]" />
+                <span>30 Prototypes certifiés</span>
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* ================================================================= */}
       {/* BARRE DE NAVIGATION & CONTRÔLES ÉPURÉS                             */}

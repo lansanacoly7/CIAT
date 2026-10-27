@@ -98,30 +98,30 @@ export default function ContactPage() {
       {/* ========================================================= */}
       <section className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden bg-[#24140D]">
         <Image
-          src="/images/contact/contact-equipe-ciat.jpg"
-          alt="Équipe d'accompagnement et accueil du CIAT"
+          src="/images/contact/contact-hero-reception-officielle.jpg"
+          alt="Accueil et réception du CIAT · Université et Centre d'Innovation"
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
 
-        {/* Dégradé doux conforme à la maquette */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30 pointer-events-none" />
+        {/* Voile subtil et doux laissant ressortir la clarté et l'architecture boisée du hall */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent pointer-events-none" />
 
         {/* Contenu Titre & Sous-titre adapté au CIAT */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
           <div className="inline-flex items-center gap-2 mb-3">
-            <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
-            <span className="text-xs font-bold tracking-[0.2em] text-[#C99A68] uppercase">
+            <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse shadow-sm" />
+            <span className="text-xs font-bold tracking-[0.2em] text-[#F3CA9C] uppercase drop-shadow-sm">
               CENTRE D&apos;INNOVATION & D&apos;ACCÉLÉRATION TECHNOLOGIQUE
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
             Contactez le CIAT
           </h1>
-          <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/90 max-w-2xl font-normal leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/95 max-w-2xl font-normal leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
             Nous sommes à votre écoute pour accompagner vos projets d&apos;innovation, vos candidatures
             à l&apos;incubateur, vos besoins de prototypage au FabLab et vos démarches de transfert technologique.
           </p>
