@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Layers,
   User,
+  Calendar,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -27,6 +28,12 @@ const STAFF_ITEMS = [
     href: "/incubateur",
     titre: "Gestion de l'incubateur",
     icon: Rocket,
+  },
+  {
+    slug: "calendrier",
+    href: "/incubateur/calendrier",
+    titre: "Calendrier incubateur",
+    icon: Calendar,
   },
   {
     slug: "documents",
@@ -73,6 +80,12 @@ const PORTEUR_ITEMS = [
     href: "/incubateur/projets",
     titre: "Suivi de mes projets",
     icon: Layers,
+  },
+  {
+    slug: "calendrier",
+    href: "/incubateur/calendrier",
+    titre: "Calendrier",
+    icon: Calendar,
   },
   {
     slug: "assistant",

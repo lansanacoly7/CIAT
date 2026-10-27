@@ -89,6 +89,13 @@ function ListeProjets() {
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <Link
+              href="/incubateur/calendrier"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
+            >
+              <Calendar className="h-4 w-4 text-[#A35926]" />
+              <span>Calendrier</span>
+            </Link>
+            <Link
               href="/assistant"
               className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
             >
