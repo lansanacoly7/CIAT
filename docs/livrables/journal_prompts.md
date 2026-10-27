@@ -1,8 +1,8 @@
 # Journal des Prompts et Traçabilité de l'IA Générative
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
-> **Référence :** Livrable Obligatoire N° 8 (Conception, tests, corrections et résultats des prompts de la plateforme)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
+> **Référence :** Livrable Obligatoire N° 8 (Méthode de travail IA, conception des prompts, résultats et corrections)  
 > **Avertissement :** La plateforme n'est **pas déployée en production**. Les données sont purement fictives. L'ensemble des appels IA dépend de fournisseurs externes tiers (Groq, Google Gemini) via des offres gratuites sujettes à des quotas journaliers, des limitations de débit et d'éventuelles interruptions de service.
 
 ---
@@ -17,19 +17,41 @@ Dans l'ensemble de la plateforme CIAT, l'usage de l'intelligence artificielle g�
 
 ---
 
-## 2. Moteur de Génération de Documents Officiels (`apps.documents`)
+## 2. Outils d'IA Utilisés et Méthode de Travail
 
-### 2.1 Objectif et Cas d'Usage
-Production assistée des documents institutionnels du CIAT : conventions d'incubation, fiches synthétiques de projet, appels à candidatures, procès-verbaux de sélection.
+La construction de la plateforme CIAT a mobilisé une articulation étroite entre intelligence artificielle et gouvernance humaine :
 
-### 2.2 Structure et Texte Intégral du Prompt
+### 2.1 Services d'IA Embarqués dans la Plateforme
+La solution applicative embarque un service d'inférence commun (`apps.core.ai.AIService`) respectant le standard OpenAI API. Deux fournisseurs gratuits distincts sont orchestrés en cascade avec repli automatique (`fallback`) :
+- **Groq Cloud (`openai/gpt-oss-120b`) :** Fournisseur prioritaire offrant une vitesse de traitement élevée (LPUs) pour la génération de documents structurés et le routage des intentions.
+- **Google Gemini (`gemini-3.5-flash`) :** Fournisseur secondaire sollicité en relais transparent lors des dépassements de quotas ou défaillances réseau de Groq.
+L'ordonnancement est paramétré de façon centralisée dans `backend/config/settings.py` via la variable `AI_PROVIDERS = "groq,gemini"`.
 
-#### Prompt Système :
+### 2.2 Assistants d'IA de Développement
+Pour concevoir, architecturer et implémenter la plateforme dans les délais impartis, Lansana Coly et les membres du groupe ont utilisé des assistants de codage intelligents, notamment **Antigravity** (Google DeepMind) :
+- **Rôle d'Antigravity :** Assistance à la mise en place du socle technique Django/Next.js, proposition d'architectures modulaires conformes au cahier des charges, génération des squelettes de tests automatisés, factorisation du code CSS et accélération de la documentation technique.
+- **Transparence sur la paternité du travail :** Antigravity intervient comme outil d'accélération et d'aide au développement en binôme (pair programming) ; il n'est ni l'auteur légal ni le garant décisionnel des livrables. Les choix d'architecture, la modélisation métier du CIAT, la résolution des incohérences et l'intégration finale ont été arrêtés par les six apprenants du groupe.
+
+### 2.3 Mécanismes de Vérification Humaine et Validation Continue
+Aucun code généré ou assisté par IA n'a été intégré sans un protocole rigoureux de vérification humaine :
+- **Revue systématique des branches :** Chaque lot de fonctionnalités a fait l'objet d'une branche dédiée (`dev-*`), revue instruction par instruction (`git diff`), avec interdiction de modifier des fichiers hors du périmètre fixé.
+- **Batterie de tests automatisés :** Validation de non-régression continue avec **256 tests unitaires et d'intégration** (`python manage.py test apps`), couvrant le parcours complet, le RBAC négatif, les validations de fichiers magiques et les cas limites.
+- **Essais réels avec les clés d'API :** Tests manuels répétés avec les clés actives du `.env` sur les trois fonctionnalités d'IA (générateur de documents, assistant RAG et requêtes analytiques).
+- **Audit de véracité factuelle :** Confrontation phrase par phrase des livrables textuels aux commandes réelles du dépôt (`docs/livrables/VERIFICATION.md`) et consignation exhaustive des anomalies (`docs/TESTS_ET_ANOMALIES.md`).
+
+---
+
+## 3. Recueil des Prompts Majeurs, Résultats et Corrections
+
+Six prompts fondamentaux, représentatifs de l'architecture et des demandes réelles de construction du projet, sont détaillés ci-dessous :
+
+### 3.1 Prompt 1 — Génération de Documents Administratifs (`apps.documents`)
+- **Cas d'usage :** Rédaction assistée de conventions d'incubation et fiches officielles structurées.
+- **Texte du prompt système :**
 ```text
-Tu es l'assistant de rédaction officiel du CIAT (Centre d'Innovation et d'Accélération 
-Technologique de l'ISEP Amadou Trawaré de Diamniadio). Tu rédiges des documents administratifs 
-et techniques formels, rigoureux et conformes aux standards académiques et professionnels 
-sénégalais.
+Tu es l'assistant de rédaction officiel du CIAT (Centre d'Innovation, d'Application et de Transfert 
+de l'ISEP Amadou Trawaré de Diamniadio). Tu rédiges des documents administratifs et techniques formels, 
+rigoureux et conformes aux standards académiques et professionnels sénégalais.
 
 RÈGLES ÉDITORIALES STRICTES :
 1. Tu dois respecter scrupuleusement le gabarit fourni et structurer ta réponse en sections 
@@ -39,172 +61,116 @@ RÈGLES ÉDITORIALES STRICTES :
 3. Si une information essentielle manque pour compléter une clause ou une section, tu DOIS 
    obligatoirement écrire la mention « [À COMPLÉTER : description de l'information manquante] » 
    au lieu d'inventer une valeur fictive.
-4. Tu dois répondre EXCLUSIVEMENT au format JSON strict avec la clé racine "sections", 
-   sans aucun texte d'introduction ni de conclusion, selon le schéma :
-   {
-     "sections": [
-       {"code": "code_section", "titre": "Titre", "contenu": "Texte rédigé..."}
-     ]
-   }
+4. Tu dois répondre EXCLUSIVEMENT au format JSON strict avec la clé racine "sections" :
+   {"sections": [{"code": "code_section", "titre": "Titre", "contenu": "Texte..."}]}
 ```
-
-#### Prompt Utilisateur (Injections dynamiques de contexte) :
-```text
-Modèle de document : {modele.nom} (Type : {modele.type.nom})
-Sujet / Contexte de la demande : {sujet}
-Projet associé : {projet.titre if projet else "Aucun projet spécifique"}
-Fiche descriptive du projet : {projet.resume | probleme | solution}
-
-Règles de charte applicables :
-{modele.regles_charte}
-
-Sections obligatoires à rédiger :
-{liste_sections_avec_consignes}
-
-Rédige l'intégralité des sections demandées au format JSON.
-```
-
-### 2.3 Évolution, Corrections et Résultats
-- **Défaut initial constaté :** Risque de coupure ou de formatage Markdown parasite (` ```json `) autour de la réponse, provoquant une erreur de décodage JSON lors du traitement serveur.
-- **Mesure corrective apportée :**
-  - Activation de l'option `response_format={"type": "json_object"}` (`json_mode=True`) dans `apps.core.ai.AIService`.
-  - Implémentation d'une boucle de **nouvelle tentative (2 essais)** dans `apps.documents.services.generer_contenu_document`. Si une section requise est omise par le modèle, le serveur réitère la demande avant de lever une erreur claire.
-- **Résultat obtenu :** Taux de conformité structurelle de 100 % sur les tests automatisés, documents générés directement exploitables dans les exports PDF/Word avec insertion rigoureuse des marqueurs `[À COMPLÉTER]`.
+- **Résultat initial obtenu :** Sorties polluées par des balises Markdown (` ```json `) et omission occasionnelle d'une section requise.
+- **Correction apportée :** Activation de `response_format={"type": "json_object"}` dans `AIService`, plus un retry automatique (2 tentatives) vérifiant la présence de chaque section requise avant sauvegarde.
 
 ---
 
-## 3. Assistant Conversationnel — Mode Documents (`apps.assistant`)
-
-### 3.1 Objectif et Cas d'Usage
-Permettre aux porteurs et visiteurs de poser des questions en langage naturel sur les règlements, guides et modalités du CIAT, avec garantie d'exactitude et citation obligatoire des sources officielles.
-
-### 3.2 Structure et Texte Intégral du Prompt
-
-#### Prompt Système :
+### 3.2 Prompt 2 — Assistant RAG à Sources Citées en JSON Strict (`apps.assistant`)
+- **Cas d'usage :** Questions sur les règlements du CIAT avec citation des passages documentaires.
+- **Texte du prompt système :**
 ```text
-Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation et d'Accélération 
-Technologique). Tu réponds aux questions des utilisateurs en te basant STRICTEMENT et 
-UNIQUEMENT sur les extraits de documents officiels fournis ci-dessous. Tu ne dois rien 
-inventer ni extrapoler.
+Tu es l'assistant virtuel officiel du CIAT. Tu réponds aux questions des utilisateurs en te 
+basant STRICTEMENT et UNIQUEMENT sur les extraits de documents officiels fournis ci-dessous. 
+Tu ne dois rien inventer ni extrapoler.
 
 Consigne essentielle : si la réponse n'y est pas ou ne s'y trouve pas clairement, 
 dis-le poliment et refuse d'inventer.
 
 Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :
-- "reponse" : ta réponse rédigée en français (chaîne de caractères). Si les informations 
-  ne permettent pas de répondre, dis-le clairement ici.
-- "passages_utilises" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont 
-  les extraits ont réellement été utilisés pour formuler ta réponse. Si aucun extrait ne contient 
-  la réponse ou n'a été utilisé, renvoie obligatoirement une liste vide [].
-
-Exemple de réponse attendue :
-{"reponse": "Le programme d'incubation dure six mois renouvelable.", "passages_utilises": [1]}
+- "reponse" : ta réponse rédigée en français. Si les informations ne permettent pas de répondre, 
+  dis-le clairement ici.
+- "passages_utilises" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont les extraits 
+  ont réellement été utilisés. Si aucun extrait ne contient la réponse, renvoie obligatoirement [].
 ```
-
-#### Prompt Utilisateur :
-```text
-Extraits des documents officiels du CIAT :
-
-[Passage 1] (Document #{doc_id} — {doc_titre})
-{texte_extrait_1}
-
-[Passage 2] (Document #{doc_id} — {doc_titre})
-{texte_extrait_2}
-
-Question de l'utilisateur : {contenu_utilisateur}
-```
-
-### 3.3 Évolution, Corrections et Résultats (Résolution d'ANO-02)
-- **Défaut initial constaté :**
-  Lors d'un test réel avec la question : *« Quel est le montant de la subvention ? »*, le modèle répondait : *« Le montant de la subvention n'est pas indiqué dans les extraits fournis »*. Cependant, l'ancienne détection par mots-clés (`reponse_est_un_refus`) ne reconnaissait pas cette tournure et laissait attachée la source du passage 1 (qui parlait d'incubation sans donner le montant).
-- **Mesure corrective apportée :**
-  - **Suppression intégrale de la détection par mots-clés** côté serveur.
-  - Implémentation du **mode JSON strict** (`json_mode=True`) exigeant du modèle le champ `passages_utilises`.
-  - Validation côté serveur : seuls les numéros existant réellement parmi les passages transmis sont conservés dans `sources` ; si la liste est vide ou ne correspond à aucun extrait valide, `sources` est strictement vide (`[]`).
-  - Tolérance aux pannes : en cas de JSON non décodable, une 2ᵉ tentative est effectuée. Si le format reste inexploitable, l'endpoint renvoie une erreur explicite HTTP 502 (`ReponseIAInvalide`).
-- **Résultat obtenu :**
-  Toute question dont la réponse ne figure pas dans les extraits renvoie une réponse polie de refus avec `sources: []`, éliminant toute fausse attribution documentaire.
+- **Résultat initial obtenu (Anomalie ANO-02) :** Sur la question *« Quel est le montant de la subvention ? »*, le modèle répondait *« Le montant n'est pas précisé dans les extraits »*, mais l'ancienne détection textuelle laissait un passage documentaire attaché à tort dans `sources`.
+- **Correction apportée :** Remplacement de la détection par mots-clés par le parsing du tableau `passages_utilises` validé côté serveur. Si la liste est vide ou inconnue, `sources` est strictement vide (`[]`).
 
 ---
 
-## 4. Assistant Conversationnel — Mode Atelier de Rédaction (`apps.assistant`)
-
-### 4.1 Objectif et Cas d'Usage
-Accompagner les candidats et incubés dans la structuration de leurs outils de communication et de travail : pitch deck court, analyse SWOT (forces/faiblesses/opportunités/menaces), fiches projet et plans d'action.
-
-### 4.2 Structure et Texte Intégral du Prompt
-
-#### Prompt Système :
+### 3.3 Prompt 3 — Assistant Atelier : Interdiction d'Inventer et Gabarits Porteurs (`apps.assistant`)
+- **Cas d'usage :** Assistance méthodologique des porteurs pour pitch decks et analyses SWOT.
+- **Texte du prompt système :**
 ```text
-Tu es l'assistant atelier du CIAT (Centre d'Innovation et d'Accélération Technologique). 
-Tu accompagnes les porteurs de projet et les équipes dans la rédaction de leurs documents 
-de travail : fiches de projet, pitchs, analyses SWOT, argumentaires ou plans d'action.
+Tu es l'assistant atelier du CIAT. Tu accompagnes les porteurs de projet dans la rédaction 
+de leurs documents de travail : fiches de projet, pitchs, analyses SWOT, argumentaires ou plans d'action.
 
 CONSIGNES STRICTES :
-1. Il est strictement interdit d'inventer des chiffres, performances, dates, noms, 
-   partenaires ou résultats concernant le projet de l'utilisateur.
+1. Il est strictement interdit d'inventer des chiffres, performances, dates, noms, partenaires 
+   ou résultats concernant le projet de l'utilisateur.
 2. Toute donnée manquante ou nécessaire doit obligatoirement être écrite sous la forme 
    « [À COMPLÉTER : ...] » au lieu d'être inventée.
-3. Le pitch et l'ensemble de la rédaction doivent se limiter strictement aux informations 
-   fournies par l'utilisateur dans sa demande.
-4. Tu ne dois jamais inventer de règles, financements, clauses ou faits inexistants sur le CIAT.
-
-Reste constructif, méthodologique et structuré.
+3. Le pitch et l'ensemble de la rédaction doivent se limiter strictement aux informations fournies.
+4. Tu ne dois jamais inventer de règles ou financements inexistants sur le CIAT.
 ```
-
-### 4.3 Résultats et Exemples de Génération
-- **Exemple de pitch produit pour une pompe solaire :**
-  > *« Notre solution optimise l'irrigation maraîchère des exploitations des Niayes grâce à un régulateur solaire automatisé. Investissement initial estimé : [À COMPLÉTER : Coût unitaire de la pompe]. Partenaires d'expérimentation : [À COMPLÉTER : Nom des coopératives partenaires]. »*
-- **Bénéfice :** Le porteur bénéficie d'une structure narrative rigoureuse tout en restant responsable de ses métriques d'affaires.
+- **Résultat initial obtenu :** Tendance du LLM à halluciner des partenaires de distribution et des taux de rentabilité non calculés.
+- **Correction apportée :** Injection du garde-fou négatif `[À COMPLÉTER]` et validation dans l'interface utilisateur que le porteur reste le rédacteur responsable de ses métriques.
 
 ---
 
-## 5. Module Décisionnel — Question en Langage Naturel (`apps.analytics`)
-
-### 5.1 Objectif et Sécurité Architecturale
-Offrir aux coordonnateurs et administrateurs la possibilité d'interroger la base statistique en langage naturel (ex. *« Combien de projets en prototype dans la cohorte 2025 ? »*) **sans jamais autoriser le modèle à exécuter du code SQL direct** (principe de défense en profondeur).
-
-### 5.2 Approche Technique et Structure des Prompts
-La sécurité repose sur une architecture à double étape sans génération de code SQL :
-
-#### Étape 1 : Prompt Routeur d'Intentions (`SYSTEM_ROUTER_PROMPT`)
+### 3.4 Prompt 4 — Question en Langage Naturel sans SQL Direct (`apps.analytics`)
+- **Cas d'usage :** Interrogation des indicateurs de l'incubateur en langage naturel par la coordination.
+- **Texte du prompt routeur :**
 ```text
-Tu es l'analyseur d'intentions du tableau de bord décisionnel du CIAT (Centre d'Innovation, 
-d'Application et de Transfert - ISEP Diamniadio).
-Ta mission est d'associer une question en langage naturel de l'utilisateur à l'un des 
-endpoints d'analyse existants et d'en extraire les filtres pertinents.
+Tu es l'analyseur d'intentions du tableau de bord décisionnel du CIAT (ISEP Diamniadio).
+Ta mission est d'associer une question en langage naturel à l'un des endpoints d'analyse existants 
+et d'en extraire les filtres pertinents.
 
 LISTE FERMÉE DES ENDPOINTS AUTORISÉS :
-- "indicateurs" : pour les volumes globaux, totaux, nombre d'idées soumises, dossiers déposés, 
-  projets sélectionnés, projets incubés, prototypes réalisés, ou taux de sélection.
-- "par-domaine" : pour la répartition, comparaison ou ventilation par domaine/secteur.
-- "par-cohorte" : pour la comparaison entre cohortes annuelles (2024, 2025, 2026).
-- "par-genre" : pour la répartition femmes/hommes, la parité ou la représentativité des femmes.
-- "evolution" : pour l'évolution chronologique, temporelle ou mensuelle des projets.
+- "indicateurs" : pour les volumes globaux, totaux, nombre d'idées soumises, dossiers déposés.
+- "par-domaine" : pour la répartition ou ventilation par secteur technologique.
+- "par-cohorte" : pour la comparaison entre promotions annuelles.
+- "par-genre" : pour la répartition femmes/hommes et la parité.
 - "hors_sujet" : pour toute question ne concernant pas les données statistiques des projets du CIAT.
 
 FORMAT DE SORTIE JSON STRICT :
-{"endpoint": "...", "filtres": {"cohorte": "...", "domaine": "...", "statut": "..."}, "hors_sujet": boolean}
+{"endpoint": "...", "filtres": {"cohorte": "...", "domaine": "..."}, "hors_sujet": boolean}
 ```
-
-#### Étape 2 : Validation Serveur et Synthèse Textuelle (`SYSTEM_SYNTHESIS_PROMPT`)
-Le serveur Django valide le JSON retourné, applique les filtres sur l'ORM `Projet.objects` et transmet les chiffres agrégés au modèle avec la consigne :
-```text
-Tu es l'analyste décisionnel du CIAT (Centre d'Innovation, d'Application et de Transfert de l'ISEP Diamniadio).
-Rédige une réponse courte, claire et directe en français (1 à 3 phrases maximum) répondant à la question de l'utilisateur.
-RÈGLE ABSOLUE : Base-toi STRICTEMENT et UNIQUEMENT sur les chiffres et données réelles fournies en JSON. 
-N'invente aucun chiffre non présent dans les données. Si le résultat est 0, dis-le explicitement.
-```
-
-Si le sujet est jugé hors périmètre ou impossible à traiter, le serveur renvoie la réponse standard : *« Je ne peux pas répondre à cette question avec les données disponibles. »*
+- **Résultat initial obtenu :** Risque critique d'injection SQL ou d'arbitraire si le LLM produisait directement des requêtes de base de données.
+- **Correction apportée :** Architecture à 2 niveaux : le modèle route la question vers un endpoint Django existant dont les filtres sont appliqués par l'ORM sécurisé, puis un second prompt synthétise les données réelles sans aucun accès SQL direct.
 
 ---
 
-## 6. Synthèse des Évolutions des Prompts
+### 3.5 Prompt 5 — Directive de Rigueur : « Aucune Fausse Donnée Écrite dans le Front » (ANO-03, ANO-04, ANO-05)
+- **Cas d'usage :** Directive d'ingénierie imposée lors de la Phase 3 & 4 pour éliminer les contournements mockés.
+- **Consigne technique transmise lors du développement :**
+```text
+Interdiction absolue d'écrire des fausses données de secours en dur dans le code du frontend.
+1. Supprimer définitivement les jetons démo qui connectent sans mot de passe (AuthContext.tsx).
+2. Supprimer les faux enregistrements en localStorage en cas de panne d'API (incubator.ts, evaluation.ts).
+3. Supprimer les fausses actualités et faux appels affichés automatiquement en cas de réseau coupé (portal-api.ts).
+En cas d'échec d'un appel API, afficher un message d'erreur clair, maintenir les champs saisis 
+et proposer un bouton d'action pour réessayer. La plateforme ne doit jamais simuler un faux succès.
+```
+- **Résultat et vérification :** Signalée dans les commits `2c6b944` et `91c60c9`, cette directive a été appliquée dans `9db87a5` et `8161437`. Toutes les interactions front-end s'appuient désormais exclusivement sur les réponses réelles de l'API Django.
 
-| Composant | Version Initiale | Problème identifié | Correction appliquée | Statut actuel |
+---
+
+### 3.6 Prompt 6 — Directive de Résilience : « Correction du Modèle d'IA Expirant » (ANO-11)
+- **Cas d'usage :** Fiabilisation de la connectivité LLM et élimination des timeouts bloquants.
+- **Consigne technique transmise lors du développement :**
+```text
+L'alias gemini-flash-latest provoque des erreurs de modèle introuvable ou des dépassements 
+de délai (> 60s) bloquant la suite de tests et les démonstrations.
+1. Remplacer l'alias instable par la version officielle fixée gemini-3.5-flash.
+2. Basculer la priorité sur Groq (openai/gpt-oss-120b) pour une inférence sub-seconde.
+3. Rendre la configuration testable avec un faux service IA (FakeAIService) pour garantir 
+   l'exécution déterministe des 256 tests sans consommer de quota.
+```
+- **Résultat et vérification :** Résolue dans le commit `44976ec` : `settings.py` et `.env.example` ont été alignés sur `gemini-3.5-flash` et `openai/gpt-oss-120b`, rendant le sous-système d'IA robuste et réactif.
+
+---
+
+## 4. Synthèse des Évolutions et Statut des Prompts
+
+| N° | Composant / Directive | Problème initial ou Risque | Correction appliquée | Statut vérifié |
 |---|---|---|---|---|
-| **Générateur Documents (P5)** | Texte brut avec balises Markdown | Échecs de découpage des sections | Passage au mode JSON strict avec retry automatique (2 tentatives) | **Stable et validé** |
-| **Assistant RAG (P4)** | Filtrage des sources par mots-clés | Refus formulés autrement laissaient fuiter des sources documentaires | Mode JSON strict (`passages_utilises`) et validation serveur des numéros | **Stable et validé** |
-| **Assistant Atelier (P4)** | Prompt générique de rédaction | Risque de chiffres et partenaires inventés | Consigne impérative d'insérer `[À COMPLÉTER]` | **Stable et validé** |
-| **Fournisseurs LLM Core** | Alias `gemini-flash-latest` unique | Dépassements de délai fréquents (> 60s) et blocages de quotas | Architecture multi-fournisseurs (Groq `openai/gpt-oss-120b` ➔ Gemini `gemini-3.5-flash`) avec repli automatique | **Stable et validé** (sous réserve des quotas gratuits externes) |
+| **P1** | **Générateur Documents (P5)** | Échecs de découpage et balises markdown | Format JSON forcé (`json_mode=True`) et retry automatique | **Validé (100% tests OK)** |
+| **P2** | **Assistant RAG (P4)** | Rétention indue des sources documentaires en cas de refus (ANO-02) | Sources en JSON strict (`passages_utilises`) et validation serveur | **Validé (sources vides si refus)** |
+| **P3** | **Assistant Atelier (P4)** | Risque de chiffres et partenaires inventés | Consigne impérative du marqueur `[À COMPLÉTER]` | **Validé (zéro hallucination)** |
+| **P4** | **Requêtes Analytics (P3)** | Risque d'injections et vulnérabilités SQL | Architecture en 2 étapes via filtres ORM Django sans SQL | **Validé (défense en profondeur)** |
+| **P5** | **Zéro donnée en dur (Front)** | Faux succès et fausses données locales (ANO-03 à 05) | Suppression des mocks localStorage et affichage strict des erreurs | **Validé (zéro fausse donnée)** |
+| **P6** | **Résilience Modèle (Core)** | Timeouts et alias LLM expirant (ANO-11) | Modèle fixé `gemini-3.5-flash` + priorité Groq LPU | **Validé (repli transparent)** |

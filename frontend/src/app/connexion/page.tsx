@@ -123,7 +123,7 @@ function ConnexionForm() {
                   <p className="text-[#6b5646]">
                     Le service de réinitialisation autonome en ligne est en cours de déploiement côté serveur.
                     Pour réinitialiser votre accès, veuillez vous adresser directement à la coordination du CIAT
-                    ou écrire à <span className="font-mono text-[#612D10]">À compléter</span>.
+                    ou écrire à <span className="font-mono text-[#612D10]">contact@ciat-demo.example</span>.
                   </p>
                 </div>
                 <button

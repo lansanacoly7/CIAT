@@ -80,7 +80,20 @@ export default function DocumentsPortailPage() {
   }, [selectedCat]);
 
   const handleDownload = (doc: DocumentPublic) => {
-    // Déclenche un téléchargement simulé sécurisé
+    if (doc.fichier_url && doc.fichier_url !== "#") {
+      const url = doc.fichier_url.startsWith("http")
+        ? doc.fichier_url
+        : doc.fichier_url.startsWith("/")
+        ? doc.fichier_url
+        : `/${doc.fichier_url}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc.titre.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
     setDownloadSuccess(`Le téléchargement de "${doc.titre}" a démarré.`);
     setTimeout(() => {
       setDownloadSuccess(null);

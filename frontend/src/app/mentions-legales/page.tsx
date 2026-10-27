@@ -45,11 +45,14 @@ export default function MentionsLegalesPage() {
               établissement public d&apos;enseignement supérieur professionnel sous tutelle du Ministère de l&apos;Enseignement
               Supérieur, de la Recherche et de l&apos;Innovation de la République du Sénégal.
             </p>
+            <p className="text-xs text-[#602D10] font-semibold italic bg-[#FAF7F2] p-2.5 rounded-lg border border-[#E5D7C5]">
+              Note de démonstration : Les coordonnées ci-dessous sont des coordonnées fictives établies pour les besoins de la démonstration académique de la plateforme.
+            </p>
             <ul className="text-xs sm:text-sm text-[#4A3220] space-y-1.5 pl-4 border-l-2 border-[#D4AA70]/50 mt-2">
               <li><strong>Siège :</strong> Pôle Urbain de Diamniadio, Dakar, Sénégal</li>
-              <li><strong>Téléphone :</strong> [À compléter par l&apos;ISEP]</li>
+              <li><strong>Téléphone (coordonnées fictives) :</strong> +221 33 800 00 00</li>
               <li><strong>Directeur de la publication :</strong> Le Coordonnateur du CIAT / Direction de l&apos;ISEP Diamniadio</li>
-              <li><strong>Courriel institutionnel :</strong> [À compléter par l&apos;ISEP]</li>
+              <li><strong>Courriel institutionnel (coordonnées fictives) :</strong> contact@ciat-demo.example</li>
             </ul>
           </section>
 
@@ -93,7 +96,7 @@ export default function MentionsLegalesPage() {
               Hébergement technique &amp; Disponibilité
             </h2>
             <p className="text-sm leading-relaxed text-[#3D2817]">
-              L&apos;hébergeur de la plateforme (nom et adresse) sera indiqué ici à sa mise en ligne. [À compléter lors du déploiement]
+              Hébergement de démonstration (à renseigner à la mise en ligne).
             </p>
           </section>
 
