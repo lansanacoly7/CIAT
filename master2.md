@@ -1,0 +1,1 @@
+Complète la phase d'audit avant toute progression. Reprends chaque critère d'acceptation qui n'est pas satisfait. Fournis des preuves concrètes issues des fichiers ou vérifications réellement effectués. Distingue les faits, les hypothèses et les points non vérifiés. Ne commence aucune phase suivante et ne modifie aucun fichier en dehors de ce qui est explicitement autorisé.
