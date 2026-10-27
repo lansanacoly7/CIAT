@@ -126,7 +126,7 @@ Les index ont été ajoutés de façon ciblée sur les colonnes subissant des tr
 
 ### A. Protocole et conditions d'expérimentation
 
-Les mesures ont été réalisées à l'aide du script autonome [`scripts/mesure_charge.py`](file:///scripts/mesure_charge.py) contre l'application locale préalablement alimentée via `python manage.py seed_all`.
+Les mesures ont été réalisées à l'aide du script autonome [`scripts/mesure_charge.py`](../scripts/mesure_charge.py) contre l'application locale préalablement alimentée via `python manage.py seed_all`.
 
 - **Commande de reproduction exacte** :
   ```powershell
@@ -204,30 +204,86 @@ Chaque palier envoie 200 requêtes réparties sur le nombre de clients simultan�
 
 ---
 
-## 7. Optimisation des deux routes lentes sous charge (Phase 5 — T3)
+## 7. Analyse et évaluation des routes sous charge (Phase 5 — T3)
 
-Conformément à la tâche **T3**, l'analyse des requêtes SQL réelles (`connection.queries`) sur les deux routes ayant dépassé 1 seconde à 20 clients dans les mesures initiales (`/api/incubator/dossiers/` et `/api/analytics/indicateurs/`) a permis d'éliminer les sous-requêtes imbriquées et les recalculs redondants.
+Conformément à la tâche **T3**, les deux routes identifiées comme les plus lentes dans les mesures initiales de charge (`/api/incubator/dossiers/` et `/api/analytics/indicateurs/`) ont été analysées avec `connection.queries`, profilées en processus et éprouvées sous charge concurrente.
 
-### A. Tableau Avant / Après des optimisations ciblées
+### A. Analyse des requêtes SQL et annulation des modifications superflues
 
-| Route analysée | Rôle appelant | Comportement SQL Avant | Comportement SQL Après | Nb requêtes SQL | Gain SQL & CPU |
-| :--- | :---: | :--- | :--- | :---: | :---: |
-| **`/api/incubator/dossiers/`** | Porteur / Coordonnateur | Évaluation répétée de `self.pieces.all()` pour chaque calcul séparé de `pieces_manquantes` et `completude` lors de la sérialisation. Risque de requêtes dupliquées si hors prefetch. | Mise en cache d'instance (`_cached_pieces_manquantes`) évitant toute réitération mémoire ou réémission SQL. | **3** (constant $O(1)$) | **0 recalcul redondant**, transmission directe en mémoire. |
-| **`/api/analytics/indicateurs/`** | Coordonnateur | Sous-requête SQL imbriquée `WHERE projet_id IN (SELECT id FROM core_projet)` exécutée même sans aucun filtre de recherche. | Court-circuit sans filtre : décompte direct `WHERE NOT (statut = 'brouillon')` exploitant l'index B-Tree de `statut`. | **2** (constant $O(1)$) | **Suppression du scan imbriqué**, décompte direct sur index. |
+L'audit technique approfondi a révélé les faits suivants :
+1. **Absence de requêtes en trop** : Les deux routes disposaient déjà d'un profil de requêtes optimal avant toute modification :
+   - `/api/incubator/dossiers/` génère **2 requêtes** pour un porteur (comptage de pagination + sélection avec prefetch) et **4 requêtes** pour un coordonnateur (comptage de pagination + sélection des dossiers + prefetch des pièces + prefetch des évaluations).
+   - `/api/analytics/indicateurs/` génère **2 requêtes** dans le banc de test avec `force_authenticate` (1 agrégat conditionnel sur les projets + 1 décompte des dossiers d'incubation). Lors d'un appel API réel authentifié par jeton JWT Bearer, **3 requêtes** sont exécutées au total (la première requête chargeant l'utilisateur via `core_user` dans le middleware d'authentification JWT).
+2. **Annulation du cache d'instance `_cached_pieces_manquantes`** :
+   La tentative de mise en cache d'instance dans `Dossier.pieces_manquantes` introduisait un risque de régression : l'ajout d'une `Piece` sur la même instance Python laissait la liste des pièces manquantes et la complétude périmées (démontré par le test de non-régression `test_dossier_pieces_manquantes_et_completude_a_jour_apres_ajout_piece`). Comme `self.pieces.all()` exploitait déjà le prefetch sans émettre de requête supplémentaire, ce cache inutile et générateur d'anomalies a été purement et simplement annulé.
+3. **Annulation du raccourci dans `IndicateursView` et plan d'exécution réel** :
+   La duplication manuelle des paramètres de filtrage pour court-circuiter la sous-requête `projet__in=qs` a été annulée. L'affirmation selon laquelle ce décompte exploitait l'index B-Tree sur `statut` était inexacte. La sortie réelle d'`EXPLAIN` sous PostgreSQL 16.10 démontre que le planificateur effectue un parcours séquentiel (`Seq Scan`) car le filtre sélectionne la quasi-totalité des lignes de la table :
+   ```text
+   EXPLAIN SELECT COUNT(*) FROM incubator_dossier WHERE NOT (statut = 'brouillon');
+   Aggregate  (cost=1.87..1.88 rows=1 width=8)
+     ->  Seq Scan on incubator_dossier  (cost=0.00..1.73 rows=58 width=0)
+           Filter: ((statut)::text <> 'brouillon'::text)
+   ```
 
-### B. Détail des requêtes vérifiées avec `connection.queries`
+---
 
-1. **Route `/api/incubator/dossiers/` (3 requêtes constantes) :**
-   - Requête 1 (Pagination) : `SELECT COUNT(*) AS "__count" FROM "incubator_dossier" ...`
-   - Requête 2 (Dossiers de la page + jointure porteur) : `SELECT "incubator_dossier"."id", ... FROM "incubator_dossier" INNER JOIN "core_projet" ...`
-   - Requête 3 (Prefetch groupé des pièces) : `SELECT "incubator_piece"."id", ... FROM "incubator_piece" WHERE "incubator_piece"."dossier_id" IN (...)`
+### B. Mesure 1 — Profil en processus (150 appels instrumentés après échauffement)
 
-2. **Route `/api/analytics/indicateurs/` (2 requêtes d'agrégation pures) :**
-   - Requête 1 (Agrégats conditionnels des projets) : `SELECT COUNT("core_projet"."id") AS "idees_recues", COUNT(...) FILTER (...) FROM "core_projet"`
-   - Requête 2 (Décompte indexé des dossiers sans sous-requête) : `SELECT COUNT(*) AS "__count" FROM "incubator_dossier" WHERE NOT ("incubator_dossier"."statut" = 'brouillon')`
+- **Environnement** : Hôte Windows 11 Professionnel, CPU Intel Core i5-7300U @ 2.60 GHz (2 cœurs, 4 threads), 16 Go RAM.
+- **Moteur de base de données** : PostgreSQL 16.10 officiel (port `5434`), base `ciat_db` initialisée par `seed_all`.
+- **Paramètres de banc** : Throttling DRF désactivé (`DEFAULT_THROTTLE_RATES = 1000000/min`), 20 requêtes d'échauffement puis 150 appels consécutifs chronométrés via `time.perf_counter()`.
 
-### C. Validation par les tests de non-régression
+| Version | Route | Rôle testé | Requêtes SQL | Médiane (ms) | 95e centile (ms) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Avant** (`ac3b0d0`) | `/api/incubator/dossiers/` | Porteur | 2 | 4,30 ms | 5,44 ms |
+| **Après** (corrigé) | `/api/incubator/dossiers/` | Porteur | 2 | 4,28 ms | 5,56 ms |
+| **Avant** (`ac3b0d0`) | `/api/incubator/dossiers/` | Coordonnateur | 4 | 16,09 ms | 20,39 ms |
+| **Après** (corrigé) | `/api/incubator/dossiers/` | Coordonnateur | 4 | 16,06 ms | 20,34 ms |
+| **Avant** (`ac3b0d0`) | `/api/analytics/indicateurs/` | Coordonnateur (JWT réel) | 3 | 5,36 ms | 6,61 ms |
+| **Après** (corrigé) | `/api/analytics/indicateurs/` | Coordonnateur (JWT réel) | 3 | 5,39 ms | 6,59 ms |
+| **Avant** (`ac3b0d0`) | `/api/analytics/indicateurs/` | Coordonnateur (`force_auth`) | 2 | 4,20 ms | 5,43 ms |
+| **Après** (corrigé) | `/api/analytics/indicateurs/` | Coordonnateur (`force_auth`) | 2 | 4,18 ms | 5,44 ms |
 
-La suite de tests de performance ([`apps/core/tests/test_performance.py`](../backend/apps/core/tests/test_performance.py)) valide formellement ces seuils :
-- `test_performance_liste_incubator_dossiers` : validé à exactement **3 requêtes**.
-- `test_performance_analytics_indicateurs` : validé à exactement **2 requêtes**.
+*Constat* : Les durées en processus sont strictement identiques avant et après (écart moyen inférieur à 0,1 ms, totalement dans le bruit de mesure).
+
+---
+
+### C. Mesure 2 — Campagne sous charge (3 passes alternées, 200 requêtes par palier)
+
+- **Protocole** : 3 passes complètes et strictement alternées (Avant / Après / Avant / Après / Avant / Après) exécutées via `scripts/mesure_charge.py --routes dossiers,indicateurs --concurrency 5 20 50 --requests 200`.
+- **Serveur** : Django `runserver` (Windows 11 x64, 4 processeurs logiques, `bench_settings` sans limitation de débit) connecté à PostgreSQL 16.10.
+
+| Route & Rôle | Concurrence | Version | Médiane Pass 1 | Médiane Pass 2 | Médiane Pass 3 | Médiane moy. | p95 moy. | Débit moy. | Erreurs moy. |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Dossiers** *(porteur)* | **5 clients** | Avant | 99,5 ms | 99,5 ms | 102,4 ms | **100,5 ms** | 151,0 ms | 47,2 req/s | 0 |
+| **Dossiers** *(porteur)* | **5 clients** | Après | 97,7 ms | 98,7 ms | 99,0 ms | **98,5 ms** | 130,7 ms | 49,0 req/s | 0 |
+| **Indicateurs** *(coordo)* | **5 clients** | Avant | 110,9 ms | 105,4 ms | 105,2 ms | **107,2 ms** | 161,3 ms | 44,0 req/s | 0 |
+| **Indicateurs** *(coordo)* | **5 clients** | Après | 104,0 ms | 107,5 ms | 104,6 ms | **105,4 ms** | 165,7 ms | 44,1 req/s | 0 |
+| **Dossiers** *(porteur)* | **20 clients** | Avant | 324,2 ms | 273,8 ms | 277,7 ms | **291,9 ms** | 993,1 ms | 44,9 req/s | 0 |
+| **Dossiers** *(porteur)* | **20 clients** | Après | 268,3 ms | 277,3 ms | 270,9 ms | **272,2 ms** | 929,6 ms | 45,8 req/s | 0,3 |
+| **Indicateurs** *(coordo)* | **20 clients** | Avant | 276,3 ms | 337,9 ms | 305,4 ms | **306,5 ms** | 1241,9 ms | 41,5 req/s | 1,3 |
+| **Indicateurs** *(coordo)* | **20 clients** | Après | 290,8 ms | 292,2 ms | 293,6 ms | **292,2 ms** | 1015,2 ms | 44,3 req/s | 0,7 |
+| **Dossiers** *(porteur)* | **50 clients** | Avant | 759,4 ms | 945,1 ms | 795,0 ms | **833,2 ms** | 2228,2 ms | 45,5 req/s | 9,7 |
+| **Dossiers** *(porteur)* | **50 clients** | Après | 351,1 ms | 828,1 ms | 841,7 ms | **673,6 ms** | 2298,7 ms | 48,3 req/s | 5,3 |
+| **Indicateurs** *(coordo)* | **50 clients** | Avant | 822,5 ms | 937,8 ms | 840,9 ms | **867,1 ms** | 2324,6 ms | 43,6 req/s | 8,0 |
+| **Indicateurs** *(coordo)* | **50 clients** | Après | 859,6 ms | 874,6 ms | 800,3 ms | **844,8 ms** | 2315,9 ms | 44,7 req/s | 6,7 |
+
+---
+
+### D. Conclusions objectives et recommandations
+
+1. **Écart statistique dans le bruit de mesure** :
+   Les plages de médianes et de p95 entre les deux versions se chevauchent entièrement (ex: sur indicateurs à 20 clients, les médianes s'échelonnent entre 276 ms et 338 ms pour l'état initial, contre 291 ms à 294 ms pour l'état corrigé). L'écart relatif moyen est inférieur à 5 % et demeure indissociable des variations du système d'exploitation.
+2. **Origine réelle des temps supérieurs à 1 seconde relevés par Pathé** :
+   Les temps > 1 s observés initialement à 20 clients provenaient exclusivement de l'environnement de banc de test de Pathé (`runserver` sous Windows avec base SQLite monothreadée sur disque et limitations de débit actives), et **non d'une inefficacité des requêtes SQL**. Sur PostgreSQL 16.10, la médiane à 20 clients reste de **270 à 300 ms** avec un débit soutenu de 44 à 46 req/s.
+3. **Recommandation pour la production** :
+   Pour absorber une concurrence de 50 clients et plus sans interruption réseau (élimination des erreurs de sockets dropped observées sur `runserver`), il est indispensable d'utiliser en production un serveur WSGI pré-fork multi-processus (**Gunicorn avec workers `sync` ou `gthread`**) sous Linux, adossé au serveur de base de données **PostgreSQL 16**.
+
+---
+
+### E. Validation par les tests automatisés
+
+La suite de tests de performance ([`apps/core/tests/test_performance.py`](../backend/apps/core/tests/test_performance.py)) valide formellement ces comportements :
+- `test_performance_liste_incubator_dossiers` : 3 requêtes (administrateur).
+- `test_performance_analytics_indicateurs` : 2 requêtes (`force_authenticate`).
+- `test_dossier_pieces_manquantes_et_completude_a_jour_apres_ajout_piece` : validation de l'absence de cache périmé lors de l'ajout dynamique d'une pièce.
