@@ -16,9 +16,7 @@ const NAV_LINKS = [
   { href: "/", label: "Accueil" },
   { href: "/portail/ciat", label: "Le CIAT" },
   { href: "/portail/incubateur", label: "L'Incubateur" },
-  { href: "/incubateur/projets", label: "Suivi Projets" },
   { href: "/galerie", label: "Galerie" },
-  { href: "/documents", label: "Documents IA" },
   { href: "/portail/domaines", label: "7 Domaines" },
   { href: "/portail/appels", label: "Appels" },
   { href: "/contact", label: "Contact" },
@@ -39,8 +37,6 @@ function isActiveRoute(href: string, pathname: string) {
   if (href === "/portail/incubateur") return pathname === "/portail/incubateur";
   if (href === "/contact") return pathname === "/portail/contact" || pathname === "/contact";
   if (href === "/galerie") return pathname.startsWith("/galerie");
-  if (href === "/documents") return pathname.startsWith("/documents") || pathname.startsWith("/portail/documents");
-  if (href === "/incubateur/projets") return pathname.startsWith("/incubateur/projets");
   if (href === "/portail/domaines") return pathname.startsWith("/portail/domaines");
   if (href === "/portail/appels") return pathname.startsWith("/portail/appels");
   return pathname.startsWith(href);
