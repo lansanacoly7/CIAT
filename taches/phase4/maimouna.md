@@ -32,6 +32,3 @@ Vérifie `npm run lint && npm run build`, ouvre l'écran en 390 px et en 1280 px
 
 ## Contrastes d'accessibilité (audit axe, `docs/ACCESSIBILITE.md`)
 `/incubateur` a 5 éléments dont le contraste est insuffisant (texte secondaire ou badge sous 4,5:1). Rehausse-les avec des teintes de la charte et relance `npm run test:axe`. `/documents` est repris par Ibrahima, ne le touche pas pour cette correction.
-
-## IMPORTANT — Gel du design (décision de Lansana)
-Le design et l'UX de toute la plateforme sont repris par Lansana et ses assistants (`taches/phase6/lansana.md`). **Ne modifie plus l'apparence** (styles, mise en page, composants visuels) : ça créerait des conflits. Les contrastes d'accessibilité sont repris par eux. Tu gardes le **fonctionnel** : C6 (avertissement d'hydratation), T1 (boutons de téléchargement de l'accusé de réception et du compte rendu PDF, sans mise en forme élaborée : utilise les composants de `ui.tsx`). La régénération des maquettes (T2) attend la fin du redesign ; Lansana te le dira. Pour C8 (jalons sur téléphone) : ne le fais pas, c'est inclus dans le redesign.

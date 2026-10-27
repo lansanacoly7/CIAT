@@ -26,6 +26,3 @@ Ordre conseillé : T1, puis T2.
 - **Tu attends :** rien. Branche : `Alioune`.
 - **Attendu par :** Lansana (démonstration).
 - **Terminé quand :** aucune carte n'affiche un cadre vide ni le texte alternatif, en 1280 px et en 390 px.
-
-## IMPORTANT — Gel du design (décision de Lansana)
-Le design et l'UX de toute la plateforme sont repris par Lansana et ses assistants (`taches/phase6/lansana.md`). **Ne modifie plus l'apparence** (styles, mise en page, composants visuels, barre latérale) : ça créerait des conflits. Ton T3 (images de la galerie) est annulé : il est inclus dans leur travail. Ta mission devient : **fiabiliser les tests** (`npm run test:e2e` et `npm run test:axe` doivent rester verts malgré le redesign : prépare des sélecteurs robustes, ajoute les parcours manquants : dépôt de dossier, évaluation par le comité, génération d'un document), et **la qualité des données** (relance `controle_qualite_donnees` sur `seed_all`, mets à jour `docs/livrables/qualite_donnees.md` avec les résultats réels).

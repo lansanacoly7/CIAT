@@ -28,6 +28,3 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## Contrastes d'accessibilité (audit axe, `docs/ACCESSIBILITE.md`)
 Après T1 : l'accueil et la galerie ont des textes secondaires (ocre ou gris clair) sous le seuil de contraste 4,5:1 (13 et 10 éléments). Rehausse-les avec des teintes de la charte et relance `npm run test:axe` (Alioune a mis en place le test). L'assistant (4 éléments) est repris par Ibrahima.
-
-## IMPORTANT — Gel du design (décision de Lansana)
-Le design et l'UX de toute la plateforme sont repris par Lansana et ses assistants (`taches/phase6/lansana.md`). **Ne modifie plus l'apparence** (en-tête, accueil, styles, composants) : ça créerait des conflits. Ton T1 (en-tête unique) et les contrastes sont annulés : c'est inclus dans leur travail. Ta mission devient : **préparer la vidéo** (scénario à jour dans `docs/livrables/video/scenario.md`, comptes de `docs/DEMO.md`, répétition du déroulé) et l'enregistrer **quand Lansana te dit que le design est prêt**. En attendant, tu peux aider à relire les livrables écrits (`docs/livrables/`) et signaler les erreurs.
