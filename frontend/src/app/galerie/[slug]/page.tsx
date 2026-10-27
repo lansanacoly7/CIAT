@@ -12,8 +12,17 @@ import {
 } from "@/components/ui";
 import CardImage from "@/components/CardImage";
 import {
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  X,
+  Handshake,
+  Send,
+} from "lucide-react";
+import {
   getFicheBySlug,
   getFicheQrUrl,
+  postInteretFiche,
   type FicheInnovation,
 } from "@/lib/gallery-api";
 
@@ -48,6 +57,17 @@ function FicheDetailContent({
   const [isDemo, setIsDemo] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+
+  // États Formulaire "Je suis intéressé" (Phase 8 — T1)
+  const [showInteretModal, setShowInteretModal] = useState(false);
+  const [interetNom, setInteretNom] = useState("");
+  const [interetEmail, setInteretEmail] = useState("");
+  const [interetOrganisation, setInteretOrganisation] = useState("");
+  const [interetMessage, setInteretMessage] = useState("");
+  const [interetSubmitting, setInteretSubmitting] = useState(false);
+  const [interetSuccess, setInteretSuccess] = useState<string | null>(null);
+  const [interetError, setInteretError] = useState<string | null>(null);
+  const [interetFieldErrors, setInteretFieldErrors] = useState<Record<string, string>>({});
 
   const loadFiche = () => {
     setLoading(true);
@@ -125,6 +145,76 @@ function FicheDetailContent({
       document.body.removeChild(a);
     } catch {
       alert("Erreur lors du téléchargement du QR Code.");
+    }
+  };
+
+  // Fermeture du modal par touche Échap (Accessibilité WCAG 2.1 AA)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showInteretModal) {
+        setShowInteretModal(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showInteretModal]);
+
+  const handleInteretSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const errs: Record<string, string> = {};
+    if (!interetNom.trim()) {
+      errs.nom = "Veuillez renseigner votre nom complet.";
+    }
+    if (!interetEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(interetEmail.trim())) {
+      errs.email = "Veuillez renseigner une adresse email valide.";
+    }
+    if (!interetMessage.trim() || interetMessage.trim().length < 10) {
+      errs.message = "Votre message doit comporter au moins 10 caractères.";
+    } else if (interetMessage.trim().length > 1500) {
+      errs.message = "Votre message ne peut excéder 1500 caractères.";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setInteretFieldErrors(errs);
+      return;
+    }
+
+    setInteretSubmitting(true);
+    setInteretError(null);
+    setInteretFieldErrors({});
+
+    try {
+      const res = await postInteretFiche(slug, {
+        nom: interetNom,
+        email: interetEmail,
+        organisation: interetOrganisation,
+        message: interetMessage,
+      });
+
+      if (res.success) {
+        setInteretSuccess(
+          res.message ||
+            "Votre manifestation d'intérêt a bien été enregistrée pour cette innovation. Le porteur et le coordonnateur du CIAT prendront contact avec vous."
+        );
+        setInteretNom("");
+        setInteretEmail("");
+        setInteretOrganisation("");
+        setInteretMessage("");
+      } else {
+        setInteretError(
+          res.error || "Une erreur est survenue lors de la transmission. Vos données ont été conservées."
+        );
+        if (res.errors) {
+          setInteretFieldErrors(res.errors);
+        }
+      }
+    } catch {
+      setInteretError(
+        "Connexion au serveur impossible. Vos informations ont été conservées ci-dessus, veuillez réessayer."
+      );
+    } finally {
+      setInteretSubmitting(false);
     }
   };
 
@@ -373,10 +463,63 @@ function FicheDetailContent({
                 </div>
               </section>
             )}
+
+            {/* Bannière Partenaires & Investisseurs — Appel à manifestation d'intérêt */}
+            <div className="rounded-2xl border border-[#EBE4DC] bg-white p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#C99A68]">
+                  OPPORTUNITÉ DE COOPÉRATION & PARTENARIAT
+                </span>
+                <h3 className="text-lg font-bold text-[#24140D] mt-0.5">
+                  Cette innovation intéresse votre organisation ?
+                </h3>
+                <p className="text-xs text-[#5A4A40] mt-1 max-w-xl leading-relaxed">
+                  Prenez contact directement avec le porteur du projet et l&apos;équipe du CIAT pour explorer un pilote terrain, un accord de distribution ou un accompagnement investisseur.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setInteretError(null);
+                  setShowInteretModal(true);
+                }}
+                className="shrink-0 min-h-[44px] py-3 px-6 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#C99A68]"
+              >
+                <Handshake className="h-4 w-4 text-[#E2A669]" />
+                Je suis intéressé
+              </button>
+            </div>
           </div>
 
-          {/* Colonne Latérale (QR Code & Actions) */}
+          {/* Colonne Latérale (Actions, Intérêt, QR Code & Statut) */}
           <aside className="space-y-6">
+            {/* 1. Carte Espace Partenaires & Investisseurs */}
+            <div className="rounded-2xl border-2 border-[#C99A68] bg-white p-6 shadow-xs text-left">
+              <div className="inline-flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+                  Espace Partenaires & Investisseurs
+                </span>
+              </div>
+              <h2 className="text-base font-bold text-[#24140D] tracking-tight">
+                Soutenir ou déployer cette innovation
+              </h2>
+              <p className="mt-1 text-xs text-[#5A4A40] leading-relaxed">
+                Vous représentez une entreprise, une institution ou un fonds ? Manifestez votre intérêt pour entrer en relation directe avec l&apos;équipe du CIAT.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setInteretError(null);
+                  setShowInteretModal(true);
+                }}
+                className="w-full mt-4 min-h-[44px] py-3.5 px-5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68]"
+              >
+                <Handshake className="h-4 w-4 text-[#E2A669]" />
+                Je suis intéressé
+              </button>
+            </div>
+
             {/* Carte QR Code Officielle */}
             <div className="rounded-2xl border-2 border-beige/60 bg-white p-6 shadow-sm text-center">
               <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-beige">
@@ -464,6 +607,215 @@ function FicheDetailContent({
           </aside>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* MODAL « JE SUIS INTÉRESSÉ » — DESIGN CHARTE CONTACT CIAT  */}
+      {/* ========================================================= */}
+      {showInteretModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="interet-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => setShowInteretModal(false)}
+        >
+          <div
+            className="relative w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#EBE4DC] my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Bouton Fermer */}
+            <button
+              type="button"
+              onClick={() => setShowInteretModal(false)}
+              className="absolute top-5 right-5 h-10 w-10 rounded-full bg-[#F4F4F6] text-[#5A4A40] hover:bg-[#EBE4DC] hover:text-[#24140D] flex items-center justify-center transition cursor-pointer focus-visible:outline-2 focus-visible:outline-[#C99A68]"
+              aria-label="Fermer la fenêtre"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* En-tête */}
+            <div className="pr-10 mb-6">
+              <div className="inline-flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-[#C99A68]" />
+                <span className="text-[11px] font-bold tracking-wider text-[#612D10] uppercase">
+                  ESPACE PARTENAIRES & INVESTISSEURS
+                </span>
+              </div>
+              <h3 id="interet-modal-title" className="text-2xl font-bold text-[#24140D] tracking-tight">
+                Manifester votre intérêt
+              </h3>
+              <p className="mt-1 text-xs sm:text-sm text-[#5A4A40]">
+                Projet : <strong className="text-[#24140D]">{fiche.titre}</strong>
+              </p>
+            </div>
+
+            {/* Notification Succès */}
+            {interetSuccess ? (
+              <div className="space-y-4">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex items-start gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-5 text-emerald-950"
+                >
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">Manifestation enregistrée avec succès</p>
+                    <p className="mt-1 text-xs text-emerald-800 leading-relaxed">{interetSuccess}</p>
+                    <p className="mt-2 text-[11px] text-emerald-700">
+                      Le porteur du projet et le coordonnateur du CIAT ont été notifiés de votre démarche.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInteretSuccess(null);
+                      setShowInteretModal(false);
+                    }}
+                    className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition cursor-pointer"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleInteretSubmit} noValidate className="space-y-4">
+                {/* Erreur générale */}
+                {interetError && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 p-4 text-xs text-red-900"
+                  >
+                    <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-bold">Transmission impossible</p>
+                      <p className="mt-0.5 text-red-800 leading-relaxed">{interetError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulaire avec design hérité de la page Contact */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nom */}
+                  <div>
+                    <label htmlFor="interet-nom" className="block text-xs font-semibold text-[#5A4A40] mb-1.5">
+                      Nom complet <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="interet-nom"
+                      required
+                      value={interetNom}
+                      onChange={(e) => setInteretNom(e.target.value)}
+                      placeholder="Mme/M. Prénom Nom"
+                      disabled={interetSubmitting}
+                      className="w-full rounded-xl bg-[#F4F4F6] border-none px-4 py-3.5 text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:outline-none focus:ring-2 focus:ring-[#24140D] transition-all"
+                    />
+                    {interetFieldErrors.nom && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">{interetFieldErrors.nom}</p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="interet-email" className="block text-xs font-semibold text-[#5A4A40] mb-1.5">
+                      Email professionnel <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="interet-email"
+                      required
+                      value={interetEmail}
+                      onChange={(e) => setInteretEmail(e.target.value)}
+                      placeholder="prenom.nom@organisation.sn"
+                      disabled={interetSubmitting}
+                      className="w-full rounded-xl bg-[#F4F4F6] border-none px-4 py-3.5 text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:outline-none focus:ring-2 focus:ring-[#24140D] transition-all"
+                    />
+                    {interetFieldErrors.email && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">{interetFieldErrors.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Organisation */}
+                <div>
+                  <label htmlFor="interet-organisation" className="block text-xs font-semibold text-[#5A4A40] mb-1.5">
+                    Organisation / Entreprise / Fonds (optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    id="interet-organisation"
+                    value={interetOrganisation}
+                    onChange={(e) => setInteretOrganisation(e.target.value)}
+                    placeholder="Structure, fonds d'investissement, ONG, partenaire industriel..."
+                    disabled={interetSubmitting}
+                    className="w-full rounded-xl bg-[#F4F4F6] border-none px-4 py-3.5 text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:outline-none focus:ring-2 focus:ring-[#24140D] transition-all"
+                  />
+                  {interetFieldErrors.organisation && (
+                    <p className="mt-1 text-xs text-red-600 font-medium">{interetFieldErrors.organisation}</p>
+                  )}
+                </div>
+
+                {/* Message */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label htmlFor="interet-message" className="block text-xs font-semibold text-[#5A4A40]">
+                      Votre message ou proposition <span className="text-red-600">*</span>
+                    </label>
+                    <span className="text-[11px] text-[#9C8B7E]">
+                      {interetMessage.length} / 1500 caractères
+                    </span>
+                  </div>
+                  <textarea
+                    id="interet-message"
+                    required
+                    rows={4}
+                    maxLength={1500}
+                    value={interetMessage}
+                    onChange={(e) => setInteretMessage(e.target.value)}
+                    placeholder="Précisez la nature de votre intérêt : opportunité de pilote terrain, financement, accord de distribution, R&D commune..."
+                    disabled={interetSubmitting}
+                    className="w-full rounded-xl bg-[#F4F4F6] border-none px-4 py-3.5 text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:outline-none focus:ring-2 focus:ring-[#24140D] transition-all"
+                  />
+                  {interetFieldErrors.message && (
+                    <p className="mt-1 text-xs text-red-600 font-medium">{interetFieldErrors.message}</p>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowInteretModal(false)}
+                    disabled={interetSubmitting}
+                    className="min-h-[44px] sm:w-1/3 py-3 px-4 rounded-xl border border-[#EBE4DC] bg-white hover:bg-[#F4F4F6] text-[#5A4A40] font-semibold text-sm transition text-center cursor-pointer disabled:opacity-50"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={interetSubmitting}
+                    className="min-h-[44px] flex-1 py-3 px-5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {interetSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Transmission en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 text-[#E2A669]" />
+                        Transmettre mon intérêt
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

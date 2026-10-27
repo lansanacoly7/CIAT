@@ -8,7 +8,7 @@
  * Règle d'or : aucune fausse donnée affichée comme réelle.
  * Les données de secours ne sont activées QUE si NEXT_PUBLIC_MODE_DEMO=1.
  */
-import { api, API_URL, type Page } from "./api";
+import { api, API_URL, ApiError, type Page } from "./api";
 
 export type MediaItem = {
   type: "photo" | "video" | "demo";
@@ -505,3 +505,111 @@ export async function getMesProjets(): Promise<ProjetOption[]> {
     return [];
   }
 }
+
+/* -----------------------------------------------------------------------------
+ * MANIFESTATIONS D'INTÉRÊT (PARTENAIRES & INVESTISSEURS) — PHASE 8 (T1)
+ * -------------------------------------------------------------------------- */
+
+export type InteretPayload = {
+  nom: string;
+  email: string;
+  organisation?: string;
+  message: string;
+};
+
+export type InteretResult = {
+  success: boolean;
+  message?: string;
+  error?: string;
+  errors?: Record<string, string>;
+  status?: number;
+};
+
+/**
+ * Envoie une manifestation d'intérêt pour une fiche innovation publiée.
+ * Route backend : POST /api/gallery/fiches/{slug}/interet/
+ */
+export async function postInteretFiche(
+  slug: string,
+  payload: InteretPayload
+): Promise<InteretResult> {
+  try {
+    const res = await api<unknown>(`/gallery/fiches/${slug}/interet/`, {
+      method: "POST",
+      body: {
+        nom: payload.nom.trim(),
+        email: payload.email.trim(),
+        organisation: payload.organisation?.trim() || "",
+        message: payload.message.trim(),
+      },
+      auth: false,
+    });
+
+    const msg =
+      res && typeof res === "object" && "message" in res && typeof (res as { message: unknown }).message === "string"
+        ? (res as { message: string }).message
+        : "Votre manifestation d'intérêt a été transmise avec succès à l'équipe du CIAT et au porteur du projet.";
+
+    return {
+      success: true,
+      message: msg,
+      status: 201,
+    };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.status === 429) {
+        return {
+          success: false,
+          error:
+            "Trop de demandes récentes depuis cette connexion. Veuillez patienter quelques instants avant de soumettre une nouvelle manifestation d'intérêt.",
+          status: 429,
+        };
+      }
+
+      if (err.status === 400 || err.status === 409) {
+        const errorData = err.data as Record<string, unknown> | null;
+        let errorMessage =
+          "Une manifestation d'intérêt a déjà été enregistrée pour cette adresse email et ce projet au cours de la dernière heure.";
+        const fieldErrors: Record<string, string> = {};
+
+        if (errorData && typeof errorData === "object") {
+          for (const [key, val] of Object.entries(errorData)) {
+            if (Array.isArray(val) && val.length > 0) {
+              fieldErrors[key] = String(val[0]);
+            } else if (typeof val === "string") {
+              fieldErrors[key] = val;
+            }
+          }
+          if (errorData.detail && typeof errorData.detail === "string") {
+            errorMessage = errorData.detail;
+          } else if (errorData.message && typeof errorData.message === "string") {
+            errorMessage = errorData.message;
+          }
+        }
+
+        return {
+          success: false,
+          error: errorMessage,
+          errors: fieldErrors,
+          status: err.status,
+        };
+      }
+
+      if (err.status === 404) {
+        return {
+          success: false,
+          error: "Cette fiche d'innovation n'est pas disponible ou n'est plus publiée.",
+          status: 404,
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error:
+        "Le service de transmission du CIAT est temporairement indisponible. Vos informations ont été conservées ci-dessus, merci de réessayer dans quelques instants.",
+      status: 500,
+    };
+  }
+}
+
