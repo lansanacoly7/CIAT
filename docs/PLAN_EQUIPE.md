@@ -2,7 +2,7 @@
 
 # Plateforme CIAT — Plan d'équipe
 
-> Écrit pour toute l'équipe Teranga Labs.
+> Écrit pour toute l'équipe du projet.
 > Délai : 2 jours. Une seule plateforme, six modules interconnectés.
 
 ## 1. L'équipe

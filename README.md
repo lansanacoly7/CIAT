@@ -3,7 +3,7 @@
 Une seule plateforme pour le Centre d'Innovation, d'Application et de Transfert (ISEP Amadou Trawaré, Diamniadio).
 Backend Django REST Framework, frontend Next.js (TypeScript, Tailwind).
 
-> Écrit pour toute l'équipe Teranga Labs. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](docs/PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT_ISEP.pdf](docs/Charte_Graphique_CIAT_ISEP.pdf).
+> Écrit pour toute l'équipe du projet. Le plan, les priorités et la file de tâches sont dans [PLAN_EQUIPE.md](docs/PLAN_EQUIPE.md). Les couleurs, polices et composants sont dans [Charte_Graphique_CIAT_ISEP.pdf](docs/Charte_Graphique_CIAT_ISEP.pdf).
 
 ## Démarrer en 5 minutes
 
@@ -92,13 +92,14 @@ texte = ai.generate("Rédige une attestation ...", system="Tu rédiges des docum
 
 ## Tests de bout en bout (E2E) — Parcours clés de démonstration
 
-La suite de tests E2E automatisée avec Playwright valide les 6 parcours critiques de l'application :
+La suite de tests E2E automatisée avec Playwright valide les 7 parcours critiques de l'application :
 1. Connexion refusée sur mot de passe erroné (message d'erreur, pas de token).
 2. Connexion d'un porteur de projet et accès immédiat à son espace incubateur (`/incubateur`).
 3. Contrôle d'accès : un porteur tentant d'accéder au tableau de bord décisionnel (`/tableau-de-bord`) est intercepté et redirigé.
 4. Parcours Coordonnateur : accès au tableau de bord décisionnel, chargement des indicateurs réels et question en langage naturel (autonome sans clé IA externe).
 5. Accès au référentiel méthodologique (`/tableau-de-bord/methodologie`) avec filtres et formules de calcul.
 6. Parcours public visiteur : consultation de la galerie des innovations (`/galerie`) et ouverture d'une fiche prototype détaillée.
+7. Parcours Coordonnateur (filtres & export) : filtrage temporel au format français (`jj/mm/aaaa`), gestion des états vides et téléchargement d'un export consolidé (`.xlsx`).
 
 ### Lancer les tests E2E :
 Prérequis : aucun serveur à démarrer manuellement. La commande lance elle-même le backend Django (avec migration et `seed_all`) et le frontend Next.js en local comme en CI via la configuration `webServer`.

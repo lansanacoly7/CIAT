@@ -124,7 +124,7 @@ class NumberedCanvas(canvas.Canvas):
         self.drawString(
             45,
             30,
-            "Plateforme Numérique CIAT  •  Livrable Obligatoire N° 6 (Lead technique : Lansana Coly)",
+            "Plateforme Numérique CIAT  •  Livrable N° 6  •  Groupe de six apprenants (Lansana, Alioune, Maimouna, Massogui, Ibrahima, Pathé)",
         )
         page_str = f"Page {self._pageNumber} sur {page_count}"
         self.setFont("Helvetica-Bold", 8)
@@ -580,7 +580,7 @@ def generer_docx(blocks, output_path: Path):
     p_footer = footer.paragraphs[0]
     p_footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r_ftr = p_footer.add_run(
-        "Plateforme Numérique CIAT  •  Livrable Obligatoire N° 6  •  Lead technique : Lansana Coly"
+        "Plateforme Numérique CIAT  •  Livrable Obligatoire N° 6  •  Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall"
     )
     r_ftr.font.name = "Calibri"
     r_ftr.font.size = Pt(8.5)

@@ -1,7 +1,7 @@
 # Registre de Vérification Factuelle des Livrables
 
 > **Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Trawaré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 4 (Tâche T1)  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Objectif :** Audit phrase par phrase de la véracité de l'ensemble des livrables écrits du projet face au code source réel, aux tests automatisés et aux commandes exécutées.
 
 ---

@@ -292,7 +292,7 @@ export default function DocumentCreationWizard({ onDocumentCreated }: DocumentCr
                           title={sec.consigne || sec.titre}
                           className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-ivoire text-texte-doux border border-bordure"
                         >
-                          <span className="text-beige mr-1 font-bold">{idx + 1}.</span>
+                          <span className="text-[#5A4B42] mr-1 font-bold">{idx + 1}.</span>
                           {sec.titre}
                         </span>
                       ))}

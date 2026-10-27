@@ -24,3 +24,12 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Tu attends :** les mesures corrigées de Pathé. Branche : `Kalz`.
 - **Attendu par :** Lansana (rapport, section performance).
 - **Terminé quand :** un tableau avant/après figure dans `docs/PERFORMANCE.md`, avec les tests qui passent.
+
+> **Phase 5 validée et fusionnée dans `test`** (preuve réelle sur PostgreSQL 16.10 avec 278 tests, couverture mesurée, optimisation avant/après). Bravo, c'est le travail le plus rigoureux sur les preuves. Pense à `git pull origin test`.
+
+## T4 — Contrastes d'accessibilité sur `/documents` et `/assistant`
+- **Complexité :** Faible · **Importance :** Normale · **Durée estimée :** 2 h
+- **À faire :** l'audit axe (`docs/ACCESSIBILITE.md`) relève des contrastes de couleur insuffisants sur `/documents` (8 éléments) et `/assistant` (4 éléments). Ce ne sont pas tes écrans à l'origine (Maimouna et Massogui en sont propriétaires), mais ils sont occupés : tu prends ces deux écrans. Corrige les textes secondaires et badges sous le seuil 4,5:1 avec des teintes de la charte (ex. brun foncé au lieu de gris clair), sans changer la mise en page. Relance `npm run test:axe` et mets à jour le tableau.
+- **Tu attends :** rien. Branche : `Kalz`.
+- **Attendu par :** Lansana (accessibilité du rapport).
+- **Terminé quand :** `/documents` et `/assistant` n'ont plus de violation de contraste dans le test axe, et `npm run lint && npm run build` passent.

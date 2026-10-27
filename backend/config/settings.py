@@ -77,11 +77,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # PostgreSQL en équipe et en production (DATABASE_URL). SQLite sert uniquement à démarrer sans rien installer.
+_db_default = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+_is_sqlite = "sqlite" in os.getenv("DATABASE_URL", _db_default)
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600
+        default=_db_default,
+        conn_max_age=0 if _is_sqlite else 600,
     )
 }
+if DATABASES["default"].get("ENGINE") == "django.db.backends.sqlite3":
+    DATABASES["default"].setdefault("OPTIONS", {})["timeout"] = 30
 
 AUTH_USER_MODEL = "core.User"
 
@@ -136,14 +141,16 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
+        () if os.getenv("DISABLE_THROTTLING", "0") == "1" else (
+            "rest_framework.throttling.AnonRateThrottle",
+            "rest_framework.throttling.UserRateThrottle",
+        )
     ),
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "60/min",
-        "user": "300/min",
-        "ai": "20/min",
-        "auth": "5/min",
+        "anon": os.getenv("THROTTLE_RATE_ANON", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "60/min"),
+        "user": os.getenv("THROTTLE_RATE_USER", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "300/min"),
+        "ai": os.getenv("THROTTLE_RATE_AI", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "20/min"),
+        "auth": os.getenv("THROTTLE_RATE_AUTH", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "5/min"),
     },
 }
 
@@ -192,6 +199,9 @@ AI_PROVIDER_CONFIG = {
     },
 }
 
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "1") == "1"
     SESSION_COOKIE_SECURE = True
@@ -200,8 +210,6 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = "DENY"
 
 # ==============================================================================
 # Configuration des emails (Phase 4 Pathé)
@@ -214,4 +222,6 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "1") == "1"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "CIAT <noreply@localhost>")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "CIAT Démonstration <contact@ciat-demo.example>"
+)

@@ -1,7 +1,7 @@
 # Schéma de la Base de Données Relationnelle
 
 > **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio**  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Référence :** Livrable Obligatoire N° 5 (Architecture des données, relations et contraintes d'intégrité)  
 > **Document compagnon :** [`docs/dictionnaire_donnees.md`](../dictionnaire_donnees.md) (Dictionnaire exhaustif des 34 modèles)  
 > **Avertissement :** La plateforme n'est **pas déployée en production**. Les bases exploitées sont SQLite (développement et tests) et PostgreSQL (cible pour conteneur de démonstration locale). Toutes les données sont strictement fictives.

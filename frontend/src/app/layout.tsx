@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 import AppShell from "@/components/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
+
+const fraunces = Fraunces({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  display: "swap",
+});
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -66,7 +73,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className={`${jakarta.variable} ${inter.variable} h-full antialiased`}>
+    <html
+      lang="fr"
+      className={`${fraunces.variable} ${jakarta.variable} ${inter.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col overflow-x-hidden">
         <AuthProvider>
           <Suspense fallback={null}>
