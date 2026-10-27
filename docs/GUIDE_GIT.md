@@ -1,6 +1,6 @@
 # Guide Git : comment travailler sur le dépôt
 
-> Écrit pour toute l'équipe Teranga Labs, y compris pour ceux qui n'ont pas l'habitude de Git.
+> Écrit pour toute l'équipe du projet, y compris pour ceux qui n'ont pas l'habitude de Git.
 > Dépôt : https://github.com/lansanacoly7/CIAT
 
 ## Le principe : une branche par personne

@@ -59,7 +59,9 @@ def envoyer_email_confirmation_soumission(dossier) -> bool:
             f"L'équipe du CIAT"
         )
 
-        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <noreply@localhost>")
+        from_email = getattr(
+            settings, "DEFAULT_FROM_EMAIL", "CIAT Démonstration <contact@ciat-demo.example>"
+        )
         send_mail(
             subject=sujet,
             message=corps,
@@ -152,7 +154,9 @@ def envoyer_email_decision_dossier(decision) -> bool:
             f"Le Comité de sélection CIAT"
         )
 
-        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <noreply@localhost>")
+        from_email = getattr(
+            settings, "DEFAULT_FROM_EMAIL", "CIAT Démonstration <contact@ciat-demo.example>"
+        )
         send_mail(
             subject=sujet,
             message=corps,

@@ -372,7 +372,7 @@ export default function ContactPage() {
 
               <div>
                 <strong className="block text-brun-fonce">Courriel institutionnel :</strong>
-                contact@ciat.sn
+                contact@ciat-demo.example (coordonnées fictives de démonstration)
               </div>
 
               <div>
