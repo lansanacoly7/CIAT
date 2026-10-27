@@ -26,11 +26,22 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Écrans d'authentification plein écran
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
 
+  // Pages vitrines et institutionnelles publiques (jamais de barre latérale)
+  const isPublicPage =
+    pathname === "/" ||
+    pathname.startsWith("/portail") ||
+    pathname === "/mentions-legales" ||
+    pathname === "/confidentialite" ||
+    (pathname.startsWith("/galerie") && !pathname.startsWith("/galerie/gestion"));
+
   // Utilisateur connecté
   const isAuthenticated = Boolean(user);
 
-  // La barre latérale unifiée n'est JAMAIS visible si l'utilisateur n'est pas connecté
-  const showSidebar = !isAuthPage && isAuthenticated;
+  // La barre latérale unifiée s'affiche STRICTEMENT :
+  // - uniquement si l'utilisateur est connecté
+  // - jamais sur les pages d'auth
+  // - jamais sur la page d'accueil ni les pages vitrines publiques
+  const showSidebar = !isAuthPage && !isPublicPage && isAuthenticated;
 
   if (isAuthPage) {
     return <main className="flex-1">{children}</main>;

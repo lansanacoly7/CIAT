@@ -76,6 +76,21 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {!loading && user ? (
               <div className="hidden items-center gap-3 md:flex">
+                {user.role === "coordonnateur" || user.role === "administrateur" ? (
+                  <Link
+                    href="/tableau-de-bord"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#c99a69] px-3 py-1.5 text-xs font-bold text-[#21130d] hover:brightness-105 transition-all shadow-xs"
+                  >
+                    Tableau de bord →
+                  </Link>
+                ) : user.role === "porteur" ? (
+                  <Link
+                    href="/incubateur"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#c99a69] px-3 py-1.5 text-xs font-bold text-[#21130d] hover:brightness-105 transition-all shadow-xs"
+                  >
+                    Mon Espace →
+                  </Link>
+                ) : null}
                 <Link
                   href="/compte"
                   className="group flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-white/10"
