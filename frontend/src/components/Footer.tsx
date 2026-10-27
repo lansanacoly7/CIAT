@@ -10,7 +10,7 @@ export default function Footer() {
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
   const isAppPage = pathname.startsWith("/incubateur") || pathname.startsWith("/compte") || pathname.startsWith("/documents");
 
-  if (isAuthPage || isAppPage) {
+  if (isAuthPage || isAppPage || pathname === "/") {
     return null;
   }
 
