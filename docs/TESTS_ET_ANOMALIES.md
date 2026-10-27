@@ -141,3 +141,58 @@ coverage report --include="apps/*" -m
 | [`apps/incubator/management/commands/envoyer_alertes_retard.py`](../backend/apps/incubator/management/commands/envoyer_alertes_retard.py) | 20 | 5 | **75,0 %** | 32-36 | Gestion de l'option `--force` en ligne de commande. |
 | [`apps/incubator/emails.py`](../backend/apps/incubator/emails.py) | 57 | 13 | **77,2 %** | 32, 37-41, 77-83, 100, 105, 109-113, 170-176 | Gabarits d'e-mails pour statuts rejetés et notifications alternatives. |
 | [`apps/documents/services.py`](../backend/apps/documents/services.py) | 88 | 19 | **78,4 %** | 33, 42-53, 159-164 | Gestion des erreurs de gabarit manquant et exceptions d'export. |
+
+---
+
+## 6. Audit de Robustesse de l'API (Phase 7 — T1 : Aucune Erreur 500)
+
+- **Date d'exécution :** 27 octobre 2026
+- **Auteur :** Pathé (Back-end)
+- **Suite de test automatisée dédiée :** `backend/apps/core/tests/test_robustesse_500.py` (`RobustesseApiAucuneErreur500Tests`)
+- **Exécution :** `python backend/manage.py test apps.core.tests.test_robustesse_500` (7 tests exécutés en ~10 s, optimisé avec `MD5PasswordHasher`).
+- **Objectif :** Parcourir systématiquement l'ensemble des routes d'écriture et de lecture de l'API avec des entrées anormales et vérifier que le code retour est **toujours** dans `{400, 401, 403, 404, 409, 429}`, **jamais 500 (Internal Server Error)**.
+
+### Périmètre des 7 Catégories Testées
+
+1. **Identifiants négatifs ou inexistants (`test_01_identifiants_negatifs_ou_inexistants`) :**
+   - Requêtes sur toutes les routes de détail (`GET`, `PUT`, `PATCH`, `DELETE`) avec `/api/.../-1/`, `/api/.../-99999/` et `/api/.../999999/`.
+   - Contrôle : Retour HTTP 404 Not Found (ou 401/403 si droit d'accès requis), aucun crash ORM `DoesNotExist`.
+2. **Chaînes très longues / Buffer overflow test (`test_02_chaines_tres_longues_10000_caracteres`) :**
+   - Envois de payloads avec des champs textes saturés à 10 000 caractères (`"A" * 10000`) sur l'ensemble des routes `POST` / `PATCH` (auth, portal, incubator, documents, analytics, assistant, gallery).
+   - Contrôle : Validation DRF propre (HTTP 400 Bad Request avec message d'erreur explicite), aucun crash mémoire ni erreur SQL de troncature non gérée.
+3. **Types invalides (`test_03_types_faux_nombre_au_lieu_de_texte_et_inversement`) :**
+   - Envoi de nombres entiers ou flottants là où une chaîne ou un email est attendu (`{"email": 12345, "nom": 9999}`), et chaînes là où un entier/décimal/booléen est requis.
+   - Contrôle : Rejet par les sérialiseurs avec HTTP 400 Bad Request (`expected a string`, `valid number is required`).
+4. **Champs obligatoires absents (`test_04_champs_absents_et_payloads_vides`) :**
+   - Envoi de corps vides `{}` sur toutes les routes de création ou modification.
+   - Contrôle : HTTP 400 Bad Request (`This field is required`), pas de `KeyError` non rattrapée.
+5. **JSON syntaxiquement malformé (`test_05_json_invalide_et_corrompu`) :**
+   - Envoi de corps bruts non conformes (`{bad_json:`, `{"unclosed": "string`, `{"key": undefined}`) avec l'en-tête `Content-Type: application/json`.
+   - Contrôle : Pris en charge par le parser DRF avec HTTP 400 Bad Request (`JSON parse error`), aucune erreur 500 non interceptée.
+6. **Fichiers vides ou de mauvais type / exécutables (`test_06_fichiers_vides_et_mauvais_type`) :**
+   - Envoi de fichiers de taille 0 octet (`SimpleUploadedFile("empty.pdf", b"")`) et de scripts malveillants (`SimpleUploadedFile("script.sh", b"#!/bin/bash\necho 1", content_type="application/x-sh")`, `.exe`, `.bat`).
+   - Contrôle : HTTP 400 Bad Request systématique rejetant les fichiers vides et les extensions exécutables.
+7. **Doubles envois / Concurrence d'unicité (`test_07_doubles_envois_et_collisions_unicite`) :**
+   - Soumission répétée d'enregistrements avec contrainte d'unicité (création de compte avec email identique, création de fiche galerie pour le même projet).
+   - Contrôle : HTTP 400 Bad Request ou HTTP 409 Conflict, jamais d'erreur 500 `IntegrityError`.
+
+### Inventaire des 5 Cas Corrigés
+
+Au cours de cet audit, 5 cas susceptibles de provoquer une erreur 500 ou un défaut de validation en amont ont été découverts et corrigés :
+
+| Réf. | Composant / Fichier | Comportement avant correction | Correction appliquée | Statut HTTP garanti |
+|---|---|---|---|:---:|
+| **ROB-01** | `apps/analytics/views.py` (`QuestionView`) | La clause `except Exception` levait explicitement `status=status.HTTP_500_INTERNAL_SERVER_ERROR` en cas d'indisponibilité du service IA. | Remplacement par `status.HTTP_503_SERVICE_UNAVAILABLE` avec message d'indisponibilité propre. | `503` |
+| **ROB-02** | `apps/documents/views.py` (`GenererDocumentView`) | Les exceptions inattendues du générateur de document n'étaient pas protégées au niveau de la vue et pouvaient remonter en 500 Django standard. | Ajout d'une capture `except Exception as exc` retournant un statut `503 Service Unavailable` documenté. | `503` |
+| **ROB-03** | `apps/assistant/views.py` (`MessageListCreateView`) | Les exceptions du moteur RAG en création de message pouvaient faire crasher la requête en 500. | Ajout d'une capture `except Exception as exc` retournant `HTTP_503_SERVICE_UNAVAILABLE` pour service IA dégradé. | `503` |
+| **ROB-04** | `apps/incubator/serializers.py` (`PreuveJalonSerializer`) | Le validateur `validate_fichier` n'appelait pas explicitement les vérifications de taille (0 octet et >10 Mo) ni de signature de contenu avant la persistance. | Intégration de `validate_file_size(value)` et `validate_file_content(value)` rejetant immédiatement les fichiers vides ou interdits avec `ValidationError`. | `400` |
+| **ROB-05** | `apps/portal/serializers.py` (`DocumentPublicSerializer`, `PartenaireSerializer`, `ActualiteSerializer`) | L'upload de fichiers dans le portail public n'interdisait pas les fichiers vides (0 octet) ni les scripts exécutables (`.exe`, `.sh`, `.bat`, etc.). | Ajout des validateurs `validate_fichier`, `validate_logo` et `validate_image` rejetant les fichiers de 0 octet, les fichiers > 10 Mo/5 Mo et les extensions de scripts exécutables. | `400` |
+
+### Test de Mutation (Vérification de la sensibilité du test)
+
+Conformément à l'exigence de la tâche T1 (*« il casse si on retire une validation »*), un test de mutation a été réalisé :
+1. Désactivation temporaire de `validate_fichier` dans `apps/portal/serializers.py` (`DocumentPublicSerializer`).
+2. Exécution de `test_06_fichiers_vides_et_mauvais_type`.
+3. Résultat : Le test a échoué immédiatement avec `AssertionError: 201 != 400` (le serveur créait l'entité avec un fichier vide au lieu de rejeter avec 400).
+4. Restauration de la validation : La suite complète repasse au vert (`Ran 7 tests in 10.092s — OK`).
+

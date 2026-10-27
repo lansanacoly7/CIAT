@@ -1,5 +1,6 @@
 from django.db import connection
-from rest_framework import generics, viewsets
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +16,32 @@ from .serializers import (
 from .throttling import AuthRateThrottle
 
 
+@extend_schema(
+    summary="État de santé de l'API et de la base de données",
+    description="Route publique sans authentification ni donnée sensible renvoyant l'état de fonctionnement de l'API et de la connexion à la base de données.",
+    responses={
+        200: OpenApiResponse(
+            description="L'API et la base de données sont opérationnelles.",
+            response={
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "example": "ok"},
+                    "database": {"type": "string", "example": "connected"},
+                },
+            },
+        ),
+        503: OpenApiResponse(
+            description="La base de données ne répond pas ou est dégradée.",
+            response={
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "example": "degraded"},
+                    "database": {"type": "string", "example": "disconnected"},
+                },
+            },
+        ),
+    },
+)
 class HealthView(APIView):
     """Vérifie que l'API et la base répondent. Sert à la supervision et au déploiement."""
 
@@ -22,9 +49,18 @@ class HealthView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        with connection.cursor() as cur:
-            cur.execute("SELECT 1")
-        return Response({"status": "ok"})
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT 1")
+            return Response(
+                {"status": "ok", "database": "connected"},
+                status=status.HTTP_200_OK,
+            )
+        except Exception:
+            return Response(
+                {"status": "degraded", "database": "disconnected"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
 
 class CiatTokenObtainPairView(TokenObtainPairView):

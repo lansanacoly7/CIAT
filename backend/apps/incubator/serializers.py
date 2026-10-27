@@ -445,6 +445,12 @@ class PreuveJalonSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"Format de fichier '.{ext}' non autorisé. Extensions acceptées : {', '.join(ALLOWED_PIECE_EXTENSIONS)}."
             )
+        from .models import validate_file_content, validate_file_size
+        try:
+            validate_file_size(file)
+            validate_file_content(file)
+        except Exception as e:
+            raise serializers.ValidationError(getattr(e, "message", str(e)))
         return file
 
     def create(self, validated_data):
