@@ -213,100 +213,75 @@ export default function Home() {
   return (
     <>
       {/* =====================================================================
-       * 1. HERO SANS DÉFILEMENT FORCÉ : ÉLÉGANT, NET, PUNCHY ET LUMINEUX
-       *    Mise en page split-screen : texte épuré à gauche, photo nette à droite.
+       * 1. HERO IMMERSIF PLEINE LARGEUR (DESIGN ISEP-AT DIAMNIADIO)
+       *    - Photo campus plein écran (background full-bleed)
+       *    - Dégradé directionnel gauche -> droite (brun chaud 88% -> 100% transparent à droite)
+       *    - Zéro filtre blur lourd : l'architecture du campus reste nette et lumineuse
+       *    - Hauteur calibrée sans défilement forcé (tout est visible au premier coup d'œil)
+       *    - Badge pillule "Diamniadio, Ville du futur" et 2 boutons capsules rounded-full
        * =================================================================== */}
-      <section className="border-b border-[#3d2315] bg-[#24140D] text-white py-8 md:py-10 lg:py-12">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+      <section className="relative w-full overflow-hidden min-h-[540px] lg:h-[calc(100vh-76px)] lg:max-h-[680px] flex items-center bg-[#24140D] border-b border-[#3d2315]">
+        {/* Photo du campus en arrière-plan pleine largeur */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/campus-isep.png"
+            alt="Campus officiel de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[center_35%]"
+          />
+          {/* Dégradé directionnel : Très sombre et chaud à gauche pour le contraste du texte blanc,
+              fondu progressif au centre, et totalement transparent à droite pour révéler le campus au soleil */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(28, 14, 8, 0.88) 0%, rgba(28, 14, 8, 0.72) 42%, rgba(28, 14, 8, 0.30) 70%, rgba(28, 14, 8, 0.05) 90%, rgba(28, 14, 8, 0.0) 100%)",
+            }}
+          />
+          {/* Léger fondu en bas pour une transition naturelle vers la section suivante */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#24140D] to-transparent pointer-events-none" />
+        </div>
+
+        {/* Contenu textuel aligné à gauche (prend ~60% de la largeur, laissant respirer le campus à droite) */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-0">
+          <div className="max-w-2xl lg:max-w-3xl space-y-5 sm:space-y-6">
             
-            {/* Colonne Gauche (7 cols) : Titre, présentation et actions */}
-            <div className="lg:col-span-7 space-y-4 md:space-y-5">
-              {/* Badge officiel de souveraineté */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3.5 py-1 text-xs font-semibold text-[#C99A68]">
-                <span className="h-2 w-2 rounded-full bg-succes" />
-                <span>ISEP Amadou Traoré · Diamniadio</span>
-              </div>
-
-              {/* Titre calibré pour tenir sans forcer de défilement */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                Centre d&apos;Innovation, d&apos;Application et de Transfert
-                <span className="block mt-1 text-[#C99A68] text-xl sm:text-2xl lg:text-3xl font-semibold">
-                  Pôle d&apos;Incubation &amp; de Prototypage Technologique
-                </span>
-              </h1>
-
-              {/* Paragraphe concis et lisible */}
-              <p className="text-sm sm:text-base leading-relaxed text-[#EAE0D5] max-w-xl">
-                De l&apos;idée brute au prototype industriel opérationnel. Une infrastructure unifiée réunissant ateliers d&apos;ingénierie, assistance IA souveraine et valorisation économique à Diamniadio.
-              </p>
-
-              {/* Boutons d'Action (Même esthétique que le bandeau validé) */}
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <ButtonLink
-                  href="/portail/incubateur"
-                  variant="accent"
-                  className="px-6 py-3 font-bold text-sm shadow-md"
-                >
-                  Découvrir l&apos;Incubateur →
-                </ButtonLink>
-                <ButtonLink
-                  href="/portail/appels"
-                  variant="secondary"
-                  className="!border-white/30 !bg-transparent !text-white hover:!bg-white/10 px-5 py-3 text-sm"
-                >
-                  Appels à Projets 2026
-                </ButtonLink>
-                <Link
-                  href="/galerie"
-                  className="text-xs font-semibold text-[#C99A68] hover:text-[#EAE0D5] transition-colors py-2 px-1 flex items-center gap-1"
-                >
-                  <span>Galerie des Innovations</span>
-                  <span>→</span>
-                </Link>
-              </div>
-
-              {/* Bandeau compact des 4 chiffres clés en une seule ligne (zéro encombrement) */}
-              <div className="pt-4 border-t border-white/15 grid grid-cols-4 gap-2 text-center sm:text-left">
-                <div>
-                  <span className="block text-2xl font-extrabold text-white">07</span>
-                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Filières clés</span>
-                </div>
-                <div>
-                  <span className="block text-2xl font-extrabold text-white">05</span>
-                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Jalons rigoureux</span>
-                </div>
-                <div>
-                  <span className="block text-2xl font-extrabold text-white">06</span>
-                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Modules 360</span>
-                </div>
-                <div>
-                  <span className="block text-2xl font-extrabold text-white">100%</span>
-                  <span className="text-[11px] text-[#C99A68] font-medium leading-tight block">Prototypage réel</span>
-                </div>
-              </div>
+            {/* Badge officiel de localisation */}
+            <div className="inline-flex items-center rounded-lg border border-white/20 bg-black/30 backdrop-blur-xs px-3.5 py-1 text-xs sm:text-sm font-medium text-white/90 shadow-sm">
+              ISEP Amadou Traoré · Diamniadio · CIAT
             </div>
 
-            {/* Colonne Droite (5 cols) : Photo du Campus NETTE, LUMINEUSE, SANS AUCUN BLUR MUDDY */}
-            <div className="lg:col-span-5">
-              <div className="relative h-[280px] sm:h-[340px] lg:h-[380px] w-full rounded-2xl overflow-hidden border border-white/20 shadow-xl">
-                <Image
-                  src="/images/campus-isep.png"
-                  alt="Campus officiel de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 42vw, 100vw"
-                  className="object-cover object-center"
-                />
-                {/* Bandeau discret d'identification du campus en bas */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3.5 flex items-center justify-between text-xs text-white">
-                  <span className="font-semibold flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-succes" />
-                    Campus ISEP Diamniadio
-                  </span>
-                  <span className="text-[11px] text-[#C99A68] font-medium">Cité du Savoir</span>
-                </div>
-              </div>
+            {/* Grand Titre net, massif et percutant en BLANC PUR STRICT */}
+            <h1
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight !text-white leading-[1.15]"
+              style={{ color: "#FFFFFF" }}
+            >
+              L&apos;excellence technologique et l&apos;incubation d&apos;élite du Sénégal
+            </h1>
+
+            {/* Sous-titre lisible, lumineux et aéré */}
+            <p className="text-sm sm:text-base md:text-lg text-[#F7EFE6] leading-relaxed max-w-xl font-normal">
+              Prototypez, accélérez et valorisez vos innovations dans un écosystème d&apos;ingénierie appliquée de classe mondiale. Ateliers spécialisés, mentorat expert et IA souveraine à Diamniadio.
+            </p>
+
+            {/* Boutons d'Action standardisés conformes au Design System CIAT (ui.tsx) */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <ButtonLink
+                href="/portail/incubateur"
+                variant="accent"
+                className="text-sm sm:text-base font-bold shadow-md px-6 py-3"
+              >
+                Découvrir l&apos;Incubateur →
+              </ButtonLink>
+              <ButtonLink
+                href="/portail/appels"
+                variant="secondary"
+                className="text-sm sm:text-base font-semibold shadow-md px-6 py-3 !border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+              >
+                Candidater maintenant
+              </ButtonLink>
             </div>
 
           </div>
@@ -319,24 +294,16 @@ export default function Home() {
        * =================================================================== */}
       <section className="border-b border-bordure bg-white py-14 md:py-18">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="max-w-2xl space-y-1.5">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
-                Identité de Marque &amp; Valeurs Fondatrices
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
-                Les 4 Piliers Fondamentaux du CIAT
-              </h2>
-              <p className="text-sm text-texte-doux">
-                Inscrits à la charte officielle, ces 4 piliers guident la rigueur de nos laboratoires et l&apos;excellence technique de chaque projet.
-              </p>
-            </div>
-            <div className="shrink-0">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-bordure bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-bold text-brun">
-                <span className="h-2 w-2 rounded-full bg-beige" />
-                Norme CIAT 360
-              </span>
-            </div>
+          <div className="max-w-2xl space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-beige">
+              Identité de Marque &amp; Valeurs Fondatrices
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-brun tracking-tight">
+              Les 4 Piliers Fondamentaux du CIAT
+            </h2>
+            <p className="text-sm text-texte-doux">
+              Inscrits à la charte officielle, ces 4 piliers guident la rigueur de nos laboratoires et l&apos;excellence technique de chaque projet.
+            </p>
           </div>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -519,7 +486,6 @@ export default function Home() {
               Une seule base de données unifiée partagée en temps réel entre porteurs, comités, mentors et direction.
             </p>
           </div>
-          <Badge tone="info">Architecture Unifiée 6-en-1</Badge>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -544,7 +510,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="mt-5 border-t border-bordure pt-3 text-[11px] font-semibold text-texte-doux flex items-center justify-between">
-                  <span>Module CIAT 360</span>
+                  <span>Pôle opérationnel</span>
                   <span className="text-[10px] uppercase font-bold text-beige">Opérationnel</span>
                 </div>
               </Card>
@@ -561,9 +527,9 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-[#C99A68]">
-                Orientation &amp; Sélection Continue 2026
-              </div>
+              <p className="text-xs font-bold uppercase tracking-wider text-[#C99A68]">
+                Orientation &amp; Candidatures Ouvertes 2026
+              </p>
               <h2 className="text-2xl sm:text-4xl font-extrabold !text-white tracking-tight">
                 Vous avez un projet innovant ou un besoin de prototypage ?
               </h2>

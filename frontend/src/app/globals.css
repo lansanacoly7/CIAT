@@ -40,9 +40,11 @@ body {
   line-height: 1.5;
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-title);
-  color: var(--color-primary);
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-title);
+    color: var(--color-primary);
+  }
 }
 
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
