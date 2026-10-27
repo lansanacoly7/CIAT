@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-// Les modules de gestion CIAT (Tableau de bord placé en haut en élément principal)
-const GESTION_ITEMS = [
+// Les modules de gestion CIAT (pour coordonnateurs, administrateurs et membres de comité)
+const STAFF_ITEMS = [
   {
     slug: "incubateur",
     href: "/incubateur",
@@ -52,12 +52,61 @@ const GESTION_ITEMS = [
     titre: "Galerie des innovations",
     icon: Layers,
   },
+  {
+    slug: "compte",
+    href: "/compte",
+    titre: "Mon compte",
+    icon: User,
+  },
+];
+
+// Les modules applicatifs pour les porteurs de projet (candidats)
+const PORTEUR_ITEMS = [
+  {
+    slug: "candidature",
+    href: "/incubateur",
+    titre: "Dépôt de candidature",
+    icon: Rocket,
+  },
+  {
+    slug: "projets",
+    href: "/incubateur/projets",
+    titre: "Suivi de mes projets",
+    icon: Layers,
+  },
+  {
+    slug: "documents",
+    href: "/documents",
+    titre: "Générateur de documents",
+    icon: FileText,
+  },
+  {
+    slug: "assistant",
+    href: "/assistant",
+    titre: "Assistant IA",
+    icon: MessageSquare,
+  },
+  {
+    slug: "galerie",
+    href: "/galerie",
+    titre: "Galerie des innovations",
+    icon: Globe,
+  },
+  {
+    slug: "compte",
+    href: "/compte",
+    titre: "Mon profil & Compte",
+    icon: User,
+  },
 ];
 
 export function DashboardSidebar() {
   const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+
+  const isPorteur = user?.role === "porteur";
+  const navItems = isPorteur ? PORTEUR_ITEMS : STAFF_ITEMS;
 
   // Gestion de la touche Échap pour le menu mobile
   useEffect(() => {
@@ -92,6 +141,8 @@ export function DashboardSidebar() {
       ? "Comité de Sélection"
       : user?.role === "mentor"
       ? "Mentor"
+      : user?.role === "porteur"
+      ? "Porteur de projet"
       : "Équipe CIAT";
 
   const userDisplayName = user
@@ -134,59 +185,63 @@ export function DashboardSidebar() {
             </Link>
           </div>
 
-          {/* 2. Boutons principaux : Tableau de bord & Méthodologie */}
-          <div className="px-3 space-y-1">
-            <Link
-              href="/tableau-de-bord"
-              onClick={onItemClick}
-              className={`flex items-center gap-3.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                isDashboardActive
-                  ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
-                  : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Home className="h-5 w-5 stroke-[1.75]" />
-              <span>Tableau de bord</span>
-            </Link>
-            <Link
-              href="/tableau-de-bord/methodologie"
-              onClick={onItemClick}
-              className={`flex items-center gap-3.5 rounded-xl px-4 py-2 text-sm transition-all ${
-                isMethodologieActive
-                  ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
-                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
-              <span>Méthodologie</span>
-            </Link>
-          </div>
+          {/* 2. Boutons principaux : Tableau de bord & Méthodologie (réservés au staff) */}
+          {!isPorteur && (
+            <div className="px-3 space-y-1">
+              <Link
+                href="/tableau-de-bord"
+                onClick={onItemClick}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+                  isDashboardActive
+                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
+                    : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Home className="h-5 w-5 stroke-[1.75]" />
+                <span>Tableau de bord</span>
+              </Link>
+              <Link
+                href="/tableau-de-bord/methodologie"
+                onClick={onItemClick}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+                  isMethodologieActive
+                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
+                    : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
+                <span>Méthodologie</span>
+              </Link>
+            </div>
+          )}
 
-          {/* 3. Section : ESPACES DE GESTION */}
-          <div className="mb-2 mt-6 px-5 text-[11px] font-semibold uppercase tracking-wider text-[#cbb7a3]">
-            ESPACES DE GESTION
+          {/* 3. Section : ESPACES DE GESTION ou ESPACE CANDIDAT */}
+          <div className="mb-2 mt-5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[#cbb7a3]">
+            {isPorteur ? "ESPACE CANDIDAT" : "ESPACES DE GESTION"}
           </div>
 
           <nav className="space-y-1 px-3">
-            {GESTION_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const IconComponent = item.icon;
               const isActive =
-                pathname === item.href ||
-                (pathname.startsWith(item.href) && item.href !== "/");
+                item.href === "/incubateur"
+                  ? pathname === "/incubateur"
+                  : pathname === item.href ||
+                    (pathname.startsWith(item.href) && item.href !== "/");
 
               return (
                 <Link
                   key={item.slug}
                   href={item.href}
                   onClick={onItemClick}
-                  className={`group flex items-center gap-3.5 rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                  className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-[#523624] font-semibold text-white"
+                      ? "bg-[#523624] font-semibold text-white shadow-xs"
                       : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <IconComponent
-                    className="h-5 w-5 stroke-[1.5] text-white/90 group-hover:text-white"
+                    className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90 group-hover:text-white"
                   />
                   <span className="truncate">{item.titre}</span>
                 </Link>
@@ -202,13 +257,13 @@ export function DashboardSidebar() {
             <Link
               href="/"
               onClick={onItemClick}
-              className={`flex items-center gap-3.5 rounded-lg px-4 py-2.5 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                 isHomeActive
                   ? "bg-[#523624] font-semibold text-white"
                   : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
               }`}
             >
-              <Home className="h-5 w-5 stroke-[1.5] text-white/90" />
+              <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
               <span>Page d&apos;accueil</span>
             </Link>
           </div>

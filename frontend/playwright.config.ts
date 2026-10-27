@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Configuration Playwright E2E pour CIAT (Phase 3 - T3)
- * Couvre les parcours de démonstration de bout en bout.
+ * Couvre les 6 parcours de démonstration de bout en bout.
+ * Démarre automatiquement le backend Django (SQLite, seed_all) et le frontend Next.js en local et en CI.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -27,12 +28,20 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: process.env.CI
-    ? {
-        command: "npm run start",
-        url: "http://localhost:3000",
-        reuseExistingServer: true,
-        timeout: 120 * 1000,
-      }
-    : undefined,
+  webServer: [
+    {
+      command:
+        "python manage.py migrate && python manage.py seed_all && python manage.py runserver 127.0.0.1:8000",
+      url: "http://127.0.0.1:8000/api/docs/",
+      cwd: "../backend",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+    {
+      command: "npm run start",
+      url: "http://localhost:3000",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  ],
 });

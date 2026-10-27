@@ -92,7 +92,7 @@ texte = ai.generate("Rédige une attestation ...", system="Tu rédiges des docum
 
 ## Tests de bout en bout (E2E) — Parcours clés de démonstration
 
-La suite de tests E2E automatisée avec Playwright valide les 5 parcours critiques de l'application :
+La suite de tests E2E automatisée avec Playwright valide les 6 parcours critiques de l'application :
 1. Connexion refusée sur mot de passe erroné (message d'erreur, pas de token).
 2. Connexion d'un porteur de projet et accès immédiat à son espace incubateur (`/incubateur`).
 3. Contrôle d'accès : un porteur tentant d'accéder au tableau de bord décisionnel (`/tableau-de-bord`) est intercepté et redirigé.
@@ -101,12 +101,12 @@ La suite de tests E2E automatisée avec Playwright valide les 5 parcours critiqu
 6. Parcours public visiteur : consultation de la galerie des innovations (`/galerie`) et ouverture d'une fiche prototype détaillée.
 
 ### Lancer les tests E2E :
-Prérequis : le backend Django tourne sur le port 8000 (`python manage.py runserver`) et le frontend sur le port 3000 (`npm run dev` ou `npm run start`).
+Prérequis : aucun serveur à démarrer manuellement. La commande lance elle-même le backend Django (avec migration et `seed_all`) et le frontend Next.js en local comme en CI via la configuration `webServer`.
 ```bash
 cd frontend
 npm run test:e2e
 ```
-*Temps d'exécution : ~40 secondes (objectif < 3 minutes garanti, 100% autonome sans clé IA externe).*
+*Temps d'exécution mesuré : ~1 min 15 s (75 secondes sur démarrage complet avec migrations et seed_all, 100% autonome sans clé IA externe).*
 
 ## Vérifier avant de proposer son travail
 ```bash
