@@ -243,7 +243,7 @@ function ProjetDetailContent({
         <div className="mt-12 border-t border-bordure pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-texte-doux">
             Projet certifié par le <strong>Comité de Sélection & d&apos;Incubation du CIAT</strong><br />
-            Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio
+            Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio
           </div>
 
           <div className="flex gap-2">

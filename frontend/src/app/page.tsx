@@ -187,7 +187,7 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/campus-isep.png"
-            alt="Campus officiel de l'ISEP Amadou Traoré de Diamniadio — Siège du CIAT"
+            alt="Campus officiel de l'ISEP Amadou Trawaré de Diamniadio — Siège du CIAT"
             fill
             priority
             sizes="100vw"

@@ -68,11 +68,7 @@ const MOCK_FICHES_DEMO: FicheInnovation[] = [
     medias: [
       {
         type: "photo",
-        url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80",
-      },
-      {
-        type: "photo",
-        url: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80",
+        url: "/media/galerie/fiche_agrisol-pompes-solaires-connectees.jpg",
       },
       { type: "demo", url: "https://demo.agrisol.sn" },
     ],
@@ -94,7 +90,7 @@ const MOCK_FICHES_DEMO: FicheInnovation[] = [
     medias: [
       {
         type: "photo",
-        url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
+        url: "/media/galerie/fiche_sunudoc-telemedecine-langues-nationales.jpg",
       },
       { type: "demo", url: "https://sunudoc.ciat-demo.sn" },
     ],
@@ -116,7 +112,7 @@ const MOCK_FICHES_DEMO: FicheInnovation[] = [
     medias: [
       {
         type: "photo",
-        url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80",
+        url: "/media/galerie/fiche_jumeau-numerique-ateliers-isep.jpg",
       },
       { type: "demo", url: "https://jumeau-ateliers.isep.sn" },
     ],
@@ -138,7 +134,7 @@ const MOCK_FICHES_DEMO: FicheInnovation[] = [
     medias: [
       {
         type: "photo",
-        url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
+        url: "/media/galerie/fiche_kayar-trace-tracabilite-peche-artisanale.jpg",
       },
       { type: "demo", url: "https://kayartrace.ciat-labs.org" },
     ],
@@ -160,7 +156,7 @@ const MOCK_FICHES_DEMO: FicheInnovation[] = [
     medias: [
       {
         type: "photo",
-        url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80",
+        url: "/media/galerie/fiche_presse-compacte-huile-arachide-sesame.jpg",
       },
     ],
     statut: "publie",

@@ -1,7 +1,7 @@
 # Cahier des Charges Fonctionnel et Technique
 
 > **Plateforme Numérique Intégrée du CIAT et de son Incubateur**  
-> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Traoré, Diamniadio  
+> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Trawaré, Diamniadio  
 > **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (fonctionnement en local et en intégration continue). L'ensemble des données injectées sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** soumis à quotas et aléas réseau.
@@ -10,8 +10,8 @@
 
 ## 1. Contexte Institutionnel et Justification du Projet
 
-### 1.1 Le CIAT et l'ISEP Amadou Traoré
-L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
+### 1.1 Le CIAT et l'ISEP Amadou Trawaré
+L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
 - La valorisation de la recherche appliquée et le transfert de technologies vers le tissu économique local.
 - L'accueil, la sélection et l'accompagnement des porteurs de projets innovants via son **Incubateur d'entreprises**.
 - L'animation de pôles technologiques répondant aux priorités du Plan Sénégal Émergent (agroécologie, énergies renouvelables, numérique/IA, mécanique, santé, éducation).
@@ -95,7 +95,7 @@ La plateforme repose sur une segmentation stricte en **6 rôles d'utilisateurs**
 
 ### 4.2 Performance et Disponibilité
 - **Temps de réponse API :** Objectif de réponses rapides sur les requêtes standards, grâce à l'optimisation des requêtes Django (aucune mesure de charge n'a encore été réalisée) (`select_related`, `prefetch_related`, agrégations SQL natives).
-- **Vitesse de la suite de tests :** Exécution complète de la suite de 183 tests automatisés en environ 21 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
+- **Vitesse de la suite de tests :** Exécution complète de la suite de 256 tests automatisés (100 % passants) en environ 30 à 40 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
 - **Tolérance aux pannes des services d'IA :** Mécanisme de fallback ordonné multi-fournisseurs (Groq ➔ Gemini) avec gestion gracieuse des erreurs (`503 Service Unavailable` ou `502 Bad Gateway` avec messages clairs en français). Les services d'IA reposent sur des quotas gratuits de fournisseurs tiers et demeurent soumis à des limites de requêtes ou des indisponibilités ponctuelles.
 
 ### 4.3 Ergonomie et Identité Visuelle

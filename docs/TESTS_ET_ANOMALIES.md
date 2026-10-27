@@ -4,7 +4,7 @@
 > **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence :** `taches/phase3/lansana.md` & `taches/phase4/lansana.md`  
 > **Suite de test automatisée du parcours complet :** `backend/apps/core/tests/test_parcours_complet.py`  
-> **Temps d'exécution :** ~0,92 seconde (seuil exigé : < 30 secondes, optimisé avec `MD5PasswordHasher`)  
+> **Temps d'exécution :** ~1,05 seconde (seuil exigé : < 30 secondes, optimisé avec `MD5PasswordHasher`)  
 > **Rappel :** La plateforme n'est **pas déployée en production** et les jeux de données utilisés sont **strictement fictifs**.
 
 ---
@@ -74,10 +74,10 @@ Ce registre consigne l'ensemble des défauts réels identifiés lors des revues 
   ```
 - **Résultat :**
   ```text
-  Ran 2 tests in 0.921s
+  Ran 2 tests in 1.047s
   OK
   ```
 - **Contrôles généraux de qualité :**
   - `python manage.py check` : 0 anomalie signalée.
   - `python manage.py makemigrations --check` : 0 migration en attente.
-  - Suite de tests complète (`python manage.py test apps`) : **183 tests passants** à 100 % en ~21 secondes.
+  - Suite de tests complète (`python manage.py test apps`) : **256 tests passants** à 100 % (0 échec, 0 erreur) en ~30 à 40 secondes.

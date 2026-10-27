@@ -4,7 +4,7 @@ import { Badge, ButtonLink, Card, PageTitle } from "@/components/ui";
 export const metadata = {
   title: "Portail Institutionnel",
   description:
-    "Portail officiel du Centre d'Innovation, d'Application et de Transfert (CIAT) de l'ISEP Amadou Traoré de Diamniadio.",
+    "Portail officiel du Centre d'Innovation, d'Application et de Transfert (CIAT) de l'ISEP Amadou Trawaré de Diamniadio.",
 };
 
 const POLE_INSTITUTION = [
@@ -113,7 +113,7 @@ export default function PortailHubPage() {
       <PageTitle
         tag="Module P1 · Portail Institutionnel"
         title="Portail Public du CIAT"
-        subtitle="Vitrine officielle de l'innovation, des parcours d'accompagnement méthodique et des opportunités technologiques à l'ISEP Amadou Traoré de Diamniadio."
+        subtitle="Vitrine officielle de l'innovation, des parcours d'accompagnement méthodique et des opportunités technologiques à l'ISEP Amadou Trawaré de Diamniadio."
       />
 
       {/* Bandeau d'Indicateurs Structurants du Portail */}

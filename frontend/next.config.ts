@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api").replace(/\/api\/?$/, "");
+
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
@@ -17,6 +19,10 @@ const nextConfig: NextConfig = {
       {
         source: "/brand/:path*",
         destination: "/images/brand/:path*",
+      },
+      {
+        source: "/media/:path*",
+        destination: `${API_ORIGIN}/media/:path*`,
       },
     ];
   },
