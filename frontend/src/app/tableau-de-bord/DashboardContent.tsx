@@ -32,7 +32,7 @@ import { PartenariatsFinancementsSection } from "./components/PartenariatsFinanc
 import { AiDrawer } from "./components/AiDrawer";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
-import { formatCurrencyCompact, formatDateTime } from "@/lib/format";
+import { formatCurrencyCompact } from "@/lib/format";
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -435,11 +435,11 @@ export function DashboardContent() {
                     <div className="flex items-center justify-between">
                       <h2
                         id="detail-table-heading"
-                        className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+                        className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]"
                       >
                         Registre analytique des financements et conventions
                       </h2>
-                      <span className="text-[11px] text-[#8C7E74]">
+                      <span className="text-[11px] text-[#5A4B42]">
                         {financementsData.length} lignes consolidées
                       </span>
                     </div>

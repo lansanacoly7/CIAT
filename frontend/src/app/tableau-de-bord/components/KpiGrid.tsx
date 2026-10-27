@@ -158,7 +158,7 @@ export function KpiGrid({
             >
               {/* Libellé 12px majuscules */}
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+                <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                   {card.label}
                 </span>
 
@@ -207,7 +207,7 @@ export function KpiGrid({
               </div>
 
               {/* Sous-titre descriptif */}
-              <div className="text-xs text-[#8C7E74]">
+              <div className="text-xs text-[#5A4B42]">
                 {card.subtext}
               </div>
             </div>

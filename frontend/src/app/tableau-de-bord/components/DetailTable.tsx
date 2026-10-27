@@ -53,8 +53,8 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   // Tri
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
+      const aVal = a[sortField];
+      const bVal = b[sortField];
 
       if (sortField === "montant") {
         const aNum = Number(aVal) || 0;
@@ -123,7 +123,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       );
     }
     return (
-      <span className="inline-flex w-24 justify-center items-center rounded-md bg-[#8C7E74]/15 px-2 py-1 text-xs font-semibold text-[#574C45]">
+      <span className="inline-flex w-24 justify-center items-center rounded-md bg-[#5A4B42]/12 px-2 py-1 text-xs font-semibold text-[#574C45]">
         {label}
       </span>
     );
@@ -135,7 +135,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(60,35,20,0.06)] pb-4">
         {/* Recherche */}
         <div className="relative min-w-[240px] flex-1 max-w-sm">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#8C7E74]" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#5A4B42]" />
           <input
             type="text"
             value={searchTerm}
@@ -143,8 +143,9 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
+            aria-label="Rechercher par projet, porteur ou guichet"
             placeholder="Rechercher un projet, porteur, guichet..."
-            className="w-full h-9 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] pl-9 pr-3 text-xs font-medium text-[#21130D] placeholder:text-[#8C7E74] transition focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+            className="w-full h-9 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] pl-9 pr-3 text-xs font-medium text-[#21130D] placeholder:text-[#5A4B42] transition focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
           />
         </div>
 
@@ -166,7 +167,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                 selectedStatut === pill.key
                   ? "bg-[#21130D] text-[#FBF8F3]"
-                  : "bg-[#FBF8F3] text-[#8C7E74] hover:bg-[#C99A68]/15 hover:text-[#21130D]"
+                  : "bg-[#FBF8F3] text-[#5A4B42] hover:bg-[#C99A68]/15 hover:text-[#21130D]"
               }`}
             >
               {pill.label}
@@ -175,7 +176,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         </div>
 
         {/* Sélecteur de pagination (10 / 25 / 50) */}
-        <div className="flex items-center gap-2 text-xs text-[#8C7E74]">
+        <div className="flex items-center gap-2 text-xs text-[#5A4B42]">
           <span>Lignes par page :</span>
           <select
             value={pageSize}
@@ -183,6 +184,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
+            aria-label="Nombre de lignes par page"
             className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2 text-xs font-semibold text-[#21130D] focus:border-[#C99A68] focus:outline-hidden"
           >
             <option value={10}>10</option>
@@ -199,7 +201,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             <tr className="h-11">
               <th
                 onClick={() => handleSort("projet_titre")}
-                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#8C7E74] hover:text-[#21130D]"
+                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Projet & Porteur</span>
@@ -208,18 +210,18 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               </th>
 
               {showCohorteCol && (
-                <th className="px-4 font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+                <th className="px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                   Cohorte
                 </th>
               )}
 
-              <th className="px-4 font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+              <th className="px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                 Domaine
               </th>
 
               <th
                 onClick={() => handleSort("source")}
-                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#8C7E74] hover:text-[#21130D]"
+                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Source / Guichet</span>
@@ -229,7 +231,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("date")}
-                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#8C7E74] hover:text-[#21130D]"
+                className="cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Date d&apos;attribution</span>
@@ -237,13 +239,13 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                 </div>
               </th>
 
-              <th className="px-4 text-center font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+              <th className="px-4 text-center font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                 Statut
               </th>
 
               <th
                 onClick={() => handleSort("montant")}
-                className="cursor-pointer px-4 text-right font-semibold uppercase tracking-[0.06em] text-[#8C7E74] hover:text-[#21130D]"
+                className="cursor-pointer px-4 text-right font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D]"
               >
                 <div className="flex items-center justify-end gap-1.5">
                   <span>Montant (FCFA)</span>
@@ -263,7 +265,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                 </tr>
               ))
             ) : paginatedData.length === 0 ? (
-              <tr className="h-28 text-center text-[#8C7E74]">
+              <tr className="h-28 text-center text-[#5A4B42]">
                 <td colSpan={7}>Aucun enregistrement ne correspond aux filtres.</td>
               </tr>
             ) : (
@@ -276,13 +278,13 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                     <div className="font-semibold text-[#21130D] group-hover:text-[#612D10]">
                       {row.projet_titre || "Projet CIAT"}
                     </div>
-                    <div className="text-[11px] text-[#8C7E74]">
+                    <div className="text-[11px] text-[#5A4B42]">
                       {row.porteur_nom || "Porteur non renseigné"}
                     </div>
                   </td>
 
                   {showCohorteCol && (
-                    <td className="px-4 text-[#8C7E74] tabular-nums">
+                    <td className="px-4 text-[#5A4B42] tabular-nums">
                       {row.cohorte || "—"}
                     </td>
                   )}
@@ -297,7 +299,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                     {row.source || "Fonds CIAT"}
                   </td>
 
-                  <td className="px-4 text-[#8C7E74] tabular-nums">
+                  <td className="px-4 text-[#5A4B42] tabular-nums">
                     {formatDate(row.date)}
                   </td>
 
@@ -320,11 +322,11 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               <tr className="h-12 font-semibold">
                 <td
                   colSpan={showCohorteCol ? 5 : 4}
-                  className="px-4 text-xs uppercase tracking-[0.06em] text-[#8C7E74]"
+                  className="px-4 text-xs uppercase tracking-[0.06em] text-[#5A4B42]"
                 >
                   Total des engagements filtrés ({filteredData.length} dossiers)
                 </td>
-                <td className="px-4 text-center text-xs text-[#8C7E74]">
+                <td className="px-4 text-center text-xs text-[#5A4B42]">
                   Consolidé
                 </td>
                 <td className="px-4 text-right font-serif text-sm font-bold text-[#21130D] tabular-nums">
@@ -337,7 +339,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       </div>
 
       {/* Pagination & Compteur x sur 50 */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-[#8C7E74]">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-[#5A4B42]">
         <div>
           Affichage de{" "}
           <strong className="text-[#21130D]">
@@ -355,6 +357,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
+            aria-label="Page précédente"
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] transition hover:bg-white disabled:opacity-40"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -368,6 +371,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
+            aria-label="Page suivante"
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] transition hover:bg-white disabled:opacity-40"
           >
             <ChevronRight className="h-4 w-4" />

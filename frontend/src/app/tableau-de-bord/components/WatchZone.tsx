@@ -58,11 +58,11 @@ export function WatchZone({ onFilterStatut, onNavigateTab }: WatchZoneProps) {
       <div className="flex items-center justify-between">
         <h2
           id="watch-zone-heading"
-          className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+          className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]"
         >
           Points d&apos;attention · À surveiller
         </h2>
-        <span className="text-[11px] text-[#8C7E74]">
+        <span className="text-[11px] text-[#5A4B42]">
           Actualisation en continu
         </span>
       </div>
@@ -91,7 +91,7 @@ export function WatchZone({ onFilterStatut, onNavigateTab }: WatchZoneProps) {
                   </span>
                 </div>
 
-                <p className="text-xs text-[#8C7E74] leading-relaxed">
+                <p className="text-xs text-[#5A4B42] leading-relaxed">
                   {alert.phrase}
                 </p>
               </div>

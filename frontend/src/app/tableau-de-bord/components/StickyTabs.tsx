@@ -27,7 +27,7 @@ export function StickyTabs({
           className={`relative pb-3 pt-1 text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "projets"
               ? "text-[#21130D]"
-              : "text-[#8C7E74] hover:text-[#21130D]"
+              : "text-[#5A4B42] hover:text-[#21130D]"
           }`}
         >
           <FolderGit2 className="h-4 w-4" />
@@ -36,7 +36,7 @@ export function StickyTabs({
             className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
               activeTab === "projets"
                 ? "bg-[#21130D] text-[#FBF8F3]"
-                : "bg-black/5 text-[#8C7E74]"
+                : "bg-black/5 text-[#5A4B42]"
             }`}
           >
             {projetsCount}
@@ -55,7 +55,7 @@ export function StickyTabs({
           className={`relative pb-3 pt-1 text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "financements"
               ? "text-[#21130D]"
-              : "text-[#8C7E74] hover:text-[#21130D]"
+              : "text-[#5A4B42] hover:text-[#21130D]"
           }`}
         >
           <Coins className="h-4 w-4" />
@@ -64,7 +64,7 @@ export function StickyTabs({
             className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
               activeTab === "financements"
                 ? "bg-[#21130D] text-[#FBF8F3]"
-                : "bg-black/5 text-[#8C7E74]"
+                : "bg-black/5 text-[#5A4B42]"
             }`}
           >
             {financementsAmount}

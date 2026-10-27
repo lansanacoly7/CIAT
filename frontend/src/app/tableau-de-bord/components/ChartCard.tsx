@@ -5,8 +5,6 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -18,14 +16,14 @@ import {
   LabelList,
   ReferenceLine,
 } from "recharts";
-import { Table, Eye, EyeOff } from "lucide-react";
+import { Table, EyeOff } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
   ParDomaineItem,
   ParGenreItem,
 } from "../types";
-import { formatNumber, formatPercent } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 
 // Palette de données officielle CIAT (6 teintes contrastées et harmonieuses)
 export const DATA_COLORS = {
@@ -34,7 +32,7 @@ export const DATA_COLORS = {
   vertSauge: "#5A7D65",
   bleuArdoise: "#4A6B82",
   terracotta: "#B85D43",
-  grisChaud: "#8C7E74",
+  grisChaud: "#5A4B42",
 };
 
 interface ChartCardProps {
@@ -68,13 +66,13 @@ export function ChartCard({
               {title}
             </h3>
             {badge && (
-              <span className="rounded-full bg-[#FBF8F3] border border-[rgba(60,35,20,0.06)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+              <span className="rounded-full bg-[#FBF8F3] border border-[rgba(60,35,20,0.06)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                 {badge}
               </span>
             )}
           </div>
           {description && (
-            <p className="mt-1 text-xs text-[#8C7E74]">{description}</p>
+            <p className="mt-1 text-xs text-[#5A4B42]">{description}</p>
           )}
         </div>
 
@@ -96,7 +94,7 @@ export function ChartCard({
             >
               {showTable ? (
                 <>
-                  <EyeOff className="h-3.5 w-3.5 text-[#8C7E74]" />
+                  <EyeOff className="h-3.5 w-3.5 text-[#5A4B42]" />
                   <span>Graphique</span>
                 </>
               ) : (
@@ -120,7 +118,7 @@ export function ChartCard({
                   {tableColumns.map((col) => (
                     <th
                       key={col.key}
-                      className="px-3 py-2 font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+                      className="px-3 py-2 font-semibold uppercase tracking-[0.06em] text-[#5A4B42]"
                     >
                       {col.label}
                     </th>
@@ -186,7 +184,7 @@ export function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: item.color || item.fill }}
                 />
-                <span className="font-medium text-[#8C7E74]">
+                <span className="font-medium text-[#5A4B42]">
                   {item.name || "Total"} :
                 </span>
               </div>
@@ -212,14 +210,11 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
     return Math.round((sum / data.length) * 10) / 10;
   }, [data]);
 
-  const tableData = useMemo(() => {
-    return data.map((d) => ({ mois: d.mois, total: d.total }));
-  }, [data]);
-
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart
         data={data}
+        accessibilityLayer={false}
         margin={{ top: 15, right: 15, left: -20, bottom: 0 }}
       >
         <CartesianGrid
@@ -231,12 +226,12 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
           dataKey="mois"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8C7E74", fontSize: 12, fontWeight: 500 }}
+          tick={{ fill: "#5A4B42", fontSize: 12, fontWeight: 500 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8C7E74", fontSize: 12 }}
+          tick={{ fill: "#5A4B42", fontSize: 12 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <ReferenceLine
@@ -246,7 +241,7 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
           strokeWidth={1.5}
           label={{
             value: `Moy. (${formatNumber(average)})`,
-            fill: "#C99A68",
+            fill: "#8C5E2D",
             fontSize: 11,
             position: "right",
           }}
@@ -284,6 +279,7 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
     <ResponsiveContainer width="100%" height={260}>
       <BarChart
         data={sortedData}
+        accessibilityLayer={false}
         layout="vertical"
         margin={{ top: 10, right: 40, left: 10, bottom: 0 }}
       >
@@ -296,7 +292,7 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
           type="number"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8C7E74", fontSize: 12 }}
+          tick={{ fill: "#5A4B42", fontSize: 12 }}
         />
         <YAxis
           dataKey="domaine"
@@ -320,7 +316,7 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
             dataKey="percent"
             position="right"
             formatter={(val: number) => `${val}%`}
-            style={{ fill: "#8C7E74", fontSize: 11, fontWeight: 600 }}
+            style={{ fill: "#5A4B42", fontSize: 11, fontWeight: 600 }}
           />
         </Bar>
       </BarChart>
@@ -334,6 +330,7 @@ export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
     <ResponsiveContainer width="100%" height={260}>
       <BarChart
         data={data}
+        accessibilityLayer={false}
         margin={{ top: 20, right: 15, left: -20, bottom: 0 }}
         barGap={6}
       >
@@ -346,12 +343,12 @@ export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
           dataKey="cohorte"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8C7E74", fontSize: 12, fontWeight: 500 }}
+          tick={{ fill: "#5A4B42", fontSize: 12, fontWeight: 500 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8C7E74", fontSize: 12 }}
+          tick={{ fill: "#5A4B42", fontSize: 12 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend
@@ -405,12 +402,27 @@ export function GenreChart({ data }: { data: ParGenreItem[] }) {
     DATA_COLORS.vertSauge,   // Équipes mixtes
   ];
 
+  const enrichedData = useMemo(() => {
+    return data.map((item) => {
+      const count = item.total ?? 0;
+      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+      return {
+        ...item,
+        "aria-label": `${item.genre} : ${count} porteurs (${pct} %)`,
+      };
+    });
+  }, [data, total]);
+
   return (
-    <div className="relative flex items-center justify-center">
+    <div
+      className="relative flex items-center justify-center"
+      role="region"
+      aria-label="Répartition par genre des porteurs de projets"
+    >
       <ResponsiveContainer width="100%" height={260}>
-        <PieChart>
+        <PieChart accessibilityLayer={false}>
           <Pie
-            data={data}
+            data={enrichedData}
             cx="40%"
             cy="50%"
             innerRadius="68%" // Épaisseur = 82% - 68% = 14%
@@ -421,13 +433,16 @@ export function GenreChart({ data }: { data: ParGenreItem[] }) {
             cornerRadius={4}
             animationDuration={700}
             animationEasing="ease-out"
+            role="presentation"
           >
-            {data.map((_, index) => (
+            {enrichedData.map((item, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={donutColors[index % donutColors.length]}
                 stroke="#FFFFFF"
                 strokeWidth={2}
+                role="img"
+                aria-label={item["aria-label"]}
               />
             ))}
           </Pie>
@@ -461,7 +476,7 @@ export function GenreChart({ data }: { data: ParGenreItem[] }) {
             y="60%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="text-[11px] font-semibold uppercase tracking-[0.06em] fill-[#8C7E74]"
+            className="text-[11px] font-semibold uppercase tracking-[0.06em] fill-[#5A4B42]"
           >
             Porteurs
           </text>

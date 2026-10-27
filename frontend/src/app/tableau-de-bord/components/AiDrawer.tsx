@@ -5,9 +5,7 @@ import {
   Sparkles,
   Send,
   X,
-  HelpCircle,
   Clock,
-  Layers,
   CheckCircle2,
   AlertCircle,
   Copy,
@@ -42,13 +40,11 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
   // Effet machine à écrire progressif (typewriter)
   useEffect(() => {
     if (!response?.reponse) {
-      setDisplayedText("");
       return;
     }
 
     const fullText = response.reponse;
     let index = 0;
-    setDisplayedText("");
 
     const interval = setInterval(() => {
       index++;
@@ -58,7 +54,9 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
       }
     }, 15);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [response]);
 
   // Fermeture par touche Echap
@@ -80,6 +78,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
     setIsLoading(true);
     setError(null);
     setResponse(null);
+    setDisplayedText("");
 
     try {
       const res = await api<QuestionAnalyticsResponse>("/analytics/question/", {
@@ -133,7 +132,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
               <h2 className="text-sm font-bold text-[#21130D]">
                 Assistant décisionnel CIAT
               </h2>
-              <p className="text-[11px] text-[#8C7E74]">
+              <p className="text-[11px] text-[#5A4B42]">
                 Interrogation des données en langage naturel
               </p>
             </div>
@@ -142,7 +141,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-[#8C7E74] transition hover:bg-black/5 hover:text-[#21130D]"
+            className="rounded-lg p-1.5 text-[#5A4B42] transition hover:bg-black/5 hover:text-[#21130D]"
             aria-label="Fermer le tiroir"
           >
             <X className="h-5 w-5" />
@@ -155,7 +154,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
           <form onSubmit={handleSubmit} className="space-y-3">
             <label
               htmlFor="ai-question-input"
-              className="text-xs font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+              className="text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]"
             >
               Votre question sur les projets et financements
             </label>
@@ -167,12 +166,12 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ex. : Combien de projets sont au stade prototype ?"
-                className="w-full resize-none rounded-xl border border-[rgba(60,35,20,0.14)] bg-[#FBF8F3] p-3 text-xs font-medium text-[#21130D] placeholder:text-[#8C7E74] transition focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                className="w-full resize-none rounded-xl border border-[rgba(60,35,20,0.14)] bg-[#FBF8F3] p-3 text-xs font-medium text-[#21130D] placeholder:text-[#5A4B42] transition focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
               />
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-[#8C7E74]">
+              <span className="text-[11px] text-[#5A4B42]">
                 Données certifiées CIAT · Agrégation temps réel
               </span>
               <button
@@ -195,7 +194,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
 
           {/* Suggestions en chips défilantes */}
           <div className="space-y-2">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
               Suggestions de requêtes
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -235,7 +234,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-[#8C7E74] hover:bg-white"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-[#5A4B42] hover:bg-white"
                   title="Copier la réponse"
                 >
                   {copied ? (
@@ -256,7 +255,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
               {response.filtres_utilises &&
                 Object.keys(response.filtres_utilises).length > 0 && (
                   <div className="pt-2 border-t border-[rgba(60,35,20,0.06)]">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74] mb-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-1">
                       Périmètre analysé :
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -279,7 +278,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
           {/* Historique récent des questions posées */}
           {history.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-[rgba(60,35,20,0.06)]">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
                 <Clock className="h-3 w-3 text-[#C99A68]" />
                 <span>Questions récentes</span>
               </div>

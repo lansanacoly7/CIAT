@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Calendar, Filter, RotateCcw, X } from "lucide-react";
+import { Calendar, Filter, RotateCcw } from "lucide-react";
 import type { DashboardFilters } from "../types";
 
 interface StickyFiltersBarProps {
@@ -97,7 +97,7 @@ export function StickyFiltersBar({
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Groupe des sélecteurs en pilule */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
               <Filter className="h-3.5 w-3.5 text-[#C99A68]" />
               <span className="hidden sm:inline">Filtres :</span>
             </span>
@@ -173,7 +173,7 @@ export function StickyFiltersBar({
                     : "border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] hover:border-[#C99A68]"
                 }`}
               >
-                <Calendar className="h-3.5 w-3.5 text-[#8C7E74]" />
+                <Calendar className="h-3.5 w-3.5 text-[#5A4B42]" />
                 <span>
                   {filters.debut && filters.fin
                     ? `${filters.debut} au ${filters.fin}`
@@ -185,7 +185,7 @@ export function StickyFiltersBar({
 
               {isCalendarOpen && (
                 <div className="absolute left-0 mt-2 w-64 origin-top-left rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-3 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74] mb-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-2">
                     Présets rapides
                   </div>
                   <div className="grid grid-cols-2 gap-1 mb-3">
@@ -201,12 +201,12 @@ export function StickyFiltersBar({
                     ))}
                   </div>
 
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74] mb-1.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-1.5">
                     Dates personnalisées
                   </div>
                   <div className="space-y-1.5">
                     <div>
-                      <span className="text-[10px] text-[#8C7E74]">Du :</span>
+                      <span className="text-[10px] text-[#5A4B42]">Du :</span>
                       <input
                         type="date"
                         value={filters.debut || ""}
@@ -220,7 +220,7 @@ export function StickyFiltersBar({
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-[#8C7E74]">Au :</span>
+                      <span className="text-[10px] text-[#5A4B42]">Au :</span>
                       <input
                         type="date"
                         value={filters.fin || ""}
@@ -267,7 +267,7 @@ export function StickyFiltersBar({
               </div>
             )}
 
-            <div className="hidden lg:block text-[11px] italic text-[#8C7E74]">
+            <div className="hidden lg:block text-[11px] italic text-[#5A4B42]">
               S&apos;applique aux sections Projets et Financements
             </div>
           </div>
