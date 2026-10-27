@@ -40,8 +40,8 @@ export default function Header() {
     pathname.startsWith("/compte") ||
     pathname.startsWith("/documents");
 
-  // Masquer l'en-tête public sur les pages d'authentification, les modules avec Sidebar et l'accueil dédié
-  if (isAuthPage || isAppPage || pathname === "/") {
+  // Masquer l'en-tête public sur les pages d'authentification et les modules avec Sidebar
+  if (isAuthPage || isAppPage) {
     return null;
   }
 

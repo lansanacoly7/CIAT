@@ -5,7 +5,6 @@ import React from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  Search,
   Landmark,
   Sprout,
   ChartNoAxesColumnIncreasing,
@@ -15,42 +14,38 @@ import {
   HandHelping,
   Network,
   HeartPulse,
-  MapPin,
-  Phone,
-  Mail,
-  X,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { ButtonLink } from "@/components/ui";
 
 const modules = [
   {
     icon: Landmark,
     title: "Portail Institutionnel",
-    description: "Vitrine officielle, gouvernance, filières et actualités institutionnelles.",
+    description: "Vitrine officielle, filières prioritaires, actualités et gouvernance.",
     href: "/portail/ciat",
   },
   {
     icon: Sprout,
     title: "Gestion Incubateur",
-    description: "Parcours en 5 jalons, suivi des cohortes, mentors et accompagnement.",
+    description: "Parcours en 5 jalons, suivi des cohortes et mentorat sur-mesure.",
     href: "/incubateur",
   },
   {
     icon: ChartNoAxesColumnIncreasing,
     title: "Tableau Décisionnel",
-    description: "Indicateurs d'impact, analyses d'avancement et pilotage stratégique.",
+    description: "Indicateurs d'impact, taux de maturité et pilotage stratégique.",
     href: "/incubateur",
   },
   {
     icon: BrainCircuit,
     title: "Assistant IA",
-    description: "Orientation intelligente, coaching méthodologique et support personnalisé.",
+    description: "Orientation méthodologique, analyse de dossiers et support personnalisé.",
     href: "/assistant",
   },
   {
     icon: FileText,
     title: "Générateur de Documents",
-    description: "Attestations officielles, fiches projets et rapports structurés.",
+    description: "Attestations officielles, fiches projets et livrables normés.",
     href: "/documents",
   },
   {
@@ -65,234 +60,105 @@ const news = [
   {
     category: "Agriculture IoT",
     title: "AgriSol : Station agrométéorologique et irrigation raisonnée pour le Sahel",
-    image:
-      "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=700&q=85",
+    image: "/images/innovations/agrisol-iot.jpg",
     href: "/galerie",
   },
   {
     category: "Fabrication 4.0",
     title: "Fraiseuse CNC 4.0 : Usinage de précision pour pièces mécaniques locales",
-    image:
-      "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=700&q=85",
+    image: "/images/innovations/cnc-4-0.jpg",
     href: "/galerie",
   },
   {
     category: "Santé & Biomédical",
     title: "Moniteur Médical Connecté : Télésurveillance des constantes physiologiques",
-    image:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=85",
+    image: "/images/innovations/telemedical-device.jpg",
     href: "/galerie",
   },
   {
     category: "Énergies Propres",
     title: "Éco-Séchoir Hybride : Optimisation thermique et séchage agroalimentaire",
-    image:
-      "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=700&q=85",
+    image: "/images/ciat-depot-innovation.jpg",
     href: "/galerie",
   },
 ];
 
 const benefits = [
-  { icon: HandHelping, label: "Accompagnement personnalisé" },
-  { icon: Network, label: "Accès aux ressources et expertises" },
-  { icon: HeartPulse, label: "Partenariats et collaborations" },
-  { icon: Sprout, label: "Impact durable" },
+  { icon: HandHelping, label: "Accompagnement personnalisé en 5 jalons" },
+  { icon: Network, label: "Accès aux ateliers & équipements de pointe" },
+  { icon: HeartPulse, label: "Réseau de mentors et partenaires industriels" },
+  { icon: Sprout, label: "Impact socio-économique durable au Sénégal" },
 ];
 
-function LinkedinIcon({ size = 17 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-      <rect x="2" y="9" width="4" height="12" />
-      <circle cx="4" cy="4" r="2" />
-    </svg>
-  );
-}
 
-function YoutubeIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
-      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ size = 17 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-    </svg>
-  );
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <span className="eyebrow">{children}</span>;
 }
 
-function Brand({ light = false }: { light?: boolean }) {
-  return (
-    <Link className={`brand ${light ? "brand-light" : ""}`} href="/">
-      <span className="brand-symbol">
-        <span />
-        <span />
-        <span />
-      </span>
-      <span className="brand-copy">
-        <strong>CIAT</strong>
-        <small>
-          Centre d’Innovation, d’Application
-          <br />
-          et de Transfert
-          <br />
-          ISEP Amadou Trawaré
-        </small>
-      </span>
-    </Link>
-  );
-}
-
-function Button({
-  children,
-  outline = false,
-  href = "#",
-  onClick,
-}: {
-  children: React.ReactNode;
-  outline?: boolean;
-  href?: string;
-  onClick?: () => void;
-}) {
-  return (
-    <Link
-      className={`button ${outline ? "button-outline" : ""}`}
-      href={href}
-      onClick={onClick}
-    >
-      {children}
-      <ArrowRight size={15} strokeWidth={1.7} />
-    </Link>
-  );
-}
-
 export default function Home() {
-  const { user } = useAuth();
-
   return (
     <main>
-      {/* NAVIGATION */}
-      <header className="site-header">
-        <div className="header-inner">
-          <Brand />
-
-          <nav className="navigation">
-            {[
-              { label: "Accueil", href: "/" },
-              { label: "À propos", href: "/portail/ciat" },
-              { label: "Incubateur", href: "/portail/incubateur" },
-              { label: "Innovations", href: "/galerie" },
-              { label: "Actualités", href: "/portail/actualites" },
-              { label: "Ressources", href: "/portail/documents" },
-              { label: "Contact", href: "/portail/contact" },
-            ].map((item, index) => (
-              <Link
-                href={item.href}
-                key={item.label}
-                className={index === 0 ? "active" : ""}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="header-actions">
-            <Link
-              href="/galerie"
-              className="search-button"
-              aria-label="Rechercher des projets et innovations"
-            >
-              <Search size={18} />
-            </Link>
-            {user ? (
-              <Button href="/incubateur">Mon Espace</Button>
-            ) : (
-              <Button href="/connexion?next=/incubateur/candidatures/nouvelle">
-                Candidater
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* HERO */}
+      {/* 1. HERO PLEIN ÉCRAN CINÉMATIQUE */}
       <section className="hero">
-        <div className="hero-copy">
-          <SectionLabel>INNOVER&nbsp; · &nbsp;INCUBER&nbsp; · &nbsp;TRANSFÉRER</SectionLabel>
+        <div className="hero-overlay-gradient" aria-hidden="true" />
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <h1>
+              Innover aujourd’hui pour
+              <br />
+              <span className="hero-highlight-gold">transformer demain</span>
+            </h1>
 
-          <h1>
-            Le CIAT,
-            <span>un écosystème au service</span>
-            <span>de l’innovation et de</span>
-            <span>l’entrepreneuriat</span>
-          </h1>
+            <p>
+              Le CIAT et son incubateur accompagnent les porteurs de projets et
+              favorisent l’innovation au service du développement de l’ISEP et
+              de son environnement à Diamniadio.
+            </p>
 
-          <p>
-            Le Centre d’Innovation, d’Application et de Transfert accompagne
-            les porteurs de projets, les startups et les acteurs de
-            l’innovation pour transformer les idées en solutions concrètes au sein
-            de l’ISEP Amadou Trawaré de Diamniadio.
-          </p>
-
-          <div className="hero-buttons">
-            <Button href="/portail/ciat">Découvrir le CIAT</Button>
-            <Button outline href="/galerie">Nos projets incubés</Button>
+            <div className="hero-buttons">
+              <ButtonLink href="/portail/ciat" variant="primary">
+                Découvrir le CIAT
+                <ArrowRight size={16} className="ml-2" />
+              </ButtonLink>
+              <ButtonLink
+                href="/galerie"
+                variant="secondary"
+                className="!text-white !border-white/40 !bg-white/10 hover:!bg-white/20 backdrop-blur-sm"
+              >
+                Nos projets incubés
+                <ArrowRight size={16} className="ml-2" />
+              </ButtonLink>
+            </div>
           </div>
-        </div>
 
-        <div className="hero-visual">
-          <img
-            src="/images/campus-isep.png"
-            alt="Campus de l’ISEP Amadou Trawaré de Diamniadio"
-          />
-          <div className="hero-caption">
-            <span>Innovation</span>
-            <span>Application</span>
-            <span>Transfert</span>
+          {/* Barre flottante de métriques & ancrage territorial */}
+          <div className="hero-glass-kpi">
+            <div className="hero-kpi-item">
+              <strong>+50</strong>
+              <span className="kpi-label">Projets Accompagnés</span>
+              <span className="kpi-sub">Idéation, prototypage et maturation</span>
+            </div>
+            <div className="hero-kpi-item">
+              <strong>+20</strong>
+              <span className="kpi-label">Startups &amp; Prototypes</span>
+              <span className="kpi-sub">Solutions technologiques viables</span>
+            </div>
+            <div className="hero-kpi-item">
+              <strong>7 <span>Filières</span></strong>
+              <span className="kpi-label">Domaines Stratégiques</span>
+              <span className="kpi-sub">Numérique, Agro, Énergie, Santé</span>
+            </div>
+            <div className="hero-kpi-item">
+              <strong>Diamniadio</strong>
+              <span className="kpi-label">Campus ISEP Amadou Trawaré</span>
+              <span className="kpi-sub">Ateliers technologiques &amp; FabLab</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CIAT 360 — rondel central et six modules */}
+      {/* 3. CIAT 360 — RONDEL CENTRAL ET SIX MODULES */}
       <section className="ecosystem section-padding" id="ciat-360">
         <div className="ecosystem-intro">
           <SectionLabel>NOTRE ÉCOSYSTÈME</SectionLabel>
@@ -305,10 +171,14 @@ export default function Home() {
             pour accompagner chaque étape d’un projet, de l’éclosion de l’idée
             jusqu’au prototypage et au transfert vers l’industrie.
           </p>
-          <Button href="/portail/ciat#modules">Découvrir tous les modules</Button>
+          <ButtonLink href="/portail/ciat#modules" variant="secondary">
+            Découvrir tous les modules
+            <ArrowRight size={15} className="ml-2" />
+          </ButtonLink>
         </div>
 
         <div className="ciat360-layout">
+          {/* Modules de gauche (01 à 03) */}
           <div className="ciat360-modules ciat360-modules-left">
             {modules.slice(0, 3).map((module, index) => {
               const Icon = module.icon;
@@ -327,6 +197,7 @@ export default function Home() {
             })}
           </div>
 
+          {/* Rondel central avec symbole officiel CIAT */}
           <div className="ciat360-wheel" aria-label="Rondel CIAT 360">
             <div className="ciat360-wheel-outer">
               <div className="ciat360-wheel-dashes" />
@@ -336,7 +207,32 @@ export default function Home() {
               <span className="ciat360-orbit-dot dot-four" />
               <div className="ciat360-wheel-inner">
                 <div className="ciat360-wheel-center">
-                  <span className="ciat360-center-mark">C</span>
+                  <div className="ciat360-center-emblem">
+                    <svg
+                      viewBox="0 0 365 415"
+                      fill="currentColor"
+                      width="30"
+                      height="34"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M 307 197 L 280 211 L 259 225 L 246 237 L 239 247 L 239 334 L 249 333 L 258 330 L 282 319 L 300 307 L 303 304 L 307 297 Z"
+                        fillRule="evenodd"
+                      />
+                      <path
+                        d="M 155 157 L 155 323 L 157 325 L 170 330 L 199 336 L 213 337 L 219 336 L 219 202 L 214 195 L 204 186 L 159 158 Z"
+                        fillRule="evenodd"
+                      />
+                      <path
+                        d="M 216 93 L 208 95 L 204 97 L 196 103 L 192 108 L 188 115 L 186 122 L 186 134 L 187 139 L 190 146 L 192 149 L 200 157 L 209 162 L 216 164 L 226 164 L 231 163 L 239 160 L 246 155 L 252 148 L 255 142 L 257 136 L 257 121 L 256 117 L 250 106 L 244 100 L 232 94 L 228 93 Z"
+                        fillRule="evenodd"
+                      />
+                      <path
+                        d="M 250 16 L 176 16 L 136 28 L 102 46 L 71 71 L 45 101 L 28 129 L 12 172 L 7 208 L 10 252 L 33 311 L 54 339 L 86 367 L 150 396 L 216 401 L 265 390 L 316 362 L 349 329 L 319 307 L 291 330 L 251 348 L 223 353 L 176 349 L 142 336 L 112 315 L 86 282 L 74 253 L 69 198 L 79 158 L 100 123 L 127 96 L 162 76 L 200 67 L 249 70 L 295 89 L 326 49 L 304 35 Z"
+                        fillRule="evenodd"
+                      />
+                    </svg>
+                  </div>
                   <span className="ciat360-center-name">CIAT</span>
                   <span className="ciat360-center-degree">360°</span>
                   <span className="ciat360-center-caption">UNE VISION GLOBALE</span>
@@ -345,6 +241,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Modules de droite (04 à 06) */}
           <div className="ciat360-modules ciat360-modules-right">
             {modules.slice(3, 6).map((module, index) => {
               const Icon = module.icon;
@@ -365,19 +262,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* À PROPOS */}
+      {/* 4. À PROPOS DU CIAT */}
       <section className="about">
         <div className="about-visual">
-          <img
-            src="/images/ciat-depot-innovation.jpg"
-            alt="Atelier technologique et prototypage au CIAT"
-          />
-          <div className="image-caption">
-            Des idées d’aujourd’hui
-            <br />
-            aux solutions de demain
+          <div className="about-card-frame">
+            <img
+              src="/images/about-lab-students.png"
+              alt="Des idées d’aujourd’hui aux solutions de demain — Prototypage et projets au CIAT"
+              className="about-card-img"
+            />
+            {/* Capsule oblique Brun CIAT avec filigrane symbole */}
+            <div className="about-capsule-badge" aria-hidden="true">
+              <img
+                src="/images/brand/symbole_blanc.png"
+                alt=""
+                className="about-capsule-symbol"
+              />
+            </div>
+            {/* Ruban horizontal d'ancrage avec devise officielle */}
+            <div className="about-caption-ribbon">
+              <span className="ribbon-title">Des idées d’aujourd’hui</span>
+              <span className="ribbon-subtitle">aux solutions de demain</span>
+            </div>
           </div>
-          <div className="image-decoration" />
         </div>
 
         <div className="about-copy">
@@ -392,7 +299,10 @@ export default function Home() {
             et à la transformation des idées en solutions concrètes, au service du
             développement économique et social du Sénégal.
           </p>
-          <Button outline href="/portail/ciat">En savoir plus</Button>
+          <ButtonLink href="/portail/ciat" variant="secondary">
+            En savoir plus
+            <ArrowRight size={15} className="ml-2" />
+          </ButtonLink>
         </div>
 
         <div className="benefits">
@@ -401,7 +311,7 @@ export default function Home() {
             return (
               <div className="benefit" key={benefit.label}>
                 <span className="benefit-icon">
-                  <Icon size={20} strokeWidth={1.7} />
+                  <Icon size={20} strokeWidth={1.8} />
                 </span>
                 <span>{benefit.label}</span>
               </div>
@@ -410,7 +320,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BANDEAU MODULABLE : STATISTIQUES OU PROJETS */}
+      {/* 5. BANDEAU D'IMPACT (LE CIAT EN CHIFFRES) */}
       <section className="impact-band">
         <div className="impact-intro">
           <h2>Le CIAT en chiffres</h2>
@@ -430,15 +340,15 @@ export default function Home() {
         ))}
       </section>
 
-      {/* ACTUALITÉS */}
+      {/* 6. ACTUALITÉS & RÉALISATIONS PHARES */}
       <section className="news section-padding">
         <div className="section-heading">
           <div>
             <SectionLabel>ACTUALITÉS & ÉVÉNEMENTS</SectionLabel>
-            <h2>Restez informé des dernières actualités</h2>
+            <h2>Les réalisations phares issues de nos filières</h2>
           </div>
           <Link href="/galerie" className="text-link">
-            Voir toutes les actualités <ArrowRight size={16} />
+            Voir toutes les innovations <ArrowRight size={16} />
           </Link>
         </div>
 
@@ -450,101 +360,48 @@ export default function Home() {
               </div>
               <div className="news-content">
                 <span className="category-pill">{item.category}</span>
-                <time>0{index + 1} AVR. 2025</time>
+                <time>0{index + 1} AVR. 2026</time>
                 <h3>{item.title}</h3>
-                <ArrowRight className="news-arrow" size={15} />
+                <ArrowRight className="news-arrow" size={16} />
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* APPEL À L'ACTION */}
-      <section className="cta-wrap">
-        <div className="cta-icon">
-          <Sprout size={28} />
-        </div>
-        <div className="cta-copy">
-          <h2>Vous avez une idée ?</h2>
-          <p>Rejoignez l’écosystème et donnez vie à votre projet.</p>
-        </div>
-        <Button href="/connexion?next=/incubateur/candidatures/nouvelle">Candidater maintenant</Button>
-        <div className="cta-decoration">✳</div>
-      </section>
+      {/* 7. BANDEAU D'APPEL À L'ACTION & CANDIDATURE (Section officielle plébiscitée) */}
+      <section className="border-t border-[#3d2315] bg-gradient-to-r from-[#24140D] via-[#3D1D10] to-[#24140D] text-white py-16 md:py-20 shadow-inner">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="text-2xl font-extrabold !text-white sm:text-4xl tracking-tight leading-tight">
+                Vous avez un projet innovant ou un besoin de prototypage ?
+              </h2>
+              <p className="text-sm sm:text-base leading-relaxed text-[#EAE0D5]">
+                Que vous soyez apprenant de l&apos;ISEP, diplômé en insertion ou entreprise partenaire, 
+                le CIAT met à votre disposition ses ateliers technologiques, ses bancs de test et son réseau de mentors à Diamniadio.
+              </p>
+            </div>
 
-      {/* FOOTER */}
-      <footer className="site-footer">
-        <div className="footer-main">
-          <Brand light />
-
-          <div className="footer-contact">
-            <p><MapPin size={15} /> Diamniadio, Dakar, Sénégal</p>
-            <p><Phone size={15} /> +221 33 860 00 00</p>
-            <p><Mail size={15} /> contact@isep-diamniadio.sn</p>
-          </div>
-
-          <div className="footer-links">
-            <h3>Liens utiles</h3>
-            <Link href="/portail/ciat">À propos</Link>
-            <Link href="/portail/incubateur">Incubateur</Link>
-            <Link href="/galerie">Innovations</Link>
-          </div>
-
-          <div className="footer-links">
-            <h3>Ressources</h3>
-            <Link href="/portail/actualites">Actualités</Link>
-            <Link href="/portail/documents">Documents</Link>
-            <Link href="/portail/contact">Contact</Link>
-          </div>
-
-          <div className="footer-social">
-            <h3>Suivez-nous</h3>
-            <div>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
+            <div className="flex flex-wrap gap-3.5 shrink-0">
+              <ButtonLink
+                href="/connexion?next=/incubateur"
+                variant="accent"
+                className="font-bold text-sm px-6 py-3.5 shadow-xl"
               >
-                <LinkedinIcon size={17} />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X"
+                Déposer une Candidature
+              </ButtonLink>
+              <ButtonLink
+                href="/portail/contact"
+                variant="secondary"
+                className="!text-white !border-white/50 !bg-white/10 hover:!bg-white/20 text-sm px-5 py-3.5 backdrop-blur-sm"
               >
-                <X size={17} />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-              >
-                <YoutubeIcon size={18} />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-              >
-                <FacebookIcon size={17} />
-              </a>
+                Contacter le Secrétariat
+              </ButtonLink>
             </div>
           </div>
         </div>
-
-        <div className="footer-bottom">
-          <span>© 2026 CIAT · ISEP Amadou Trawaré de Diamniadio — Tous droits réservés.</span>
-          <div>
-            <Link href="/mentions-legales">Mentions légales</Link>
-            <span>·</span>
-            <Link href="/confidentialite">Politique de confidentialité</Link>
-          </div>
-        </div>
-      </footer>
+      </section>
     </main>
   );
 }

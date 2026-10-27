@@ -29,6 +29,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Pages vitrines et institutionnelles publiques (jamais de barre latérale)
   const isPublicPage =
     pathname === "/" ||
+    pathname === "/contact" ||
+    pathname === "/ciat" ||
     pathname.startsWith("/portail") ||
     pathname === "/mentions-legales" ||
     pathname === "/confidentialite" ||
