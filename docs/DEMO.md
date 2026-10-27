@@ -100,7 +100,7 @@ graph LR
 * **Action :**
   1. Parcourir la page d'accueil : mise en valeur de la charte graphique CIAT 360 (Brun, Ocre doré, Sable doux), photographie officielle du campus ISEP Diamniadio et présentation des 7 domaines technologiques.
   2. Cliquer sur l'onglet **Galerie** : naviguer parmi les fiches d'innovations validées et publiées.
-  3. Ouvrir la fiche détaillée du projet phare : `SunuAgri AI — Détection des maladies maraîchères des Niayes` (`/galerie/sunuagri-ai-detection-des-maladies-maracheres-des-niayes`).
+  3. Ouvrir la fiche détaillée du projet phare : `SunuAgri AI — Détection des maladies maraîchères des Niayes` (`/galerie/sunuagri-ai-detection-des-maladies-maraicheres-des-niayes`).
 * **Résultat attendu :**
   - Affichage des images de démonstration générées localement (aucun appel externe, aucun lien brisé).
   - Badge de statut certifié (`Terminé` ou `Prototype`).

@@ -605,6 +605,19 @@ class Command(BaseCommand):
             if created:
                 user.set_password(MOT_DE_PASSE)
                 user.save()
+            else:
+                updated = False
+                if user.last_name != p["nom"]:
+                    user.last_name = p["nom"]
+                    updated = True
+                if user.first_name != p["prenom"]:
+                    user.first_name = p["prenom"]
+                    updated = True
+                if user.organisation != p["org"]:
+                    user.organisation = p["org"]
+                    updated = True
+                if updated:
+                    user.save()
             porteurs_map[p["email"]] = user
 
         # 5. Projets de démonstration
