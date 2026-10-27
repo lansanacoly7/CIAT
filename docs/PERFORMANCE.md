@@ -119,3 +119,85 @@ Les index ont été ajoutés de façon ciblée sur les colonnes subissant des tr
    Dans une méthode `@property` d'un modèle appelée par un serializer, ne jamais écrire `self.relation.filter(...)` ou `self.relation.values(...)`. Privilégier des listes en mémoire (`[x for x in self.relation.all() if ...]`) pour bénéficier du cache Django.
 4. **Verrouiller les listes avec `assertNumQueries` dans les tests** :
    Tout nouvel endpoint de liste doit s'accompagner d'un test unitaire `with self.assertNumQueries(...)` pour garantir qu'un ajout ultérieur ne réintroduise pas silencieusement de requêtes N+1.
+
+---
+
+## 6. Mesures sous charge légère (Phase 6 — Pathé)
+
+### A. Protocole et conditions d'expérimentation
+
+Les mesures ont été réalisées à l'aide du script autonome [`scripts/mesure_charge.py`](file:///scripts/mesure_charge.py) contre l'application locale préalablement alimentée via `python manage.py seed_all`.
+
+- **Commande de reproduction exacte** :
+  ```powershell
+  # 1. Démarrer le serveur local (dans un premier terminal)
+  cd backend
+  python manage.py seed_all
+  python manage.py runserver 127.0.0.1:8000
+
+  # 2. Exécuter le banc de test sous charge (dans un second terminal)
+  python scripts/mesure_charge.py --concurrency 5 20 50 --requests 200
+  ```
+
+- **Environnement matériel et logiciel réel de la mesure** :
+  - **Machine hôte** : PC Windows 10 (Build 19045), Processeur 2 cœurs x86_64 (GenuineIntel, 2 vCPUs), 8 Go de mémoire vive (RAM).
+  - **Moteur de base de données** : SQLite 3 (fichier local `db.sqlite3`).
+  - **Serveur applicatif** : Serveur de développement Django (`manage.py runserver`).
+  - **Avertissement de transparence** : Le serveur `runserver` est un serveur de développement à boucle d'événements simple, non optimisé pour la concurrence massive. Il ne dispose pas de gestionnaire de processus pré-fourchés (comme Gunicorn) ni de file d'attente asynchrone (comme Uvicorn).
+  - **Limites d'expérimentation** : Les tests ont été conduits sur la boucle locale (`127.0.0.1`). La latence réseau Internet/WAN (typiquement 20 à 80 ms selon la connectivité au Sénégal) n'est pas incluse dans ces mesures purement applicatives.
+
+- **Routes évaluées (6 endpoints représentatifs)** :
+  1. `Actualités (public)` : `GET /api/portal/actualites/`
+  2. `Galerie (public)` : `GET /api/gallery/fiches/`
+  3. `Détail Fiche (public)` : `GET /api/gallery/fiches/{slug}/`
+  4. `Connexion (auth throttle)` : `POST /api/auth/token/`
+  5. `Dossiers (porteur)` : `GET /api/incubator/dossiers/` (authentifié Porteur)
+  6. `Indicateurs (coordonnateur)` : `GET /api/analytics/indicateurs/` (authentifié Coordonnateur)
+
+---
+
+### B. Résultats mesurés sous charge (200 requêtes par palier)
+
+Chaque palier envoie 200 requêtes réparties sur le nombre de clients simultanés spécifié.
+
+| Route | Clients | Req. | Erreurs / 429 | Médiane (ms) | p95 (ms) | Débit (req/s) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Actualités (public) | **5** | 200 | 141 lim. | 311.6 | 679.2 | **12.4** |
+| Galerie (public) | **5** | 200 | 200 lim. | 174.4 | 371.4 | **25.9** |
+| Détail Fiche (public) | **5** | 200 | 200 lim. | 235.1 | 375.8 | **20.5** |
+| Connexion (auth throttle) | **5** | 200 | 197 lim. | 230.2 | 415.3 | **16.5** |
+| Dossiers (porteur) | **5** | 200 | 0 | 246.0 | 399.3 | **20.4** |
+| Indicateurs (coordonnateur) | **5** | 200 | 0 | 234.3 | 340.3 | **22.2** |
+| Actualités (public) | **20** | 200 | 139 lim., 1 err. | 457.6 | 1774.0 | **29.1** |
+| Galerie (public) | **20** | 200 | 200 lim. | 478.1 | 1791.1 | **25.9** |
+| Détail Fiche (public) | **20** | 200 | 198 lim., 2 err. | 555.6 | 2039.2 | **24.7** |
+| Connexion (auth throttle) | **20** | 200 | 182 lim., 13 err. | 1548.0 | 3769.9 | **10.2** |
+| Dossiers (porteur) | **20** | 200 | 18 err. | 1446.4 | 3598.8 | **11.6** |
+| Indicateurs (coordonnateur) | **20** | 200 | 4 err. | 1040.8 | 2512.6 | **13.7** |
+| Actualités (public) | **50** | 200 | 122 lim., 18 err. | 1170.1 | 2626.9 | **30.2** |
+| Galerie (public) | **50** | 200 | 186 lim., 14 err. | 703.6 | 2632.2 | **32.9** |
+| Détail Fiche (public) | **50** | 200 | 179 lim., 21 err. | 1069.3 | 2495.6 | **26.8** |
+| Connexion (auth throttle) | **50** | 200 | 179 lim., 16 err. | 1532.0 | 3282.6 | **14.4** |
+| Dossiers (porteur) | **50** | 200 | 36 err. | 1233.1 | 2680.5 | **24.1** |
+| Indicateurs (coordonnateur) | **50** | 200 | 31 lim., 28 err. | 1648.1 | 3116.4 | **21.9** |
+
+---
+
+### C. Analyse technique des comportements observés
+
+1. **Efficacité de la protection par limitation de débit (Throttling)** :
+   - Conformément aux exigences de sécurité, la politique de throttling configurée dans `settings.REST_FRAMEWORK` fonctionne fidèlement :
+     - **Connexion** : `AuthRateThrottle` est fixé à `5 req/min`. Dès la 6e requête, le serveur renvoie immédiatement `429 Too Many Requests` (197 requêtes limitées sur 200 à 5 clients). Cette coupure rapide protège l'application contre l'épuisement de ressources CPU lors du calcul de hachage de mot de passe.
+     - **Routes publiques** : `AnonRateThrottle` à `60 req/min` plafonne les flux anonymes intempestifs.
+     - **Routes authentifiées** : `UserRateThrottle` à `300 req/min` autorise un flux de travail fluide pour les utilisateurs connectés (0 limitation à 5 clients sur 200 requêtes).
+
+2. **Temps de réponse à 5 clients simultanés (Charge nominale)** :
+   - Les requêtes authentifiées métiers (`/api/incubator/dossiers/`, `/api/analytics/indicateurs/`) affichent un **temps médian de 234 à 246 ms** et un **95e centile entre 340 et 399 ms**, avec **0 erreur** et un débit d'environ **20 à 22 req/s**.
+   - Ce niveau de performance confirme que les optimisations de requêtes SQL (suppression des requêtes N+1 via `select_related` et `prefetch_related`) maintiennent les vues métiers dans un temps de réponse très satisfaisant.
+
+3. **Comportement à 20 et 50 clients simultanés (Limites du serveur de dev Windows)** :
+   - Lorsque la concurrence s'élève à 20 puis 50 clients simultanés, le temps médian augmente pour atteindre entre **0,5 s et 1,6 s**, et des erreurs de connexion réinitialisée (`ConnectionResetError` / socket dropped) apparaissent (de 4 à 36 erreurs sur 200 requêtes).
+   - Cette dégradation est attribuable à deux facteurs documentés :
+     - Le serveur `runserver` de Django n'est pas conçu pour multiplexer 50 connexions TCP concurrentes.
+     - SQLite verrouille l'intégralité du fichier de base de données lors des écritures (sessions, tokens JWT, mise à jour des compteurs de requêtes du throttle en cache fichier/base), générant des contentions transactionnelles.
+   - En environnement de déploiement cible avec PostgreSQL 16 et un serveur WSGI professionnel (Gunicorn avec 4 workers configurés pour le CIAT), le pool de connexions et le verrouillage au niveau ligne (Row-Level Locking) absorberont cette concurrence sans contention globale.

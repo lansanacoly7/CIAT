@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from apps.core.models import Role
 
 from .models import FicheInnovation
+from .exports_pdf import generer_fiche_promotionnelle_pdf
 from .qr import generer_qr_code_png
 from .serializers import (
     FicheInnovationCreateSerializer,
@@ -217,6 +218,41 @@ class FicheQRCodeView(APIView):
 
         response = HttpResponse(png_bytes, content_type="image/png")
         response["Content-Disposition"] = f'inline; filename="qr_{fiche.slug}.png"'
+        return response
+
+
+@extend_schema(
+    summary="Télécharger la fiche promotionnelle PDF d'une innovation publiée (Public)",
+    description=(
+        "Génère un document PDF officiel d'une page A4 aux couleurs du CIAT, "
+        "comprenant le titre, le problème, la solution innovante, l'équipe et le QR code officiel."
+    ),
+    responses={(200, "application/pdf"): bytes, 404: dict},
+)
+class FichePDFView(APIView):
+    """Génération et téléchargement de la fiche promotionnelle PDF officielle."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        fiche = get_object_or_404(
+            FicheInnovation.objects.select_related("projet", "projet__domaine", "projet__cohorte"),
+            slug=slug,
+        )
+
+        # Une fiche non publiée n'est pas accessible au public
+        if fiche.statut != FicheInnovation.Statut.PUBLIE:
+            is_owner = request.user.is_authenticated and fiche.projet.porteur_id == request.user.id
+            if not is_owner and not _est_equipe_ciat(request.user):
+                return Response(
+                    {"detail": "Cette fiche d'innovation n'est pas encore publiée."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        pdf_buffer = generer_fiche_promotionnelle_pdf(fiche, base_url=settings.SITE_URL)
+
+        response = HttpResponse(pdf_buffer.getvalue(), content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="fiche_{fiche.slug}.pdf"'
         return response
 
 
