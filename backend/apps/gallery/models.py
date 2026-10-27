@@ -73,3 +73,33 @@ class FicheInnovation(models.Model):
 
     def __str__(self):
         return f"{self.titre} [{self.statut}]"
+
+
+class ManifestationInteret(models.Model):
+    """Manifestation d'intérêt d'un partenaire ou investisseur pour une fiche d'innovation."""
+
+    fiche = models.ForeignKey(
+        FicheInnovation,
+        on_delete=models.CASCADE,
+        related_name="manifestations_interet",
+        verbose_name="Fiche d'innovation",
+    )
+    nom = models.CharField(max_length=150, verbose_name="Nom complet")
+    email = models.EmailField(verbose_name="Adresse email")
+    organisation = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        verbose_name="Organisation ou entreprise",
+    )
+    message = models.TextField(verbose_name="Message ou objet de l'intérêt")
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date d'enregistrement")
+
+    class Meta:
+        ordering = ["-cree_le"]
+        verbose_name = "Manifestation d'intérêt"
+        verbose_name_plural = "Manifestations d'intérêt"
+
+    def __str__(self):
+        return f"{self.nom} ({self.email}) — {self.fiche.titre}"
+

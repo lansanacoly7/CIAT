@@ -243,6 +243,75 @@ paths:
               schema:
                 $ref: '#/components/schemas/Conversation'
           description: ''
+  /api/assistant/conversations/{id}/:
+    get:
+      operationId: assistant_conversations_retrieve
+      description: Consultation et suppression d'une conversation privée avec l'assistant
+        IA.
+      summary: Détail d'une conversation
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    delete:
+      operationId: assistant_conversations_destroy
+      description: Consultation et suppression d'une conversation privée avec l'assistant
+        IA.
+      summary: Supprimer une conversation privée (Droit à l'effacement RGPD)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/assistant/conversations/{id}/messages/:
     get:
       operationId: assistant_conversations_messages_list
@@ -344,6 +413,7 @@ paths:
   /api/auth/me/:
     get:
       operationId: auth_me_retrieve
+      summary: Consulter mon profil utilisateur
       tags:
       - auth
       security:
@@ -357,6 +427,7 @@ paths:
           description: ''
     put:
       operationId: auth_me_update
+      summary: Modifier l'ensemble de mon profil
       tags:
       - auth
       requestBody:
@@ -381,6 +452,7 @@ paths:
           description: ''
     patch:
       operationId: auth_me_partial_update
+      summary: Modifier partiellement mon profil
       tags:
       - auth
       requestBody:
@@ -402,6 +474,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: auth_me_destroy
+      description: Exige le mot de passe actuel pour confirmation. Supprime les conversations
+        privées de l'assistant et anonymise les données personnelles en conservant
+        l'intégrité des projets.
+      summary: Supprimer ou anonymiser mon compte (Droit à l'effacement RGPD)
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/me/export/:
+    get:
+      operationId: auth_me_export_retrieve
+      description: Télécharge un fichier JSON structuré reprenant profil, projets,
+        dossiers, documents, conversations assistant et interactions.
+      summary: Exporter l'ensemble de mes données personnelles en JSON (Portabilité
+        RGPD)
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+                description: Fichier JSON exporté
           description: ''
   /api/auth/register/:
     post:
@@ -544,7 +663,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
       - cohortes
@@ -564,7 +683,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
       - cohortes
@@ -596,7 +715,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
       - cohortes
@@ -627,7 +746,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
       - cohortes
@@ -905,7 +1024,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
       - domaines
@@ -925,7 +1044,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
       - domaines
@@ -957,7 +1076,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
       - domaines
@@ -988,7 +1107,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
       - domaines
@@ -1236,6 +1355,70 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/gallery/fiches/{slug}/interet/:
+    post:
+      operationId: gallery_fiches_interet_create
+      description: Enregistrement d'une manifestation d'intérêt d'un partenaire ou
+        investisseur.
+      summary: Manifester son intérêt pour une fiche d'innovation (Public)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - gallery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestationInteret'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/gallery/fiches/{slug}/qr/:
     get:
       operationId: gallery_fiches_qr_retrieve
@@ -1267,11 +1450,58 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/gallery/interets/:
+    get:
+      operationId: gallery_interets_list
+      description: Consultation sécurisée des manifestations d'intérêt avec filtres
+        et pagination.
+      summary: Lister les manifestations d'intérêt (Porteurs et Équipe CIAT)
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Date exacte (AAAA-MM-JJ)
+      - in: query
+        name: date_debut
+        schema:
+          type: string
+        description: Date de début (AAAA-MM-JJ)
+      - in: query
+        name: date_fin
+        schema:
+          type: string
+        description: Date de fin (AAAA-MM-JJ)
+      - in: query
+        name: fiche
+        schema:
+          type: string
+        description: Slug ou ID de la fiche
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManifestationInteret'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/gallery/statistiques/:
     get:
       operationId: gallery_statistiques_retrieve
-      description: 'Statistiques de consultation : total des vues et répartition par
-        fiche.'
+      description: 'Statistiques de consultation : total des vues, total des intérêts
+        et répartition par fiche.'
       summary: Consulter les statistiques des fiches (Équipe CIAT)
       tags:
       - gallery
@@ -3082,7 +3312,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
       - portal
@@ -3152,6 +3382,7 @@ paths:
         name: statut
         schema:
           type: string
+          title: Statut du projet
           enum:
           - depose
           - idee
@@ -3216,7 +3447,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
       - projets
@@ -3238,7 +3469,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
       - projets
@@ -3272,7 +3503,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
       - projets
@@ -3305,7 +3536,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
       - projets
@@ -3390,20 +3621,24 @@ components:
           readOnly: true
         nom:
           type: string
+          title: Nom de la cohorte
           maxLength: 120
         annee:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+          title: Année
         date_debut:
           type: string
           format: date
           nullable: true
+          title: Date de début
         date_fin:
           type: string
           format: date
           nullable: true
+          title: Date de fin
       required:
       - annee
       - id
@@ -3474,6 +3709,7 @@ components:
           readOnly: true
         nom:
           type: string
+          title: Nom du domaine
           maxLength: 120
         slug:
           type: string
@@ -3710,7 +3946,7 @@ components:
       - vues
     FicheStatistiqueItem:
       type: object
-      description: Statistiques de consultation par fiche.
+      description: Statistiques de consultation et d'intérêt par fiche.
       properties:
         slug:
           type: string
@@ -3718,6 +3954,9 @@ components:
           type: string
         vues:
           type: integer
+        interets:
+          type: integer
+          default: 0
       required:
       - slug
       - titre
@@ -3732,6 +3971,78 @@ components:
         * `F` - Femme
         * `H` - Homme
         * `A` - Autre / non précisé
+    ManifestationInteret:
+      type: object
+      description: Sérialiseur de consultation d'une manifestation d'intérêt.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fiche:
+          type: integer
+          readOnly: true
+          title: Fiche d'innovation
+        fiche_slug:
+          type: string
+          readOnly: true
+        fiche_titre:
+          type: string
+          readOnly: true
+        nom:
+          type: string
+          readOnly: true
+          title: Nom complet
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adresse email
+        organisation:
+          type: string
+          readOnly: true
+          title: Organisation ou entreprise
+        message:
+          type: string
+          readOnly: true
+          title: Message ou objet de l'intérêt
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'enregistrement
+      required:
+      - cree_le
+      - email
+      - fiche
+      - fiche_slug
+      - fiche_titre
+      - id
+      - message
+      - nom
+      - organisation
+    ManifestationInteretCreate:
+      type: object
+      description: Sérialiseur pour soumettre une manifestation d'intérêt (Public).
+      properties:
+        nom:
+          type: string
+          maxLength: 150
+          minLength: 2
+        email:
+          type: string
+          format: email
+        organisation:
+          type: string
+          default: ''
+          maxLength: 200
+        message:
+          type: string
+          maxLength: 5000
+          minLength: 10
+      required:
+      - email
+      - message
+      - nom
     MentorUser:
       type: object
       description: Représentation publique d'un mentor pour affectation.
@@ -4135,20 +4446,24 @@ components:
           readOnly: true
         nom:
           type: string
+          title: Nom de la cohorte
           maxLength: 120
         annee:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+          title: Année
         date_debut:
           type: string
           format: date
           nullable: true
+          title: Date de début
         date_fin:
           type: string
           format: date
           nullable: true
+          title: Date de fin
     PatchedDocumentPublic:
       type: object
       description: 'Format : { id, titre, categorie, fichier }'
@@ -4174,6 +4489,7 @@ components:
           readOnly: true
         nom:
           type: string
+          title: Nom du domaine
           maxLength: 120
         slug:
           type: string
@@ -4299,13 +4615,17 @@ components:
           readOnly: true
         titre:
           type: string
+          title: Titre du projet
           maxLength: 200
         resume:
           type: string
+          title: Résumé
         probleme:
           type: string
+          title: Problème adressé
         solution:
           type: string
+          title: Solution innovante
         domaine:
           type: integer
         domaine_nom:
@@ -4320,19 +4640,24 @@ components:
         porteur:
           type: integer
           readOnly: true
+          title: Porteur de projet
         porteur_nom:
           type: string
           readOnly: true
         statut:
-          $ref: '#/components/schemas/StatutF4cEnum'
+          allOf:
+          - $ref: '#/components/schemas/StatutF4cEnum'
+          title: Statut du projet
         cree_le:
           type: string
           format: date-time
           readOnly: true
+          title: Date de création
         modifie_le:
           type: string
           format: date-time
           readOnly: true
+          title: Dernière modification
     PatchedUser:
       type: object
       properties:
@@ -4396,13 +4721,17 @@ components:
           readOnly: true
         titre:
           type: string
+          title: Titre du projet
           maxLength: 200
         resume:
           type: string
+          title: Résumé
         probleme:
           type: string
+          title: Problème adressé
         solution:
           type: string
+          title: Solution innovante
         domaine:
           type: integer
         domaine_nom:
@@ -4417,19 +4746,24 @@ components:
         porteur:
           type: integer
           readOnly: true
+          title: Porteur de projet
         porteur_nom:
           type: string
           readOnly: true
         statut:
-          $ref: '#/components/schemas/StatutF4cEnum'
+          allOf:
+          - $ref: '#/components/schemas/StatutF4cEnum'
+          title: Statut du projet
         cree_le:
           type: string
           format: date-time
           readOnly: true
+          title: Date de création
         modifie_le:
           type: string
           format: date-time
           readOnly: true
+          title: Dernière modification
       required:
       - cohorte_nom
       - cree_le
@@ -4454,9 +4788,11 @@ components:
         titre:
           type: string
           readOnly: true
+          title: Titre du projet
         resume:
           type: string
           readOnly: true
+          title: Résumé
         domaine_nom:
           type: string
           readOnly: true
@@ -4467,9 +4803,11 @@ components:
           allOf:
           - $ref: '#/components/schemas/StatutF4cEnum'
           readOnly: true
+          title: Statut du projet
         vues:
           type: integer
           readOnly: true
+          title: Nombre de consultations
           description: Nombre de consultations de la fiche projet.
       required:
       - cohorte_nom
@@ -4488,6 +4826,7 @@ components:
           readOnly: true
         titre:
           type: string
+          title: Titre du projet
           maxLength: 200
       required:
       - id
@@ -4532,10 +4871,14 @@ components:
       - password
     StatistiquesGallery:
       type: object
-      description: 'Format : { total_vues, par_fiche: [{ slug, titre, vues }] }'
+      description: 'Format : { total_vues, total_interets, par_fiche: [{ slug, titre,
+        vues, interets }] }'
       properties:
         total_vues:
           type: integer
+        total_interets:
+          type: integer
+          default: 0
         par_fiche:
           type: array
           items:

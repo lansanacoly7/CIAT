@@ -13,8 +13,11 @@
 | `POST /auth/token/refresh/` | `{ refresh }` → `{ access }` |
 | `POST /auth/register/` | Crée un porteur de projet |
 | `GET/PATCH /auth/me/` | `{ id, email, first_name, last_name, role, telephone, genre, organisation }` |
+| `DELETE /auth/me/` | Suppression ou anonymisation du compte avec confirmation par mot de passe `{ password }` → `204` |
+| `GET /auth/me/export/` | Téléchargement du fichier JSON complet de toutes ses données personnelles (portabilité RGPD) |
 | `GET /domaines/`, `GET /cohortes/` | Listes sans pagination |
 | `GET/POST /projets/` | `{ id, titre, resume, probleme, solution, domaine, domaine_nom, cohorte, cohorte_nom, porteur, porteur_nom, statut, cree_le, modifie_le }` |
+
 
 Rôles : `administrateur`, `coordonnateur`, `mentor`, `membre_comite`, `porteur`, `visiteur`.
 Statuts d'un projet : `idee`, `depose`, `selectionne`, `incube`, `prototype`, `termine`, `rejete`.
@@ -127,13 +130,14 @@ Authentification obligatoire.
 |---|---|
 | `GET /conversations/` | Mes conversations : `[{ id, titre, cree_le }]` |
 | `POST /conversations/` | Crée une conversation |
-| `GET /conversations/{id}/messages/` | `[{ id, role: "user"\|"assistant", contenu, sources, cree_le }]` |
-| `POST /conversations/{id}/messages/` | `{ contenu, mode: "documents"\|"atelier" }` → message de l'assistant : `{ contenu, sources: [{ document_id, titre, extrait }], avertissement_ia }`. `sources` vide et refus explicite si rien de pertinent (mode `documents`). `503` sans clé IA. |
+| `GET /conversations/{id}/messages/` | `[{ id, role: "user"|"assistant", contenu, sources, cree_le }]` |
+| `POST /conversations/{id}/messages/` | `{ contenu, mode: "documents"|"atelier" }` → message de l'assistant : `{ contenu, sources: [{ document_id, titre, extrait }], avertissement_ia }`. `sources` vide et refus explicite si rien de pertinent (mode `documents`). `503` sans clé IA. |
+| `DELETE /conversations/{id}/` | Supprime une conversation privée (réservé à l'auteur) → `204` |
 | `POST /indexation/` | Administrateur : réindexe les documents publics |
 
 ## P6 — Galerie (`/api/gallery/`)
 
-Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medias: [{ type: "photo"\|"video"\|"demo", url }], statut, vues }`. Statuts : `brouillon`, `en_validation`, `publie`, `refuse`.
+Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medias: [{ type: "photo"|"video"|"demo", url }], statut, vues }`. Statuts : `brouillon`, `en_validation`, `publie`, `refuse`.
 
 | Route | Description |
 |---|---|
@@ -142,9 +146,12 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `GET /fiches/{slug}/qr/` | Public : image PNG du QR code vers la fiche |
 | `GET /fiches/{slug}/fiche/` | Public : fiche promotionnelle officielle en PDF (1 page A4, charte CIAT, problème, solution, équipe, QR code). `404` si non publiée (sauf porteur / équipe). |
 | `POST /fiches/` | Porteur : crée une fiche pour son projet |
+| `POST /fiches/{slug}/interet/` | Public : manifestation d'intérêt `{ nom, email, organisation, message }` → `201` (fiche publiée seulement, limitation anti-spam, anti-doublon 1h, notification email) |
+| `GET /interets/` | Porteur (ses fiches) et Équipe CIAT (tout) : manifestations d'intérêt reçues, filtres `?fiche=&date=&date_debut=&date_fin=`, paginé |
 | `POST /fiches/{id}/valider/` | Coordonnateur ou administrateur : validation d'une fiche |
 | `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur : refus d'une fiche |
-| `GET /statistiques/` | Équipe CIAT : `{ total_vues, par_fiche: [{ slug, titre, vues }] }` |
+| `GET /statistiques/` | Équipe CIAT : `{ total_vues, total_interets, par_fiche: [{ slug, titre, vues, interets }] }` |
+
 
 
 ## P1 — Compléments de la Phase 3 (`/api/portal/`)

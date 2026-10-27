@@ -14,6 +14,7 @@ urlpatterns = [
     path("auth/register/", views.RegisterView.as_view(), name="register"),
     path("auth/token/", views.CiatTokenObtainPairView.as_view(), name="token"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("auth/me/export/", views.MeExportView.as_view(), name="me-export"),
     path("auth/me/", views.MeView.as_view(), name="me"),
     path("", include(router.urls)),
 ]

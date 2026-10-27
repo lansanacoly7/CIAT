@@ -3,7 +3,8 @@ from rest_framework import serializers
 
 from apps.core.models import Projet
 
-from .models import FicheInnovation
+from .models import FicheInnovation, ManifestationInteret
+
 
 
 class MediaItemSerializer(serializers.Serializer):
@@ -98,15 +99,72 @@ class FicheInnovationCreateSerializer(FicheInnovationSerializer):
 
 
 class FicheStatistiqueItemSerializer(serializers.Serializer):
-    """Statistiques de consultation par fiche."""
+    """Statistiques de consultation et d'intérêt par fiche."""
 
     slug = serializers.CharField()
     titre = serializers.CharField()
     vues = serializers.IntegerField()
+    interets = serializers.IntegerField(required=False, default=0)
 
 
 class StatistiquesGallerySerializer(serializers.Serializer):
-    """Format : { total_vues, par_fiche: [{ slug, titre, vues }] }"""
+    """Format : { total_vues, total_interets, par_fiche: [{ slug, titre, vues, interets }] }"""
 
     total_vues = serializers.IntegerField()
+    total_interets = serializers.IntegerField(required=False, default=0)
     par_fiche = FicheStatistiqueItemSerializer(many=True)
+
+
+class ManifestationInteretCreateSerializer(serializers.Serializer):
+    """Sérialiseur pour soumettre une manifestation d'intérêt (Public)."""
+
+    nom = serializers.CharField(max_length=150, min_length=2, trim_whitespace=True)
+    email = serializers.EmailField()
+    organisation = serializers.CharField(
+        max_length=200, required=False, allow_blank=True, default="", trim_whitespace=True
+    )
+    message = serializers.CharField(max_length=5000, min_length=10, trim_whitespace=True)
+
+    def validate_nom(self, value):
+        val = value.strip()
+        if not val:
+            raise serializers.ValidationError("Le nom ne peut pas être vide.")
+        return val
+
+    def validate_message(self, value):
+        val = value.strip()
+        if not val:
+            raise serializers.ValidationError("Le message ne peut pas être vide.")
+        return val
+
+
+class ManifestationInteretSerializer(serializers.ModelSerializer):
+    """Sérialiseur de consultation d'une manifestation d'intérêt."""
+
+    fiche_slug = serializers.CharField(source="fiche.slug", read_only=True)
+    fiche_titre = serializers.CharField(source="fiche.titre", read_only=True)
+
+    class Meta:
+        model = ManifestationInteret
+        fields = [
+            "id",
+            "fiche",
+            "fiche_slug",
+            "fiche_titre",
+            "nom",
+            "email",
+            "organisation",
+            "message",
+            "cree_le",
+        ]
+        read_only_fields = [
+            "id",
+            "fiche",
+            "fiche_slug",
+            "fiche_titre",
+            "nom",
+            "email",
+            "organisation",
+            "message",
+            "cree_le",
+        ]
