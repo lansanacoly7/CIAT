@@ -96,18 +96,18 @@ export default function ContactPage() {
       {/* ========================================================= */}
       {/* 1. HERO BANNER CINÉMATIQUE                                */}
       {/* ========================================================= */}
-      <section className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden bg-[#24140D]">
+      <section className="relative w-full h-[360px] sm:h-[420px] lg:h-[460px] overflow-hidden bg-[#24140D]">
         <Image
           src="/images/contact/contact-hero-reception-officielle.jpg"
           alt="Accueil et réception du CIAT · Université et Centre d'Innovation"
           fill
           priority
           unoptimized
-          className="object-cover object-center"
+          className="object-cover object-[center_35%]"
         />
 
         {/* Voile subtil et doux laissant ressortir la clarté et l'architecture boisée du hall */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/15 to-transparent pointer-events-none" />
 
         {/* Contenu Titre & Sous-titre adapté au CIAT */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
