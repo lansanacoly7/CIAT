@@ -1,11 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   PieChart,
   Pie,
   Cell,
@@ -14,107 +15,185 @@ import {
   Tooltip,
   Legend,
   CartesianGrid,
+  LabelList,
+  ReferenceLine,
 } from "recharts";
+import { Table, Eye, EyeOff } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
   ParDomaineItem,
   ParGenreItem,
 } from "../types";
+import { formatNumber, formatPercent } from "@/lib/format";
 
-// Palette officielle CIAT harmonieuse et contrastée
-const COLOR_PRIMARY = "#602d10";   // Brun foncé CIAT
-const COLOR_CARAMEL = "#8c4b24";   // Caramel / Terracotta
-const COLOR_ACCENT = "#c99a69";    // Ocre Doré / Ambre
-const COLOR_MUTED = "#a16d47";     // Bronze doux
-const COLOR_SAND = "#dec8b3";      // Sable doux pour les totaux
-const COLOR_BORDER = "#ebdcc9";    // Lignes de repère douces
-
-// Couleurs différenciées pour les domaines
-const DOMAINE_PALETTE = [
-  "#602d10", // TIC & IA
-  "#7c3d18", // Agriculture
-  "#8c4b24", // Énergie
-  "#a16d47", // Santé
-  "#b87333", // Mécanique
-  "#c99a69", // Insertion
-];
-
-// Couleurs pour la répartition par genre
-const GENRE_PALETTE = [
-  COLOR_PRIMARY, // Hommes
-  COLOR_ACCENT,  // Femmes
-  COLOR_MUTED,   // Équipes mixtes
-];
+// Palette de données officielle CIAT (6 teintes contrastées et harmonieuses)
+export const DATA_COLORS = {
+  brunProfond: "#3D2314",
+  ocre: "#C99A68",
+  vertSauge: "#5A7D65",
+  bleuArdoise: "#4A6B82",
+  terracotta: "#B85D43",
+  grisChaud: "#8C7E74",
+};
 
 interface ChartCardProps {
   title: string;
   description?: string;
   badge?: string;
+  summaryValue?: string;
+  tableData?: Array<Record<string, string | number>>;
+  tableColumns?: { key: string; label: string }[];
   children: React.ReactNode;
 }
 
-export function ChartCard({ title, description, badge, children }: ChartCardProps) {
+export function ChartCard({
+  title,
+  description,
+  badge,
+  summaryValue,
+  tableData,
+  tableColumns,
+  children,
+}: ChartCardProps) {
+  const [showTable, setShowTable] = useState(false);
+
   return (
-    <div className="group flex flex-col rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(33,19,13,0.02)] transition-all duration-300 hover:border-[#c99a69]/60 hover:shadow-[0_8px_24px_rgba(33,19,13,0.06)]">
-      {/* En-tête de la carte graphique */}
-      <div className="mb-3.5 flex items-start justify-between gap-3 border-b border-zinc-100/90 pb-3">
+    <div className="flex flex-col rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 shadow-[0_1px_2px_rgba(60,35,20,0.04),0_8px_24px_rgba(60,35,20,0.05)] transition hover:shadow-[0_2px_12px_rgba(60,35,20,0.08)]">
+      {/* En-tête de la carte avec valeur de synthèse & bouton Voir les données */}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(60,35,20,0.06)] pb-3.5">
         <div>
-          <h3 className="text-sm font-extrabold tracking-tight text-[#1c120c] transition-colors group-hover:text-[#602d10]">
-            {title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold tracking-tight text-[#21130D]">
+              {title}
+            </h3>
+            {badge && (
+              <span className="rounded-full bg-[#FBF8F3] border border-[rgba(60,35,20,0.06)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]">
+                {badge}
+              </span>
+            )}
+          </div>
           {description && (
-            <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
+            <p className="mt-1 text-xs text-[#8C7E74]">{description}</p>
           )}
         </div>
-        {badge && (
-          <span className="shrink-0 rounded-full border border-[#e6d8c6] bg-[#f8f1e7] px-2.5 py-0.5 text-[10px] font-bold text-[#602d10]">
-            {badge}
-          </span>
-        )}
+
+        <div className="flex items-center gap-3">
+          {summaryValue && (
+            <div className="text-right">
+              <span className="font-serif text-lg font-bold text-[#21130D] tabular-nums">
+                {summaryValue}
+              </span>
+            </div>
+          )}
+
+          {tableData && tableColumns && (
+            <button
+              type="button"
+              onClick={() => setShowTable(!showTable)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2.5 py-1 text-xs font-semibold text-[#21130D] transition hover:bg-white hover:border-[#C99A68] active:scale-95"
+              title={showTable ? "Masquer la table" : "Afficher les données sous forme de tableau"}
+            >
+              {showTable ? (
+                <>
+                  <EyeOff className="h-3.5 w-3.5 text-[#8C7E74]" />
+                  <span>Graphique</span>
+                </>
+              ) : (
+                <>
+                  <Table className="h-3.5 w-3.5 text-[#C99A68]" />
+                  <span>Voir les données</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Conteneur de visualisation */}
-      <div className="h-[250px] w-full flex-1">{children}</div>
+      {/* Contenu : Graphique OU Table sous-jacente */}
+      <div className="min-h-[260px] w-full flex-1">
+        {showTable && tableData && tableColumns ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3]">
+                  {tableColumns.map((col) => (
+                    <th
+                      key={col.key}
+                      className="px-3 py-2 font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+                    >
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
+                {tableData.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-[#FBF8F3]/50">
+                    {tableColumns.map((col) => (
+                      <td
+                        key={col.key}
+                        className="px-3 py-2 text-[#21130D] tabular-nums"
+                      >
+                        {typeof row[col.key] === "number"
+                          ? formatNumber(row[col.key] as number)
+                          : row[col.key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
     </div>
   );
 }
 
-interface TooltipPayloadItem {
-  name?: string;
-  value?: number | string;
-  color?: string;
-  fill?: string;
-}
-
+// Tooltip personnalisé : carte blanche, ombre douce, rayon 12px, tabular-nums, pastille de couleur
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: TooltipPayloadItem[];
+  payload?: Array<{
+    name?: string;
+    value?: number | string;
+    color?: string;
+    fill?: string;
+    payload?: Record<string, unknown>;
+  }>;
   label?: string | number;
 }
 
-/** Tooltip flottant style glassmorphism élégant */
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+export function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-[#e6d8c6] bg-white/95 px-3 py-2 text-xs shadow-lg backdrop-blur-md">
-        <div className="font-bold text-[#21130d] border-b border-zinc-100 pb-1 mb-1.5">
-          {label}
-        </div>
-        <div className="space-y-1">
-          {payload.map((entry: TooltipPayloadItem, index: number) => (
-            <div key={`item-${index}`} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
+      <div className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-3 text-xs shadow-[0_8px_24px_rgba(60,35,20,0.12)]">
+        {label && (
+          <div className="mb-2 border-b border-[rgba(60,35,20,0.06)] pb-1.5 font-bold text-[#21130D]">
+            {label}
+          </div>
+        )}
+        <div className="space-y-1.5">
+          {payload.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between gap-4 text-xs"
+            >
+              <div className="flex items-center gap-2">
                 <span
-                  className="h-2 w-2 rounded-full ring-2 ring-white"
-                  style={{ backgroundColor: entry.color || entry.fill }}
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: item.color || item.fill }}
                 />
-                <span className="text-zinc-600 font-medium">{entry.name || "Total"}</span>
+                <span className="font-medium text-[#8C7E74]">
+                  {item.name || "Total"} :
+                </span>
               </div>
-              <span className="font-mono font-black text-[#602d10] tabular-nums">
-                {typeof entry.value === "number"
-                  ? entry.value.toLocaleString("fr-FR")
-                  : entry.value}
+              <span className="font-bold text-[#21130D] tabular-nums">
+                {typeof item.value === "number"
+                  ? formatNumber(item.value)
+                  : item.value}
               </span>
             </div>
           ))}
@@ -125,227 +204,269 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null;
 }
 
-const formatMoisLabel = (mois: string) => {
-  if (!mois) return "";
-  if (/^\d{4}-\d{2}$/.test(mois)) {
-    const [year, month] = mois.split("-");
-    const monthNames = [
-      "Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
-      "Juil", "Août", "Sept", "Oct", "Nov", "Déc"
-    ];
-    const mIdx = parseInt(month, 10) - 1;
-    const mStr = monthNames[mIdx] || month;
-    return `${mStr} '${year.slice(2)}`;
-  }
-  return mois;
-};
-
-const formatDomaineLabel = (label: string) => {
-  if (!label) return "";
-  if (label.length > 20) {
-    return label.slice(0, 18) + "…";
-  }
-  return label;
-};
-
-/** 1. Graphique d'évolution temporelle : courbe fluide et halo lumineux */
+// 1. Évolution mensuelle : Barres arrondies (radius 6) avec ligne de moyenne en pointillés
 export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
+  const average = useMemo(() => {
+    if (!data.length) return 0;
+    const sum = data.reduce((acc, curr) => acc + curr.total, 0);
+    return Math.round((sum / data.length) * 10) / 10;
+  }, [data]);
+
+  const tableData = useMemo(() => {
+    return data.map((d) => ({ mois: d.mois, total: d.total }));
+  }, [data]);
+
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <AreaChart data={data} margin={{ top: 15, right: 15, left: -22, bottom: 0 }}>
-        <defs>
-          <linearGradient id="areaGradientCIAT" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={COLOR_CARAMEL} stopOpacity={0.35} />
-            <stop offset="50%" stopColor={COLOR_ACCENT} stopOpacity={0.12} />
-            <stop offset="100%" stopColor="#fdfaf6" stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLOR_BORDER} opacity={0.6} />
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart
+        data={data}
+        margin={{ top: 15, right: 15, left: -20, bottom: 0 }}
+      >
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="rgba(60,35,20,0.08)"
+        />
         <XAxis
           dataKey="mois"
           tickLine={false}
-          axisLine={{ stroke: COLOR_BORDER }}
-          tick={{ fill: "#8c7e75", fontSize: 11, fontWeight: 500 }}
-          tickFormatter={formatMoisLabel}
+          axisLine={false}
+          tick={{ fill: "#8C7E74", fontSize: 12, fontWeight: 500 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8c7e75", fontSize: 11 }}
+          tick={{ fill: "#8C7E74", fontSize: 12 }}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Area
-          type="monotone"
+        <ReferenceLine
+          y={average}
+          stroke="#C99A68"
+          strokeDasharray="4 4"
+          strokeWidth={1.5}
+          label={{
+            value: `Moy. (${formatNumber(average)})`,
+            fill: "#C99A68",
+            fontSize: 11,
+            position: "right",
+          }}
+        />
+        <Bar
           dataKey="total"
           name="Projets créés"
-          stroke={COLOR_CARAMEL}
-          strokeWidth={2.5}
-          activeDot={{
-            r: 5,
-            fill: "#ffffff",
-            stroke: COLOR_PRIMARY,
-            strokeWidth: 2.5,
-          }}
-          fill="url(#areaGradientCIAT)"
+          fill={DATA_COLORS.brunProfond}
+          radius={[6, 6, 0, 0]}
+          barSize={20}
+          animationDuration={700}
+          animationEasing="ease-out"
         />
-      </AreaChart>
+      </BarChart>
     </ResponsiveContainer>
   );
 }
 
-/** 2. Projets par domaine : Barres horizontales raffinées avec palette progressive */
+// 2. Domaines prioritaires : Barres horizontales triées décroissantes, couleur unique, LabelList au bout avec part en %
 export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
+  const sortedData = useMemo(() => {
+    const totalGlobal = data.reduce((acc, d) => acc + d.total, 0);
+    return [...data]
+      .sort((a, b) => b.total - a.total)
+      .map((d) => ({
+        ...d,
+        percent:
+          totalGlobal > 0
+            ? Math.round((d.total / totalGlobal) * 1000) / 10
+            : 0,
+      }));
+  }, [data]);
+
   return (
-    <ResponsiveContainer width="100%" height={250}>
+    <ResponsiveContainer width="100%" height={260}>
       <BarChart
-        data={data}
+        data={sortedData}
         layout="vertical"
-        margin={{ top: 8, right: 30, left: 10, bottom: 0 }}
+        margin={{ top: 10, right: 40, left: 10, bottom: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={COLOR_BORDER} opacity={0.6} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          horizontal={false}
+          stroke="rgba(60,35,20,0.08)"
+        />
         <XAxis
           type="number"
           tickLine={false}
-          axisLine={{ stroke: COLOR_BORDER }}
-          tick={{ fill: "#8c7e75", fontSize: 11 }}
+          axisLine={false}
+          tick={{ fill: "#8C7E74", fontSize: 12 }}
         />
         <YAxis
           dataKey="domaine"
           type="category"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#3f1d0a", fontSize: 11, fontWeight: 600 }}
-          tickFormatter={formatDomaineLabel}
+          tick={{ fill: "#21130D", fontSize: 12, fontWeight: 500 }}
           width={130}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar
           dataKey="total"
-          name="Projets enregistrés"
-          radius={[0, 999, 999, 0]}
-          barSize={12}
+          name="Projets"
+          fill={DATA_COLORS.ocre}
+          radius={[0, 6, 6, 0]}
+          barSize={14}
+          animationDuration={700}
+          animationEasing="ease-out"
         >
-          {data.map((_, index) => (
-            <Cell
-              key={`domaine-bar-${index}`}
-              fill={DOMAINE_PALETTE[index % DOMAINE_PALETTE.length]}
-            />
-          ))}
+          <LabelList
+            dataKey="percent"
+            position="right"
+            formatter={(val: number) => `${val}%`}
+            style={{ fill: "#8C7E74", fontSize: 11, fontWeight: 600 }}
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-/** 3. Comparaison cohortes : 3 barres fines arrondies avec légende nette */
+// 3. Comparaison cohortes : Barres groupées plus larges, 3 séries contrastées, valeurs au-dessus
 export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
   return (
-    <ResponsiveContainer width="100%" height={250}>
+    <ResponsiveContainer width="100%" height={260}>
       <BarChart
         data={data}
-        margin={{ top: 12, right: 15, left: -22, bottom: 0 }}
-        barGap={4}
+        margin={{ top: 20, right: 15, left: -20, bottom: 0 }}
+        barGap={6}
       >
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLOR_BORDER} opacity={0.6} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="rgba(60,35,20,0.08)"
+        />
         <XAxis
           dataKey="cohorte"
           tickLine={false}
-          axisLine={{ stroke: COLOR_BORDER }}
-          tick={{ fill: "#8c7e75", fontSize: 11, fontWeight: 500 }}
+          axisLine={false}
+          tick={{ fill: "#8C7E74", fontSize: 12, fontWeight: 500 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "#8c7e75", fontSize: 11 }}
+          tick={{ fill: "#8C7E74", fontSize: 12 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend
           verticalAlign="top"
           align="right"
           iconType="circle"
-          iconSize={7}
-          wrapperStyle={{ paddingBottom: 10, fontSize: 11, color: "#602d10", fontWeight: 600 }}
+          iconSize={8}
+          wrapperStyle={{ paddingBottom: 10, fontSize: 12, color: "#21130D" }}
         />
         <Bar
           dataKey="total"
           name="Idées soumises"
-          fill={COLOR_SAND}
+          fill={DATA_COLORS.grisChaud}
           radius={[4, 4, 0, 0]}
-          barSize={10}
+          barSize={14}
+          animationDuration={700}
+          animationEasing="ease-out"
         />
         <Bar
           dataKey="selectionnes"
           name="Projets retenus"
-          fill={COLOR_PRIMARY}
+          fill={DATA_COLORS.brunProfond}
           radius={[4, 4, 0, 0]}
-          barSize={10}
+          barSize={14}
+          animationDuration={700}
+          animationEasing="ease-out"
         />
         <Bar
           dataKey="prototypes"
           name="Prototypes validés"
-          fill={COLOR_ACCENT}
+          fill={DATA_COLORS.ocre}
           radius={[4, 4, 0, 0]}
-          barSize={10}
+          barSize={14}
+          animationDuration={700}
+          animationEasing="ease-out"
         />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-/** 4. Répartition par genre : Donut fin et aéré avec total central */
+// 4. Donuts genre : Anneau fin (épaisseur 14 %), total au centre en serif, légende verticale alignée à droite
 export function GenreChart({ data }: { data: ParGenreItem[] }) {
-  const total = data.reduce((acc, curr) => acc + curr.total, 0);
+  const total = useMemo(() => {
+    return data.reduce((acc, curr) => acc + curr.total, 0);
+  }, [data]);
+
+  const donutColors = [
+    DATA_COLORS.brunProfond, // Hommes
+    DATA_COLORS.ocre,        // Femmes
+    DATA_COLORS.vertSauge,   // Équipes mixtes
+  ];
 
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="46%"
-          innerRadius={64}
-          outerRadius={92}
-          paddingAngle={4}
-          dataKey="total"
-          nameKey="genre"
-          cornerRadius={5}
-        >
-          {data.map((_, index) => (
-            <Cell
-              key={`genre-cell-${index}`}
-              fill={GENRE_PALETTE[index % GENRE_PALETTE.length]}
-              stroke="#ffffff"
-              strokeWidth={2}
-            />
-          ))}
-        </Pie>
-        <Tooltip content={<CustomTooltip />} />
-        <Legend
-          verticalAlign="bottom"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ fontSize: 11, color: "#602d10", fontWeight: 600, paddingTop: 6 }}
-        />
-        {/* Total et label au centre du Donut */}
-        <text
-          x="50%"
-          y="44%"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className="font-mono text-2xl font-black fill-[#1c120c]"
-        >
-          {total}
-        </text>
-        <text
-          x="50%"
-          y="53%"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className="text-[10px] font-bold fill-[#8c786a] uppercase tracking-widest"
-        >
-          Porteurs
-        </text>
-      </PieChart>
-    </ResponsiveContainer>
+    <div className="relative flex items-center justify-center">
+      <ResponsiveContainer width="100%" height={260}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="40%"
+            cy="50%"
+            innerRadius="68%" // Épaisseur = 82% - 68% = 14%
+            outerRadius="82%"
+            paddingAngle={4}
+            dataKey="total"
+            nameKey="genre"
+            cornerRadius={4}
+            animationDuration={700}
+            animationEasing="ease-out"
+          >
+            {data.map((_, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={donutColors[index % donutColors.length]}
+                stroke="#FFFFFF"
+                strokeWidth={2}
+              />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend
+            layout="vertical"
+            verticalAlign="middle"
+            align="right"
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{ fontSize: 12, color: "#21130D", paddingRight: 10 }}
+            formatter={(value: string, entry: unknown) => {
+              const item = (entry as { payload?: ParGenreItem }).payload;
+              const count = item?.total ?? 0;
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+              return `${value} : ${count} (${pct} %)`;
+            }}
+          />
+          {/* Total au centre en serif 44px */}
+          <text
+            x="40%"
+            y="48%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="font-serif text-3xl font-bold fill-[#21130D]"
+          >
+            {total}
+          </text>
+          <text
+            x="40%"
+            y="60%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="text-[11px] font-semibold uppercase tracking-[0.06em] fill-[#8C7E74]"
+          >
+            Porteurs
+          </text>
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

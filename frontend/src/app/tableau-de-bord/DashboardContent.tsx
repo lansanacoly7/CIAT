@@ -7,15 +7,19 @@ import type {
   AnalyticsData,
   DashboardFilters,
   EvolutionItem,
+  FinancementItem,
   IndicateursGlobaux,
   ParCohorteItem,
   ParDomaineItem,
   ParGenreItem,
+  PartenariatsFinancementsStats,
 } from "./types";
 import { getMockAnalyticsData } from "./mockData";
-import { KpiCard } from "./components/KpiCard";
-import { FiltersBar } from "./components/FiltersBar";
-import { DashboardBanner } from "./components/DashboardBanner";
+import { CompactHeader } from "./components/CompactHeader";
+import { StickyFiltersBar } from "./components/StickyFiltersBar";
+import { KpiGrid } from "./components/KpiGrid";
+import { WatchZone } from "./components/WatchZone";
+import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
 import {
   ChartCard,
   CohorteChart,
@@ -23,16 +27,12 @@ import {
   EvolutionChart,
   GenreChart,
 } from "./components/ChartCard";
-import {
-  ChartSkeleton,
-  EmptyState,
-  KpiSkeletonGrid,
-} from "./components/PageState";
-import { ExportToolbar } from "./components/ExportToolbar";
-import { PrintSummaryModal } from "./components/PrintSummaryModal";
-import { NaturalLanguageQueryBox } from "./components/NaturalLanguageQueryBox";
+import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
-import { CheckCircle2, Info, RefreshCw } from "lucide-react";
+import { AiDrawer } from "./components/AiDrawer";
+import { PrintSummaryModal } from "./components/PrintSummaryModal";
+import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
+import { formatCurrencyCompact, formatDateTime } from "@/lib/format";
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -52,10 +52,15 @@ export function DashboardContent() {
   const [, startTransition] = useTransition();
 
   const [data, setData] = useState<AnalyticsData | null>(null);
+  const [financementsData, setFinancementsData] = useState<FinancementItem[]>([]);
+  const [financementsStats, setFinancementsStats] =
+    useState<PartenariatsFinancementsStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
-  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [activeTab, setActiveTab] = useState<DashboardTab>("projets");
+  const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("en direct");
 
   // Synchronisation des filtres avec l'URL searchParams
   const filters: DashboardFilters = useMemo(() => {
@@ -80,7 +85,7 @@ export function DashboardContent() {
 
   const isExplicitDemo = process.env.NEXT_PUBLIC_MODE_DEMO === "1";
 
-  // Chargement asynchrone des données synchronisé avec les filtres
+  // Chargement des données
   useEffect(() => {
     let isSubscribed = true;
 
@@ -111,20 +116,33 @@ export function DashboardContent() {
                 saveTokens(authRes.access, authRes.refresh);
               }
             } catch {
-              // Continuer vers l'appel direct
+              // Continuer vers l'appel
             }
           }
         }
 
         const query = buildQuery(filters);
-        const [indicateurs, parDomaine, parCohorte, parGenre, evolution] =
-          await Promise.all([
-            api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
-            api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
-            api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
-            api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
-            api<EvolutionItem[]>(`/analytics/evolution/${query}`),
-          ]);
+        const [
+          indicateurs,
+          parDomaine,
+          parCohorte,
+          parGenre,
+          evolution,
+          financementsList,
+          partStats,
+        ] = await Promise.all([
+          api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
+          api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
+          api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
+          api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
+          api<EvolutionItem[]>(`/analytics/evolution/${query}`),
+          api<FinancementItem[]>(`/analytics/financements/${query}`).catch(
+            () => []
+          ),
+          api<PartenariatsFinancementsStats>(
+            `/analytics/partenariats-financements/stats/${query}`
+          ).catch(() => null),
+        ]);
 
         if (isSubscribed) {
           setData({
@@ -134,14 +152,28 @@ export function DashboardContent() {
             parGenre,
             evolution,
           });
+          setFinancementsData(financementsList || []);
+          setFinancementsStats(partStats);
           setIsLiveConnected(true);
           setIsLoading(false);
+          setLastUpdatedTime(
+            new Date().toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
         }
       } catch {
         if (isSubscribed) {
           setData(getMockAnalyticsData(filters));
           setIsLiveConnected(false);
           setIsLoading(false);
+          setLastUpdatedTime(
+            new Date().toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
         }
       }
     }
@@ -153,19 +185,31 @@ export function DashboardContent() {
     };
   }, [filters, isExplicitDemo]);
 
-  const handleManualReconnect = async () => {
-    setIsReconnecting(true);
+  const handleRefresh = async () => {
     setIsLoading(true);
     try {
       const query = buildQuery(filters);
-      const [indicateurs, parDomaine, parCohorte, parGenre, evolution] =
-        await Promise.all([
-          api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
-          api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
-          api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
-          api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
-          api<EvolutionItem[]>(`/analytics/evolution/${query}`),
-        ]);
+      const [
+        indicateurs,
+        parDomaine,
+        parCohorte,
+        parGenre,
+        evolution,
+        financementsList,
+        partStats,
+      ] = await Promise.all([
+        api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
+        api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
+        api<ParCohorteItem[]>(`/analytics/par-cohorte/${query}`),
+        api<ParGenreItem[]>(`/analytics/par-genre/${query}`),
+        api<EvolutionItem[]>(`/analytics/evolution/${query}`),
+        api<FinancementItem[]>(`/analytics/financements/${query}`).catch(
+          () => []
+        ),
+        api<PartenariatsFinancementsStats>(
+          `/analytics/partenariats-financements/stats/${query}`
+        ).catch(() => null),
+      ]);
 
       setData({
         indicateurs,
@@ -174,13 +218,20 @@ export function DashboardContent() {
         parGenre,
         evolution,
       });
+      setFinancementsData(financementsList || []);
+      setFinancementsStats(partStats);
       setIsLiveConnected(true);
+      setLastUpdatedTime(
+        new Date().toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
     } catch {
       setData(getMockAnalyticsData(filters));
       setIsLiveConnected(false);
     } finally {
       setIsLoading(false);
-      setIsReconnecting(false);
     }
   };
 
@@ -206,86 +257,39 @@ export function DashboardContent() {
   const hasNoData = Boolean(data && data.indicateurs.idees_recues === 0);
 
   return (
-    <div className="min-h-full bg-[#fcfbf9]/90 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-5">
-        {/* État de connexion de la source de données (Transparent & Règle 5) */}
-        {isLiveConnected === false && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50/90 px-4 py-2.5 text-xs text-amber-900 shadow-xs animate-fade-in-up">
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 shrink-0 text-amber-700" />
-              <span>
-                <strong>MODE DÉMONSTRATION ACTIF :</strong> Le serveur backend Django (port 8000) n&apos;a pas pu être joint. Affichage des données simulées.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleManualReconnect}
-              disabled={isReconnecting}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-200/80 px-2.5 py-1 text-[11px] font-bold text-amber-900 transition hover:bg-amber-300"
-            >
-              <RefreshCw
-                className={`h-3 w-3 ${isReconnecting ? "animate-spin" : ""}`}
-              />
-              <span>{isReconnecting ? "Connexion..." : "Reconnexion API"}</span>
-            </button>
-          </div>
-        )}
+    <div
+      id="dashboard-root"
+      className="min-h-screen bg-[#FBF8F3] text-[#21130D]"
+    >
+      {/* =========================================================================
+          1. EN-TÊTE COMPACT (UNE LIGNE, 64 PX)
+         ========================================================================= */}
+      <CompactHeader
+        lastUpdated={lastUpdatedTime}
+        isLive={isLiveConnected === true}
+        isLoading={isLoading}
+        onRefresh={handleRefresh}
+        onOpenAiDrawer={() => setIsAiDrawerOpen(true)}
+        onOpenPrintModal={() => setIsPrintModalOpen(true)}
+        filters={filters}
+        targetCaptureId="dashboard-capture-zone"
+      />
 
-        {isLiveConnected === true && (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-1.5 text-[11px] font-medium text-emerald-800">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            <span>
-              Données réelles connectées en direct depuis le serveur CIAT ({data?.indicateurs.idees_recues ?? 0} projets en base).
-            </span>
-          </div>
-        )}
-
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 space-y-6">
         {/* =========================================================================
-            1. BANNIÈRE INSTITUTIONNELLE CIAT
+            2. BARRE DE FILTRES STICKY (PILULE FLOTTANTE AVEC FLOU)
            ========================================================================= */}
-        <div className="animate-fade-in-up">
-          <DashboardBanner />
-        </div>
+        <StickyFiltersBar
+          filters={filters}
+          onChange={updateFilters}
+          onReset={handleResetFilters}
+          isFiltered={isFiltered}
+        />
 
-        {/* =========================================================================
-            2. BARRE DE FILTRES DÉCISIONNELS & CONTRÔLE
-           ========================================================================= */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-          <FiltersBar
-            filters={filters}
-            onChange={updateFilters}
-            onReset={handleResetFilters}
-            isFiltered={isFiltered}
-            onRefresh={handleManualReconnect}
-            isLoading={isLoading}
-            onExport={() => {
-              setIsPrintModalOpen(true);
-            }}
-          />
-        </div>
-
-        {/* =========================================================================
-            2.1 BARRE D'EXPORTS (IMAGE PNG, EXCEL, PDF & FICHE IMPRIMABLE)
-           ========================================================================= */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "110ms" }}>
-          <ExportToolbar
-            filters={filters}
-            onOpenPrintModal={() => setIsPrintModalOpen(true)}
-            targetCaptureId="dashboard-main-content"
-          />
-        </div>
-
-        {/* =========================================================================
-            2.2 INTERROGATION DES DONNÉES EN LANGAGE NATUREL (IA DÉCISIONNELLE - T2)
-           ========================================================================= */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "125ms" }}>
-          <NaturalLanguageQueryBox />
-        </div>
-
-        {/* Zone de contenu principale ciblée pour l'export image PNG */}
-        <div id="dashboard-main-content">
+        {/* Zone de contenu principale ciblée pour l'export */}
+        <div id="dashboard-capture-zone" className="space-y-6">
           {isLoading ? (
-            <div className="space-y-4 sm:space-y-5">
+            <div className="space-y-6">
               <KpiSkeletonGrid />
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <ChartSkeleton />
@@ -295,156 +299,214 @@ export function DashboardContent() {
           ) : hasNoData ? (
             <EmptyState onReset={handleResetFilters} />
           ) : data ? (
-            <div className="space-y-4 sm:space-y-5">
+            <>
               {/* =========================================================================
-                  4. LES 6 CARTES KPI COMPACTES & GAIN DE PLACE (6 COLONNES DESKTOP)
+                  3. KPI EN MISE EN AVANT (GRILLE DE 4 COLONNES X 2 LIGNES)
                  ========================================================================= */}
-              <section
-                aria-labelledby="kpis-title"
-                className="animate-fade-in-up"
-                style={{ animationDelay: "140ms" }}
-              >
-                <h2 id="kpis-title" className="sr-only">
-                  Indicateurs clés de performance
-                </h2>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6 sm:gap-3">
-                  <KpiCard
-                    label="Idées reçues"
-                    value={data.indicateurs.idees_recues}
-                    subtext="Total des soumissions initiales"
-                  />
-                  <KpiCard
-                    label="Dossiers déposés"
-                    value={data.indicateurs.dossiers_deposes}
-                    subtext="Candidatures avec pièces obligatoires"
-                  />
-                  <KpiCard
-                    label="Projets sélectionnés"
-                    value={data.indicateurs.projets_selectionnes}
-                    subtext="Avis favorable du comité"
-                  />
-                  <KpiCard
-                    label="Projets incubés"
-                    value={data.indicateurs.projets_incubes}
-                    subtext="Parcours d'incubation actif"
-                  />
-                  <KpiCard
-                    label="Prototypes validés"
-                    value={data.indicateurs.prototypes}
-                    subtext="Maturation technique certifiée"
-                  />
-                  <KpiCard
-                    label="Taux de sélection"
-                    value={data.indicateurs.taux_selection}
-                    suffix="%"
-                    subtext="Sélectionnés / dossiers"
-                    badge={
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Cohorte active
+              <KpiGrid
+                indicateurs={data.indicateurs}
+                totalFinance={financementsStats?.total_finance ?? 472000000}
+                partenariatsActifs={
+                  financementsStats?.nombre_partenariats_actifs ?? 33
+                }
+              />
+
+              {/* =========================================================================
+                  4. ZONE "À SURVEILLER" (3 CARTES D'ALERTE COMPACTES)
+                 ========================================================================= */}
+              <WatchZone
+                onFilterStatut={(statut) => {
+                  updateFilters({ ...filters, statut });
+                }}
+                onNavigateTab={(tab) => {
+                  setActiveTab(tab);
+                }}
+              />
+
+              {/* =========================================================================
+                  5. ONGLETS STICKY "PROJETS" / "FINANCEMENTS"
+                 ========================================================================= */}
+              <StickyTabs
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                projetsCount={data.indicateurs.idees_recues}
+                financementsAmount={formatCurrencyCompact(
+                  financementsStats?.total_finance ?? 472000000
+                )}
+              />
+
+              {/* =========================================================================
+                  6. CONTENU DE L'ONGLET ACTIF : GRAPHIQUES + TABLEAU OU FINANCEMENTS
+                 ========================================================================= */}
+              {activeTab === "projets" ? (
+                <div className="space-y-6">
+                  {/* Grille des 4 graphiques Recharts (2 x 2) */}
+                  <section
+                    aria-labelledby="charts-heading"
+                    className="space-y-6"
+                  >
+                    <h2 id="charts-heading" className="sr-only">
+                      Visualisations graphiques
+                    </h2>
+
+                    {/* Ligne 1 : Évolution et Répartition par domaine */}
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                      <ChartCard
+                        title="Évolution mensuelle des projets"
+                        description="Flux de création et d'enregistrement au fil du temps"
+                        badge="Série temporelle"
+                        summaryValue={`${data.indicateurs.idees_recues} créés`}
+                        tableData={data.evolution.map((e) => ({
+                          Mois: e.mois,
+                          Projets: e.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Mois", label: "Mois" },
+                          { key: "Projets", label: "Projets créés" },
+                        ]}
+                      >
+                        <EvolutionChart data={data.evolution} />
+                      </ChartCard>
+
+                      <ChartCard
+                        title="Projets par domaine prioritaire"
+                        description="Répartition des innovations par filière d'excellence"
+                        badge="Filières CIAT"
+                        summaryValue={`${data.parDomaine.length} domaines`}
+                        tableData={data.parDomaine.map((d) => ({
+                          Domaine: d.domaine,
+                          Total: d.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Domaine", label: "Domaine prioritaire" },
+                          { key: "Total", label: "Nombre de projets" },
+                        ]}
+                      >
+                        <DomaineChart data={data.parDomaine} />
+                      </ChartCard>
+                    </div>
+
+                    {/* Ligne 2 : Comparaison cohortes et Répartition par genre */}
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                      <ChartCard
+                        title="Comparaison entre promotions"
+                        description="Progression comparée des cohortes annuelles 2024 — 2026"
+                        badge="3 promotions"
+                        summaryValue={`${data.indicateurs.idees_recues} au total`}
+                        tableData={data.parCohorte.map((c) => ({
+                          Cohorte: c.cohorte,
+                          Soumissions: c.total,
+                          Retenus: c.selectionnes,
+                          Prototypes: c.prototypes,
+                        }))}
+                        tableColumns={[
+                          { key: "Cohorte", label: "Cohorte" },
+                          { key: "Soumissions", label: "Idées soumises" },
+                          { key: "Retenus", label: "Projets retenus" },
+                          { key: "Prototypes", label: "Prototypes validés" },
+                        ]}
+                      >
+                        <CohorteChart data={data.parCohorte} />
+                      </ChartCard>
+
+                      <ChartCard
+                        title="Mixité et parité des équipes"
+                        description="Représentativité et répartition par genre des porteurs"
+                        badge="Parité & RSE"
+                        summaryValue={`${data.indicateurs.idees_recues} porteurs`}
+                        tableData={data.parGenre.map((g) => ({
+                          Genre: g.genre,
+                          Porteurs: g.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Genre", label: "Catégorie" },
+                          { key: "Porteurs", label: "Effectif" },
+                        ]}
+                      >
+                        <GenreChart data={data.parGenre} />
+                      </ChartCard>
+                    </div>
+                  </section>
+
+                  {/* =========================================================================
+                      7. TABLEAU DE DÉTAIL (56PX ROWS, STICKY HEADER, TRI, RECHERCHE)
+                     ========================================================================= */}
+                  <section aria-labelledby="detail-table-heading" className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h2
+                        id="detail-table-heading"
+                        className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8C7E74]"
+                      >
+                        Registre analytique des financements et conventions
+                      </h2>
+                      <span className="text-[11px] text-[#8C7E74]">
+                        {financementsData.length} lignes consolidées
                       </span>
-                    }
-                  />
+                    </div>
+
+                    <DetailTable data={financementsData} isLoading={isLoading} />
+                  </section>
                 </div>
-              </section>
-
-              {/* =========================================================================
-                  5. LES 4 GRAPHIQUES RECHARTS (ÉLÉGANTS, ARRONDIS, CHARTE CIAT)
-                 ========================================================================= */}
-              <section
-                aria-labelledby="charts-title"
-                className="space-y-6 animate-fade-in-up"
-                style={{ animationDelay: "200ms" }}
-              >
-                <h2 id="charts-title" className="sr-only">
-                  Visualisations graphiques
-                </h2>
-
-                {/* Ligne 1 : Évolution et Répartition par domaine */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <ChartCard
-                    title="Évolution mensuelle des projets"
-                    description="Progression des projets créés au CIAT"
-                    badge="Série temporelle"
-                  >
-                    <EvolutionChart data={data.evolution} />
-                  </ChartCard>
-
-                  <ChartCard
-                    title="Projets par domaine prioritaire"
-                    description="Répartition des innovations selon les filières d'excellence"
-                    badge="Filières CIAT"
-                  >
-                    <DomaineChart data={data.parDomaine} />
-                  </ChartCard>
-                </div>
-
-                {/* Ligne 2 : Comparaison cohortes et Répartition genre */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <ChartCard
-                    title="Comparaison entre cohortes"
-                    description="Idées soumises, dossiers retenus et prototypes finalisés"
-                    badge="2024 — 2026"
-                  >
-                    <CohorteChart data={data.parCohorte} />
-                  </ChartCard>
-
-                  <ChartCard
-                    title="Répartition par genre des porteurs"
-                    description="Mixité des équipes et représentativité des porteurs de projet"
-                    badge="Parité & Impact"
-                  >
-                    <GenreChart data={data.parGenre} />
-                  </ChartCard>
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  5.1 SUIVI DES PARTENARIATS ET FINANCEMENTS (T3)
-                 ========================================================================= */}
-              <section
-                aria-labelledby="partenariats-title"
-                className="animate-fade-in-up"
-                style={{ animationDelay: "240ms" }}
-              >
-                <PartenariatsFinancementsSection filters={filters} />
-              </section>
-            </div>
+              ) : (
+                /* Onglet Financements & Partenariats */
+                <section aria-labelledby="financements-heading">
+                  <h2 id="financements-heading" className="sr-only">
+                    Financements et Partenariats
+                  </h2>
+                  <PartenariatsFinancementsSection filters={filters} />
+                </section>
+              )}
+            </>
           ) : null}
         </div>
-
-        {/* =========================================================================
-            6. MODALE FICHE DE SYNTHÈSE IMPRIMABLE
-           ========================================================================= */}
-        {data && (
-          <PrintSummaryModal
-            isOpen={isPrintModalOpen}
-            onClose={() => setIsPrintModalOpen(false)}
-            data={data}
-            filters={filters}
-            onExportPdf={async () => {
-              const query = buildQuery(filters);
-              const token = typeof window !== "undefined" ? localStorage.getItem("ciat_access") : null;
-              const headers = new Headers();
-              if (token) headers.set("Authorization", `Bearer ${token}`);
-              const res = await fetch(`${API_URL}/analytics/export/?format=pdf${query ? `&${query.slice(1)}` : ""}`, {
-                headers,
-              });
-              if (!res.ok) throw new Error("Erreur génération PDF");
-              const blob = await res.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `ciat_fiche_synthese_${new Date().toISOString().slice(0, 10)}.pdf`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              window.URL.revokeObjectURL(url);
-            }}
-          />
-        )}
       </div>
+
+      {/* =========================================================================
+          8. TIROIR LATÉRAL DROIT POUR L'INTERROGATION EN LANGAGE NATUREL (480 PX)
+         ========================================================================= */}
+      <AiDrawer
+        isOpen={isAiDrawerOpen}
+        onClose={() => setIsAiDrawerOpen(false)}
+      />
+
+      {/* =========================================================================
+          9. MODALE FICHE DE SYNTHÈSE IMPRIMABLE
+         ========================================================================= */}
+      {data && (
+        <PrintSummaryModal
+          isOpen={isPrintModalOpen}
+          onClose={() => setIsPrintModalOpen(false)}
+          data={data}
+          filters={filters}
+          onExportPdf={async () => {
+            const query = buildQuery(filters);
+            const token =
+              typeof window !== "undefined"
+                ? localStorage.getItem("ciat_access")
+                : null;
+            const headers = new Headers();
+            if (token) headers.set("Authorization", `Bearer ${token}`);
+            const res = await fetch(
+              `${API_URL}/analytics/export/?format=pdf${
+                query ? `&${query.slice(1)}` : ""
+              }`,
+              { headers }
+            );
+            if (!res.ok) throw new Error("Erreur génération PDF");
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `ciat_fiche_synthese_${new Date()
+              .toISOString()
+              .slice(0, 10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          }}
+        />
+      )}
     </div>
   );
 }
-

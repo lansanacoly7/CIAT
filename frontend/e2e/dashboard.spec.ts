@@ -28,7 +28,11 @@ test.describe("Parcours Coordonnateur — Tableau de bord et requêtes IA (E2E)"
     const dashboardTitle = page.locator("h1:visible").first();
     await expect(dashboardTitle).toBeVisible();
 
-    // 4. Localise le bloc d'interrogation en langage naturel
+    // 4. Localise et ouvre le tiroir d'interrogation en langage naturel (480px)
+    const openAiBtn = page.locator("#open-ai-drawer");
+    await expect(openAiBtn).toBeVisible({ timeout: 15000 });
+    await openAiBtn.click();
+
     const queryInput = page.locator("#ai-question-input");
     await expect(queryInput).toBeVisible({ timeout: 15000 });
 

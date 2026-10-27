@@ -1389,5 +1389,67 @@ class IndicateursDefinitionsViewTests(TestCase):
             self.assertEqual(ind["categorie"], "Entonnoir d'incubation")
 
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AnalyticsDataConsistencyTests(TestCase):
+    """Vérification stricte de la cohérence mathématique globale des données CIAT.
+    
+    Invariables vérifiés :
+    1. Somme des cohortes = KPI idées reçues (62)
+    2. Somme des guichets/sources de financement = 472 M FCFA (472 000 000 FCFA)
+    3. Somme de la parité de genre (Femmes + Hommes) = 62
+    4. Somme des projets par domaine = Total des projets enregistrés (62)
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_all")
+
+    def setUp(self):
+        self.client = APIClient()
+        self.coordo = User.objects.filter(role=Role.COORDONNATEUR).first()
+        self.client.force_authenticate(user=self.coordo)
+
+    def test_somme_cohortes_egale_kpi_idees_recues(self):
+        """La somme des projets par cohorte doit égaler exactement le KPI 'idées reçues' (62)."""
+        res_ind = self.client.get("/api/analytics/indicateurs/")
+        self.assertEqual(res_ind.status_code, 200)
+        idees_recues = res_ind.data["idees_recues"]
+        self.assertEqual(idees_recues, 62)
+
+        res_coh = self.client.get("/api/analytics/par-cohorte/")
+        self.assertEqual(res_coh.status_code, 200)
+        total_cohortes = sum(c["total"] for c in res_coh.data)
+        self.assertEqual(total_cohortes, idees_recues)
+        self.assertEqual(total_cohortes, 62)
+
+    def test_somme_financements_sources_egale_472_millions(self):
+        """Le cumul des financements par guichet/source doit égaler exactement 472 M FCFA."""
+        res_stats = self.client.get("/api/analytics/partenariats-financements/stats/")
+        self.assertEqual(res_stats.status_code, 200)
+        total_finance = res_stats.data["total_finance"]
+        self.assertEqual(total_finance, 472000000)
+
+        # Vérification sur les guichets / sources
+        sources = res_stats.data.get("repartition_sources", [])
+        if sources:
+            total_sources = sum(s["montant"] for s in sources)
+            self.assertEqual(total_sources, 472000000)
+
+    def test_somme_genre_egale_total_projets(self):
+        """La somme des répartitions par genre (Femmes + Hommes) doit égaler exactement 62."""
+        res_genre = self.client.get("/api/analytics/par-genre/")
+        self.assertEqual(res_genre.status_code, 200)
+        total_genre = sum(g["total"] for g in res_genre.data)
+        self.assertEqual(total_genre, 62)
+
+    def test_somme_domaines_egale_total_projets(self):
+        """La somme des projets répartis par domaine prioritaire doit égaler exactement 62."""
+        res_dom = self.client.get("/api/analytics/par-domaine/")
+        self.assertEqual(res_dom.status_code, 200)
+        total_domaines = sum(d["total"] for d in res_dom.data)
+        self.assertEqual(total_domaines, 62)
+
+
+
 
 
