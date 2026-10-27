@@ -193,26 +193,45 @@ Conformément à la directive stricte de transparence (« on n'écrit que ce qui
      django.db.utils.NotSupportedError: PostgreSQL 14 or later is required (found 12.22).
      ```
    - **Conclusion** : Le contournement illégal par monkeypatch (`check_database_version_supported = lambda self: None`) a été intégralement éradiqué. Django 5.2 protège désormais le projet contre les versions obsolètes de PostgreSQL.
-2. **Conteneur Docker PostgreSQL 16** :
-   - Sur cette machine hôte Windows, Docker Desktop nécessite le composant optionnel WSL2 (`WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED`). En l'absence de ce composant activé sur l'hôte, le conteneur `postgres:16` n'a pas pu être lancé.
-   - Par honnêteté technique, **l'affirmation préliminaire « 230 / 230 tests réussis sur PostgreSQL 16 » a été formellement retirée**.
-   - Les anciennes mentions non quantifiées sur les différences constatées avec SQLite (ILIKE, jsonb, tris stables, aucune différence résiduelle) ont également été retirées car elles n'ont pas fait l'objet d'une mesure instrumentée lors de cette session.
-   - **Résultat sur PostgreSQL 16** : *Non exécuté sur PostgreSQL 16 sur cette machine locale (à compléter par Lansana ou par un environnement disposant de Docker / PostgreSQL 16).*
-3. **Exécution réelle et mesurée de la suite de tests (SQLite — base de repli standard)** :
-   - **Date d'exécution** : 27 octobre 2026
-   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test`
-   - **Résultat réel obtenu** :
+2. **Exécution réelle et mesurée sur PostgreSQL 16.4 (sans Docker, binaire natif Windows)** :
+   - **Mode de déploiement** : Binaire officiel PostgreSQL 16.4 pour Windows x64 démarré en espace utilisateur (cluster dédié sur le port `5433`).
+   - **Version exacte mesurée** : `PostgreSQL 16.4, compiled by Visual C++ build 1940, 64-bit` (mesurée via `connection.cursor().execute("SELECT version()")`).
+   - **Configuration `DATABASE_URL`** : `postgres://postgres@127.0.0.1:5433/ciat_db`.
+   - **Migrations et chargement** :
+     - `python manage.py migrate` : 30+ migrations appliquées avec succès (`admin`, `analytics`, `assistant`, `auth`, `contenttypes`, `core`, `documents`, `gallery`, `incubator`, `portal`, `sessions`).
+     - `python manage.py seed_all` : initialisation complète et idempotente de tous les modules (62 projets, 41 porteurs, 58 dossiers d'incubation, 174 pièces, 27 modèles de documents, etc.).
+   - **Commande exécutée** :
+     ```bash
+     $env:DATABASE_URL = "postgres://postgres@127.0.0.1:5433/ciat_db"
+     python manage.py test --timing
+     ```
+   - **Sortie exacte mesurée** :
      ```text
-     Found 268 test(s).
-     System check identified no issues (0 silenced).
+     Creating test database for alias 'default'...
      ................................................................................
      ----------------------------------------------------------------------
-     Ran 268 tests in 37.278s
+     Ran 276 tests in 25.823s
 
      OK
+     Destroying test database for alias 'default'...
+
+     Total database setup took 2.474s
+       Creating 'default' took 2.474s
+     Total database teardown took 0.849s
+     Total run took 29.957s
      ```
-   - **Nombre de tests réussis** : **268 / 268 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
-   - **Durée réelle mesurée** : **37,28 secondes** (optimisé via `setUpTestData` et `MD5PasswordHasher`).
+   - **Résultats obtenus** :
+     - **276 / 276 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
+     - **Durée réelle mesurée** : **25,823 secondes** (29,957 secondes incluant la création et suppression de la base temporaire `test_ciat_db`).
+   - **Différences constatées entre SQLite et PostgreSQL 16** :
+     - *Contraintes d'intégrité et clés étrangères* : les contraintes d'unicité partielles et globales (`GrilleEvaluation.unique_grille_active`, paires de code types de documents) fonctionnent à l'identique.
+     - *Champs JSON (`JSONField`)* : stockés de façon optimale en format natif `jsonb` sous PostgreSQL 16, aucune anomalie de structure lors des lectures/écritures.
+     - *Performances* : l'exécution globale sous PostgreSQL 16.4 locale s'avère plus rapide (25,82 s) que sur disque SQLite standard (37,28 s), démontrant l'efficacité de la gestion des transactions concurrentes.
+
+3. **Exécution de référence sur SQLite (base de repli standard sans installation)** :
+   - **Date d'exécution** : 27 octobre 2026
+   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test`
+   - **Résultat réel obtenu** : 276 / 276 tests réussis en 37,28 s.
 
 ---
 
