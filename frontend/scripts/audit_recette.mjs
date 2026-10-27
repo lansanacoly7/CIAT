@@ -1,28 +1,19 @@
 import { chromium } from 'playwright';
 import fs from 'fs';
 
-const TOKENS = {
-  "porteur@ciat.sn": {
-    access: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzMDcwMjM1LCJpYXQiOjE3OTMwNjg0MzUsImp0aSI6IjA5ZGFhYzdmZWQyNjRmNDc4NzRkY2Y4YmNjZGM5MzRiIiwidXNlcl9pZCI6IjUifQ.NbuQIEzUxy9alNm6EU8sKc9jTXfXVZwpvCvgUYc06-Y",
-    refresh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzY3MzIzNSwiaWF0IjoxNzkzMDY4NDM1LCJqdGkiOiJhOWU2MDA3NzMwZDA0MGQ2OGUwYTg2N2Q0NTU2NDhjMCIsInVzZXJfaWQiOiI1In0.tnx0_OJT5Tv4vsUwG3L8w6Ohq2QA1xlHJUEt25OoEgQ"
-  },
-  "comite@ciat.sn": {
-    access: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzMDcwMjM1LCJpYXQiOjE3OTMwNjg0MzUsImp0aSI6IjA0YzM4ZWQyMjA1ODQzMWJiMTcwOTRjZmQ1ZThhODViIiwidXNlcl9pZCI6IjQifQ.1hB8xwLcHj0C_kmpdAtcoEOKqZMKHJuVqHy49xoqw2Y",
-    refresh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzY3MzIzNSwiaWF0IjoxNzkzMDY4NDM1LCJqdGkiOiI5OWNmMDZiOTgzZGQ0YWQyOTA5YzQ5ZmVlOWY1OGE1YiIsInVzZXJfaWQiOiI0In0.Mm_fu0MVQflCIv195MRjFF5v8dEKkTD-c8uE7hfKMlE"
-  },
-  "coordo@ciat.sn": {
-    access: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzMDcwMjM1LCJpYXQiOjE3OTMwNjg0MzUsImp0aSI6Ijc5ZDAzZjg0ZDZmNTQwMzVhNWZlNWI0ZmQwZjlkZTcyIiwidXNlcl9pZCI6IjIifQ.WBzeyssx-UkadgYrZhN3lbQYHun9iNMLmTjzuvyf6sk",
-    refresh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzY3MzIzNSwiaWF0IjoxNzkzMDY4NDM1LCJqdGkiOiIzMDFiYTE3YzdiYTU0YzlkYTdlYjg3ODJkMDg0N2E3NiIsInVzZXJfaWQiOiIyIn0.IxlE2N2wXUjsq3sx46HDfFWf1Hh82RiWfY5TmUFUm3A"
-  },
-  "mentor@ciat.sn": {
-    access: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzMDcwMjM1LCJpYXQiOjE3OTMwNjg0MzUsImp0aSI6IjcyODdjZTQyMWQ0MzQyOWI4YWY1NDdjMzM2OTczMzk3IiwidXNlcl9pZCI6IjMifQ.VjIPs4Oe-Ug_WDBNW-4GgA1FfqX88l2-U_5uT6JqUiE",
-    refresh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzY3MzIzNSwiaWF0IjoxNzkzMDY4NDM1LCJqdGkiOiIwZWNhNDgyNjIyMjM0Y2MzYjRhNmUxMDhjMDJkNTRmZSIsInVzZXJfaWQiOiIzIn0.o8jFScI574wX2LcgwtFQsc2ivXUGw3q_TgFI2PWehOs"
-  },
-  "admin@ciat.sn": {
-    access: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzMDcwMjM1LCJpYXQiOjE3OTMwNjg0MzUsImp0aSI6IjJkZTY3NGVkMTMzMjRlYThhOWIyMzJmNjdhNmE3ZTI2IiwidXNlcl9pZCI6IjEifQ.RsDOt7JX0j36AO6KYQTxKxidH6FKf3e7revltqWCczg",
-    refresh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzY3MzIzNSwiaWF0IjoxNzkzMDY4NDM1LCJqdGkiOiJmNTVjNTlhNDI2ODI0Yjg4YWI4ODUyZmI2NjEzN2VhZCIsInVzZXJfaWQiOiIxIn0.jkUB51ynFD2QbVAQ1VGoNKEGAHcJHfe7N7gKAlkVIrM"
-  }
-};
+const API = process.env.API_URL || 'http://localhost:8000/api';
+const PASSWORD = process.env.DEMO_PASSWORD || 'Ciat2026!';
+
+// Jetons obtenus à l'exécution (aucun jeton n'est écrit dans le dépôt)
+async function obtenirJetons(email) {
+  const res = await fetch(`${API}/auth/token/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: PASSWORD }),
+  });
+  if (!res.ok) throw new Error(`Connexion impossible pour ${email} (${res.status})`);
+  return res.json();
+}
 
 async function runAudit() {
   const browser = await chromium.launch();
@@ -60,7 +51,7 @@ async function runAudit() {
         await page.waitForTimeout(300);
         return;
       }
-      const pair = TOKENS[email];
+      const pair = await obtenirJetons(email);
       await page.goto('http://localhost:3000/');
       await page.evaluate(({ access, refresh }) => {
         localStorage.setItem('ciat_access', access);
