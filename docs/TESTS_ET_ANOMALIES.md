@@ -80,4 +80,45 @@ Ce registre consigne l'ensemble des défauts réels identifiés lors des revues 
 - **Contrôles généraux de qualité :**
   - `python manage.py check` : 0 anomalie signalée.
   - `python manage.py makemigrations --check` : 0 migration en attente.
-  - Suite de tests complète (`python manage.py test apps`) : **256 tests passants** à 100 % (0 échec, 0 erreur) en ~30 à 40 secondes.
+  - Suite de tests complète (`python manage.py test apps`) : **269 tests passants** à 100 % (0 échec, 0 erreur) en ~30 à 40 secondes.
+
+---
+
+## 5. Mesure de Couverture de Tests (Phase 5 — T2)
+
+La couverture de code a été mesurée avec `coverage.py` sur l'ensemble de la suite de tests automatisée du back-end (269 tests).
+
+### Commande de reproduction
+
+Depuis le répertoire `backend/` :
+
+```bash
+coverage run --source=apps manage.py test
+coverage report --include="apps/*"
+```
+
+### Résultats mesurés par application
+
+| Application | Lignes déclarées (Stmts) | Lignes non couvertes (Miss) | Couverture globale | Couverture code métier (hors tests & migrations) |
+|---|:---:|:---:|:---:|:---:|
+| **`apps.analytics`** | 1 613 | 169 | 89,5 % | 83,6 % (862 / 1 031) |
+| **`apps.assistant`** | 711 | 77 | 89,2 % | 82,1 % (353 / 430) |
+| **`apps.core`** | 1 872 | 70 | 96,3 % | 92,1 % (791 / 859) |
+| **`apps.documents`** | 968 | 40 | 95,9 % | 93,9 % (519 / 553) |
+| **`apps.gallery`** | 755 | 50 | 93,4 % | 89,9 % (444 / 494) |
+| **`apps.incubator`** | 2 727 | 99 | 96,4 % | 93,8 % (1 477 / 1 574) |
+| **`apps.portal`** | 759 | 22 | 97,1 % | 95,2 % (437 / 459) |
+| **TOTAL GÉNÉRAL** | **9 405** | **527** | **94,4 %** | **90,4 % (4 883 / 5 400)** |
+
+### Analyse des 3 zones les moins couvertes
+
+Conformément à la règle de mesure factuelle (aucun objectif promis, constat des écarts réels) :
+
+1. **`apps.assistant` (82,1 % sur le code métier — 77 lignes non couvertes) :**
+   - Zone principale : [`apps/assistant/services.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/assistant/services.py) (73,2 % de couverture, 74 lignes non couvertes).
+   - Raison technique : les branches de secours liées aux timeouts réseau LLM, au repli vers des fournisseurs alternatifs et à certains flux de streaming ne sont pas tous sollicités par les mocks des tests unitaires déterministes.
+2. **`apps.analytics` (83,6 % sur le code métier — 169 lignes non couvertes) :**
+   - Zones principales : [`apps/analytics/management/commands/controle_qualite_donnees.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/analytics/management/commands/controle_qualite_donnees.py) (62,0 % de couverture, 70 lignes non couvertes) et [`apps/analytics/services.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/analytics/services.py) (71,9 % de couverture, 32 lignes non couvertes).
+   - Raison technique : la commande de contrôle qualité inspecte des cas de données corrompues ou incomplètes qui ne sont pas tous injectés lors du cycle de test standard, et certains calculs d'agrégations optionnelles (filtres temporels spécifiques) ne sont pas testés unitairement.
+3. **`apps.gallery` (89,9 % sur le code métier — 50 lignes non couvertes) :**
+   - Zones principales : [`apps/gallery/management/commands/seed_gallery.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/gallery/management/commands/seed_gallery.py) (0 % car la commande de seed unitaire est supplantée par `seed_all`) et les cas de repli d'encodage binaire dans [`apps/gallery/qr.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/gallery/qr.py) (94 % de couverture, 9 lignes de cas limites non atteintes).
