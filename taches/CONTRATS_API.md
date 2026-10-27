@@ -8,6 +8,7 @@
 
 | Route | Description |
 |---|---|
+| `GET /health/` | `{ status: "ok", database: "connected" }` (public, supervision, HTTP 503 si base indisponible) |
 | `POST /auth/token/` | `{ email, password }` → `{ access, refresh }` |
 | `POST /auth/token/refresh/` | `{ refresh }` → `{ access }` |
 | `POST /auth/register/` | Crée un porteur de projet |
@@ -68,6 +69,7 @@ Accès : coordonnateur, administrateur, membre du comité. Tous les endpoints ac
 | Route | Réponse |
 |---|---|
 | `GET /indicateurs/` | `{ idees_recues, dossiers_deposes, projets_selectionnes, projets_incubes, prototypes, taux_selection }` |
+| `GET /indicateurs/definitions/` | Définitions méthodologiques des indicateurs décisionnels |
 | `GET /par-domaine/` | `[{ domaine, total }]` |
 | `GET /par-cohorte/` | `[{ cohorte, total, selectionnes, prototypes }]` |
 | `GET /par-genre/` | `[{ genre, total }]` |
@@ -141,8 +143,8 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `GET /fiches/{slug}/qr/` | Public : image PNG du QR code vers la fiche |
 | `GET /fiches/{slug}/fiche/` | Public : fiche promotionnelle officielle en PDF (1 page A4, charte CIAT, problème, solution, équipe, QR code). `404` si non publiée (sauf porteur / équipe). |
 | `POST /fiches/` | Porteur : crée une fiche pour son projet |
-| `POST /fiches/{id}/soumettre/` | Porteur : brouillon vers en validation |
-| `POST /fiches/{id}/valider/`, `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur |
+| `POST /fiches/{id}/valider/` | Coordonnateur ou administrateur : validation d'une fiche |
+| `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur : refus d'une fiche |
 | `GET /statistiques/` | Équipe CIAT : `{ total_vues, par_fiche: [{ slug, titre, vues }] }` |
 
 
@@ -166,8 +168,7 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `POST /question/` | `{ question }` → `{ reponse, donnees, filtres_utilises }`. Le modèle choisit un endpoint et des filtres dans une liste fermée, jamais de SQL. Mêmes droits que les autres endpoints d'analyse ; `503` sans clé IA. |
 | `GET /partenariats/` | Liste filtrable : `{ id, projet, partenaire, type, date_debut, statut }` |
 | `GET /financements/` | Liste filtrable : `{ id, projet, source, montant, date, statut }` |
-| `GET /financements/resume/` | `{ total_finance, partenariats_actifs }` |
-| `GET /partenariats-financements/stats/` | Indicateurs agrégés : `{ total_finance, financements_decaisses, nombre_financements, nombre_partenariats_actifs, total_partenariats, par_source: [{ source, total, count }], par_type_partenariat: [{ type, type_key, count }], par_domaine: [{ domaine, total, count }] }`. Mêmes filtres et droits d'analyse. |
+| `GET /partenariats-financements/stats/` | Indicateurs agrégés (consolide le résumé financements et partenariats) : `{ total_finance, financements_decaisses, nombre_financements, nombre_partenariats_actifs, total_partenariats, par_source: [{ source, total, count }], par_type_partenariat: [{ type, type_key, count }], par_domaine: [{ domaine, total, count }] }`. Mêmes filtres et droits d'analyse. |
 
 ### P6 — Filtres réservés de la liste des fiches (ajout de la Phase 2)
 
@@ -203,8 +204,31 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 |---|---|---|---|---|
 | `/api/gallery/fiches/{slug}/fiche/` | `GET` | Aucun | Génère un document PDF d'une page A4 aux couleurs officielles du CIAT / ISEP Amadou Trawaré de Diamniadio. Contient le titre, badges (domaine, cohorte, avancement), problème, solution innovante, équipe et le QR code officiel menant à la vitrine en ligne. **Droits :** Public pour une fiche au statut `publie`. Pour une fiche non publiée, seul le porteur propriétaire ou un membre de l'équipe CIAT peut y accéder. | `200` : fichier `.pdf` (`application/pdf`) ; `404` : fiche non publiée ou slug inexistant. |
 
-### Calendrier de l'incubateur (`Phase 7 — T1`)
+---
 
-| Route | Méthode | Paramètres | Description & Droits | Codes de retour |
-|---|---|---|---|---|
-| `/api/incubator/calendrier/` | `GET` | `?mois=AAAA-MM` (obligatoire) | Liste chronologique agrégée des jalons et objectifs d'accompagnement du mois spécifié sous la forme `[{ date, type, titre, projet, statut, en_retard }]`. **Droits :** le porteur voit ses projets, le mentor ceux qui lui sont affectés, l'équipe CIAT voit l'ensemble des projets ; le visiteur et porteur étranger ne voient rien (`[]`). | `200` : liste d'événements ordonnés par date ; `400` : mois manquant ou format invalide (attendu `AAAA-MM`) ; `401` : utilisateur non connecté. |
+## Vérification de Conformité OpenAPI (Phase 7 — T3)
+
+- **Date de vérification :** 27 octobre 2026  
+- **Responsable :** Pathé (Back-end)  
+- **Fichier de schéma exporté :** [`docs/openapi.yaml`](../docs/openapi.yaml) (généré via `python manage.py spectacular --file docs/openapi.yaml`)  
+- **Suite de test automatisée :** `backend/apps/core/tests/test_contrat_api.py` (`ApiContractConformanceTests`)  
+- **Résultat du test :** `Ran 2 tests in 3.508s — OK` (100 % de conformité, 0 écart résiduel).
+
+### Écarts constatés et mesures appliquées
+
+Conformément à la règle de la tâche T3 (*« corrige le document, pas le code, sauf bug évident »*) :
+
+1. **Route obsolète `/api/analytics/financements/resume/` :**
+   - *Constat :* Documentée en Phase 2 mais non présente dans l'implémentation effective ni dans le schéma OpenAPI.
+   - *Explication :* Cette route initiale a été consolidée et intégrée directement dans `GET /api/analytics/partenariats-financements/stats/` qui agrège déjà l'ensemble des indicateurs de financements et partenariats actifs.
+   - *Correction :* Mise à jour de la documentation `taches/CONTRATS_API.md` en retirant la route obsolète et en précisant la consolidation.
+2. **Scission des routes de validation/refus de fiches galerie :**
+   - *Constat :* Notées sur une seule ligne combinée `POST /fiches/{id}/valider/, POST /fiches/{id}/refuser/`.
+   - *Correction :* Scission en deux lignes distinctes pour une lecture univoque et un parsing automatisé exact.
+3. **Route méthodologique ajoutée `/api/analytics/indicateurs/definitions/` :**
+   - *Constat :* Présente dans le code et le schéma OpenAPI mais absente du tableau récapitulatif.
+   - *Correction :* Ajout de la route dans la section P3 Analyse de `taches/CONTRATS_API.md`.
+4. **Route publique de santé `/api/health/` :**
+   - *Constat :* Ajoutée en Phase 7 T2.
+   - *Correction :* Intégrée dans le tableau socle de `taches/CONTRATS_API.md` et documentée dans `docs/API.md`.
+
