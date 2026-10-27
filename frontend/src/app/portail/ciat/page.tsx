@@ -147,8 +147,8 @@ export default function CiatPresentationPage() {
        * Cohérent avec les héros de la page Accueil et de la page Incubateur
        * Palette : Brun Nuit #24140D, Brun CIAT #612D10, Ocre Doré #C99A68, Blanc Pur
        * ===================================================================== */}
-      <section className="relative w-full min-h-[calc(100vh-72px)] flex items-center overflow-hidden bg-[#24140D]">
-        {/* Photographie panoramique plein écran du Campus CIAT Diamniadio */}
+      <section className="relative w-full min-h-[calc(100vh-72px)] flex items-center overflow-hidden bg-[#0A0C0F]">
+        {/* Photographie panoramique plein écran du Campus CIAT Diamniadio (nette et sans filtre flou) */}
         <Image
           src="/images/ciat-header-panoramique.jpg"
           alt="Campus et Centre d'Innovation et d'Accélération Technologique (CIAT) à Diamniadio"
@@ -158,14 +158,14 @@ export default function CiatPresentationPage() {
           className="object-cover object-center"
         />
 
-        {/* Dégradé cinématographique asymétrique : sombre à gauche pour contraste parfait, ouvert à droite sur l'architecture */}
+        {/* Dégradé neutre haute définition : sombre à gauche pour contraste net, totalement ouvert et lumineux à droite */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-[#24140D]/95 via-[#24140D]/85 to-[#24140D]/40 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 via-45% to-transparent pointer-events-none"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#24140D]/90 via-transparent to-black/40 pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"
         />
 
         {/* Contenu textuel calé sur le côté gauche (cohérence globale avec Accueil & Incubateur) */}
@@ -197,7 +197,7 @@ export default function CiatPresentationPage() {
 
               <a
                 href="#missions"
-                className="inline-flex items-center justify-center rounded-xl border border-white/35 bg-white/10 hover:bg-white/20 px-7 py-3.5 text-xs sm:text-sm font-semibold text-white transition-all backdrop-blur-sm active:scale-95"
+                className="inline-flex items-center justify-center rounded-xl border border-white/35 bg-white/10 hover:bg-white/20 px-7 py-3.5 text-xs sm:text-sm font-semibold text-white transition-all active:scale-95"
               >
                 Découvrir nos missions
               </a>
