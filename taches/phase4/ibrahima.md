@@ -25,3 +25,10 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Tu attends :** T1 (même environnement Docker). Branche : `Kalz`.
 - **Attendu par :** Lansana (guide de déploiement).
 - **Terminé quand :** une sauvegarde puis une restauration redonnent les mêmes comptes de lignes.
+
+## T4 — Types de documents manquants (module Documents)
+- **Complexité :** Moyenne · **Importance :** Haute · **Durée estimée :** 3 h
+- **À faire :** le sujet (projet 5) demande d'autres documents que les quatre déjà présents (appel à candidatures, fiche de projet, convention, procès-verbal). Il manque : **attestation**, **fiche partenaire**, **rapport de suivi**, **compte rendu** et **rapport annuel**. Ajoute ces cinq types et, pour chacun, trois modèles (formats différents) avec leurs sections et consignes, dans le même style que les modèles existants (migration de données `0002_seed_documents` et `seed_documents`, sans toucher à la logique de génération). Les informations institutionnelles que tu ne connais pas restent des champs à compléter, jamais des valeurs inventées.
+- **Tu attends :** rien. Branche : `Kalz`.
+- **Attendu par :** Lansana (conformité au sujet), Maimouna (le générateur affichera les nouveaux types).
+- **Terminé quand :** `GET /api/documents/types/` renvoie 9 types, chacun avec 3 modèles ; une génération réelle de chaque type donne un document cohérent ; les tests de génération couvrent les nouveaux types.
