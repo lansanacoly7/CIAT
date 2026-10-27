@@ -137,7 +137,7 @@ def generer_image_actualite(actualite, force: bool = False) -> bool:
     footer_font = get_font(13, bold=False)
     draw.text(
         (44, height - 44),
-        "Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio",
+        "Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio",
         fill=OCRE_DORE,
         font=footer_font,
     )
@@ -308,7 +308,7 @@ def generer_photo_galerie(fiche, force: bool = False) -> bool:
         draw.rectangle([(20, height - 60), (width - 20, height - 20)], fill=BRUN_NUIT)
         draw.text(
             (50, height - 48),
-            "Ateliers de Prototypage & FabLab — CIAT ISEP Amadou Traoré, Diamniadio",
+            "Ateliers de Prototypage & FabLab — CIAT ISEP Amadou Trawaré, Diamniadio",
             fill=OCRE_DORE,
             font=footer_font,
         )

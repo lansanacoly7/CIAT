@@ -1,7 +1,7 @@
 # Guide de Démonstration Officiel & Comptes de Test — CIAT
 
 > **Plateforme Numérique du Centre d'Innovation, d'Application et de Transfert (CIAT)**  
-> **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio  
+> **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio  
 > **Auteurs & Destinataires :** Massogui Diop (Enregistrement vidéo), Lansana Coly (Démonstration jury & lead technique)  
 > **Durée totale cible :** 8 à 10 minutes (ou version compacte 4 à 5 minutes pour la vidéo)  
 > **Environnement :** Local uniquement (`localhost:8000` pour Django API, `localhost:3000` pour Next.js)  

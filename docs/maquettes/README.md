@@ -28,7 +28,7 @@ node scripts/captures.mjs
 ### 2. Présentation du CIAT
 - **Ordinateur :** [`02_portail_ciat_desktop.png`](02_portail_ciat_desktop.png)
 - **Téléphone :** [`02_portail_ciat_mobile.png`](02_portail_ciat_mobile.png)
-- **Description :** Présentation détaillée de la mission de l'ISEP Amadou Traoré de Diamniadio, gouvernance et ateliers technologiques.
+- **Description :** Présentation détaillée de la mission de l'ISEP Amadou Trawaré de Diamniadio, gouvernance et ateliers technologiques.
 
 ### 3. Connexion
 - **Ordinateur :** [`03_connexion_desktop.png`](03_connexion_desktop.png)

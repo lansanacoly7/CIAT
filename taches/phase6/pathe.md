@@ -18,3 +18,10 @@ Ordre conseillé : T1, puis T2.
 - **Tu attends :** T1. Branche : `pathe`.
 - **Attendu par :** Lansana (rapport final).
 - **Terminé quand :** chaque chiffre de la section peut être retrouvé en relançant le script.
+
+## T3 — Fiche promotionnelle PDF d'un projet de la galerie
+- **Complexité :** Moyenne · **Importance :** Haute · **Durée estimée :** 3 h
+- **À faire :** le sujet (projet 6) demande la « génération d'une fiche promotionnelle et d'un QR code par projet ». Le QR code existe ; la fiche non. Ajoute `GET /api/gallery/fiches/{slug}/fiche/` (public pour une fiche publiée) : un PDF d'une page A4 aux couleurs de la charte (titre, problème, solution, équipe, avancement, QR code vers la fiche), avec la même base que tes autres PDF. Fiche non publiée : `404`. Documente la route dans le contrat et dans `/api/docs/`.
+- **Tu attends :** rien. Branche : `pathe`.
+- **Attendu par :** Massogui (bouton « Télécharger la fiche » sur la page de la fiche), Lansana.
+- **Terminé quand :** le PDF est valide avec les accents et le QR, une fiche non publiée donne `404`, avec tests.

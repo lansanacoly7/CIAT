@@ -63,7 +63,7 @@ L'audit a porté sur les 5 pages publiques et interactives majeures de la platef
   - Assistant IA : `h1` unique dans le bandeau de discussion.
 
 ### F. Textes alternatifs (`alt`) sur l'ensemble des images
-- Toutes les balises `<Image />` disposent d'un texte alternatif informatif décrivant fidèlement le contenu et le rôle de l'image (ex : *« Campus moderne de l'ISEP Amadou Traoré à Diamniadio, pôle d'innovation et siège du CIAT »*, *« QR Code officiel vers la fiche d'innovation {titre} »*).
+- Toutes les balises `<Image />` disposent d'un texte alternatif informatif décrivant fidèlement le contenu et le rôle de l'image (ex : *« Campus moderne de l'ISEP Amadou Trawaré à Diamniadio, pôle d'innovation et siège du CIAT »*, *« QR Code officiel vers la fiche d'innovation {titre} »*).
 - Les illustrations décoratives sont marquées avec `alt=""` et `aria-hidden="true"`.
 
 ---
