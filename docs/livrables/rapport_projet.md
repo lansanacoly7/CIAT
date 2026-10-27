@@ -2,9 +2,9 @@
 
 > **Développement de Solutions Numériques pour le CIAT et son Incubateur**  
 > **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Auteur :** Lansana Coly (Lead technique)  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 6)  
-> **Volume documentaire :** ~7 pages (synthèse des choix techniques, résultats mesurés, sécurité, usage de l'IA et perspectives)  
+> **Volume documentaire :** 6 pages réelles (conforme à l'exigence académique de 5 à 10 pages)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (environnement de développement local, conteneurs et tests automatisés). Les données de test et de démonstration sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** (Groq, Google Gemini) soumis à quotas de requêtes et aléas de disponibilité.
 
 ---
@@ -18,6 +18,7 @@
 6. [Jeux de Données et Performance des Tests Automatisés](#6-jeux-de-données-et-performance-des-tests-automatisés)
 7. [Limites du Système et Perspectives d'Évolution](#7-limites-du-système-et-perspectives-dévolution)
 8. [Conclusion](#8-conclusion)
+9. [Formats de Remise et Commandes de Génération](#9-formats-de-remise-et-commandes-de-génération)
 
 ---
 
@@ -170,7 +171,7 @@ La validation de l'application repose sur deux suites de tests automatisées ex�
    - Temps d'exécution : **~1,05 seconde** (seuil exigé : < 30 secondes).
    - Résultat : **2/2 tests passants** (100 %).
 2. **Suite globale de tests d'intégration (`python manage.py test apps`) :**  
-   - Couverture : **256 tests unitaires et fonctionnels** couvrant l'ensemble des 7 modules.
+   - Couverture : **265 tests unitaires et fonctionnels** couvrant l'ensemble des 7 modules.
    - Temps d'exécution total : **~30 à 40 secondes**.
    - Résultat : **100 % OK, 0 échec, 0 erreur**.
    - Contrôles système : `python manage.py check` (0 avertissement), `makemigrations --check` (0 divergence de schéma).
@@ -190,3 +191,16 @@ En toute transparence académique et technique, les limites suivantes constituen
 
 La plateforme numérique du CIAT conçue et livrée lors de cette évaluation pratique constitue une réponse technique complète, rigoureuse et pérenne aux défis d'accompagnement de l'ISEP Amadou Traoré de Diamniadio.  
 En mariant la solidité d'une modélisation relationnelle de 34 tables, une étanchéité de droits garantie par une matrice RBAC à 6 rôles, et une intégration de l'IA générative strictement encadrée par des garde-fous anti-hallucination, la solution démontre qu'il est possible de mobiliser l'intelligence artificielle au service de l'action publique et académique sans jamais sacrifier la sécurité, la souveraineté des données ni la rigueur méthodologique.
+
+---
+
+## 9. Formats de Remise et Commandes de Génération
+
+Conformément aux exigences du livrable N° 6, ce rapport est produit sous deux formats officiels respectant la charte graphique CIAT / ISEP Diamniadio :
+- **Format PDF imprimable :** [`docs/livrables/rapport_projet.pdf`](./rapport_projet.pdf) (volume réel mesuré : **6 pages**, pagination dynamique, en-tête institutionnel, palettes `#612D10` et `#C49A45`).
+- **Format Word modifiable :** [`docs/livrables/rapport_projet.docx`](./rapport_projet.docx) (styles typographiques hiérarchisés, tableaux zébrés et schémas encadrés).
+
+### Commande de Régénération Reproductible
+```bash
+.\backend\.venv\Scripts\python.exe scripts/generer_rapport.py
+```
