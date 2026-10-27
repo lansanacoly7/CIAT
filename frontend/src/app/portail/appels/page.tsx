@@ -1,235 +1,208 @@
-"use client";
+import Image from "next/image";
+import type { Metadata } from "next";
+import styles from "./page.module.css";
 
-import { useEffect, useState } from "react";
-import { ApiErrorBanner, Badge, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
-import { getAppelsProjets, type AppelProjet } from "@/lib/portal-api";
+export const metadata: Metadata = {
+  title: "Appel à candidature | CIAT",
+  description:
+    "Rejoignez l’incubateur du CIAT et donnez vie à votre projet innovant.",
+};
 
-function formatDateLimite(dateStr: string) {
-  try {
-    const d = new Date(dateStr);
-    return new Intl.DateTimeFormat("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(d);
-  } catch {
-    return dateStr;
-  }
-}
-
-export default function AppelsPage() {
-  const [items, setItems] = useState<AppelProjet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fromApi, setFromApi] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchAppels = () => {
-    setLoading(true);
-    setError(null);
-    getAppelsProjets()
-      .then((res) => {
-        setItems(res.items);
-        setFromApi(res.fromApi);
-        setIsDemo(Boolean(res.isDemo));
-        setError(res.error);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Les appels à projets sont momentanément indisponibles. Réessayez plus tard.");
-        setItems([]);
-        setIsDemo(false);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    let ignore = false;
-    getAppelsProjets()
-      .then((res) => {
-        if (!ignore) {
-          setItems(res.items);
-          setFromApi(res.fromApi);
-          setIsDemo(Boolean(res.isDemo));
-          setError(res.error);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setError("Les appels à projets sont momentanément indisponibles. Réessayez plus tard.");
-          setItems([]);
-          setIsDemo(false);
-          setLoading(false);
-        }
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const ouverts = items.filter((a) => a.statut === "ouvert");
-  const clos = items.filter((a) => a.statut === "clos");
-
+export default function AppelACandidaturePage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-      <PageTitle
-        tag="Module 1 · Portail Public"
-        title="Appels à Candidatures & Sélections"
-        subtitle="Rejoignez l'incubateur du CIAT. Chaque appel vous permet de soumettre votre idée, de passer en comité et de bénéficier d'un accompagnement personnalisé."
-      />
-
-      {/* Bandeau Mode Démonstration si activé explicitement */}
-      {isDemo && <DemoBanner />}
-
-      {/* État d'erreur réseau / serveur indisponible */}
-      {error && <ApiErrorBanner message={error} onRetry={fetchAppels} />}
-
-      {/* Barre d'état */}
-      {!error && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-xs text-texte-doux">
-            <span>{ouverts.length} appel(s) ouvert(s)</span>
-            <span>·</span>
-            <span>{clos.length} appel(s) archivé(s)</span>
-          </div>
-          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
-            {fromApi ? "Connecté à l'API" : isDemo ? "Données de démo" : "Hors-ligne"}
-          </Badge>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="rounded-2xl border border-bordure bg-ivoire p-12 text-center">
-          <p className="text-sm font-semibold text-brun animate-pulse">Chargement des appels à candidatures...</p>
-        </div>
-      ) : error && items.length === 0 ? null : items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
-          <p className="text-base font-bold text-brun">Aucun appel à projets répertorié actuellement.</p>
-          <p className="mt-2 text-sm text-texte-doux">
-            Le lancement des prochains appels de cohortes sera notifié sur cette page.
-          </p>
-          <div className="mt-6">
-            <ButtonLink href="/portail" variant="secondary">
-              Retour au portail
-            </ButtonLink>
-          </div>
-        </div>
-      ) : (
-
-        <div className="space-y-8">
-          {/* Section Appels Ouverts */}
-          <div>
-            <h2 className="mb-4 text-xl font-bold text-brun">
-              Appels en cours de réception ({ouverts.length})
-            </h2>
-
-            {ouverts.length === 0 ? (
-              <p className="text-sm text-texte-doux italic">Aucun appel ouvert pour le moment.</p>
-            ) : (
-              <div className="space-y-6">
-                {ouverts.map((appel) => (
-                  <Card key={appel.id} className="border-l-4 border-l-succes transition-all hover:shadow-md">
-                    <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <Badge tone="succes">Appel Ouvert</Badge>
-                          <span className="text-xs text-texte-doux">
-                            Clôture des dépôts : <strong className="text-brun">{formatDateLimite(appel.date_limite)}</strong>
-                          </span>
-                        </div>
-
-                        <h3 className="text-xl font-bold text-brun leading-snug">
-                          {appel.titre}
-                        </h3>
-
-                        <p className="max-w-3xl text-sm leading-relaxed text-texte">
-                          {appel.description}
-                        </p>
-
-                        {/* Pièces justificatives requises */}
-                        <div className="rounded-xl border border-bordure bg-white p-4">
-                          <p className="text-xs font-bold text-brun uppercase tracking-wider">
-                            Pièces obligatoires à fournir au dépôt :
-                          </p>
-                          <ul className="mt-2 grid gap-1 sm:grid-cols-2 text-xs text-texte-doux">
-                            {appel.pieces_demandees.map((piece, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <span className="text-succes font-bold">✓</span>
-                                <span>{piece}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Action Candidater -> Redirection vers /incubateur ou /connexion */}
-                      <div className="shrink-0 pt-2 md:pt-0">
-                        <ButtonLink
-                          href="/connexion?next=/incubateur"
-                          variant="primary"
-                          className="w-full text-sm font-bold shadow-sm md:w-auto px-6 py-3"
-                        >
-                          Candidater à cet appel →
-                        </ButtonLink>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Section Appels Clos (Archivés) */}
-          {clos.length > 0 && (
-            <div className="pt-6 border-t border-bordure">
-              <h2 className="mb-4 text-lg font-bold text-texte-doux">
-                Appels clos &amp; Sessions passées ({clos.length})
-              </h2>
-
-              <div className="space-y-4 opacity-80">
-                {clos.map((appel) => (
-                  <div
-                    key={appel.id}
-                    className="rounded-xl border border-bordure bg-white p-6 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Badge tone="neutre">Session Clôturée</Badge>
-                          <span className="text-xs text-texte-doux">
-                            Clôturé le {formatDateLimite(appel.date_limite)}
-                          </span>
-                        </div>
-                        <h3 className="mt-2 text-base font-bold text-brun">{appel.titre}</h3>
-                        <p className="mt-1 text-xs text-texte-doux">{appel.description}</p>
-                      </div>
-
-                      <div className="shrink-0">
-                        <span className="inline-block rounded-lg bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-500">
-                          Candidatures closes
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+    <div className={styles.pageRoot}>
+      <main className={styles["candidate-page"]}>
+        <section className={styles.hero} aria-labelledby="hero-title">
+          <div className={styles["hero__copy"]}>
+            <p className={styles.eyebrow}>Appel à candidature</p>
+            <h1 id="hero-title">
+              Transformez vos idées en <span>projets à fort impact</span>
+            </h1>
+            <p className={styles["hero__description"]}>
+              Rejoignez l’incubateur du CIAT et bénéficiez d’un accompagnement
+              sur mesure pour développer votre projet, de la phase d’idée
+              jusqu’au prototype et au-delà.
+            </p>
+            <div className={styles["hero__actions"]}>
+              <a className={styles.button} href="#preparer">
+                Déposer ma candidature
+              </a>
+              <a className={styles["text-link"]} href="#parcours">
+                En savoir plus
+              </a>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+          <div
+            className={styles["hero__visual"]}
+            aria-label="Porteuse de projet dans un environnement professionnel"
+          >
+            <Image
+              src="/images/portrait-candidature.jpg"
+              alt="Porteuse de projet, prête à développer une idée innovante"
+              fill
+              priority
+              sizes="(max-width: 640px) 100vw, 46vw"
+            />
+            <div className={styles["hero__signature"]}>
+              Innover.<span>Incuber.</span>Transférer.
+            </div>
+          </div>
+        </section>
 
-      {/* Navigation de bas de page */}
-      <div className="mt-12 flex items-center justify-between border-t border-bordure pt-6">
-        <ButtonLink href="/portail/evenements" variant="secondary" className="text-xs">
-          ← Consulter l&apos;agenda des événements
-        </ButtonLink>
-        <ButtonLink href="/portail/incubateur" variant="secondary" className="text-xs">
-          Comprendre le parcours d&apos;incubation →
-        </ButtonLink>
-      </div>
+        <section
+          className={styles.why}
+          id="parcours"
+          aria-labelledby="why-title"
+        >
+          <div className={styles["why__intro"]}>
+            <p className={styles.eyebrow}>Pourquoi candidater ?</p>
+            <h2 id="why-title">Un tremplin pour votre projet</h2>
+            <p>
+              Le CIAT vous offre un environnement propice à l’innovation, des
+              ressources techniques et un réseau de partenaires pour faire
+              grandir votre idée et la transformer en solution concrète.
+            </p>
+            <ul className={styles.benefits}>
+              <li>Accompagnement personnalisé</li>
+              <li>Accès à des experts et mentors</li>
+              <li>Espaces, équipements et ressources dédiés</li>
+              <li>Mise en relation avec des partenaires</li>
+              <li>Valorisation et visibilité de votre projet</li>
+            </ul>
+          </div>
+
+          <div className={styles.process}>
+            <div className={styles["process__heading"]}>
+              <div>
+                <p className={styles.eyebrow}>Le parcours de candidature</p>
+                <h2>Trois étapes pour avancer</h2>
+              </div>
+              <p>
+                Un processus transparent, de la soumission du dossier à la
+                décision du comité.
+              </p>
+            </div>
+            <div className={styles.steps}>
+              <article className={styles.step}>
+                <span className={styles["step__number"]}>01</span>
+                <h3>Soumission du dossier</h3>
+                <p>
+                  Remplissez le formulaire et joignez les pièces requises pour
+                  présenter votre projet.
+                </p>
+              </article>
+              <article className={styles.step}>
+                <span className={styles["step__number"]}>02</span>
+                <h3>Évaluation du projet</h3>
+                <p>
+                  Votre dossier est étudié par un comité selon les critères de
+                  sélection du programme.
+                </p>
+              </article>
+              <article className={styles.step}>
+                <span className={styles["step__number"]}>03</span>
+                <h3>Résultats et intégration</h3>
+                <p>
+                  Vous recevez une réponse et, en cas de sélection, les
+                  prochaines étapes de votre parcours.
+                </p>
+              </article>
+            </div>
+            <div className={styles["process__action"]}>
+              <a
+                className={`${styles.button} ${styles["button--dark"]}`}
+                href="#preparer"
+              >
+                Je candidate maintenant
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.sectors} aria-labelledby="sectors-title">
+          <div className={styles["sectors__visual"]}>
+            <Image
+              src="/images/plantule-secteurs.jpg"
+              alt="Jeune pousse tenue dans les mains, symbole d’un projet en développement"
+              fill
+              sizes="(max-width: 640px) 100vw, 35vw"
+            />
+          </div>
+          <div className={styles["sectors__copy"]}>
+            <p className={styles.eyebrow}>Domaines d’intervention</p>
+            <h2 id="sectors-title">
+              Des projets dans des secteurs porteurs de sens
+            </h2>
+            <p className={styles["sectors__description"]}>
+              Nous accompagnons des initiatives innovantes qui répondent aux
+              besoins du territoire et contribuent au développement économique,
+              social et durable.
+            </p>
+            <ul className={styles["sector-list"]}>
+              <li>AgriTech et agroalimentaire</li>
+              <li>Éducation et formation</li>
+              <li>Numérique et intelligence artificielle</li>
+              <li>Industrie et services</li>
+              <li>Énergie et environnement</li>
+              <li>Culture et création</li>
+              <li>Santé et biotechnologies</li>
+              <li>Fabrication et maintenance</li>
+            </ul>
+          </div>
+        </section>
+
+        <section
+          className={styles.dossier}
+          id="preparer"
+          aria-labelledby="dossier-title"
+        >
+          <div className={styles["dossier__visual"]}>
+            <Image
+              src="/images/campus-ciat.jpg"
+              alt="Vue du campus et des espaces de travail du CIAT"
+              fill
+              sizes="(max-width: 640px) 100vw, 40vw"
+            />
+          </div>
+          <div className={styles["dossier__copy"]}>
+            <p className={styles.eyebrow}>Préparer votre dossier</p>
+            <h2 id="dossier-title">
+              Une candidature claire, un projet bien présenté.
+            </h2>
+            <p>
+              Préparez les éléments essentiels pour permettre au comité de
+              comprendre votre idée, votre équipe et la valeur de la solution
+              proposée.
+            </p>
+            <ul className={styles["dossier__list"]}>
+              <li>Présentation du projet et des objectifs</li>
+              <li>Profil du porteur ou de l’équipe</li>
+              <li>Problème identifié et solution proposée</li>
+              <li>Business plan, si disponible</li>
+              <li>Pièces justificatives demandées</li>
+              <li>Coordonnées à jour</li>
+            </ul>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
+              <a
+                className={`${styles.button} ${styles["button--dark"]}`}
+                href="/connexion?next=/incubateur"
+              >
+                Déposer ma candidature en ligne
+              </a>
+              <a
+                className={styles.button}
+                href="/portail/documents"
+              >
+                Consulter les pièces à fournir
+              </a>
+            </div>
+            <p className={styles["dossier__note"]}>
+              Les dates, critères d’éligibilité et pièces obligatoires doivent
+              être confirmés avec le CIAT avant publication.
+            </p>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
