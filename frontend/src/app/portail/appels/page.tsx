@@ -18,38 +18,41 @@ export default function AppelACandidaturePage() {
     <div className={styles.pageRoot}>
       <main className={styles["candidate-page"]}>
         <section className={styles.hero} aria-labelledby="hero-title">
+          <div className={styles["hero__bg"]}>
+            <Image
+              src="/images/portrait-candidature.jpg"
+              alt="Porteuse de projet, prête à développer une idée innovante au CIAT"
+              fill
+              priority
+              sizes="100vw"
+            />
+          </div>
+          <div className={styles["hero__overlay"]} />
           <div className={styles["hero__copy"]}>
-            <p className={styles.eyebrow}>Appel à candidature</p>
+            <div className={styles.eyebrowBadge}>
+              <span className={styles.badgeDot} />
+              <span>Appel à candidature officiel • Cohorte 2026</span>
+            </div>
             <h1 id="hero-title">
               Transformez vos idées en <span>projets à fort impact</span>
             </h1>
             <p className={styles["hero__description"]}>
               Rejoignez l’incubateur du CIAT et bénéficiez d’un accompagnement
               sur mesure pour développer votre projet, de la phase d’idée
-              jusqu’au prototype et au-delà.
+              jusqu’au prototype industriel et au transfert technologique.
             </p>
             <div className={styles["hero__actions"]}>
               <a className={styles.button} href="#preparer">
-                Déposer ma candidature
+                Déposer ma candidature →
               </a>
               <a className={styles["text-link"]} href="#parcours">
-                En savoir plus
+                En savoir plus ↓
               </a>
             </div>
-          </div>
-          <div
-            className={styles["hero__visual"]}
-            aria-label="Porteuse de projet dans un environnement professionnel"
-          >
-            <Image
-              src="/images/portrait-candidature.jpg"
-              alt="Porteuse de projet, prête à développer une idée innovante"
-              fill
-              priority
-              sizes="(max-width: 640px) 100vw, 46vw"
-            />
-            <div className={styles["hero__signature"]}>
-              Innover.<span>Incuber.</span>Transférer.
+            <div className={styles.heroPills}>
+              <span className={styles.heroPillItem}>✓ Prototypage et ateliers ISEP</span>
+              <span className={styles.heroPillItem}>✓ Accompagnement technique 360°</span>
+              <span className={styles.heroPillItem}>✓ Financement & Partenaires</span>
             </div>
           </div>
         </section>
