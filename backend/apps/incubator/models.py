@@ -124,12 +124,8 @@ class Dossier(models.Model):
     @property
     def pieces_manquantes(self):
         """Liste des types de pièces obligatoires non encore déposés."""
-        if hasattr(self, "_cached_pieces_manquantes"):
-            return self._cached_pieces_manquantes
         types_deposes = {p.type for p in self.pieces.all()}
-        res = [p.value for p in PIECES_OBLIGATOIRES if p.value not in types_deposes]
-        self._cached_pieces_manquantes = res
-        return res
+        return [p.value for p in PIECES_OBLIGATOIRES if p.value not in types_deposes]
 
     @property
     def completude(self):

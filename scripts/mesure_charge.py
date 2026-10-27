@@ -222,8 +222,9 @@ def run_benchmark(
     concurrencies: List[int] = None,
     requests_per_test: int = 200,
     output_md: Optional[str] = None,
+    routes: Optional[List[str]] = None,
 ) -> Dict[int, List[Dict]]:
-    """Exécute la campagne complète de mesure de charge sur les 6 routes."""
+    """Exécute la campagne complète de mesure de charge sur les 6 routes (ou sous-ensemble filtré)."""
     if concurrencies is None:
         concurrencies = [5, 20, 50]
 
@@ -233,6 +234,7 @@ def run_benchmark(
     # Définition des 6 routes du protocole de test
     routes_def = [
         {
+            "key": "actualites",
             "name": "Actualités (public)",
             "method": "GET",
             "path": "/api/portal/actualites/",
@@ -240,6 +242,7 @@ def run_benchmark(
             "data": None,
         },
         {
+            "key": "galerie",
             "name": "Galerie (public)",
             "method": "GET",
             "path": "/api/gallery/fiches/",
@@ -247,6 +250,7 @@ def run_benchmark(
             "data": None,
         },
         {
+            "key": "detail",
             "name": "Détail Fiche (public)",
             "method": "GET",
             "path": f"/api/gallery/fiches/{bench.sample_slug}/",
@@ -254,6 +258,7 @@ def run_benchmark(
             "data": None,
         },
         {
+            "key": "connexion",
             "name": "Connexion (auth throttle)",
             "method": "POST",
             "path": "/api/auth/token/",
@@ -261,6 +266,7 @@ def run_benchmark(
             "data": json.dumps({"email": "porteur@ciat.sn", "password": "Ciat2026!"}).encode("utf-8"),
         },
         {
+            "key": "dossiers",
             "name": "Dossiers (porteur)",
             "method": "GET",
             "path": "/api/incubator/dossiers/",
@@ -268,6 +274,7 @@ def run_benchmark(
             "data": None,
         },
         {
+            "key": "indicateurs",
             "name": "Indicateurs (coordonnateur)",
             "method": "GET",
             "path": "/api/analytics/indicateurs/",
@@ -275,6 +282,10 @@ def run_benchmark(
             "data": None,
         },
     ]
+
+    if routes:
+        routes_lower = [r.lower() for r in routes]
+        routes_def = [r for r in routes_def if r["key"] in routes_lower]
 
     all_results: Dict[int, List[Dict]] = {}
 
@@ -349,13 +360,23 @@ def main():
         default=None,
         help="Fichier de sortie Markdown pour stocker le tableau de résultats",
     )
+    parser.add_argument(
+        "--routes",
+        default=None,
+        help="Liste de routes à tester séparées par des virgules (ex: dossiers,indicateurs)",
+    )
     args = parser.parse_args()
+
+    selected_routes = None
+    if args.routes:
+        selected_routes = [r.strip() for r in args.routes.split(",") if r.strip()]
 
     run_benchmark(
         base_url=args.base_url,
         concurrencies=args.concurrency,
         requests_per_test=args.requests,
         output_md=args.output,
+        routes=selected_routes,
     )
 
 

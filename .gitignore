@@ -57,3 +57,8 @@ backend/media/
 # Les sauvegardes contiennent les données personnelles de la base et ne doivent jamais être publiées.
 backups/
 *.dump
+
+# Fichiers temporaires de banc et scratch
+bench_settings.py
+backend/bench_settings.py
+scratch/
