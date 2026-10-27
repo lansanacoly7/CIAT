@@ -98,8 +98,8 @@ export default function ContactPage() {
       {/* ========================================================= */}
       <section className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden bg-[#24140D]">
         <Image
-          src="/images/contact/hero-contact.jpg"
-          alt="Accueil du CIAT et Campus ISEP Amadou Trawaré Diamniadio"
+          src="/images/contact/contact-equipe-ciat.jpg"
+          alt="Équipe d'accompagnement et accueil du CIAT"
           fill
           priority
           sizes="100vw"

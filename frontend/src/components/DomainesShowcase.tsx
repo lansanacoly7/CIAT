@@ -1,30 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "./domaines.css";
 
 interface DomaineItem {
-  n: string;
-  title: string;
+  numero: string;
+  titre: string;
   description: string;
   image: string;
-  theme: "featured" | "standard" | "compact";
-  enjeux: string;
-  axes: string[];
-  prototypes: string[];
-  atelier: string;
+  icon: string;
+  couleur: string;
+  layout: "large" | "small";
+  enjeux?: string;
+  axes?: string[];
+  prototypes?: string[];
+  atelier?: string;
 }
 
 const domaines: DomaineItem[] = [
   {
-    n: "01",
-    title: "TIC, numérique, intelligence artificielle et données",
+    numero: "01",
+    titre: "TIC, numérique, intelligence artificielle et données",
     description:
-      "Développer des solutions numériques souveraines et des systèmes intelligents adaptés aux besoins prioritaires.",
-    image:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=90",
-    theme: "featured",
+      "Développer des solutions numériques et des systèmes intelligents pour une société plus connectée et plus performante.",
+    image: "/images/domaine-numerique.jpg",
+    icon: "▦",
+    couleur: "orange",
+    layout: "large",
     enjeux:
       "Souveraineté numérique nationale, valorisation des données publiques sénégalaises, modèles d'intelligence artificielle adaptés aux langues nationales (Wolof, Pulaar, Sérère) et cybersécurité des systèmes critiques.",
     axes: [
@@ -36,13 +39,14 @@ const domaines: DomaineItem[] = [
     atelier: "Laboratoire Calcul Haute Performance & IA",
   },
   {
-    n: "02",
-    title: "Mécanique, fabrication et maintenance",
+    numero: "02",
+    titre: "Mécanique, fabrication et maintenance",
     description:
-      "Accompagner la montée en compétences et le développement d’une industrie manufacturière locale compétitive et durable.",
-    image:
-      "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=1200&q=90",
-    theme: "standard",
+      "Accompagner la montée en compétences et le développement d’une industrie locale compétitive et durable.",
+    image: "/images/domaine-mecanique.jpg",
+    icon: "⚙",
+    couleur: "gold",
+    layout: "large",
     enjeux:
       "Rupture de la dépendance aux importations de pièces détachées industrielles par l'usinage numérique CNC de haute précision, la fabrication additive et la maintenance prédictive.",
     axes: [
@@ -54,138 +58,167 @@ const domaines: DomaineItem[] = [
     atelier: "FabLab 4.0 & Ateliers Usinage Lourd",
   },
   {
-    n: "03",
-    title: "Agriculture, transformation et environnement",
+    numero: "03",
+    titre: "Agriculture, transformation et environnement",
     description:
-      "Soutenir l’innovation agrotechnologique et la valorisation durable des ressources naturelles pour la sécurité alimentaire.",
-    image:
-      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=90",
-    theme: "standard",
+      "Soutenir l’innovation agricole et la valorisation des ressources naturelles pour une meilleure sécurité alimentaire et environnementale.",
+    image: "/images/domaine-agriculture.jpg",
+    icon: "♧",
+    couleur: "green",
+    layout: "large",
     enjeux:
-      "Sécurité alimentaire par la maîtrise des ressources hydriques, la mécanisation adaptée des filières maraîchères des Niayes et la réduction des pertes post-récolte par le séchage solaire hygiénique.",
+      "Modernisation des rendements agricoles sahéliens, automatisation de l'irrigation connectée, transformation locale des céréales et valorisation zéro déchet des biomasses.",
     axes: [
-      "Irrigation goutte-à-goutte automatisée par capteurs IoT",
-      "Serres hydroponiques bioclimatiques basse consommation d'eau",
-      "Séchoirs solaires hybrides et conservation agroalimentaire",
+      "Agro-robotique & capteurs IoT d'humidité des sols en temps réel",
+      "Lignes de transformation alimentaire solaire (séchage, pressage)",
+      "Gestion et purification partagée des eaux d'irrigation",
     ],
-    prototypes: ["AgriSol IoT", "Éco-Séchoir Solaire", "SmartIrrig Saloum"],
-    atelier: "Serres Expérimentales & Laboratoire Bio-Industries",
+    prototypes: ["AgriSol IoT", "Éco-séchoir solaire hybride", "Décortiqueuse multicéréales"],
+    atelier: "Halle Agroalimentaire & Ferme Expérimentale",
   },
   {
-    n: "04",
-    title: "Énergie, efficacité énergétique et énergies renouvelables",
+    numero: "04",
+    titre: "Énergie, efficacité énergétique et énergies renouvelables",
     description:
-      "Promouvoir des solutions d'énergie propre, autonomes et accessibles pour le développement durable des territoires.",
-    image:
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=900&q=90",
-    theme: "compact",
+      "Promouvoir des solutions énergétiques propres et accessibles pour un développement durable.",
+    image: "/images/domaine-energie.jpg",
+    icon: "ϟ",
+    couleur: "yellow",
+    layout: "small",
     enjeux:
-      "Valorisation optimale de l'irradiance solaire du Sénégal, bancs d'essai de modules photovoltaïques en climat sahélien et stabilisation des micro-réseaux ruraux autonomes.",
+      "Autonomie énergétique décentralisée des zones rurales, stabilité des micro-réseaux solaires hybrides et optimisation thermique des bâtiments industriels à Diamniadio.",
     axes: [
-      "Caractérisation et tests d'endurance de modules solaires",
-      "Gestion intelligente de micro-réseaux ruraux autonomes",
-      "Contrôleurs de charge et stockage hybride par batteries",
+      "Micro-réseaux intelligents (Smart Grids) et stockage lithium/sodium",
+      "Systèmes de pompage et d'éclairage solaire autonome pay-as-you-go",
+      "Diagnostic d'efficacité énergétique et audits d'installations",
     ],
-    prototypes: ["SunuGrid Micro-Réseau", "Éolienne multipale locale", "Bancs solaires"],
-    atelier: "Plateforme Solaire Extérieure & Laboratoire Énergies",
+    prototypes: ["SunuGrid mini-réseau", "Remorque frigorifique solaire", "Banc test onduleurs"],
+    atelier: "Laboratoire Énergies Renouvelables & Bancs Solaires",
   },
   {
-    n: "05",
-    title: "Pharmaceutique et biomédical",
+    numero: "05",
+    titre: "Pharmaceutique et biomédical",
     description:
-      "Renforcer l’innovation en santé publique et les technologies médicales adaptées aux besoins prioritaires des populations.",
-    image:
-      "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=900&q=90",
-    theme: "compact",
+      "Renforcer l’innovation en santé pour répondre aux besoins des populations et améliorer la qualité de vie.",
+    image: "/images/domaine-biomedical.jpg",
+    icon: "✚",
+    couleur: "red",
+    layout: "small",
     enjeux:
-      "Souveraineté sanitaire nationale par la fabrication locale de dispositifs médicaux d'urgence réparables, la télémédecine solaire décentralisée et l'extraction validée de principes actifs locaux.",
+      "Amélioration des équipements biomédicaux locaux, télédiagnostic pour postes de santé isolés et extraction standardisée de principes actifs de la pharmacopée traditionnelle.",
     axes: [
-      "Valises solaires de télédiagnostic médical pour postes de santé",
-      "Incubateurs néonataux robustes thermorégulés",
-      "Procédés d'extraction standardisés pour pharmacopée locale",
+      "Dispositifs médicaux de monitoring physiologiques connectés",
+      "Incubateurs néonataux robustes basse consommation pour maternités rurales",
+      "Formulation et conditionnement de principes actifs locaux (Moringa, Artemisia)",
     ],
-    prototypes: ["TéléDiag Rufisque", "Incubateur néonatal rural", "Hydrogel Moringa certifié"],
-    atelier: "Laboratoire Dispositifs Médicaux & Chimie Bio",
+    prototypes: ["Incubateur néonatal low-cost", "Moniteur biomédical télémédecine", "Gel antiseptique Moringa"],
+    atelier: "Atelier Prototypage Biomédical & Chimie Verte",
   },
   {
-    n: "06",
-    title: "Éducation, formation professionnelle et insertion",
+    numero: "06",
+    titre: "Éducation, formation professionnelle et insertion",
     description:
-      "Former les talents d’aujourd’hui et de demain aux métiers d'avenir pour stimuler l’employabilité et l’entrepreneuriat.",
-    image:
-      "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=90",
-    theme: "compact",
+      "Former les talents d’aujourd’hui et de demain pour favoriser l’employabilité et l’entrepreneuriat.",
+    image: "/images/domaine-education.jpg",
+    icon: "⌂",
+    couleur: "purple",
+    layout: "small",
     enjeux:
-      "Transformation de l'apprentissage technique par la réalité virtuelle (VR), simulateurs industriels sans risque et passerelles directes pour l'insertion des diplômés de l'ISEP.",
+      "Adéquation parfaite entre les référentiels de compétences techniques de l'ISEP et les besoins des filières industrielles émergentes du Sénégal et de la sous-région.",
     axes: [
-      "Simulateurs immersifs VR d'usinage et soudure industrielle",
-      "Plateformes d'apprentissage hybride pour filières techniques",
-      "Matching prédictif des diplômés de l'ISEP avec les entreprises",
+      "Simulateurs immersifs de formation en Réalité Virtuelle (soudure, maintenance)",
+      "Kits robotiques et pédagogiques pour lycées techniques",
+      "Plateformes d'apprentissage hybride et certification des compétences",
     ],
-    prototypes: ["Simulateur VR Usinage", "Plateforme Insertion Métiers", "Kit robotique lycées"],
-    atelier: "Centre Immersif & Laboratoire Réalité Virtuelle",
+    prototypes: ["Simulateur VR soudure", "Kit robotique pédagogique", "Portail insertion diplômés"],
+    atelier: "Pôle Ingénierie Pédagogique & Réalité Virtuelle",
   },
   {
-    n: "07",
-    title: "Services aux collectivités, entrepreneuriat et incubation",
+    numero: "07",
+    titre: "Services aux collectivités, entrepreneuriat et incubation",
     description:
-      "Soutenir les initiatives territoriales et transformer les idées à fort impact en entreprises innovantes et pérennes.",
-    image:
-      "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=90",
-    theme: "compact",
+      "Soutenir les initiatives locales et accompagner la création d’entreprises innovantes et responsables.",
+    image: "/images/domaine-incubation.jpg",
+    icon: "♧",
+    couleur: "terracotta",
+    layout: "small",
     enjeux:
-      "Modernisation des collectivités territoriales, transition vers des villes durables (Pôle Urbain de Diamniadio), optimisation de la gestion des déchets et traçabilité de la fiscalité locale.",
+      "Accélération des startups territoriales, dématérialisation des services publics locaux et création de valeur partagée au sein du pôle urbain de Diamniadio.",
     axes: [
-      "Capteurs intelligents pour l'optimisation des tournées déchets",
-      "Tricycles utilitaires électriques pour logistique urbaine",
-      "Plateformes numériques de perception et guichet unique",
+      "Guichet unique numérique et plateformes civiques territoriales",
+      "Parcours d'incubation en 5 jalons normés (idéation à levée de fonds)",
+      "Mentorat d'affaires, prototypage rapide et mise en relation industrielle",
     ],
-    prototypes: ["Dakar Waste Solutions", "SmartTax Collect", "Gestion partagée Diamniadio"],
-    atelier: "Hub Logistique & Modélisation Territoriale",
+    prototypes: ["SmartTax Collecte fiscale", "Dakar Waste Solutions", "Plateforme TerangaLang"],
+    atelier: "Incubateur CIAT & Espaces de Coworking Collaboratif",
   },
 ];
 
 export default function DomainesShowcase() {
   const [activeModalItem, setActiveModalItem] = useState<DomaineItem | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveModalItem(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <main className="ciat-page">
+    <main className="ciat-domains-page">
       {/* HERO */}
       <section className="ciat-hero">
-        <div className="ciat-hero-copy">
+        <div className="ciat-hero-content">
           <div className="ciat-eyebrow">
-            <span>NOS 7 DOMAINES STRATÉGIQUES</span>
-            <i />
+            <span>NOS 7 DOMAINES</span>
+            <span className="ciat-eyebrow-line" />
           </div>
 
           <h1>
-            7 domaines
+            Des expertises
             <br />
-            d’expertise au service
+            au service d’un
             <br />
-            d’un <em>avenir durable</em>
+            <em>avenir durable</em>
           </h1>
 
-          <p>
-            Implanté au sein de l’ISEP Amadou Trawaré à Diamniadio, le CIAT intervient
-            dans sept filières technologiques prioritaires pour accompagner les talents,
-            prototyper des solutions industrielles et répondre aux défis du Sénégal.
+          <p className="ciat-hero-description">
+            Le CIAT intervient dans 7 domaines stratégiques pour
+            accompagner les talents, soutenir l’innovation et répondre
+            aux défis du Sénégal et de l’Afrique de demain.
           </p>
 
-          <a href="#domaines" className="ciat-hero-link">
-            <span className="ciat-play">↘</span>
+          <a href="#domaines" className="ciat-hero-action">
             <span>Découvrir nos domaines</span>
-            <span className="ciat-arrow">→</span>
+            <span className="ciat-action-arrow">↗</span>
           </a>
+
+          <div className="ciat-hero-stats">
+            <div>
+              <strong>7</strong>
+              <span>domaines</span>
+            </div>
+            <div>
+              <strong>1</strong>
+              <span>mission</span>
+            </div>
+            <div>
+              <strong>∞</strong>
+              <span>possibilités</span>
+            </div>
+          </div>
         </div>
 
-        <div className="ciat-hero-image" aria-label="Illustration d’un espace de travail technique au CIAT">
+        <div className="ciat-hero-visual">
           <div className="ciat-hero-photo" />
-          <div className="ciat-hero-cut ciat-hero-cut-one" />
-          <div className="ciat-hero-cut ciat-hero-cut-two" />
-          <div className="ciat-hero-ring" />
 
-          <div className="ciat-hero-words">
+          <div className="ciat-hero-overlay ciat-hero-overlay-back" />
+          <div className="ciat-hero-overlay ciat-hero-overlay-front" />
+
+          <div className="ciat-hero-principles">
             <span>INNOVER</span>
             <span>FORMER</span>
             <span>ENTREPRENDRE</span>
@@ -195,190 +228,256 @@ export default function DomainesShowcase() {
         </div>
       </section>
 
-      {/* INTRODUCTION + GRILLE */}
-      <section className="ciat-domains" id="domaines">
-        <header className="ciat-domains-intro">
-          <div>
-            <span className="ciat-section-label">NOS 7 DOMAINES</span>
-            <p>
-              Des compétences, des infrastructures
-              <br className="desktop-break" />
-              et un accompagnement sur mesure pour
-              <br className="desktop-break" />
-              transformer les idées en solutions concrètes.
-            </p>
+      {/* INTRODUCTION */}
+      <section className="ciat-domains-section" id="domaines">
+        <header className="ciat-domains-header">
+          <div className="ciat-domains-heading">
+            <div className="ciat-section-eyebrow">
+              <span>NOS 7 DOMAINES</span>
+              <i />
+            </div>
+
+            <h2>
+              Une approche globale,
+              <br />
+              au service de l’impact
+            </h2>
           </div>
 
-          <a href="#domaine-01" className="ciat-discover">
-            Tout découvrir <span>↗</span>
-          </a>
+          <p className="ciat-domains-intro">
+            Le CIAT structure son action autour de 7 domaines
+            complémentaires, pour favoriser l’innovation, la formation,
+            le transfert de compétences et la création de valeur durable
+            au Sénégal et en Afrique.
+          </p>
+
+          <div className="ciat-intro-note">
+            <span>
+              Chaque domaine
+              <br />
+              est un levier pour
+              <br />
+              bâtir demain.
+            </span>
+            <a href="#domaine-01" aria-label="Découvrir les domaines">
+              ↗
+            </a>
+          </div>
         </header>
 
-        <div className="ciat-domain-grid">
-          {domaines.map((d) => (
-            <article
-              className={`ciat-domain-card ciat-domain-${d.theme}`}
-              id={`domaine-${d.n}`}
-              key={d.n}
-            >
-              <div
-                className="ciat-domain-image"
-                style={{ backgroundImage: `url("${d.image}")` }}
-                role="img"
-                aria-label={`Image illustrative du domaine ${d.title}`}
+        {/* PREMIÈRE LIGNE : 3 CARTES */}
+        <div className="ciat-domain-grid ciat-domain-grid-large">
+          {domaines
+            .filter((d) => d.layout === "large")
+            .map((d) => (
+              <article
+                className="ciat-domain-card"
+                id={`domaine-${d.numero}`}
+                key={d.numero}
               >
-                <span className="ciat-image-index">{d.n}</span>
-              </div>
+                <div
+                  className="ciat-card-image"
+                  style={{ backgroundImage: `url("${d.image}")` }}
+                  role="img"
+                  aria-label={`Illustration : ${d.titre}`}
+                />
 
-              <div className="ciat-domain-body">
-                <span className="ciat-domain-index">{d.n}</span>
+                <span className={`ciat-card-icon ${d.couleur}`}>
+                  {d.icon}
+                </span>
 
-                <div className="ciat-domain-symbol" aria-hidden="true">
-                  {["◉", "⌁", "♧", "ϟ", "⊙", "⌂", "⌖"][Number(d.n) - 1]}
+                <div className="ciat-card-content">
+                  <span className="ciat-card-number">{d.numero}</span>
+                  <h3>{d.titre}</h3>
+                  <p>{d.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalItem(d)}
+                    className="ciat-card-link"
+                    aria-label={`En savoir plus sur le domaine ${d.titre}`}
+                  >
+                    En savoir plus <span>→</span>
+                  </button>
                 </div>
+              </article>
+            ))}
+        </div>
 
-                <h2>{d.title}</h2>
-                <p>{d.description}</p>
+        {/* DEUXIÈME LIGNE : 4 CARTES */}
+        <div className="ciat-domain-grid ciat-domain-grid-small">
+          {domaines
+            .filter((d) => d.layout === "small")
+            .map((d) => (
+              <article
+                className="ciat-domain-card ciat-domain-card-small"
+                id={`domaine-${d.numero}`}
+                key={d.numero}
+              >
+                <div
+                  className="ciat-card-image"
+                  style={{ backgroundImage: `url("${d.image}")` }}
+                  role="img"
+                  aria-label={`Illustration : ${d.titre}`}
+                />
 
-                <button
-                  type="button"
-                  onClick={() => setActiveModalItem(d)}
-                  className="ciat-card-link"
-                  aria-label={`En savoir plus sur ${d.title}`}
-                >
-                  En savoir plus <span>→</span>
-                </button>
-              </div>
-            </article>
-          ))}
+                <span className={`ciat-card-icon ${d.couleur}`}>
+                  {d.icon}
+                </span>
+
+                <div className="ciat-card-content">
+                  <span className="ciat-card-number">{d.numero}</span>
+                  <h3>{d.titre}</h3>
+                  <p>{d.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalItem(d)}
+                    className="ciat-card-link"
+                    aria-label={`En savoir plus sur le domaine ${d.titre}`}
+                  >
+                    En savoir plus <span>→</span>
+                  </button>
+                </div>
+              </article>
+            ))}
         </div>
       </section>
 
       {/* BANDEAU FINAL */}
-      <section className="ciat-bottom-cta">
-        <div className="ciat-bottom-copy">
-          <span className="ciat-section-label">
-            UN ÉCOSYSTÈME AU SERVICE DES IDÉES
-          </span>
+      <section className="ciat-closing">
+        <div className="ciat-closing-content">
+          <div className="ciat-section-eyebrow">
+            <span>LE CIAT</span>
+            <i />
+          </div>
 
           <h2>
-            Des idées d’aujourd’hui,
+            Ensemble, transformons
             <br />
-            les <em>solutions de demain.</em>
+            les idées en <em>solutions</em>
           </h2>
 
           <p>
-            Apprenant de l’ISEP, porteur de projet ou entreprise partenaire : rejoignez
-            l’incubateur et les laboratoires technologiques du CIAT à Diamniadio pour
-            développer et valider vos innovations.
+            Rejoignez un écosystème d’innovation, de formation et de
+            transfert au service du développement du Sénégal et de l’Afrique.
           </p>
 
-          <Link href="/portail/ciat" className="ciat-cta-button">
+          <Link href="/portail/ciat" className="ciat-closing-button">
             Découvrir le CIAT <span>→</span>
           </Link>
         </div>
 
-        <div className="ciat-bottom-visual">
-          <div className="ciat-bottom-photo" />
-          <div className="ciat-bottom-shape" />
-          <div className="ciat-bottom-arc" />
+        <div className="ciat-closing-visual">
+          <div className="ciat-closing-photo" />
+          <div className="ciat-closing-cut" />
+          <div className="ciat-closing-curve" />
         </div>
       </section>
 
-      {/* MODAL LIGHTBOX DÉTAILLÉE AU CLIC SUR UNE CARTE */}
+      {/* MODAL FICHE DÉTAILLÉE DE DOMAINE */}
       {activeModalItem && (
         <div
+          className="ciat-modal-backdrop"
+          onClick={() => setActiveModalItem(null)}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="modal-domain-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setActiveModalItem(null)}
         >
           <div
-            className="relative w-full max-w-2xl rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-[#EFE4D6] text-[#24140D] max-h-[90vh] overflow-y-auto"
+            className="ciat-modal-card"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Bouton Fermer */}
             <button
               type="button"
+              className="ciat-modal-close"
               onClick={() => setActiveModalItem(null)}
-              className="absolute top-4 right-4 h-9 w-9 rounded-full bg-[#FAF7F2] text-[#612D10] hover:bg-[#612D10] hover:text-white transition-colors flex items-center justify-center font-bold text-sm"
-              aria-label="Fermer la fenêtre détaillée"
+              aria-label="Fermer la boîte de dialogue"
             >
               ✕
             </button>
 
-            {/* En-tête modal */}
-            <div className="flex items-center gap-3 mb-3">
-              <span className="px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-xs font-bold text-[#612D10]">
-                Domaine {activeModalItem.n}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <span className={`ciat-card-icon ${activeModalItem.couleur}`} style={{ margin: 0, width: "36px", height: "36px", fontSize: "16px" }}>
+                {activeModalItem.icon}
               </span>
-              <span className="text-xs text-[#7A695D] font-medium">
-                Pôle d&apos;excellence CIAT Diamniadio
+              <span style={{ fontSize: "12px", fontWeight: "bold", letterSpacing: "0.1em", color: "#C99A68", textTransform: "uppercase" }}>
+                Domaine {activeModalItem.numero}
               </span>
             </div>
 
-            <h3 id="modal-domain-title" className="text-xl sm:text-2xl font-bold tracking-tight text-[#24140D] mb-3">
-              {activeModalItem.title}
+            <h3 style={{ fontSize: "20px", fontWeight: "bold", margin: "0 0 14px", color: "#24140D", lineHeight: 1.3 }}>
+              {activeModalItem.titre}
             </h3>
 
-            <p className="text-sm text-[#5A483D] leading-relaxed mb-6">
+            <p style={{ fontSize: "13px", lineHeight: "1.7", color: "#5A483D", margin: "0 0 20px" }}>
               {activeModalItem.description}
             </p>
 
-            <div className="space-y-5 border-t border-[#EFE4D6] pt-5 text-xs sm:text-sm">
-              {/* Enjeux */}
-              <div>
-                <strong className="block text-[#612D10] uppercase tracking-wider text-[11px] font-bold mb-1">
-                  Enjeux Stratégiques & Impact National
+            {activeModalItem.enjeux && (
+              <div style={{ background: "#FAF7F2", border: "1px solid #EFE4D6", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+                <strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#612D10", marginBottom: "6px" }}>
+                  Enjeux Prioritaires au Sénégal
                 </strong>
-                <p className="text-[#5A483D] leading-relaxed">{activeModalItem.enjeux}</p>
+                <p style={{ margin: 0, fontSize: "12px", lineHeight: "1.6", color: "#4A3E34" }}>
+                  {activeModalItem.enjeux}
+                </p>
               </div>
+            )}
 
-              {/* Axes prioritaires */}
-              <div>
-                <strong className="block text-[#612D10] uppercase tracking-wider text-[11px] font-bold mb-2">
-                  Axes Technologiques Prioritaires
+            {activeModalItem.axes && activeModalItem.axes.length > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                <strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#612D10", marginBottom: "8px" }}>
+                  Axes Technologiques & Ateliers
                 </strong>
-                <ul className="space-y-1.5 list-disc list-inside text-[#3E2F26]">
-                  {activeModalItem.axes.map((axe) => (
-                    <li key={axe}>{axe}</li>
+                <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#5A483D", lineHeight: "1.8" }}>
+                  {activeModalItem.axes.map((axe, i) => (
+                    <li key={i}>{axe}</li>
                   ))}
                 </ul>
               </div>
+            )}
 
-              {/* Prototypes & Atelier */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div className="rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] p-3.5">
-                  <span className="block text-[10px] uppercase font-bold text-[#612D10] mb-1">
-                    Atelier & Laboratoire rattaché
-                  </span>
-                  <p className="font-semibold text-xs text-[#24140D]">{activeModalItem.atelier}</p>
-                </div>
-
-                <div className="rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] p-3.5">
-                  <span className="block text-[10px] uppercase font-bold text-[#612D10] mb-1">
-                    Exemples de Prototypes
-                  </span>
-                  <p className="text-xs text-[#5A483D]">{activeModalItem.prototypes.join(" · ")}</p>
+            {activeModalItem.prototypes && activeModalItem.prototypes.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#612D10", marginBottom: "8px" }}>
+                  Exemples de Prototypes Réalisés
+                </strong>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {activeModalItem.prototypes.map((p, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        background: "#24140D",
+                        color: "#FFFFFF",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                      }}
+                    >
+                      {p}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Actions modal */}
-            <div className="mt-8 pt-4 border-t border-[#EFE4D6] flex flex-wrap items-center justify-between gap-3">
+            <div style={{ borderTop: "1px solid #EFE4D6", paddingTop: "18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11px", color: "#8A7A6E" }}>
+                Infrastructure : <strong>{activeModalItem.atelier || "Ateliers CIAT Diamniadio"}</strong>
+              </span>
               <Link
-                href="/galerie"
-                className="text-xs font-bold text-[#612D10] hover:underline"
-                onClick={() => setActiveModalItem(null)}
-              >
-                Voir les prototypes en galerie ↗
-              </Link>
-
-              <Link
-                href="/connexion?next=/incubateur"
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-[#612D10] px-5 text-xs font-bold text-white hover:bg-[#24140D] transition-colors"
-                onClick={() => setActiveModalItem(null)}
+                href="/portail/incubateur"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#C99A68",
+                  color: "#24140D",
+                  fontWeight: "bold",
+                  fontSize: "12px",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                }}
               >
                 Candidater dans ce domaine →
               </Link>
