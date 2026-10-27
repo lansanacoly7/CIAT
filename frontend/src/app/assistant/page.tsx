@@ -300,7 +300,7 @@ function AssistantApp() {
                       }`}
                     >
                       <span className="line-clamp-1 text-xs">{conv.titre}</span>
-                      <span className="mt-1 text-[10px] text-texte-doux/80 font-normal">
+                      <span className="mt-1 text-[10px] text-[#5A4B42] font-normal">
                         {formatConversationDate(conv.cree_le)}
                       </span>
                     </button>
@@ -426,7 +426,7 @@ function AssistantApp() {
                   }
                   className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
                 >
-                  <span className="block text-[11px] text-beige font-bold uppercase mb-1">
+                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
                     Parcours
                   </span>
                   Quelles sont les étapes du parcours d&apos;incubation ?
@@ -438,7 +438,7 @@ function AssistantApp() {
                   }
                   className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
                 >
-                  <span className="block text-[11px] text-beige font-bold uppercase mb-1">
+                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
                     Propriété
                   </span>
                   Comment est gérée la propriété intellectuelle des brevets ?
@@ -450,7 +450,7 @@ function AssistantApp() {
                   }
                   className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
                 >
-                  <span className="block text-[11px] text-beige font-bold uppercase mb-1">
+                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
                     Atelier
                   </span>
                   Aide-moi à structurer le pitch de mon projet innovant.

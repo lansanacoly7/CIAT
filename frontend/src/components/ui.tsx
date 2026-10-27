@@ -136,10 +136,10 @@ export function SimpleCard({
  * -------------------------------------------------------------------------- */
 
 const BADGES = {
-  succes: "bg-[#e3f1e9] text-succes border border-[#c4e3d1]",
-  alerte: "bg-[#f8ebd3] text-alerte border border-[#edd5ab]",
-  erreur: "bg-[#f6dedc] text-erreur border border-[#eec0bc]",
-  info: "bg-[#e6f0fa] text-info border border-[#bfdbfe]",
+  succes: "bg-[#e3f1e9] text-[#1b5e20] border border-[#c4e3d1]",
+  alerte: "bg-[#f8ebd3] text-[#854d0e] border border-[#edd5ab]",
+  erreur: "bg-[#f6dedc] text-[#b91c1c] border border-[#eec0bc]",
+  info: "bg-[#e6f0fa] text-[#1d4ed8] border border-[#bfdbfe]",
   neutre: "bg-white text-brun border border-bordure",
   ia: "bg-[#FFF7ED] text-[#9A3412] border border-[#FDBA74]",
 } as const;
@@ -191,7 +191,7 @@ export function PageTitle({
   return (
     <div className="mb-8 border-b border-beige/60 pb-6">
       {tag && (
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-beige">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#5A4B42]">
           {tag}
         </p>
       )}
