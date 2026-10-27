@@ -106,8 +106,8 @@ export default function ContactPage() {
           className="object-cover object-[center_35%]"
         />
 
-        {/* Voile subtil et doux laissant ressortir la clarté et l'architecture boisée du hall */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/15 to-transparent pointer-events-none" />
+        {/* Voile d'assombrissement doux et progressif sur la partie écriture pour une lisibilité impeccable sans masquer la clarté du hall */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 via-45% to-transparent pointer-events-none" />
 
         {/* Contenu Titre & Sous-titre adapté au CIAT */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
