@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
 import { ArrowRight, Check, ChevronDown } from "lucide-react";
 
 export interface Domaine {
@@ -17,31 +17,7 @@ export interface ProjectInfo {
 export const EMPTY_PROJECT_INFO: ProjectInfo = { titre: "", domaine: null, resume: "", probleme: "", solution: "" };
 
 const CONTROL =
-  "w-full rounded-xl border bg-white px-4 py-2.5 text-[#24140D] outline-none transition-all placeholder:text-[#a08f80] focus:border-[#C99A68] focus:ring-4 focus:ring-[#C99A68]/20";
-
-function Label({
-  htmlFor,
-  required,
-  optional,
-  children,
-}: {
-  htmlFor: string;
-  required?: boolean;
-  optional?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-semibold text-[#24140D]">
-      {children}
-      {required && <span className="text-[#DC2626]"> *</span>}
-      {optional && <span className="font-normal text-[#8C6D4F]"> (facultatif)</span>}
-    </label>
-  );
-}
-
-function Subtitle({ children }: { children: ReactNode }) {
-  return <p className="mb-1.5 text-xs leading-normal text-[#6b5646]">{children}</p>;
-}
+  "w-full rounded-xl border border-[#4A3B32]/35 bg-white px-4 py-2.5 text-[#1F130B] outline-none transition-all placeholder:text-[#5A4638]/70 focus:border-[#7A3E1D] focus:ring-2 focus:ring-[#7A3E1D]/20";
 
 function CustomSelect({
   id,
@@ -89,23 +65,24 @@ function CustomSelect({
         type="button"
         role="combobox"
         aria-expanded={open}
+        aria-controls="domaine-options-list"
         aria-haspopup="listbox"
         aria-describedby={ariaDescribedBy}
         onClick={() => setOpen((prev) => !prev)}
-        className={`flex h-12 w-full items-center justify-between rounded-xl border bg-white px-4 text-left text-sm transition-all focus:outline-none focus:ring-4 focus:ring-[#C99A68]/20 ${
+        className={`flex h-11 w-full items-center justify-between rounded-xl border bg-white px-4 text-left text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#7A3E1D]/20 ${
           error
             ? "border-[#DC2626]"
             : open
-              ? "border-[#A35926] ring-2 ring-[#C99A68]/30"
-              : "border-[#EFE4D6] hover:border-[#C99A68]"
+              ? "border-[#7A3E1D] ring-2 ring-[#7A3E1D]/20"
+              : "border-[#4A3B32]/35 hover:border-[#7A3E1D]"
         }`}
       >
-        <span className={`block truncate pr-2 ${selected ? "font-medium text-[#24140D]" : "text-[#a08f80]"}`}>
-          {selected ? selected.nom : "Sélectionner un domaine"}
+        <span className={`block truncate pr-2 ${selected ? "font-medium text-[#1F130B]" : "text-[#5A4638]/70"}`}>
+          {selected ? selected.nom : ""}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#8C6D4F] transition-transform duration-200 ${
-            open ? "rotate-180 text-[#A35926]" : ""
+          className={`h-4 w-4 shrink-0 text-[#1F130B] transition-transform duration-200 ${
+            open ? "rotate-180 text-[#7A3E1D]" : ""
           }`}
           aria-hidden="true"
         />
@@ -113,6 +90,7 @@ function CustomSelect({
 
       {open && (
         <ul
+          id="domaine-options-list"
           role="listbox"
           tabIndex={-1}
           className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-[#EFE4D6] bg-white py-1.5 shadow-xl transition-all"
@@ -181,42 +159,16 @@ export default function ProjectInfoStep({
     onSubmit({ ...form, titre: form.titre.trim() });
   }
 
-  const hasContent = Boolean(form.titre || form.probleme || form.solution || form.resume || form.domaine !== null);
-
   return (
-    <form onSubmit={submit} noValidate className="space-y-5">
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between border-b border-[#EFE4D6]/60 pb-3.5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#A35926]">
-              Dossier de candidature
-            </span>
-            <span className="text-xs text-[#8C6D4F]">· Formulaire de saisie</span>
-          </div>
-          <h2 className="font-[family-name:var(--font-title)] text-xl sm:text-2xl font-bold tracking-tight text-[#24140D]">
-            Présentez votre projet
-          </h2>
-          <p className="text-xs text-[#6b5646]">
-            Renseignez les premières informations pour initier votre dossier auprès du CIAT.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0 pt-0.5">
-          {hasContent && (
-            <button
-              type="button"
-              onClick={() => {
-                setForm(EMPTY_PROJECT_INFO);
-                setErrors({});
-              }}
-              className="text-xs font-semibold text-[#8C6D4F] transition-colors hover:text-[#DC2626]"
-            >
-              Effacer les champs
-            </button>
-          )}
-          <span className="inline-flex items-center rounded-full border border-[#A35926]/25 bg-[#A35926]/5 px-3 py-0.5 text-xs font-bold text-[#A35926]">
-            Étape 1 sur 3
-          </span>
-        </div>
+    <form onSubmit={submit} noValidate className="space-y-4">
+      {/* En-tête simplifié fidèle à la maquette */}
+      <div className="space-y-1 pb-1">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1F130B]">
+          Présentez votre projet
+        </h2>
+        <p className="text-sm text-[#4A3B32]">
+          Renseignez les premières informations pour initier votre dossier auprès du CIAT.
+        </p>
       </div>
 
       {error && (
@@ -225,98 +177,101 @@ export default function ProjectInfoStep({
         </div>
       )}
 
-      {/* SECTION 1 : IDENTITÉ & DOMAINE */}
-      <div className="space-y-3">
-        <div className="border-b border-[#EFE4D6]/70 pb-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#A35926]">
-            Identité & Domaine
-          </span>
+      {/* Ligne 1 : Titre du projet & Domaine d'activité (2 colonnes) */}
+      <div className="grid gap-4 sm:grid-cols-2 items-start">
+        <div>
+          <label htmlFor="titre" className="mb-1.5 block text-sm font-bold text-[#1F130B]">
+            Titre du projet <span className="text-[#DC2626]">*</span>
+          </label>
+          <input
+            id="titre"
+            maxLength={200}
+            value={form.titre}
+            onChange={set("titre")}
+            aria-invalid={Boolean(errors.titre)}
+            aria-describedby={errors.titre ? "titre-error" : undefined}
+            placeholder="Ex: Système de prototypage solaire"
+            className={`${CONTROL} h-11 ${errors.titre ? "border-[#DC2626]" : ""}`}
+          />
+          {errors.titre && <p id="titre-error" className="mt-1 text-xs text-[#DC2626]">{errors.titre}</p>}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 items-start">
-          <div>
-            <Label htmlFor="titre" required>Titre du projet</Label>
-            <input
-              id="titre"
-              maxLength={200}
-              value={form.titre}
-              onChange={set("titre")}
-              aria-invalid={Boolean(errors.titre)}
-              aria-describedby={errors.titre ? "titre-error" : undefined}
-              placeholder="Ex. : Irrigation solaire pour maraîchers"
-              className={`${CONTROL} h-12 ${errors.titre ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
-            />
-            {errors.titre && <p id="titre-error" className="mt-1.5 text-xs text-[#DC2626]">{errors.titre}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="domaine" required>Domaine d&apos;activité</Label>
-            <CustomSelect
-              id="domaine"
-              value={form.domaine}
-              options={domaines}
-              error={Boolean(errors.domaine)}
-              ariaDescribedBy={errors.domaine ? "domaine-error" : undefined}
-              onChange={(id) => setForm((f) => ({ ...f, domaine: id }))}
-            />
-            {errors.domaine && <p id="domaine-error" className="mt-1.5 text-xs text-[#DC2626]">{errors.domaine}</p>}
-          </div>
+        <div>
+          <label htmlFor="domaine" className="mb-1.5 block text-sm font-bold text-[#1F130B]">
+            Domaine d&apos;activité <span className="text-[#DC2626]">*</span>
+          </label>
+          <CustomSelect
+            id="domaine"
+            value={form.domaine}
+            options={domaines}
+            error={Boolean(errors.domaine)}
+            ariaDescribedBy={errors.domaine ? "domaine-error" : undefined}
+            onChange={(id) => setForm((f) => ({ ...f, domaine: id }))}
+          />
+          {errors.domaine && <p id="domaine-error" className="mt-1 text-xs text-[#DC2626]">{errors.domaine}</p>}
         </div>
       </div>
 
-      {/* SECTION 2 : PROBLÉMATIQUE & SOLUTION */}
-      <div className="space-y-3.5 pt-0.5">
-        <div className="border-b border-[#EFE4D6]/70 pb-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#A35926]">
-            Problématique & Solution
-          </span>
-        </div>
-
-        <div>
-          <Label htmlFor="probleme" required>Problème identifié</Label>
-          <Subtitle>Quel besoin concret souhaitez-vous résoudre ?</Subtitle>
-          <textarea
-            id="probleme"
-            rows={3}
-            value={form.probleme}
-            onChange={set("probleme")}
-            placeholder="Décrivez la situation actuelle..."
-            className={`${CONTROL} min-h-20 resize-y border-[#EFE4D6] leading-relaxed text-sm`}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="solution" required>Solution proposée</Label>
-          <Subtitle>Comment votre solution répond-elle à ce besoin ?</Subtitle>
-          <textarea
-            id="solution"
-            rows={3}
-            value={form.solution}
-            onChange={set("solution")}
-            placeholder="Décrivez votre solution, son fonctionnement et son apport..."
-            className={`${CONTROL} min-h-20 resize-y border-[#EFE4D6] leading-relaxed text-sm`}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="resume" optional>Résumé court</Label>
-          <Subtitle>Deux ou trois phrases pour présenter le projet en un coup d&apos;œil.</Subtitle>
-          <textarea
-            id="resume"
-            rows={2}
-            value={form.resume}
-            onChange={set("resume")}
-            placeholder="Présentez votre projet en deux ou trois phrases."
-            className={`${CONTROL} min-h-16 resize-y border-[#EFE4D6] text-sm`}
-          />
-        </div>
+      {/* Ligne 2 : Problème identifié */}
+      <div>
+        <label htmlFor="probleme" className="mb-1.5 block text-sm font-bold text-[#1F130B]">
+          Problème identifié <span className="text-[#DC2626]">*</span>
+        </label>
+        <textarea
+          id="probleme"
+          rows={3}
+          value={form.probleme}
+          onChange={set("probleme")}
+          placeholder="Quel besoin concret souhaitez-vous résoudre ?"
+          className={`${CONTROL} min-h-20 resize-y text-sm`}
+        />
       </div>
 
-      <div className="flex justify-end border-t border-[#EFE4D6] pt-4">
+      {/* Ligne 3 : Solution proposée */}
+      <div>
+        <label htmlFor="solution" className="mb-1.5 block text-sm font-bold text-[#1F130B]">
+          Solution proposée <span className="text-[#DC2626]">*</span>
+        </label>
+        <textarea
+          id="solution"
+          rows={3}
+          value={form.solution}
+          onChange={set("solution")}
+          placeholder="Comment votre projet répond-il à ce besoin ?"
+          className={`${CONTROL} min-h-20 resize-y text-sm`}
+        />
+      </div>
+
+      {/* Ligne 4 : Résumé court (facultatif) */}
+      <div>
+        <textarea
+          id="resume"
+          rows={2}
+          value={form.resume}
+          onChange={set("resume")}
+          placeholder="Résumé court (facultatif)"
+          className={`${CONTROL} min-h-16 resize-y text-sm`}
+          aria-label="Résumé court (facultatif)"
+        />
+      </div>
+
+      {/* Pied de formulaire : Effacer les champs à gauche & Enregistrer et continuer à droite */}
+      <div className="flex items-center justify-between pt-2">
+        <button
+          type="button"
+          onClick={() => {
+            setForm(EMPTY_PROJECT_INFO);
+            setErrors({});
+          }}
+          className="text-sm font-medium text-[#7A3E1D] transition-colors hover:text-[#4A2411] hover:underline"
+        >
+          Effacer les champs
+        </button>
+
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-7 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7A3E1D] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#5C2E15] hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           <span>{saving ? "Enregistrement…" : "Enregistrer et continuer"}</span>
