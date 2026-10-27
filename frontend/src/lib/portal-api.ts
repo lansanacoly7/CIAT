@@ -756,7 +756,7 @@ export const MOCK_PARTENAIRES: Partenaire[] = [
   },
   {
     id: 5,
-    nom: "Institut Supérieur d'Enseignement Professionnel Amadou Traoré de Diamniadio",
+    nom: "Institut Supérieur d'Enseignement Professionnel Amadou Trawaré de Diamniadio",
     sigle: "ISEP Diamniadio",
     type: "academique",
     description:

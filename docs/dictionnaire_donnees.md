@@ -1,6 +1,6 @@
 # Dictionnaire des Données — Plateforme CIAT
 
-> **Centre d'Innovation, d'Application et de Transfert (ISEP Amadou Traoré, Diamniadio)**  
+> **Centre d'Innovation, d'Application et de Transfert (ISEP Amadou Trawaré, Diamniadio)**  
 > **Avertissement :** Les données de démonstration peuplées par la commande `seed_all` (et `seed_demo`) sont **strictement fictives**. Les adresses électroniques en `@demo.ciat.sn`, les numéros de téléphone, les identités de personnes, les intitulés de projets et les organisations associées ont été créés pour les besoins de validation technique, d'évaluation ergonomique et de démonstration du jury. Aucune donnée personnelle réelle n'est présente dans la base.
 
 ---

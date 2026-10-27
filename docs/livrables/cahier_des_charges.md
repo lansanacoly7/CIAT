@@ -1,7 +1,7 @@
 # Cahier des Charges Fonctionnel et Technique
 
 > **Plateforme Numérique Intégrée du CIAT et de son Incubateur**  
-> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Traoré, Diamniadio  
+> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Trawaré, Diamniadio  
 > **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (fonctionnement en local et en intégration continue). L'ensemble des données injectées sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** soumis à quotas et aléas réseau.
@@ -10,8 +10,8 @@
 
 ## 1. Contexte Institutionnel et Justification du Projet
 
-### 1.1 Le CIAT et l'ISEP Amadou Traoré
-L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
+### 1.1 Le CIAT et l'ISEP Amadou Trawaré
+L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
 - La valorisation de la recherche appliquée et le transfert de technologies vers le tissu économique local.
 - L'accueil, la sélection et l'accompagnement des porteurs de projets innovants via son **Incubateur d'entreprises**.
 - L'animation de pôles technologiques répondant aux priorités du Plan Sénégal Émergent (agroécologie, énergies renouvelables, numérique/IA, mécanique, santé, éducation).

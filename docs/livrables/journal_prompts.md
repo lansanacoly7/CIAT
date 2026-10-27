@@ -1,6 +1,6 @@
 # Journal des Prompts et Traçabilité de l'IA Générative
 
-> **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio**  
+> **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio**  
 > **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence :** Livrable Obligatoire N° 8 (Conception, tests, corrections et résultats des prompts de la plateforme)  
 > **Avertissement :** La plateforme n'est **pas déployée en production**. Les données sont purement fictives. L'ensemble des appels IA dépend de fournisseurs externes tiers (Groq, Google Gemini) via des offres gratuites sujettes à des quotas journaliers, des limitations de débit et d'éventuelles interruptions de service.
@@ -27,7 +27,7 @@ Production assistée des documents institutionnels du CIAT : conventions d'incub
 #### Prompt Système :
 ```text
 Tu es l'assistant de rédaction officiel du CIAT (Centre d'Innovation et d'Accélération 
-Technologique de l'ISEP Amadou Traoré de Diamniadio). Tu rédiges des documents administratifs 
+Technologique de l'ISEP Amadou Trawaré de Diamniadio). Tu rédiges des documents administratifs 
 et techniques formels, rigoureux et conformes aux standards académiques et professionnels 
 sénégalais.
 

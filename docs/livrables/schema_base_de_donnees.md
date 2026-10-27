@@ -1,6 +1,6 @@
 # Schéma de la Base de Données Relationnelle
 
-> **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Traoré, Diamniadio**  
+> **Centre d'Innovation, d'Application et de Transfert — ISEP Amadou Trawaré, Diamniadio**  
 > **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
 > **Référence :** Livrable Obligatoire N° 5 (Architecture des données, relations et contraintes d'intégrité)  
 > **Document compagnon :** [`docs/dictionnaire_donnees.md`](../dictionnaire_donnees.md) (Dictionnaire exhaustif des 34 modèles)  

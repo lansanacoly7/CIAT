@@ -11,7 +11,7 @@
 ## 1. Vue d'ensemble
 
 Le module **P2 (Gestion de l'incubateur)** est le cœur opérationnel de la plateforme CIAT. Il gère :
-1. Le cycle de vie des **dossiers de candidature** rattachés aux projets d'innovation portés par les apprenants et chercheurs de l'ISEP Amadou Traoré.
+1. Le cycle de vie des **dossiers de candidature** rattachés aux projets d'innovation portés par les apprenants et chercheurs de l'ISEP Amadou Trawaré.
 2. Le **dépôt sécurisé et le contrôle de complétude des pièces jointes** (validation de taille, vérification des signatures binaires / magic bytes et assainissement des noms de fichiers).
 3. La **grille d'évaluation multicritère unique et active**, avec validation d'exhaustivité des critères lors des notations du jury.
 4. Les **évaluations confidentielles et le calcul du score pondéré** sur 20.

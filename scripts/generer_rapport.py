@@ -138,6 +138,7 @@ def inline_markdown_to_reportlab(text: str) -> str:
     """Convertit le formatage inline markdown en balises ReportLab XML."""
     text = re.sub(r"&(?![a-zA-Z#0-9]+;)", "&amp;", text)
     text = text.replace("<", "&lt;").replace(">", "&gt;")
+    text = text.replace("&lt;br/&gt;", "<br/>")
     # Bold italic
     text = re.sub(r"\*\*\*(.*?)\*\*\*", r"<b><i>\1</i></b>", text)
     # Bold

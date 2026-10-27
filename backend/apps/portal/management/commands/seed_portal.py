@@ -28,11 +28,11 @@ class Command(BaseCommand):
             defaults={
                 "titre": "Lancement de la plateforme numérique unifiée de l'Écosystème CIAT 360",
                 "resume": (
-                    "L'ISEP Amadou Traoré de Diamniadio déploie sa nouvelle infrastructure digitale "
+                    "L'ISEP Amadou Trawaré de Diamniadio déploie sa nouvelle infrastructure digitale "
                     "dédiée à l'incubation, à l'évaluation des prototypes et au transfert technologique."
                 ),
                 "contenu": (
-                    "L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio "
+                    "L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio "
                     "marque une étape décisive dans son rayonnement national avec l'inauguration de la plateforme "
                     "numérique unifiée CIAT 360.\n\n"
                     "Conçue pour fédérer les six modules opérationnels du Centre d'Innovation, d'Application et "
@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     "Présentation des réalisations des cohortes en incubation, visites guidées des ateliers "
                     "de mécanique et démonstrations des bancs solaires en fonctionnement."
                 ),
-                "lieu": "Campus ISEP Amadou Traoré, Cité du Savoir, Diamniadio",
+                "lieu": "Campus ISEP Amadou Trawaré, Cité du Savoir, Diamniadio",
                 "debut": now + timedelta(days=14, hours=2),
                 "fin": now + timedelta(days=14, hours=9),
                 "lien_inscription": "https://ciat.sn/portail",
