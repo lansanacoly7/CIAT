@@ -3,21 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Cpu,
-  Wrench,
-  Sprout,
-  Zap,
-  HeartPulse,
-  GraduationCap,
-  Building2,
-  ArrowRight,
-  CheckCircle2,
-  ExternalLink,
-  ShieldCheck,
-  Layers,
-  Sparkles,
-} from "lucide-react";
 
 export interface DomaineData {
   id: number;
@@ -25,7 +10,6 @@ export interface DomaineData {
   code: string;
   nomCourt: string;
   nomComplet: string;
-  icone: typeof Cpu;
   badge: string;
   photo: string;
   enjeux: string;
@@ -42,7 +26,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "01",
     nomCourt: "TIC, IA & Données",
     nomComplet: "TIC, Numérique, Intelligence Artificielle et Valorisation des Données",
-    icone: Cpu,
     badge: "Pôle Numérique 4.0",
     photo: "/images/galerie_moments/collaboration-numerique.jpg",
     enjeux:
@@ -66,7 +49,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "02",
     nomCourt: "Mécanique & Industrie 4.0",
     nomComplet: "Mécanique de Précision, Usinage Numérique et Fabrication Additive",
-    icone: Wrench,
     badge: "Pôle Industrie & CAO",
     photo: "/images/galerie_moments/usinage-mecanique.jpg",
     enjeux:
@@ -90,7 +72,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "03",
     nomCourt: "AgriTech & Alimentation",
     nomComplet: "Technologies Agricoles, Transformation Agroalimentaire et Écologie",
-    icone: Sprout,
     badge: "Pôle Souveraineté Alimentaire",
     photo: "/images/galerie_moments/hydroponie-serre.jpg",
     enjeux:
@@ -114,7 +95,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "04",
     nomCourt: "Énergies & Réseaux Propres",
     nomComplet: "Énergies Renouvelables, Efficacité Énergétique et Réseaux Intelligents",
-    icone: Zap,
     badge: "Pôle Transition Énergétique",
     photo: "/images/galerie_moments/solaire-campus.jpg",
     enjeux:
@@ -138,7 +118,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "05",
     nomCourt: "Santé, Biomédical & Pharma",
     nomComplet: "Dispositifs Biomédicaux, Télémédecine et Valorisation Pharmacologique",
-    icone: HeartPulse,
     badge: "Pôle Souveraineté Sanitaire",
     photo: "/images/galerie_moments/sante-diagnostic-brousse.jpg",
     enjeux:
@@ -162,7 +141,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "06",
     nomCourt: "Formation & EdTech",
     nomComplet: "Pédagogie Technique Immersive, Simulateurs VR et Insertion Métiers",
-    icone: GraduationCap,
     badge: "Pôle Capital Humain",
     photo: "/images/galerie_moments/formation.jpg",
     enjeux:
@@ -186,7 +164,6 @@ export const DOMAINES_DATA: DomaineData[] = [
     code: "07",
     nomCourt: "Villes & Collectivités",
     nomComplet: "Smart City, Services Communaux, Logistique Urbaine et Économie Circulaire",
-    icone: Building2,
     badge: "Pôle Territoires & Villes",
     photo: "/images/galerie_moments/nos-espaces.jpg",
     enjeux:
@@ -209,12 +186,11 @@ export const DOMAINES_DATA: DomaineData[] = [
 export default function DomainesShowcase() {
   const [selectedId, setSelectedId] = useState<number>(1);
   const activeDomaine = DOMAINES_DATA.find((d) => d.id === selectedId) || DOMAINES_DATA[0];
-  const ActiveIcon = activeDomaine.icone;
 
   return (
     <div className="bg-[#FAF7F2] text-[#24140D] min-h-screen font-sans antialiased selection:bg-[#C99A68]/30">
       {/* =====================================================================
-       * 1. EN-TÊTE ÉDITORIAL ÉPURÉ & NOBLE — SANS AUCUN BANDEAU FLOU
+       * 1. EN-TÊTE ÉDITORIAL ÉPURÉ & NOBLE (ZÉRO ICÔNE SUPERFLUE)
        * ===================================================================== */}
       <header className="border-b border-[#E8DFD3] bg-white/70 backdrop-blur-xs pt-12 pb-10 sm:pt-16 sm:pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -235,36 +211,27 @@ export default function DomainesShowcase() {
             </p>
           </div>
 
-          {/* Ruban des 4 piliers d'ancrage */}
-          <div className="mt-8 pt-6 border-t border-[#E8DFD3] grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="flex items-center gap-2.5 text-[#5C4A3E]">
-              <ShieldCheck size={18} className="text-[#612D10] shrink-0" />
-              <span><strong>7 Filières</strong> prioritaires</span>
-            </div>
-            <div className="flex items-center gap-2.5 text-[#5C4A3E]">
-              <Layers size={18} className="text-[#612D10] shrink-0" />
-              <span>Maturité <strong>TRL 1 à 8</strong></span>
-            </div>
-            <div className="flex items-center gap-2.5 text-[#5C4A3E]">
-              <CheckCircle2 size={18} className="text-[#612D10] shrink-0" />
-              <span>Ateliers &amp; <strong>FabLab 4.0</strong></span>
-            </div>
-            <div className="flex items-center gap-2.5 text-[#5C4A3E]">
-              <Building2 size={18} className="text-[#612D10] shrink-0" />
-              <span>Cité du Savoir • <strong>Diamniadio</strong></span>
-            </div>
+          {/* Ruban textuel épuré sans icônes gadget */}
+          <div className="mt-8 pt-6 border-t border-[#E8DFD3] flex flex-wrap items-center gap-x-8 gap-y-3 text-xs text-[#5C4A3E]">
+            <span><strong>7 Filières</strong> prioritaires</span>
+            <span className="text-[#C99A68] hidden sm:inline">•</span>
+            <span>Maturité <strong>TRL 1 à 8</strong></span>
+            <span className="text-[#C99A68] hidden sm:inline">•</span>
+            <span>Ateliers &amp; <strong>FabLab 4.0</strong></span>
+            <span className="text-[#C99A68] hidden sm:inline">•</span>
+            <span>Cité du Savoir • <strong>Diamniadio</strong></span>
           </div>
         </div>
       </header>
 
       {/* =====================================================================
        * 2. SECTION PRINCIPALE : L'EXPLORATEUR INTERACTIF DES 7 PÔLES
-       * (Pattern Awwwards Split Master-Detail : fluide, visuel, immédiat)
+       * (Mise en page Master-Detail typographique & photographique pure)
        * ===================================================================== */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <div className="mb-6 flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-[#8C7A6D]">
-            Explorateur des Filières — Cliquez pour découvrir le pôle
+            Filières prioritaires du CIAT
           </span>
           <span className="text-xs text-[#612D10] font-mono font-bold">
             Pôle 0{activeDomaine.id} / 07
@@ -272,11 +239,10 @@ export default function DomainesShowcase() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Colonne Gauche : L'Index Typographique Interactif (5 cols) */}
+          {/* Colonne Gauche : Index Typographique (5 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-2.5">
             {DOMAINES_DATA.map((d) => {
               const isSelected = d.id === selectedId;
-              const Icon = d.icone;
 
               return (
                 <button
@@ -301,17 +267,14 @@ export default function DomainesShowcase() {
                     </span>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Icon size={14} className={isSelected ? "text-[#C99A68]" : "text-[#9C8B7E]"} />
-                        <span
-                          className={`text-sm font-bold truncate ${
-                            isSelected ? "text-[#24140D]" : "text-[#5C4A3E]"
-                          }`}
-                        >
-                          {d.nomCourt}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#8C7A6D] block truncate mt-0.5">
+                      <span
+                        className={`text-sm font-bold block truncate ${
+                          isSelected ? "text-[#24140D]" : "text-[#5C4A3E]"
+                        }`}
+                      >
+                        {d.nomCourt}
+                      </span>
+                      <span className="text-[11px] text-[#8C7A6D] block truncate mt-0.5 font-medium">
                         {d.badge}
                       </span>
                     </div>
@@ -319,7 +282,7 @@ export default function DomainesShowcase() {
 
                   <span
                     className={`text-xs font-bold shrink-0 ml-2 transition-transform ${
-                      isSelected ? "text-[#612D10] translate-x-1" : "text-[#C99A68] opacity-50"
+                      isSelected ? "text-[#612D10] translate-x-1" : "text-[#C99A68] opacity-40"
                     }`}
                   >
                     →
@@ -329,10 +292,10 @@ export default function DomainesShowcase() {
             })}
           </div>
 
-          {/* Colonne Droite : Le Pavillon Actif Haute Résolution (7 cols, sticky) */}
+          {/* Colonne Droite : Le Pavillon Actif (7 cols, sticky) */}
           <div className="lg:col-span-7 lg:sticky lg:top-24">
             <div className="bg-white rounded-3xl overflow-hidden border border-[#E8DFD3] shadow-lg">
-              {/* Photographie Haute Définition du Labo / Atelier */}
+              {/* Photographie Réelle du Labo / Atelier */}
               <div className="relative aspect-[16/9] w-full bg-[#0A0C0F] overflow-hidden">
                 <Image
                   key={activeDomaine.photo}
@@ -344,10 +307,10 @@ export default function DomainesShowcase() {
                   className="object-cover object-center transition-all duration-700 ease-out"
                 />
 
-                {/* Dégradé doux */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                {/* Dégradé de contraste */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
 
-                {/* Badges en surimpression nette */}
+                {/* Badges typographiques */}
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                   <span className="h-9 w-9 rounded-xl bg-[#612D10] text-white flex items-center justify-center font-mono font-bold text-xs shadow-md border border-[#C99A68]/40">
                     {activeDomaine.code}
@@ -366,11 +329,10 @@ export default function DomainesShowcase() {
                 </div>
               </div>
 
-              {/* Contenu Détaillé du Pôle Actif */}
+              {/* Contenu Détaillé du Pôle */}
               <div className="p-6 sm:p-8">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#612D10] uppercase tracking-wider mb-2">
-                  <ActiveIcon size={16} className="text-[#C99A68]" />
-                  <span>Filière Prioritaire Nationale N°{activeDomaine.code}</span>
+                <div className="text-xs font-bold text-[#612D10] uppercase tracking-wider mb-2">
+                  Filière Prioritaire Nationale N°{activeDomaine.code}
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#24140D] tracking-tight leading-snug">
@@ -381,7 +343,7 @@ export default function DomainesShowcase() {
                   {activeDomaine.enjeux}
                 </p>
 
-                {/* Axes technologiques */}
+                {/* Axes d'ingénierie */}
                 <div className="mt-6 pt-5 border-t border-[#F1E9DE]">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#24140D] mb-3">
                     Axes prioritaires d&apos;ingénierie :
@@ -421,15 +383,14 @@ export default function DomainesShowcase() {
                     className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] px-6 py-3 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
                   >
                     <span>Candidater sur ce pôle</span>
-                    <ArrowRight size={14} className="text-[#C99A68]" />
+                    <span className="text-[#C99A68]">→</span>
                   </Link>
 
                   <Link
                     href="/galerie"
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#612D10] hover:text-[#C99A68] transition-colors"
                   >
-                    <span>Voir les photos dans la Galerie</span>
-                    <ExternalLink size={13} />
+                    <span>Voir les photos dans la Galerie ↗</span>
                   </Link>
                 </div>
               </div>
@@ -439,7 +400,7 @@ export default function DomainesShowcase() {
       </section>
 
       {/* =====================================================================
-       * 3. GRILLE COMPLÈTE EN BENTO POUR VISIONNER LES 7 PÔLES EN UN COUP D'ŒIL
+       * 3. GRILLE COMPLÈTE SYNOPTIQUE DES 7 PÔLES (ZÉRO ICÔNE GADGET)
        * ===================================================================== */}
       <section className="border-t border-[#E8DFD3] bg-white py-14 sm:py-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -457,8 +418,6 @@ export default function DomainesShowcase() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {DOMAINES_DATA.map((domaine) => {
-              const Icon = domaine.icone;
-
               return (
                 <article
                   key={domaine.id}
@@ -473,7 +432,9 @@ export default function DomainesShowcase() {
                       <span className="h-8 w-8 rounded-lg bg-[#612D10] text-white flex items-center justify-center font-mono font-bold text-xs shadow-xs">
                         {domaine.code}
                       </span>
-                      <Icon size={18} className="text-[#C99A68] group-hover:scale-110 transition-transform" />
+                      <span className="text-[11px] font-bold text-[#C99A68] uppercase tracking-wider">
+                        Pôle 0{domaine.id}
+                      </span>
                     </div>
 
                     <h3 className="text-base font-serif font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors leading-snug line-clamp-2">
@@ -495,13 +456,12 @@ export default function DomainesShowcase() {
               );
             })}
 
-            {/* Carte additionnelle : Grille d'évaluation */}
+            {/* Carte d'information : Grille d'évaluation sans icônes */}
             <div className="rounded-2xl p-6 border border-dashed border-[#C99A68] bg-[#C99A68]/10 flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] uppercase tracking-wider mb-2">
-                  <Sparkles size={14} />
-                  <span>Critères de Sélection</span>
-                </div>
+                <span className="text-xs font-bold text-[#612D10] uppercase tracking-wider block mb-2">
+                  Critères d&apos;Éligibilité
+                </span>
                 <h3 className="text-base font-serif font-bold text-[#24140D]">
                   Votre projet coche-t-il au moins 1 pôle ?
                 </h3>
