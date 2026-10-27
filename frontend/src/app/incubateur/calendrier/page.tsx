@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, Badge, Button, EmptyState } from "@/components/ui";
+import { ApiError } from "@/lib/api";
 import {
   formatDateFr,
   getCalendrier,
@@ -96,12 +97,18 @@ function CalendrierVue() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            suiviErrorMessage(
-              err,
-              "Impossible de charger le calendrier pour ce mois. Veuillez vérifier votre connexion.",
-            ),
-          );
+          if (err instanceof ApiError && err.status === 404) {
+            setError(
+              "L'API du calendrier (/api/incubator/calendrier/) n'est pas encore disponible sur le serveur. Elle sera active dès la fusion de la branche d'Ibrahima.",
+            );
+          } else {
+            setError(
+              suiviErrorMessage(
+                err,
+                "Impossible de charger le calendrier pour ce mois. Veuillez vérifier votre connexion.",
+              ),
+            );
+          }
           setEvenements(null);
         }
       } finally {
