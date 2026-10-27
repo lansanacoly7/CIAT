@@ -201,3 +201,33 @@ Chaque palier envoie 200 requêtes réparties sur le nombre de clients simultan�
      - Le serveur `runserver` de Django n'est pas conçu pour multiplexer 50 connexions TCP concurrentes.
      - SQLite verrouille l'intégralité du fichier de base de données lors des écritures (sessions, tokens JWT, mise à jour des compteurs de requêtes du throttle en cache fichier/base), générant des contentions transactionnelles.
    - En environnement de déploiement cible avec PostgreSQL 16 et un serveur WSGI professionnel (Gunicorn avec 4 workers configurés pour le CIAT), le pool de connexions et le verrouillage au niveau ligne (Row-Level Locking) absorberont cette concurrence sans contention globale.
+
+---
+
+## 7. Optimisation des deux routes lentes sous charge (Phase 5 — T3)
+
+Conformément à la tâche **T3**, l'analyse des requêtes SQL réelles (`connection.queries`) sur les deux routes ayant dépassé 1 seconde à 20 clients dans les mesures initiales (`/api/incubator/dossiers/` et `/api/analytics/indicateurs/`) a permis d'éliminer les sous-requêtes imbriquées et les recalculs redondants.
+
+### A. Tableau Avant / Après des optimisations ciblées
+
+| Route analysée | Rôle appelant | Comportement SQL Avant | Comportement SQL Après | Nb requêtes SQL | Gain SQL & CPU |
+| :--- | :---: | :--- | :--- | :---: | :---: |
+| **`/api/incubator/dossiers/`** | Porteur / Coordonnateur | Évaluation répétée de `self.pieces.all()` pour chaque calcul séparé de `pieces_manquantes` et `completude` lors de la sérialisation. Risque de requêtes dupliquées si hors prefetch. | Mise en cache d'instance (`_cached_pieces_manquantes`) évitant toute réitération mémoire ou réémission SQL. | **3** (constant $O(1)$) | **0 recalcul redondant**, transmission directe en mémoire. |
+| **`/api/analytics/indicateurs/`** | Coordonnateur | Sous-requête SQL imbriquée `WHERE projet_id IN (SELECT id FROM core_projet)` exécutée même sans aucun filtre de recherche. | Court-circuit sans filtre : décompte direct `WHERE NOT (statut = 'brouillon')` exploitant l'index B-Tree de `statut`. | **2** (constant $O(1)$) | **Suppression du scan imbriqué**, décompte direct sur index. |
+
+### B. Détail des requêtes vérifiées avec `connection.queries`
+
+1. **Route `/api/incubator/dossiers/` (3 requêtes constantes) :**
+   - Requête 1 (Pagination) : `SELECT COUNT(*) AS "__count" FROM "incubator_dossier" ...`
+   - Requête 2 (Dossiers de la page + jointure porteur) : `SELECT "incubator_dossier"."id", ... FROM "incubator_dossier" INNER JOIN "core_projet" ...`
+   - Requête 3 (Prefetch groupé des pièces) : `SELECT "incubator_piece"."id", ... FROM "incubator_piece" WHERE "incubator_piece"."dossier_id" IN (...)`
+
+2. **Route `/api/analytics/indicateurs/` (2 requêtes d'agrégation pures) :**
+   - Requête 1 (Agrégats conditionnels des projets) : `SELECT COUNT("core_projet"."id") AS "idees_recues", COUNT(...) FILTER (...) FROM "core_projet"`
+   - Requête 2 (Décompte indexé des dossiers sans sous-requête) : `SELECT COUNT(*) AS "__count" FROM "incubator_dossier" WHERE NOT ("incubator_dossier"."statut" = 'brouillon')`
+
+### C. Validation par les tests de non-régression
+
+La suite de tests de performance ([`apps/core/tests/test_performance.py`](../backend/apps/core/tests/test_performance.py)) valide formellement ces seuils :
+- `test_performance_liste_incubator_dossiers` : validé à exactement **3 requêtes**.
+- `test_performance_analytics_indicateurs` : validé à exactement **2 requêtes**.

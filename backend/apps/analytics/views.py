@@ -170,11 +170,21 @@ class IndicateursView(APIView):
         try:
             from apps.incubator.models import Dossier, StatutDossier
 
-            dossiers_existants = (
-                Dossier.objects.filter(projet__in=qs)
-                .exclude(statut=StatutDossier.BROUILLON)
-                .count()
+            params = getattr(request, "query_params", getattr(request, "GET", {}))
+            has_filters = any(
+                params.get(k) for k in ("debut", "fin", "cohorte", "domaine", "statut")
             )
+            if not has_filters:
+                # Sans filtre, requête directe sans sous-requête projet__in
+                dossiers_existants = Dossier.objects.exclude(
+                    statut=StatutDossier.BROUILLON
+                ).count()
+            else:
+                dossiers_existants = (
+                    Dossier.objects.filter(projet__in=qs)
+                    .exclude(statut=StatutDossier.BROUILLON)
+                    .count()
+                )
             if dossiers_existants > 0:
                 dossiers_deposes = dossiers_existants
         except Exception:
