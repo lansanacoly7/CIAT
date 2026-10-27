@@ -19,7 +19,6 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  FileText,
   Info,
   Loader2,
   MessageSquare,
@@ -478,57 +477,38 @@ function AssistantApp() {
             />
           )}
 
-          {/* ÉTAT D'ACCUEIL : SUGGESTIONS FONCTIONNELLES (quand aucun message dans la conversation) */}
+          {/* ÉTAT D'ACCUEIL : SUGGESTIONS COMPACTES (quand aucun message dans la conversation) */}
           {!loadingMessages && messages.length === 0 && (
-            <div className="mx-auto max-w-5xl space-y-4 pt-4 pb-6">
-              {/* 3 Cartes de suggestions fonctionnelles */}
-              <div>
-                <div className="mb-3 flex items-center justify-between px-1">
-                  <span className="text-sm font-bold text-[#24140D]">
-                    Suggestions d&apos;actions immédiates
-                  </span>
-                  <span className="text-xs text-[#7A583A]">
-                    Mode {mode === "documents" ? "Documents CIAT" : "Atelier Rédaction"}
-                  </span>
-                </div>
+            <div className="mx-auto max-w-4xl space-y-3 pt-6 pb-6">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#7A3E1D]">
+                  Suggestions rapides
+                </span>
+                <span className="text-xs text-[#8C6D4F]">
+                  {mode === "documents" ? "Mode Documents CIAT" : "Mode Atelier Rédaction"}
+                </span>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {currentSuggestions.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSuggestionClick(item.prompt)}
-                      className="group flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 text-left shadow-xs transition-all hover:border-[#C99A68] hover:shadow-md active:scale-[0.99]"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#A35926]">
-                            {item.tag}
-                          </span>
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2E1605] text-white">
-                            {mode === "documents" ? (
-                              <FileText className="h-3.5 w-3.5" />
-                            ) : (
-                              <PenTool className="h-3.5 w-3.5" />
-                            )}
-                          </div>
-                        </div>
-                        <h3 className="mt-3 text-sm font-bold text-[#24140D] group-hover:text-[#A35926] transition-colors">
-                          {item.titre}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-[#5C3D2E] leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-end">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-[#24140D] transition-transform group-hover:translate-x-1 group-hover:bg-[#F5EFE6]">
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              {/* Cartes compactes sur 1 ou 2 lignes */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {currentSuggestions.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSuggestionClick(item.prompt)}
+                    className="group flex items-center justify-between gap-3 rounded-xl border border-[#EFE4D6] bg-white px-4 py-3 text-left shadow-2xs transition-all hover:border-[#7A3E1D] hover:bg-[#FAF7F2] hover:shadow-xs active:scale-[0.99]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-[#1F130B] group-hover:text-[#7A3E1D]">
+                        {item.titre}
+                      </p>
+                      <p className="truncate text-[11px] text-[#8C6D4F] mt-0.5">
+                        {item.description}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#8C6D4F] transition-transform group-hover:translate-x-0.5 group-hover:text-[#7A3E1D]" />
+                  </button>
+                ))}
               </div>
             </div>
           )}
