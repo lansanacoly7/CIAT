@@ -140,7 +140,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 shadow-[0_1px_2px_rgba(60,35,20,0.04),0_8px_24px_rgba(60,35,20,0.05)] space-y-4">
+    <div className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-4 sm:p-5 space-y-4">
       {/* Barre d'outils du tableau : Recherche + Filtres Statut Rapides + PageSize */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(60,35,20,0.06)] pb-4">
         {/* Recherche */}
@@ -209,12 +209,12 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       <div className="relative overflow-x-auto rounded-xl border border-[rgba(60,35,20,0.06)]">
         <table className="w-full text-left text-xs table-fixed min-w-[820px]">
           <colgroup>
-            <col className="w-[32%]" />
-            <col className="w-[16%]" />
-            <col className="w-[16%]" />
+            <col className="w-[30%]" />
+            <col className="w-[20%]" />
+            <col className="w-[15%]" />
             <col className="w-[10%]" />
-            <col className="w-[14%]" />
             <col className="w-[12%]" />
+            <col className="w-[13%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] shadow-xs">
             <tr className="h-11">
@@ -349,11 +349,11 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                     </div>
                   </td>
 
-                  {/* Domaine : texte simple 13px (court, avec tooltip complet), plus de chips */}
+                  {/* Domaine : libellé normalisé avec line-clamp-2 pour éviter toute troncature avec points de suspension */}
                   <td className="px-3 py-2">
                     <span
                       title={getDomaineFullName(row.domaine)}
-                      className="truncate text-[13px] text-[#5A4B42] block"
+                      className="line-clamp-2 text-[13px] text-[#5A4B42] leading-tight block"
                     >
                       {getDomaineShortLabel(row.domaine)}
                     </span>
@@ -399,7 +399,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                   Total des engagements filtrés ({filteredData.length} dossiers)
                 </td>
                 <td className="px-2 text-center text-[12px] text-[#5A4B42]">
-                  Consolidé
+                  —
                 </td>
                 <td className="px-3 text-right font-sans text-[14px] font-semibold text-[#21130D] tabular-nums whitespace-nowrap">
                   {formatNumber(totalAmount)}

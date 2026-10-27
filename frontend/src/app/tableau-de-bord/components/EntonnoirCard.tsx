@@ -88,20 +88,21 @@ export function EntonnoirCard({ indicateurs, onFilterStatut }: EntonnoirCardProp
   return (
     <section
       aria-labelledby="entonnoir-heading"
-      className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-3 sm:p-3.5 transition hover:shadow-[0_2px_8px_rgba(60,35,20,0.04)] max-h-[120px] overflow-hidden"
+      className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-3 sm:p-3.5 transition hover:shadow-[0_2px_8px_rgba(60,35,20,0.04)] sm:max-h-[120px] overflow-hidden"
     >
       <h2 id="entonnoir-heading" className="sr-only">
         Entonnoir de maturation des projets
       </h2>
 
       {/* Grille horizontale de 5 colonnes avec pastilles de conversion intercalées */}
-      <div className="flex items-center justify-between gap-1 sm:gap-2">
-        {steps.map((step, index) => {
-          const ratioPercent = Math.min(100, Math.max(8, (step.count / baseCount) * 100));
-          const conv = index < 4 ? conversionRates[index] : null;
+      <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+        <div className="flex items-center justify-between gap-1 sm:gap-2 min-w-[520px] sm:min-w-full">
+          {steps.map((step, index) => {
+            const ratioPercent = Math.min(100, Math.max(8, (step.count / baseCount) * 100));
+            const conv = index < 4 ? conversionRates[index] : null;
 
-          return (
-            <div key={step.id} className="flex-1 flex items-center min-w-0">
+            return (
+              <div key={step.id} className="flex-1 shrink-0 flex items-center min-w-[95px] sm:min-w-0">
               {/* Colonne cliquable */}
               <button
                 type="button"
@@ -110,7 +111,7 @@ export function EntonnoirCard({ indicateurs, onFilterStatut }: EntonnoirCardProp
                 className="group flex-1 flex flex-col justify-between text-left p-1.5 sm:p-2 rounded-lg transition hover:bg-[#FBF8F3] focus:outline-hidden focus:ring-1 focus:ring-[#C99A68]"
               >
                 {/* Ligne 1 : Libellé 12 px nowrap */}
-                <span className="text-[12px] font-medium text-[#5A4B42] whitespace-nowrap truncate group-hover:text-[#21130D]">
+                <span className="text-[12px] font-medium text-[#5A4B42] whitespace-nowrap group-hover:text-[#21130D]">
                   {step.label}
                 </span>
 
@@ -147,6 +148,7 @@ export function EntonnoirCard({ indicateurs, onFilterStatut }: EntonnoirCardProp
             </div>
           );
         })}
+        </div>
       </div>
     </section>
   );

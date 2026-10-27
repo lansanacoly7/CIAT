@@ -1449,6 +1449,27 @@ class AnalyticsDataConsistencyTests(TestCase):
         total_domaines = sum(d["total"] for d in res_dom.data)
         self.assertEqual(total_domaines, 62)
 
+    def test_points_attention_a_traiter_deterministes(self):
+        """Vérification déterministe des 3 alertes 'À traiter' (8 retards, 2 conventions, 5 dossiers).
+        
+        Requêtes déterministes vérifiées :
+        1. Jalons en retard : Jalon.objects.filter(echeance__lt=today).exclude(statut='fait') == 8
+        2. Conventions en attente : Partenariat.objects.filter(statut='en_discussion') == 2
+        3. Dossiers à évaluer : Dossier.objects.filter(statut__in=['soumis', 'en_evaluation']) == 5
+        """
+        from apps.incubator.models import Jalon, Dossier
+        from apps.analytics.models import Partenariat, StatutPartenariat
+        from django.utils import timezone
+
+        today = timezone.now().date()
+        retards_count = Jalon.objects.filter(echeance__lt=today).exclude(statut="fait").count()
+        conventions_count = Partenariat.objects.filter(statut=StatutPartenariat.EN_DISCUSSION).count()
+        dossiers_count = Dossier.objects.filter(statut__in=["soumis", "en_evaluation"]).count()
+
+        self.assertEqual(retards_count, 8, "Le nombre de jalons en retard doit être exactement de 8.")
+        self.assertEqual(conventions_count, 2, "Le nombre d'accords en discussion doit être exactement de 2.")
+        self.assertEqual(dossiers_count, 5, "Le nombre de dossiers à évaluer doit être exactement de 5.")
+
 
 
 

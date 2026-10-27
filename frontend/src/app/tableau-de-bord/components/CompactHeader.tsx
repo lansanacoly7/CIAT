@@ -167,7 +167,7 @@ export function CompactHeader({
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between border-b border-[rgba(60,35,20,0.08)] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
       {/* Titre éditorial en serif */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <h1 className="font-serif text-xl sm:text-[28px] font-bold text-[#21130D] tracking-tight whitespace-nowrap">
+        <h1 className="font-serif text-xl sm:text-[28px] font-normal font-[500] text-[#21130D] tracking-tight whitespace-nowrap">
           Tableau de bord
         </h1>
         <span className="hidden md:inline-block text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42] bg-[#FBF8F3] px-2.5 py-1 rounded-full border border-[rgba(60,35,20,0.06)]">

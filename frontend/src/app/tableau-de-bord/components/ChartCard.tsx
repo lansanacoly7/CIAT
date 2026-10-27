@@ -336,8 +336,7 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
             name="Projets créés"
             radius={[4, 4, 0, 0]}
             maxBarSize={18}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={false}
           >
             {formattedData.map((entry, index) => {
               const isLast = index === formattedData.length - 1;
@@ -547,8 +546,7 @@ export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
             fill="#5A4B42"
             radius={[3, 3, 0, 0]}
             maxBarSize={22}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={false}
           >
             <LabelList
               dataKey="total"
@@ -562,8 +560,7 @@ export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
             fill="#21130D"
             radius={[3, 3, 0, 0]}
             maxBarSize={22}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={false}
           >
             <LabelList
               dataKey="selectionnes"
@@ -577,8 +574,7 @@ export function CohorteChart({ data }: { data: ParCohorteItem[] }) {
             fill="#8C5E2D"
             radius={[3, 3, 0, 0]}
             maxBarSize={22}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={false}
           >
             <LabelList
               dataKey="prototypes"
