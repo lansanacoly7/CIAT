@@ -49,3 +49,8 @@ desktop.ini
 # Uploaded media files
 media/
 backend/media/
+
+# Sauvegardes de bases de données
+# Les sauvegardes contiennent les données personnelles de la base et ne doivent jamais être publiées.
+backups/
+*.dump

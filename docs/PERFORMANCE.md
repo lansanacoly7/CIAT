@@ -11,7 +11,7 @@ Ce document synthétise les résultats des profils de requêtes SQL, les optimis
 - **Moteurs de base de données testés** :
   - **SQLite 3** (développement local et tests automatisés en mémoire / fichier)
   - **PostgreSQL 16** (cible recommandée pour la recette d'équipe et la production)
-- **Suite de tests automatisée** : [`backend/apps/core/tests/test_performance.py`](file:///backend/apps/core/tests/test_performance.py)
+- **Suite de tests automatisée** : [`backend/apps/core/tests/test_performance.py`](../backend/apps/core/tests/test_performance.py)
 - **Commande de reproduction** :
   ```powershell
   cd backend
