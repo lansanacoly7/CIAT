@@ -14,7 +14,6 @@ import {
   type MessageAssistant,
 } from "@/lib/assistant-api";
 import {
-  ArrowRight,
   BookOpen,
   ChevronDown,
   ChevronRight,
@@ -481,24 +480,21 @@ function AssistantApp() {
                 </span>
               </div>
 
-              {/* Cartes compactes sur 1 ou 2 lignes */}
+              {/* Cartes compactes sur 1 ou 2 lignes sans flèches */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {currentSuggestions.map((item, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSuggestionClick(item.prompt)}
-                    className="group flex items-center justify-between gap-3 rounded-xl border border-[#EFE4D6] bg-white px-4 py-3 text-left shadow-2xs transition-all hover:border-[#7A3E1D] hover:bg-[#FAF7F2] hover:shadow-xs active:scale-[0.99]"
+                    className="group block rounded-xl border border-[#EFE4D6] bg-white px-4 py-3 text-left shadow-2xs transition-all hover:border-[#7A3E1D] hover:bg-[#FAF7F2] hover:shadow-xs active:scale-[0.99]"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-[#1F130B] group-hover:text-[#7A3E1D]">
-                        {item.titre}
-                      </p>
-                      <p className="truncate text-[11px] text-[#8C6D4F] mt-0.5">
-                        {item.description}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#8C6D4F] transition-transform group-hover:translate-x-0.5 group-hover:text-[#7A3E1D]" />
+                    <p className="truncate text-xs font-bold text-[#1F130B] group-hover:text-[#7A3E1D]">
+                      {item.titre}
+                    </p>
+                    <p className="truncate text-[11px] text-[#8C6D4F] mt-0.5">
+                      {item.description}
+                    </p>
                   </button>
                 ))}
               </div>
