@@ -1,81 +1,57 @@
 "use client";
 
-import { FolderGit2, Coins } from "lucide-react";
+import { LayoutDashboard, FolderGit2, Coins, TableProperties } from "lucide-react";
 
-export type DashboardTab = "projets" | "financements";
+export type DashboardTab = "vue-d-ensemble" | "projets" | "financements" | "registre";
 
 interface StickyTabsProps {
   activeTab: DashboardTab;
   onChange: (tab: DashboardTab) => void;
-  projetsCount?: number;
-  financementsAmount?: string;
 }
 
-export function StickyTabs({
-  activeTab,
-  onChange,
-  projetsCount = 62,
-  financementsAmount = "472 M FCFA",
-}: StickyTabsProps) {
+const TABS: Array<{ id: DashboardTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { id: "projets", label: "Projets", icon: FolderGit2 },
+  { id: "financements", label: "Financements", icon: Coins },
+  { id: "registre", label: "Registre", icon: TableProperties },
+];
+
+export function StickyTabs({ activeTab, onChange }: StickyTabsProps) {
   return (
-    <div className="sticky top-[68px] z-20 border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3]/90 backdrop-blur-xs py-1">
-      <div className="flex items-center gap-6">
-        {/* Onglet 1 : Projets */}
-        <button
-          type="button"
-          onClick={() => onChange("projets")}
-          className={`relative pb-3 pt-1 text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === "projets"
-              ? "text-[#21130D]"
-              : "text-[#5A4B42] hover:text-[#21130D]"
-          }`}
-        >
-          <FolderGit2 className="h-4 w-4" />
-          <span>Projets & Maturation</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-              activeTab === "projets"
-                ? "bg-[#21130D] text-[#FBF8F3]"
-                : "bg-black/5 text-[#5A4B42]"
-            }`}
-          >
-            {projetsCount}
-          </span>
+    <nav
+      aria-label="Navigation des vues du tableau de bord"
+      className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] pt-1"
+    >
+      <div className="flex items-center gap-2 sm:gap-6 overflow-x-auto no-scrollbar">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`panel-${tab.id}`}
+              id={`tab-${tab.id}`}
+              onClick={() => onChange(tab.id)}
+              className={`relative pb-3 pt-1 text-sm font-medium transition-colors flex items-center gap-2 shrink-0 ${
+                isActive
+                  ? "font-semibold text-[#21130D]"
+                  : "text-[#5A4B42] hover:text-[#21130D]"
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${isActive ? "text-[#C99A68]" : "text-[#5A4B42]"}`} />
+              <span>{tab.label}</span>
 
-          {/* Soulignement actif qui glisse */}
-          {activeTab === "projets" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#C99A68] transition-all" />
-          )}
-        </button>
-
-        {/* Onglet 2 : Financements & Partenariats */}
-        <button
-          type="button"
-          onClick={() => onChange("financements")}
-          className={`relative pb-3 pt-1 text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === "financements"
-              ? "text-[#21130D]"
-              : "text-[#5A4B42] hover:text-[#21130D]"
-          }`}
-        >
-          <Coins className="h-4 w-4" />
-          <span>Financements & Partenariats</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-              activeTab === "financements"
-                ? "bg-[#21130D] text-[#FBF8F3]"
-                : "bg-black/5 text-[#5A4B42]"
-            }`}
-          >
-            {financementsAmount}
-          </span>
-
-          {/* Soulignement actif qui glisse */}
-          {activeTab === "financements" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#C99A68] transition-all" />
-          )}
-        </button>
+              {/* Soulignement actif qui glisse */}
+              {isActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#C99A68] transition-all" />
+              )}
+            </button>
+          );
+        })}
       </div>
-    </div>
+    </nav>
   );
 }

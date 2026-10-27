@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Calendar, Filter, RotateCcw } from "lucide-react";
+import { Calendar, Filter, RotateCcw, HelpCircle } from "lucide-react";
 import type { DashboardFilters } from "../types";
 
 interface StickyFiltersBarProps {
@@ -411,8 +411,20 @@ export function StickyFiltersBar({
               </div>
             )}
 
-            <div className="hidden lg:block text-[11px] italic text-[#5A4B42]">
-              S&apos;applique aux sections Projets et Financements
+            <div className="relative group flex items-center">
+              <button
+                type="button"
+                aria-label="Périmètre d'application des filtres"
+                className="p-1 text-[#5A4B42] hover:text-[#21130D] rounded-full transition focus:outline-hidden"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+              <div
+                role="tooltip"
+                className="absolute right-0 top-full mt-1.5 hidden w-64 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-2.5 text-[11px] leading-relaxed text-[#5A4B42] shadow-[0_4px_16px_rgba(60,35,20,0.08)] group-hover:block group-focus-within:block z-50 pointer-events-none"
+              >
+                Ces filtres s&apos;appliquent à l&apos;ensemble des 4 onglets : Vue d&apos;ensemble, Projets, Financements et Registre.
+              </div>
             </div>
           </div>
         </div>
