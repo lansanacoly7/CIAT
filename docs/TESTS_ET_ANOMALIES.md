@@ -86,39 +86,58 @@ Ce registre consigne l'ensemble des défauts réels identifiés lors des revues 
 
 ## 5. Mesure de Couverture de Tests (Phase 5 — T2)
 
-La couverture de code a été mesurée avec `coverage.py` sur l'ensemble de la suite de tests automatisée du back-end (269 tests).
+La couverture de code a été mesurée avec `coverage.py` sur l'ensemble de la suite de tests automatisée du back-end (**278 tests** passants).
+- **Date de mesure** : 27 octobre 2026.
+- **Moteur de base de données** : SQLite (base de repli standard de test `db.sqlite3`).
+- **Prérequis** : `pip install coverage` (outil de mesure hors `requirements.txt`).
+- **Règle de la colonne « code métier »** : Isole les fichiers applicatifs réels en excluant systématiquement les dossiers de tests (`apps/*/tests/*`) et les migrations de schéma Django (`apps/*/migrations/*`).
 
-### Commande de reproduction
+### Commande de reproduction exacte
 
 Depuis le répertoire `backend/` :
 
 ```bash
 coverage run --source=apps manage.py test
-coverage report --include="apps/*"
+coverage report --include="apps/*" -m
 ```
 
 ### Résultats mesurés par application
 
 | Application | Lignes déclarées (Stmts) | Lignes non couvertes (Miss) | Couverture globale | Couverture code métier (hors tests & migrations) |
 |---|:---:|:---:|:---:|:---:|
-| **`apps.analytics`** | 1 613 | 169 | 89,5 % | 83,6 % (862 / 1 031) |
-| **`apps.assistant`** | 711 | 77 | 89,2 % | 82,1 % (353 / 430) |
-| **`apps.core`** | 1 872 | 70 | 96,3 % | 92,1 % (791 / 859) |
-| **`apps.documents`** | 968 | 40 | 95,9 % | 93,9 % (519 / 553) |
-| **`apps.gallery`** | 755 | 50 | 93,4 % | 89,9 % (444 / 494) |
-| **`apps.incubator`** | 2 727 | 99 | 96,4 % | 93,8 % (1 477 / 1 574) |
-| **`apps.portal`** | 759 | 22 | 97,1 % | 95,2 % (437 / 459) |
-| **TOTAL GÉNÉRAL** | **9 405** | **527** | **94,4 %** | **90,4 % (4 883 / 5 400)** |
+| **`apps.portal`** | 759 | 22 | **97,1 %** | **97,0 %** (715 / 737) |
+| **`apps.incubator`** | 2 727 | 99 | **96,4 %** | **96,3 %** (2 572 / 2 671) |
+| **`apps.core`** | 1 898 | 74 | **96,1 %** | **92,1 %** (791 / 859) |
+| **`apps.documents`** | 968 | 40 | **95,9 %** | **93,9 %** (519 / 553) |
+| **`apps.gallery`** | 755 | 50 | **93,4 %** | **89,9 %** (444 / 494) |
+| **`apps.analytics`** | 1 613 | 169 | **89,5 %** | **89,5 %** (1 438 / 1 607) |
+| **`apps.assistant`** | 711 | 77 | **89,2 %** | **82,1 %** (353 / 430) |
+| **TOTAL GÉNÉRAL** | **9 431** | **531** | **94,4 %** | **92,8 %** (6 832 / 7 351) |
 
-### Analyse des 3 zones les moins couvertes
+---
 
-Conformément à la règle de mesure factuelle (aucun objectif promis, constat des écarts réels) :
+### Zones et fichiers les moins couverts (constats mesurés)
 
+#### A. Les 3 zones les moins couvertes par application
 1. **`apps.assistant` (82,1 % sur le code métier — 77 lignes non couvertes) :**
-   - Zone principale : [`apps/assistant/services.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/assistant/services.py) (73,2 % de couverture, 74 lignes non couvertes).
-   - Raison technique : les branches de secours liées aux timeouts réseau LLM, au repli vers des fournisseurs alternatifs et à certains flux de streaming ne sont pas tous sollicités par les mocks des tests unitaires déterministes.
-2. **`apps.analytics` (83,6 % sur le code métier — 169 lignes non couvertes) :**
-   - Zones principales : [`apps/analytics/management/commands/controle_qualite_donnees.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/analytics/management/commands/controle_qualite_donnees.py) (62,0 % de couverture, 70 lignes non couvertes) et [`apps/analytics/services.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/analytics/services.py) (71,9 % de couverture, 32 lignes non couvertes).
-   - Raison technique : la commande de contrôle qualité inspecte des cas de données corrompues ou incomplètes qui ne sont pas tous injectés lors du cycle de test standard, et certains calculs d'agrégations optionnelles (filtres temporels spécifiques) ne sont pas testés unitairement.
+   - Composant principal : [`apps/assistant/services.py`](../backend/apps/assistant/services.py) (73,2 % de couverture, 74 lignes non couvertes : 75, 90, 100-102, 110-114, 122-160, 166, 172-174, 177, 182-184, 187-189, 194-197, 207, 212, 324, 404, 412, 465-470, 475, 484, 488, 491).
+   - Constat dans le code : Branches de basculement multi-fournisseurs (repli de Groq vers Gemini lors des erreurs d'authentification ou d'épuisement de quota) et gestionnaires d'erreurs de parsing de structures JSON non conformes renvoyées par le modèle distant.
+2. **`apps.analytics` (89,5 % sur le code métier — 169 lignes non couvertes) :**
+   - Composants : [`apps/analytics/management/commands/controle_qualite_donnees.py`](../backend/apps/analytics/management/commands/controle_qualite_donnees.py) (62,0 % de couverture, 70 lignes non couvertes) et [`apps/analytics/services.py`](../backend/apps/analytics/services.py) (71,9 % de couverture, 32 lignes non couvertes).
+   - Constat dans le code : Détection et affichage CLI des cas d'incohérence de données rares (dossiers sans cohorte ou projets sans porteur), et filtres de requêtes conditionnelles sur financements non activés dans les scénarios de test.
 3. **`apps.gallery` (89,9 % sur le code métier — 50 lignes non couvertes) :**
-   - Zones principales : [`apps/gallery/management/commands/seed_gallery.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/gallery/management/commands/seed_gallery.py) (0 % car la commande de seed unitaire est supplantée par `seed_all`) et les cas de repli d'encodage binaire dans [`apps/gallery/qr.py`](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/backend/apps/gallery/qr.py) (94 % de couverture, 9 lignes de cas limites non atteintes).
+   - Composant : [`apps/gallery/management/commands/seed_gallery.py`](../backend/apps/gallery/management/commands/seed_gallery.py) (0 % de couverture, 30 lignes non couvertes : lignes 6-262).
+   - Constat dans le code : Commande de seed non appelée par la suite de tests ni par `seed_all` (constat vérifié par grep).
+
+#### B. Fichiers de code les moins couverts (hors tests et migrations)
+
+| Fichier | Instructions | Non couvertes | Couverture | Lignes non couvertes (`coverage report -m`) | Constat dans le code |
+|---|:---:|:---:|:---:|---|---|
+| [`apps/gallery/management/commands/seed_gallery.py`](../backend/apps/gallery/management/commands/seed_gallery.py) | 30 | 30 | **0,0 %** | 6-262 | Commande de seed non appelée par la suite de tests ni par `seed_all` (constat vérifié par grep). |
+| [`apps/core/ai.py`](../backend/apps/core/ai.py) | 36 | 22 | **38,9 %** | 35-37, 41, 45-72, 76 | Appels HTTP réels sortants vers les API distantes (Groq et Gemini), systématiquement interceptés par des mocks lors des tests. |
+| [`apps/analytics/management/commands/controle_qualite_donnees.py`](../backend/apps/analytics/management/commands/controle_qualite_donnees.py) | 184 | 70 | **62,0 %** | 74, 95, 105, 115, 136, 191-192, 216-218, 228-231, 254-257, 270-272, 283-284, 294-296, 328, 350, 371-380, 390-401, 438, 474, 478-543 | Formatage console des rapports d'anomalies de données orphelines. |
+| [`apps/analytics/services.py`](../backend/apps/analytics/services.py) | 114 | 32 | **71,9 %** | 74-78, 82-86, 96, 100-104, 178-180, 218-245, 269-282, 291, 303-305, 334, 355-358 | Calculs croisés avec filtres optionnels de financements et dates. |
+| [`apps/assistant/services.py`](../backend/apps/assistant/services.py) | 276 | 74 | **73,2 %** | 75, 90, 100-102, 110-114, 122-160, 166, 172-174, 177, 182-184, 187-189, 194-197, 207, 212, 324, 404, 412, 465-470, 475, 484, 488, 491 | Mécanismes de repli Groq/Gemini en cas de timeout et parsing de retours incomplets. |
+| [`apps/incubator/management/commands/envoyer_alertes_retard.py`](../backend/apps/incubator/management/commands/envoyer_alertes_retard.py) | 20 | 5 | **75,0 %** | 32-36 | Gestion de l'option `--force` en ligne de commande. |
+| [`apps/incubator/emails.py`](../backend/apps/incubator/emails.py) | 57 | 13 | **77,2 %** | 32, 37-41, 77-83, 100, 105, 109-113, 170-176 | Gabarits d'e-mails pour statuts rejetés et notifications alternatives. |
+| [`apps/documents/services.py`](../backend/apps/documents/services.py) | 88 | 19 | **78,4 %** | 33, 42-53, 159-164 | Gestion des erreurs de gabarit manquant et exceptions d'export. |
