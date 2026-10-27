@@ -13,6 +13,7 @@ interface DomaineItem {
   isDark?: boolean;
   accentBg?: string;
   waveColor?: string;
+  cornerAccent?: string;
   iconSvg: string;
   enjeuxComplets: string;
   axes: string[];
@@ -30,9 +31,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "TIC, numérique, intelligence artificielle et données",
     description:
       "Développer des solutions numériques et des systèmes intelligents pour une société plus connectée et plus performante.",
-    photo: "/images/domaine_01_tic_hd.jpg",
+    photo: "/images/domaine_01_card_hd.jpg",
     isDark: true,
     waveColor: "#22120A",
+    cornerAccent: "concentric_dark",
     iconSvg: "sliders",
     enjeuxComplets:
       "Souveraineté numérique nationale, valorisation des données publiques sénégalaises, modèles d'intelligence artificielle adaptés aux langues nationales (Wolof, Pulaar, Sérère), vision par ordinateur et cybersécurité des systèmes critiques.",
@@ -50,10 +52,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Mécanique, fabrication et maintenance",
     description:
       "Accompagner la montée en compétences et le développement d’une industrie locale compétitive et durable.",
-    photo: "/images/domaine_02_meca_hd.jpg",
+    photo: "/images/domaine_02_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#EEDFD0",
+    waveColor: "#FFFFFF",
+    cornerAccent: "amber_facet",
     iconSvg: "cogs",
     enjeuxComplets:
       "Rupture de la dépendance aux importations de pièces détachées industrielles par l'usinage numérique CNC de haute précision, la fabrication additive sur métaux/polymères et la maintenance prédictive.",
@@ -71,10 +73,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Agriculture, transformation et environnement",
     description:
       "Soutenir l’innovation agricole et la valorisation des ressources naturelles pour une meilleure sécurité alimentaire et environnementale.",
-    photo: "/images/domaine_03_agri_hd.jpg",
+    photo: "/images/domaine_03_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#E3ECE0",
+    waveColor: "#FFFFFF",
+    cornerAccent: "green_leaf",
     iconSvg: "sprout",
     enjeuxComplets:
       "Sécurité alimentaire durable par la maîtrise des ressources hydriques, la mécanisation adaptée des filières céréalières et maraîchères des Niayes, et la réduction des pertes post-récolte par le séchage solaire.",
@@ -96,10 +98,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Énergie, efficacité énergétique et énergies renouvelables",
     description:
       "Promouvoir des solutions énergétiques propres et accessibles pour un développement durable.",
-    photo: "/images/domaine_04_energie_hd.jpg",
+    photo: "/images/domaine_04_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#F7E8D6",
+    waveColor: "#FFFFFF",
+    cornerAccent: "orange_sun",
     iconSvg: "sun",
     enjeuxComplets:
       "Valorisation optimale de l'irradiance solaire du Sénégal, stabilisation des micro-réseaux ruraux autonomes (microgrids) et certification technique des équipements photovoltaïques en climat sahélien.",
@@ -117,10 +119,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Pharmaceutique et biomédical",
     description:
       "Renforcer l’innovation en santé pour répondre aux besoins des populations et améliorer la qualité de vie.",
-    photo: "/images/domaine_05_sante_hd.jpg",
+    photo: "/images/domaine_05_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#F5DFDF",
+    waveColor: "#FFFFFF",
+    cornerAccent: "rose_coral",
     iconSvg: "microscope",
     enjeuxComplets:
       "Souveraineté sanitaire nationale par la fabrication locale de dispositifs médicaux d'urgence réparables, la télémédecine solaire décentralisée pour postes de santé de brousse et l'extraction validée de principes actifs.",
@@ -138,10 +140,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Éducation, formation professionnelle et insertion",
     description:
       "Former les talents d’aujourd’hui et de demain pour favoriser l’employabilité et l’entrepreneuriat.",
-    photo: "/images/domaine_06_education_hd.jpg",
+    photo: "/images/domaine_06_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#EBE3F2",
+    waveColor: "#FFFFFF",
+    cornerAccent: "purple_prism",
     iconSvg: "cap",
     enjeuxComplets:
       "Transformation de l'apprentissage technique par les technologies immersives (VR), simulateurs d'ateliers sans risque et passerelles directes pour l'insertion des diplômés de l'ISEP dans l'industrie.",
@@ -159,10 +161,10 @@ const DOMAINES: DomaineItem[] = [
     nom: "Services aux collectivités, entrepreneuriat et incubation",
     description:
       "Soutenir les initiatives locales et accompagner la création d’entreprises innovantes et responsables.",
-    photo: "/images/domaine_07_services_hd.jpg",
+    photo: "/images/domaine_07_card_hd.jpg",
     isDark: false,
-    waveColor: "#FAF7F2",
-    accentBg: "#F4E5D4",
+    waveColor: "#FFFFFF",
+    cornerAccent: "terracotta_polygon",
     iconSvg: "city",
     enjeuxComplets:
       "Modernisation des collectivités territoriales, transition vers des villes durables (Pôle Urbain de Diamniadio), optimisation de la gestion des déchets et traçabilité de la fiscalité locale.",
@@ -176,66 +178,277 @@ const DOMAINES: DomaineItem[] = [
   },
 ];
 
-// Rendu des petits pictogrammes fins exacts à côté des numéros
-function CardMicroIcon({ type, isDark }: { type: string; isDark?: boolean }) {
-  const strokeClass = isDark ? "stroke-[#C99A68]" : "stroke-[#A07044]";
-  const fillClass = isDark ? "fill-[#C99A68]" : "fill-[#A07044]";
-
+// Ornements artistiques d'angle géométriques fidèles à la maquette (coin inférieur droit)
+function CardCornerAccent({ type }: { type?: string }) {
   switch (type) {
-    case "sliders":
+    case "concentric_dark":
       return (
-        <svg className={`w-5 h-4 ${strokeClass}`} viewBox="0 0 20 16" fill="none" strokeWidth="1.5">
-          <circle cx="5" cy="8" r="2.5" className={fillClass} />
-          <line x1="8" y1="8" x2="18" y2="8" />
-          <line x1="2" y1="8" x2="3" y2="8" />
-          <circle cx="15" cy="3" r="1.5" />
-          <circle cx="15" cy="13" r="1.5" />
+        <svg
+          className="absolute -bottom-8 -right-8 w-36 h-36 pointer-events-none opacity-40"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="#4A2514"
+          strokeWidth="1.5"
+        >
+          <circle cx="100" cy="100" r="25" />
+          <circle cx="100" cy="100" r="45" />
+          <circle cx="100" cy="100" r="65" />
+          <circle cx="100" cy="100" r="85" />
         </svg>
       );
-    case "cogs":
+    case "amber_facet":
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <rect x="7" y="2" width="6" height="16" rx="2" />
-          <line x1="10" y1="2" x2="10" y2="18" strokeDasharray="2 2" />
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none opacity-85"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <polygon points="100,20 100,100 20,100" fill="#D8A47F" opacity="0.6" />
+          <polygon points="100,50 100,100 50,100" fill="#C99A68" opacity="0.8" />
         </svg>
       );
-    case "sprout":
+    case "green_leaf":
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <path d="M10 17V8" />
-          <path d="M10 8C10 5 13 3 17 3C17 7 15 10 10 10" />
-          <path d="M10 12C10 10 7 8 3 8C3 12 5 14 10 14" />
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-28 pointer-events-none opacity-85"
+          viewBox="0 0 100 120"
+          fill="none"
+        >
+          <path
+            d="M100,30 C70,40 50,70 60,120 L100,120 Z"
+            fill="#8FA876"
+            opacity="0.8"
+          />
+          <path
+            d="M100,60 C80,70 70,90 80,120 L100,120 Z"
+            fill="#6B8E55"
+            opacity="0.9"
+          />
         </svg>
       );
-    case "sun":
+    case "orange_sun":
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <path d="M11 2L5 11H10L9 18L15 9H10L11 2Z" className={fillClass} />
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none opacity-80"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <path
+            d="M100,20 C60,40 40,80 50,100 L100,100 Z"
+            fill="#E9A855"
+            opacity="0.75"
+          />
         </svg>
       );
-    case "microscope":
+    case "rose_coral":
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <circle cx="10" cy="6" r="3" />
-          <path d="M6 16H14" />
-          <path d="M10 9V16" />
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none opacity-75"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <path
+            d="M100,35 C70,45 55,75 60,100 L100,100 Z"
+            fill="#E6A5A5"
+            opacity="0.75"
+          />
         </svg>
       );
-    case "cap":
+    case "purple_prism":
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <polygon points="10 3 18 7 10 11 2 7" className={fillClass} />
-          <path d="M5 9V14C5 15.5 7.5 17 10 17C12.5 17 15 15.5 15 14V9" />
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none opacity-80"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <polygon points="100,25 100,100 35,100" fill="#8E7DBE" opacity="0.6" />
+          <polygon points="100,55 100,100 65,100" fill="#6A539B" opacity="0.8" />
         </svg>
       );
-    case "city":
+    case "terracotta_polygon":
+      return (
+        <svg
+          className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none opacity-80"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <path
+            d="M100,25 C65,35 45,70 50,100 L100,100 Z"
+            fill="#D36B3B"
+            opacity="0.8"
+          />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+// Découpe ondulée précise entre la photo et le corps de la carte selon la maquette
+function CardWaveTransition({ id, isDark }: { id: number; isDark?: boolean }) {
+  const fillColor = isDark ? "#22120A" : "#FFFFFF";
+
+  switch (id) {
+    case 1:
+      // Carte 01 : Pente angulaire franche vers le bas-droite
+      return (
+        <div className="relative -mt-6 z-10 w-full h-8 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 400 36" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,0 L 400,26 L 400,36 L 0,36 Z" />
+          </svg>
+        </div>
+      );
+    case 2:
+      // Carte 02 : Dôme / arche convexe remontant vers le haut
+      return (
+        <div className="relative -mt-6 z-10 w-full h-8 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 400 36" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,28 Q 200,-6 400,28 L 400,36 L 0,36 Z" />
+          </svg>
+        </div>
+      );
+    case 3:
+      // Carte 03 : Vague asymétrique plongeante
+      return (
+        <div className="relative -mt-6 z-10 w-full h-8 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 400 36" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,14 C 120,38 260,2 400,24 L 400,36 L 0,36 Z" />
+          </svg>
+        </div>
+      );
+    case 4:
+      // Carte 04 : Vague montante
+      return (
+        <div className="relative -mt-5 z-10 w-full h-7 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 300 30" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,18 C 90,4 200,32 300,16 L 300,30 L 0,30 Z" />
+          </svg>
+        </div>
+      );
+    case 5:
+      // Carte 05 : Double arche douce
+      return (
+        <div className="relative -mt-5 z-10 w-full h-7 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 300 30" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,22 C 75,-2 180,30 300,14 L 300,30 L 0,30 Z" />
+          </svg>
+        </div>
+      );
+    case 6:
+      // Carte 06 : Vague dynamique
+      return (
+        <div className="relative -mt-5 z-10 w-full h-7 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 300 30" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,12 C 100,32 200,4 300,20 L 300,30 L 0,30 Z" />
+          </svg>
+        </div>
+      );
+    case 7:
+    default:
+      // Carte 07 : Vague fluide
+      return (
+        <div className="relative -mt-5 z-10 w-full h-7 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 300 30" fill={fillColor} preserveAspectRatio="none" className="w-full h-full block">
+            <path d="M 0,20 C 120,4 210,30 300,14 L 300,30 L 0,30 Z" />
+          </svg>
+        </div>
+      );
+  }
+}
+
+// Pictogrammes techniques précis à côté de chaque numéro selon la capture de l'utilisateur
+function CardHeaderIcon({ id, isDark }: { id: number; isDark?: boolean }) {
+  const strokeClass = isDark ? "stroke-[#C99A68]" : "stroke-[#8C7A6D]";
+  const fillClass = isDark ? "fill-[#C99A68]" : "fill-[#8C7A6D]";
+
+  switch (id) {
+    case 1:
+      return (
+        <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <circle cx="10" cy="11" r="6" />
+            <line x1="10" y1="2" x2="10" y2="5" />
+            <line x1="10" y1="8" x2="10" y2="11" />
+            <line x1="10" y1="11" x2="13" y2="13" />
+          </svg>
+          <svg className={`w-8 h-2.5 ${strokeClass}`} viewBox="0 0 32 10" fill="none" strokeWidth="1.5">
+            <line x1="2" y1="5" x2="30" y2="5" />
+            <circle cx="20" cy="5" r="3" className={fillClass} />
+          </svg>
+        </div>
+      );
+    case 2:
+      return (
+        <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <polygon points="10,2 17,5 17,11 10,18 3,11 3,5" />
+            <circle cx="10" cy="10" r="2.5" />
+          </svg>
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 16 16" fill="none" strokeWidth="1.5">
+            <line x1="5" y1="2" x2="5" y2="14" />
+            <circle cx="5" cy="6" r="1.5" className={fillClass} />
+            <line x1="11" y1="2" x2="11" y2="14" />
+            <circle cx="11" cy="10" r="1.5" className={fillClass} />
+          </svg>
+        </div>
+      );
+    case 3:
+      return (
+        <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <circle cx="10" cy="10" r="7" />
+            <line x1="10" y1="5" x2="10" y2="15" />
+            <line x1="5" y1="10" x2="15" y2="10" />
+            <circle cx="10" cy="10" r="2" className={fillClass} />
+          </svg>
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 16 16" fill="none" strokeWidth="1.5">
+            <line x1="5" y1="2" x2="5" y2="14" />
+            <circle cx="5" cy="8" r="1.5" className={fillClass} />
+            <line x1="11" y1="2" x2="11" y2="14" />
+            <circle cx="11" cy="5" r="1.5" className={fillClass} />
+          </svg>
+        </div>
+      );
+    case 4:
+      return (
+        <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <polygon points="11,2 5,11 10,11 9,18 15,9 10,9" className={fillClass} />
+          </svg>
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 16 16" fill="none" strokeWidth="1.5">
+            <line x1="5" y1="2" x2="5" y2="14" />
+            <line x1="11" y1="2" x2="11" y2="14" />
+          </svg>
+        </div>
+      );
+    case 5:
+      return (
+        <div className="flex items-center gap-1.5">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <polygon points="10,2 17,5 17,11 10,18 3,11 3,5" />
+            <line x1="10" y1="7" x2="10" y2="13" />
+            <line x1="7" y1="10" x2="13" y2="10" />
+          </svg>
+        </div>
+      );
+    case 6:
+      return (
+        <div className="flex items-center gap-1.5">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <polygon points="10,4 18,8 10,12 2,8" className={fillClass} />
+            <path d="M5,10 V14 C5,15.5 7.5,17 10,17 C12.5,17 15,15.5 15,14 V10" />
+          </svg>
+        </div>
+      );
+    case 7:
     default:
       return (
-        <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
-          <circle cx="7" cy="7" r="3" />
-          <circle cx="14" cy="13" r="3" />
-          <line x1="9" y1="9" x2="12" y2="12" />
-        </svg>
+        <div className="flex items-center gap-1.5">
+          <svg className={`w-4 h-4 ${strokeClass}`} viewBox="0 0 20 20" fill="none" strokeWidth="1.5">
+            <circle cx="10" cy="7" r="4" className={fillClass} />
+            <path d="M10,11 L10,17" />
+          </svg>
+        </div>
       );
   }
 }
@@ -246,54 +459,57 @@ export default function DomainesShowcase() {
   return (
     <div className="bg-[#FAF7F2] text-[#24140D] min-h-screen font-sans antialiased selection:bg-[#C99A68]/30">
       {/* =====================================================================
-       * SECTION 1 : HERO HAUT DE PAGE CONFORME À LA MAQUETTE
-       * Fond biseauté marron foncé à facettes + Photo chercheuse haute résolution
+       * SECTION 1 : HERO HAUT DE PAGE CONFORME À LA MAQUETTE & CHARTE CIAT
+       * Affiche l'œuvre maîtresse 2K HD en fond avec bouton interactif et fallback mobile
        * ===================================================================== */}
-      <section className="relative w-full min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] bg-[#1F110B] text-white overflow-hidden flex items-center">
-        {/* Motifs géométriques à facettes en arrière-plan gauche */}
-        <div className="absolute inset-y-0 left-0 w-full lg:w-[60%] pointer-events-none z-0 overflow-hidden">
-          {/* Facettes polygonales subtiles de la maquette */}
-          <div className="absolute -top-20 -left-20 w-[600px] h-[700px] bg-gradient-to-br from-[#2D160D] via-[#221008] to-[#160A05] opacity-90 transform -rotate-6" />
-          <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-gradient-to-tr from-[#351A0F] to-transparent opacity-40 transform rotate-12" />
-        </div>
-
-        {/* Photo de droite haute résolution : Chercheuse au laboratoire */}
-        <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[56%] z-0 overflow-hidden">
+      <section className="relative w-full bg-[#1A0E08] text-white overflow-hidden">
+        {/* Version Desktop (lg+) : Rendu de la bannière 2K avec bouton interactif superposé */}
+        <div className="hidden lg:block relative w-full aspect-[1982/654] max-w-[1920px] mx-auto overflow-hidden">
           <Image
-            src="/images/domaines_hero_hd.jpg"
-            alt="Chercheuse et ingénieurs en laboratoire de mécatronique et électronique au CIAT Diamniadio"
+            src="/images/domaines_hero_master_2x.png"
+            alt="7 domaines d'expertise au service d'un avenir durable - CIAT Diamniadio"
             fill
             priority
-            sizes="(max-width: 1024px) 100vw, 56vw"
-            className="object-cover object-center"
+            sizes="100vw"
+            className="object-cover object-center pointer-events-none select-none"
           />
 
-          {/* Dégradé doux de transition entre les facettes sombres et la photo */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1F110B] via-transparent to-transparent lg:bg-gradient-to-r lg:from-[#1F110B] lg:via-[#1F110B]/50 lg:to-transparent" />
-
-          {/* Mots-clés verticaux exacts en haut à droite */}
-          <div className="absolute top-8 right-8 lg:top-10 lg:right-12 z-10 hidden sm:flex flex-col items-end gap-1.5 text-right font-sans text-[11px] font-bold tracking-[0.28em] text-white/95 uppercase drop-shadow-md select-none">
-            <span>INNOVER</span>
-            <div className="w-10 h-[1px] bg-white/40 my-0.5" />
-            <span>FORMER</span>
-            <div className="w-10 h-[1px] bg-white/40 my-0.5" />
-            <span>ENTREPRENDRE</span>
-            <div className="w-10 h-[1px] bg-white/40 my-0.5" />
-            <span>TRANSFÉRER</span>
-          </div>
+          {/* Bouton interactif superposé exactement sur 'Découvrir le CIAT ->' */}
+          <Link
+            href="/portail/ciat"
+            aria-label="Découvrir le CIAT"
+            className="absolute left-[4.8%] bottom-[12%] inline-flex items-center gap-3.5 group cursor-pointer z-20 py-2 px-3 rounded-full hover:bg-black/25 focus-visible:outline-2 focus-visible:outline-[#C99A68] transition-all"
+          >
+            <span className="h-10 w-10 rounded-full border border-white/50 group-hover:border-[#C99A68] bg-black/40 group-hover:bg-[#C99A68] text-white group-hover:text-[#24140D] flex items-center justify-center transition-all duration-200 shadow-lg">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-none stroke-current stroke-2 ml-0.5" aria-hidden="true">
+                <polygon points="7,4 20,12 7,20" />
+              </svg>
+            </span>
+            <span className="font-[family-name:var(--font-title)] text-base font-semibold text-white group-hover:text-[#C99A68] transition-colors underline underline-offset-8 decoration-white/70 group-hover:decoration-[#C99A68]">
+              Découvrir le CIAT →
+            </span>
+          </Link>
         </div>
 
-        {/* Contenu textuel à gauche conforme à la maquette */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 w-full">
-          <div className="max-w-xl">
-            {/* Trait et label supérieur */}
-            <div className="inline-flex items-center gap-3 text-xs font-bold tracking-[0.25em] text-[#C99A68] uppercase mb-4">
+        {/* Version Mobile / Tablette (<lg) : Fluidité responsive & lisibilité optimale */}
+        <div className="lg:hidden relative w-full py-14 px-5 sm:px-8 bg-[#24140D] flex flex-col justify-center overflow-hidden">
+          {/* Photo chercheuse en fond avec fondu sombre */}
+          <div className="absolute top-0 right-0 bottom-0 w-full z-0 opacity-25 pointer-events-none">
+            <Image
+              src="/images/domaines_hero_hd.jpg"
+              alt="Laboratoire CIAT"
+              fill
+              className="object-cover object-center"
+            />
+          </div>
+
+          <div className="relative z-10 max-w-xl">
+            <div className="inline-flex items-center gap-3 text-xs font-bold tracking-[0.25em] text-[#C99A68] uppercase mb-4 font-[family-name:var(--font-title)]">
               <span>NOS 7 DOMAINES</span>
-              <span className="w-14 h-[1px] bg-[#C99A68]" />
+              <span className="w-14 h-[1.5px] bg-[#C99A68]" />
             </div>
 
-            {/* Titre monumental en Fraunces serif */}
-            <h1 className="text-3xl sm:text-5xl lg:text-[52px] font-serif font-bold text-white tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl font-serif font-bold text-white tracking-tight leading-[1.08]">
               7 domaines
               <br />
               d’expertise au service
@@ -301,22 +517,22 @@ export default function DomainesShowcase() {
               d’un <span className="italic font-serif font-normal text-[#C99A68]">avenir durable</span>
             </h1>
 
-            {/* Paragraphe narratif */}
-            <p className="mt-5 text-sm sm:text-base text-white/85 leading-relaxed font-normal max-w-lg">
+            <p className="mt-5 text-sm sm:text-base text-white/90 leading-relaxed font-normal font-[family-name:var(--font-body)]">
               Le CIAT intervient dans 7 domaines stratégiques pour accompagner les talents,
               soutenir l’innovation et répondre aux défis du Sénégal et de l’Afrique de demain.
             </p>
 
-            {/* Bouton avec icône cercle play + Découvrir le CIAT */}
-            <div className="mt-8 flex items-center gap-4">
+            <div className="mt-8 flex items-center">
               <Link
                 href="/portail/ciat"
-                className="inline-flex items-center gap-3 text-xs sm:text-sm font-semibold text-white group cursor-pointer"
+                className="inline-flex items-center gap-3.5 group cursor-pointer"
               >
-                <span className="h-9 w-9 rounded-full border border-white/40 group-hover:border-[#C99A68] bg-white/10 group-hover:bg-[#C99A68] group-hover:text-[#1F110B] flex items-center justify-center transition-all shadow-md">
-                  <span className="text-[10px] font-bold ml-0.5">▶</span>
+                <span className="h-10 w-10 rounded-full border border-white/40 group-hover:border-[#C99A68] bg-[#24140D]/80 group-hover:bg-[#C99A68] text-white group-hover:text-[#24140D] flex items-center justify-center transition-all duration-200 shadow-lg">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-none stroke-current stroke-2 ml-0.5" aria-hidden="true">
+                    <polygon points="7,4 20,12 7,20" />
+                  </svg>
                 </span>
-                <span className="underline underline-offset-4 group-hover:text-[#C99A68] transition-colors">
+                <span className="font-[family-name:var(--font-title)] text-sm font-semibold text-white group-hover:text-[#C99A68] transition-colors underline underline-offset-8 decoration-white/60 group-hover:decoration-[#C99A68]">
                   Découvrir le CIAT →
                 </span>
               </Link>
@@ -333,7 +549,7 @@ export default function DomainesShowcase() {
         {/* En-tête de section avec titre et bouton "Tout découvrir" */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-10 border-b border-[#E8DFD3]">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#8C7A6D] block mb-2">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#8C7A6D] block mb-2 font-[family-name:var(--font-title)]">
               NOS 7 DOMAINES
             </span>
             <p className="text-lg sm:text-xl lg:text-2xl font-serif text-[#24140D] font-normal max-w-2xl leading-snug">
@@ -367,7 +583,7 @@ export default function DomainesShowcase() {
                     : "bg-white text-[#24140D] border-[#E8DFD3] hover:border-[#C99A68]/70"
                 }`}
               >
-                {/* Photo de la carte */}
+                {/* Photo de la carte exacte */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/10">
                   <Image
                     src={item.photo}
@@ -376,49 +592,32 @@ export default function DomainesShowcase() {
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover object-center transition-transform duration-500 ease-out hover:scale-105"
                   />
-                  {/* Dégradé doux inférieur de transition */}
-                  <div
-                    className={`absolute inset-0 pointer-events-none ${
-                      item.isDark
-                        ? "bg-gradient-to-t from-[#22120A] via-transparent to-transparent"
-                        : "bg-gradient-to-t from-white/90 via-transparent to-transparent"
-                    }`}
-                  />
                 </div>
 
-                {/* Transition ondulée / scalloped subtile de la maquette */}
-                <div
-                  className="relative -mt-5 z-10 w-full h-5 overflow-hidden"
-                  style={{ color: item.isDark ? "#22120A" : "#FFFFFF" }}
-                >
-                  <svg
-                    viewBox="0 0 400 24"
-                    fill="currentColor"
-                    preserveAspectRatio="none"
-                    className="w-full h-full block"
-                  >
-                    <path d="M0,12 C100,24 250,0 400,12 L400,24 L0,24 Z" />
-                  </svg>
-                </div>
+                {/* Découpe ondulée précise selon la maquette */}
+                <CardWaveTransition id={item.id} isDark={item.isDark} />
 
                 {/* Corps de texte de la carte */}
-                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between -mt-1">
-                  <div>
-                    {/* Numéro et pictogramme fin conforme à la maquette */}
-                    <div className="flex items-center gap-2 mb-3">
+                <div className="relative p-6 sm:p-7 flex-1 flex flex-col justify-between -mt-1 overflow-hidden">
+                  {/* Ornement d'angle dans le coin inférieur droit */}
+                  <CardCornerAccent type={item.cornerAccent} />
+
+                  <div className="relative z-10">
+                    {/* Numéro et pictogramme technique exact de la maquette */}
+                    <div className="flex items-center gap-2.5 mb-3">
                       <span
                         className={`font-mono text-sm font-bold ${
-                          item.isDark ? "text-white/80" : "text-[#8C7A6D]"
+                          item.isDark ? "text-[#C99A68]" : "text-[#8C7A6D]"
                         }`}
                       >
                         {item.code}
                       </span>
-                      <CardMicroIcon type={item.iconSvg} isDark={item.isDark} />
+                      <CardHeaderIcon id={item.id} isDark={item.isDark} />
                     </div>
 
-                    {/* Titre du domaine */}
+                    {/* Titre du domaine en Plus Jakarta Sans Bold */}
                     <h2
-                      className={`text-lg sm:text-xl font-bold leading-snug tracking-tight font-serif ${
+                      className={`text-lg sm:text-xl font-bold leading-snug tracking-tight font-[family-name:var(--font-title)] ${
                         item.isDark ? "text-white" : "text-[#24140D]"
                       }`}
                     >
@@ -427,7 +626,7 @@ export default function DomainesShowcase() {
 
                     {/* Description fidèle à la maquette */}
                     <p
-                      className={`mt-3 text-xs sm:text-sm leading-relaxed font-normal ${
+                      className={`mt-3 text-xs sm:text-sm leading-relaxed font-normal font-[family-name:var(--font-body)] ${
                         item.isDark ? "text-white/80" : "text-[#6B5A4E]"
                       }`}
                     >
@@ -435,8 +634,8 @@ export default function DomainesShowcase() {
                     </p>
                   </div>
 
-                  {/* Bouton En savoir plus */}
-                  <div className="mt-6 pt-4 border-t border-black/5">
+                  {/* Bouton En savoir plus avec soulignement exact de la maquette */}
+                  <div className="relative z-10 mt-6 pt-4 border-t border-black/5">
                     <button
                       type="button"
                       onClick={() => setActiveModalItem(item)}
@@ -446,7 +645,7 @@ export default function DomainesShowcase() {
                           : "text-[#612D10] hover:text-[#C99A68]"
                       }`}
                     >
-                      <span>En savoir plus</span>
+                      <span className="underline underline-offset-4">En savoir plus</span>
                       <span>→</span>
                     </button>
                   </div>
@@ -464,7 +663,7 @@ export default function DomainesShowcase() {
                 key={item.id}
                 className="bg-white rounded-3xl overflow-hidden flex flex-col justify-between border border-[#E8DFD3] hover:border-[#C99A68]/70 shadow-sm hover:shadow-xl transition-all duration-300"
               >
-                {/* Photo de la carte */}
+                {/* Photo de la carte exacte */}
                 <div className="relative aspect-[16/11] w-full overflow-hidden bg-black/10">
                   <Image
                     src={item.photo}
@@ -473,51 +672,44 @@ export default function DomainesShowcase() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover object-center transition-transform duration-500 ease-out hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/85 via-transparent to-transparent pointer-events-none" />
                 </div>
 
-                {/* Transition ondulée douce */}
-                <div className="relative -mt-4 z-10 w-full h-4 overflow-hidden text-white">
-                  <svg
-                    viewBox="0 0 300 20"
-                    fill="currentColor"
-                    preserveAspectRatio="none"
-                    className="w-full h-full block"
-                  >
-                    <path d="M0,10 C80,20 200,0 300,10 L300,20 L0,20 Z" />
-                  </svg>
-                </div>
+                {/* Découpe ondulée précise */}
+                <CardWaveTransition id={item.id} />
 
                 {/* Corps de texte */}
-                <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between -mt-1">
-                  <div>
-                    {/* Numéro et icône fine */}
+                <div className="relative p-5 sm:p-6 flex-1 flex flex-col justify-between -mt-1 overflow-hidden">
+                  {/* Ornement d'angle dans le coin inférieur droit */}
+                  <CardCornerAccent type={item.cornerAccent} />
+
+                  <div className="relative z-10">
+                    {/* Numéro et icône technique fine */}
                     <div className="flex items-center gap-2 mb-2.5">
                       <span className="font-mono text-sm font-bold text-[#8C7A6D]">
                         {item.code}
                       </span>
-                      <CardMicroIcon type={item.iconSvg} />
+                      <CardHeaderIcon id={item.id} />
                     </div>
 
-                    {/* Titre du domaine */}
-                    <h2 className="text-base font-bold text-[#24140D] font-serif leading-snug tracking-tight">
+                    {/* Titre du domaine en Plus Jakarta Sans Bold */}
+                    <h2 className="text-base font-bold text-[#24140D] font-[family-name:var(--font-title)] leading-snug tracking-tight">
                       {item.nom}
                     </h2>
 
                     {/* Description concise */}
-                    <p className="mt-2.5 text-xs text-[#6B5A4E] leading-relaxed font-normal">
+                    <p className="mt-2.5 text-xs text-[#6B5A4E] leading-relaxed font-normal font-[family-name:var(--font-body)]">
                       {item.description}
                     </p>
                   </div>
 
-                  {/* Bouton En savoir plus */}
-                  <div className="mt-5 pt-3.5 border-t border-[#F1E9DE]">
+                  {/* Bouton En savoir plus avec soulignement exact de la maquette */}
+                  <div className="relative z-10 mt-5 pt-3.5 border-t border-[#F1E9DE]">
                     <button
                       type="button"
                       onClick={() => setActiveModalItem(item)}
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] hover:text-[#C99A68] transition-colors cursor-pointer"
                     >
-                      <span>En savoir plus</span>
+                      <span className="underline underline-offset-4">En savoir plus</span>
                       <span>→</span>
                     </button>
                   </div>
