@@ -685,14 +685,12 @@ class ProjetCompteRenduExportView(APIView):
         if not force:
             fmt = request.query_params.get("format")
             if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
-                raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
+                for r in self.get_renderers():
+                    if isinstance(r, renderers.JSONRenderer):
+                        return (r, r.media_type)
         return super().perform_content_negotiation(request, force=force)
 
     def get(self, request, pk, format=None):
-        fmt = request.query_params.get("format", "xlsx")
-        if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
-            raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
-
         projet = get_object_or_404(
             Projet.objects.select_related("porteur", "domaine", "cohorte", "affectation_mentor__mentor"),
             pk=pk,
@@ -703,6 +701,10 @@ class ProjetCompteRenduExportView(APIView):
         # Contrôle strict d'accès : porteur du projet, mentor affecté ou équipe CIAT
         if not (user.is_equipe or (user.role == Role.PORTEUR and projet.porteur_id == user.id) or (user.role == Role.MENTOR and is_mentor)):
             raise PermissionDenied("Vous n'avez pas accès au compte rendu de ce projet.")
+
+        fmt = request.query_params.get("format", "xlsx")
+        if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
+            raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
 
         if fmt and fmt.lower() == "pdf":
             from apps.incubator.exports_pdf import generer_compte_rendu_pdf

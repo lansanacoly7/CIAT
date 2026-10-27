@@ -29,6 +29,7 @@ from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
     ALLOWED_PIECE_EXTENSIONS,
+    AffectationMentor,
     Critere,
     Decision,
     DecisionType,
@@ -43,7 +44,7 @@ from apps.incubator.models import (
     validate_file_content,
     validate_file_size,
 )
-from apps.portal.models import Actualite, AppelProjet, DocumentPublic, Partenaire
+from apps.portal.models import Actualite, AppelProjet, DocumentPublic, Evenement, Partenaire
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
@@ -105,9 +106,66 @@ class MatriceDroitsAPITests(TestCase):
             statut="incube",
         )
 
+        # Mentors : affecté au projet proprio vs non affecté
+        cls.users["mentor_affecte"] = User.objects.create_user(
+            email="mentor_affecte@ciat.sn",
+            password="Password123!",
+            role=Role.MENTOR,
+            first_name="Men",
+            last_name="Affecte",
+        )
+        cls.users["mentor_non_affecte"] = cls.users["mentor"]
+
+        cls.affectation_mentor = AffectationMentor.objects.create(
+            projet=cls.projet_proprio,
+            mentor=cls.users["mentor_affecte"],
+            affecte_par=cls.users["coordo"],
+        )
+
         cls.dossier_proprio = Dossier.objects.create(
             projet=cls.projet_proprio,
             statut=StatutDossier.BROUILLON,
+        )
+        cls.projet_soumis = Projet.objects.create(
+            titre="Projet Soumis Proprio",
+            resume="Résumé soumis",
+            probleme="Problème soumis",
+            solution="Solution soumise",
+            porteur=cls.users["porteur_proprio"],
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
+            statut="incube",
+        )
+        cls.dossier_soumis = Dossier.objects.create(
+            projet=cls.projet_soumis,
+            statut=StatutDossier.SOUMIS,
+            soumis_le=timezone.now(),
+        )
+        cls.dossier_brouillon = Dossier.objects.create(
+            projet=cls.projet_tiers,
+            statut=StatutDossier.BROUILLON,
+        )
+
+        # Projet distinct avec mentor affecté et dossier soumis pour tester l'interdiction mentor sur accuse
+        cls.projet_mentor_teste = Projet.objects.create(
+            titre="Projet Mentor Test",
+            resume="Résumé mentor test",
+            probleme="Pb mentor test",
+            solution="Sol mentor test",
+            porteur=cls.users["porteur_proprio"],
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
+            statut="incube",
+        )
+        cls.affectation_mentor_teste = AffectationMentor.objects.create(
+            projet=cls.projet_mentor_teste,
+            mentor=cls.users["mentor_affecte"],
+            affecte_par=cls.users["coordo"],
+        )
+        cls.dossier_mentor_teste = Dossier.objects.create(
+            projet=cls.projet_mentor_teste,
+            statut=StatutDossier.SOUMIS,
+            soumis_le=timezone.now(),
         )
 
         cls.grille = Grille.objects.create(nom="Grille 2026", active=True)
@@ -120,6 +178,13 @@ class MatriceDroitsAPITests(TestCase):
         cls.partenaire = Partenaire.objects.create(
             nom="ISEP Diamniadio",
             description="Institut supérieur",
+        )
+        cls.evenement = Evenement.objects.create(
+            titre="Hackathon CIAT 2026",
+            description="Hackathon national annuel CIAT",
+            lieu="Campus Diamniadio",
+            debut=timezone.now() + datetime.timedelta(days=7),
+            fin=timezone.now() + datetime.timedelta(days=8),
         )
         cls.appel = AppelProjet.objects.create(
             titre="Appel à candidatures 2026",
@@ -149,6 +214,7 @@ class MatriceDroitsAPITests(TestCase):
         """Authentifie le client avec l'utilisateur spécifié ou retire l'authentification si None."""
         if role_key is None:
             self.client.credentials()
+            self.client.force_authenticate(user=None)
         else:
             self.client.force_authenticate(user=self.users[role_key])
 
@@ -347,6 +413,146 @@ class MatriceDroitsAPITests(TestCase):
         resp_del_ok = self.client.delete(url_piece_delete)
         self.assertEqual(resp_del_ok.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Piece.objects.filter(id=piece.id).exists())
+
+    def test_matrice_routes_pathe_evenements_calendrier_ics(self):
+        """GET /api/portal/evenements/calendrier.ics : flux RFC 5545 accessible à tous."""
+        url = "/api/portal/evenements/calendrier.ics"
+
+        # Anonyme
+        self._auth(None)
+        resp_anon = self.client.get(url)
+        self.assertEqual(resp_anon.status_code, status.HTTP_200_OK)
+        self.assertIn("text/calendar", resp_anon.headers.get("Content-Type", ""))
+        self.assertIn("BEGIN:VCALENDAR", resp_anon.content.decode("utf-8"))
+        self.assertIn("Hackathon CIAT 2026", resp_anon.content.decode("utf-8"))
+
+        # Tous les rôles authentifiés
+        for role_key in [
+            "visiteur",
+            "porteur_proprio",
+            "porteur_tiers",
+            "mentor_non_affecte",
+            "mentor_affecte",
+            "comite",
+            "coordo",
+            "admin",
+        ]:
+            self._auth(role_key)
+            resp = self.client.get(url)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_200_OK,
+                f"Le rôle {role_key} doit pouvoir télécharger le calendrier ICS",
+            )
+
+        # Filtre ?a_venir=1
+        resp_filter = self.client.get(f"{url}?a_venir=1")
+        self.assertEqual(resp_filter.status_code, status.HTTP_200_OK)
+
+    def test_matrice_routes_pathe_dossier_accuse_reception(self):
+        """GET /api/incubator/dossiers/{id}/accuse/ : accusé PDF officiel post-soumission."""
+        url_soumis = f"/api/incubator/dossiers/{self.dossier_soumis.id}/accuse/"
+
+        # 1. Anonyme -> 401
+        self._auth(None)
+        self.assertEqual(self.client.get(url_soumis).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Rôles interdits -> 403 Forbidden
+        for role_key in ["visiteur", "porteur_tiers", "mentor_non_affecte", "mentor_affecte"]:
+            self._auth(role_key)
+            resp = self.client.get(url_soumis)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_403_FORBIDDEN,
+                f"Le rôle {role_key} ne doit pas accéder à l'accusé d'un dossier tiers",
+            )
+
+        # 3. Rôles autorisés -> 200 OK avec fichier PDF valide
+        for role_key in ["porteur_proprio", "comite", "coordo", "admin"]:
+            self._auth(role_key)
+            resp = self.client.get(url_soumis)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_200_OK,
+                f"Le rôle {role_key} doit pouvoir télécharger l'accusé de réception",
+            )
+            self.assertEqual(resp.headers.get("Content-Type"), "application/pdf")
+            self.assertTrue(resp.content.startswith(b"%PDF"))
+            self.assertIn(f"accuse_reception_dossier_{self.dossier_soumis.id}.pdf", resp.headers.get("Content-Disposition", ""))
+
+        # 4. Dossier encore en brouillon -> 400 Bad Request
+        url_brouillon = f"/api/incubator/dossiers/{self.dossier_brouillon.id}/accuse/"
+        self._auth("porteur_tiers")  # propriétaire du dossier brouillon
+        resp_brouillon = self.client.get(url_brouillon)
+        self.assertEqual(resp_brouillon.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", resp_brouillon.data)
+
+        # 5. Mentor affecté au projet du dossier soumis reçoit 403 sur son propre dossier
+        self._auth("mentor_affecte")
+        resp_mentor_propre = self.client.get(f"/api/incubator/dossiers/{self.dossier_mentor_teste.id}/accuse/")
+        self.assertEqual(resp_mentor_propre.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 6. Accusé sur dossier inexistant -> 404 pour un utilisateur autorisé
+        for role_key in ["admin", "coordo", "porteur_proprio"]:
+            self._auth(role_key)
+            resp_404 = self.client.get("/api/incubator/dossiers/999999/accuse/")
+            self.assertEqual(resp_404.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_matrice_routes_pathe_projet_compte_rendu(self):
+        """GET /api/incubator/projets/{id}/compte-rendu/?format=pdf : export compte rendu incubation."""
+        url_pdf = f"/api/incubator/projets/{self.projet_proprio.id}/compte-rendu/?format=pdf"
+
+        # 1. Anonyme -> 401
+        self._auth(None)
+        self.assertEqual(self.client.get(url_pdf).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Rôles interdits -> 403 Forbidden
+        for role_key in ["visiteur", "porteur_tiers", "mentor_non_affecte", "comite"]:
+            self._auth(role_key)
+            resp = self.client.get(url_pdf)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_403_FORBIDDEN,
+                f"Le rôle {role_key} ne doit pas accéder au compte rendu d'un projet non assigné",
+            )
+
+        # 3. Rôles autorisés -> 200 OK avec flux PDF valide
+        for role_key in ["porteur_proprio", "mentor_affecte", "coordo", "admin"]:
+            self._auth(role_key)
+            resp = self.client.get(url_pdf)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_200_OK,
+                f"Le rôle {role_key} doit pouvoir exporter le compte rendu PDF",
+            )
+            self.assertEqual(resp.headers.get("Content-Type"), "application/pdf")
+            self.assertTrue(resp.content.startswith(b"%PDF"))
+            self.assertIn(f"compte_rendu_projet_{self.projet_proprio.id}.pdf", resp.headers.get("Content-Disposition", ""))
+
+        # 4. Export format XLSX
+        url_xlsx = f"/api/incubator/projets/{self.projet_proprio.id}/compte-rendu/?format=xlsx"
+        self._auth("porteur_proprio")
+        resp_xlsx = self.client.get(url_xlsx)
+        self.assertEqual(resp_xlsx.status_code, status.HTTP_200_OK)
+
+        # 5. Format non supporté -> ordre des codes (401 anonyme -> 403 tiers -> 400 admin)
+        url_invalid = f"/api/incubator/projets/{self.projet_proprio.id}/compte-rendu/?format=csv"
+        self._auth(None)
+        self.assertEqual(self.client.get(url_invalid).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self._auth("porteur_tiers")
+        self.assertEqual(self.client.get(url_invalid).status_code, status.HTTP_403_FORBIDDEN)
+
+        self._auth("admin")
+        resp_invalid = self.client.get(url_invalid)
+        self.assertEqual(resp_invalid.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 6. Compte-rendu sur projet inexistant (401 si anonyme, 404 si authentifié)
+        self._auth(None)
+        self.assertEqual(self.client.get("/api/incubator/projets/999999/compte-rendu/?format=pdf").status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self._auth("admin")
+        self.assertEqual(self.client.get("/api/incubator/projets/999999/compte-rendu/?format=pdf").status_code, status.HTTP_404_NOT_FOUND)
 
     def test_statuts_precis_sur_methodes_interdites_405(self):
         """Les méthodes HTTP non prévues sur les endpoints renvoient explicitement 405 Method Not Allowed."""
