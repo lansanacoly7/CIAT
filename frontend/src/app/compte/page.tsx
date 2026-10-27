@@ -3,7 +3,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Bell,
   Check,
   ChevronRight,
@@ -149,15 +148,16 @@ function ProfilSection({ user }: { user: User }) {
 
   return (
     <div className="space-y-6">
-      {/* Lien de retour fluide vers le suivi des projets */}
-      <div>
+      {/* Fil d'Ariane harmonisé */}
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
         <Link
           href="/incubateur/projets"
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
+          className="hover:text-[#612D10] hover:underline transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Retour au suivi de mes projets</span>
+          Suivi des projets
         </Link>
+        <span className="text-[#C99A68]/60">/</span>
+        <span className="text-[#612D10] font-bold">Mon profil & Compte</span>
       </div>
       
       {/* 1. BANNIÈRE RÉSUMÉ DU PROFIL (Fidèle au design sans la lampe) */}

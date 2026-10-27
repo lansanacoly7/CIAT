@@ -7,7 +7,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner } from "@/components/ui";
 import { formatDateFr, getAlertes, suiviErrorMessage, type AlerteJalon, JALON_STATUTS } from "@/lib/incubator";
 import {
-  ArrowLeft,
   Calendar,
   Clock,
   ChevronRight,
@@ -108,15 +107,16 @@ function Alertes() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-        {/* Lien de retour fluide vers le suivi des projets */}
-        <div>
+        {/* Fil d'Ariane harmonisé */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
           <Link
             href="/incubateur/projets"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
+            className="hover:text-[#612D10] hover:underline transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Retour à mes projets</span>
+            Suivi des projets
           </Link>
+          <span className="text-[#C99A68]/60">/</span>
+          <span className="text-[#612D10] font-bold">Alertes de retard</span>
         </div>
 
         {/* 1. EN-TÊTE ÉDITORIAL SOBRE ET ALIGNÉ À GAUCHE (Sans boutons d'onglets ni icône superflue) */}

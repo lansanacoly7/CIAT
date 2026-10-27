@@ -256,18 +256,18 @@ function CalendrierVue() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-5">
-        {/* 1. EN-TÊTE DE NAVIGATION : BREADCRUMB & CLOCHE D'ALERTE */}
+        {/* 1. EN-TÊTE DE NAVIGATION : FIL D'ARIANE HARMONISÉ & CLOCHE D'ALERTE COMPACTE */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#8C6D58] mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58] mb-1">
               <Link
-                href="/incubateur"
-                className="hover:text-[#612D10] transition-colors"
+                href="/incubateur/projets"
+                className="hover:text-[#612D10] hover:underline transition-colors"
               >
-                Espace Incubateur
+                Suivi des projets
               </Link>
-              <span>/</span>
-              <span className="text-[#612D10]">Calendrier</span>
+              <span className="text-[#C99A68]/60">/</span>
+              <span className="text-[#612D10] font-bold">Calendrier</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#4A2810]">
               Calendrier des jalons & objectifs
@@ -277,26 +277,16 @@ function CalendrierVue() {
             </p>
           </div>
 
-          {/* Cloche d'alerte de retard (remplaçant le bouton redondant de retour) */}
+          {/* Cloche d'alerte compacte (icône seule avec pastille, identique au standard de l'espace) */}
           <div className="flex items-center gap-2">
             <Link
               href="/incubateur/alertes"
-              className="relative inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
+              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2] transition-colors relative shadow-xs"
               aria-label="Alertes de retard"
               title="Consulter les alertes de retard"
             >
-              <div className="relative">
-                <Bell className="h-4 w-4 text-[#A35926]" />
-                {stats.enRetard > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#B91C1C] animate-pulse" />
-                )}
-              </div>
-              <span>Alertes de retard</span>
-              {stats.enRetard > 0 && (
-                <span className="rounded-full bg-red-100 px-1.5 py-0.2 text-[10px] font-bold text-red-700">
-                  {stats.enRetard}
-                </span>
-              )}
+              <Bell className="h-4 w-4" aria-hidden="true" />
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#B91C1C]" />
             </Link>
           </div>
         </div>

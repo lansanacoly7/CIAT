@@ -161,15 +161,18 @@ function Suivi() {
       {/* 1. LIEN RETOUR & PASSERELLE ASSISTANT IA */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <Link
-            href="/incubateur/projets"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            <span>Retour à mes projets</span>
-          </Link>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+            <Link
+              href="/incubateur/projets"
+              className="hover:text-[#612D10] hover:underline transition-colors"
+            >
+              Suivi des projets
+            </Link>
+            <span className="text-[#C99A68]/60">/</span>
+            <span className="text-[#612D10] font-bold truncate max-w-[220px] sm:max-w-md">
+              {projet?.titre || "Détail du projet"}
+            </span>
+          </div>
 
           <Link
             href="/assistant"
