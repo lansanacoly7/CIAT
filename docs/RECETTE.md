@@ -158,7 +158,7 @@ cd ../frontend
 npm run test:e2e
 
 # 5. Lancement de l'audit complet Desktop & Mobile (390 px)
-node scripts/audit_recette.js
+node scripts/audit_recette.mjs
 ```
 
 ---

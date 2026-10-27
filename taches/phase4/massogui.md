@@ -29,3 +29,6 @@ Ordre conseillé : T1, puis T2, puis T3.
 
 ## Quand tu as fini
 Vérifie `npm run lint` et `npm run build`. Pousse ta branche `dev-massogui` et préviens Lansana.
+
+## Correction issue de la recette
+- **C5 :** sur la galerie (`/galerie`) en 390 px, les cartes du bas de liste affichent un vide avant d'apparaître (`loading="lazy"`). Garde le chargement différé mais réserve la place de l'image (`aspect-ratio`) et ajoute un fond doux pour que rien ne saute.

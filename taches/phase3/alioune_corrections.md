@@ -10,3 +10,6 @@ Vérifie ensuite `npm run lint`, `npm run build` et pousse `Alioune`.
 
 ## Information
 Tes retraits d'emojis dans les pages de l'incubateur sont déjà dans `test`. Maimouna modifie les mêmes pages (`incubateur/page.tsx`, `alertes`, `projets`) : c'est elle qui résoudra les conflits en tirant `test`. Ne retouche plus ces fichiers, ils ne sont pas dans ton domaine.
+
+## Correction issue de la recette
+- **C4 (majeur) :** sur `/documents`, ta barre `AppShell` et la barre `AppSidebarLayout` de Maimouna se cumulent et la page déborde (1359 px pour 1280). Maimouna corrige l'écran ; mets-toi d'accord avec elle pour qu'**une seule barre soit rendue par page**, et garde ta version pour le tableau de bord.
