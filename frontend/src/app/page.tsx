@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Badge, ButtonLink, Card, ProjectStatusBadge } from "@/components/ui";
-import { MODULES } from "@/lib/modules";
+import { ButtonLink } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "CIAT — Centre d'Innovation, d'Application et de Transfert | ISEP Diamniadio",
@@ -233,14 +232,13 @@ export default function Home() {
               <ButtonLink
                 href="/portail/incubateur"
                 variant="accent"
-                className="text-sm sm:text-base font-bold shadow-md px-6 py-3"
               >
                 Découvrir l&apos;Incubateur →
               </ButtonLink>
               <ButtonLink
                 href="/portail/appels"
                 variant="secondary"
-                className="text-sm sm:text-base font-semibold shadow-md px-6 py-3 !border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+                className="!border-white/50 !text-white hover:!bg-white/10"
               >
                 Candidater maintenant
               </ButtonLink>
@@ -708,14 +706,13 @@ export default function Home() {
               <ButtonLink
                 href="/connexion?next=/incubateur"
                 variant="accent"
-                className="font-bold text-sm px-7 py-3.5 shadow-md"
               >
                 Déposer une Candidature
               </ButtonLink>
               <ButtonLink
                 href="/portail/contact"
                 variant="secondary"
-                className="!text-white !border-white/30 !bg-white/10 hover:!bg-white/20 text-sm px-6 py-3.5"
+                className="!border-white/50 !text-white hover:!bg-white/10"
               >
                 Contacter le Secrétariat
               </ButtonLink>

@@ -53,20 +53,15 @@ import type {
  * -------------------------------------------------------------------------- */
 
 const BUTTON_BASE =
-  "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold tracking-wide transition-all duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68] cursor-pointer select-none";
+  "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68] cursor-pointer select-none";
 
 const VARIANTS = {
-  primary:
-    "bg-gradient-to-b from-[#6D3212] via-[#612D10] to-[#4E220B] text-white border-t border-white/20 shadow-[0_2px_8px_rgba(97,45,16,0.25)] hover:shadow-[0_6px_20px_rgba(97,45,16,0.35)] hover:-translate-y-0.5 active:translate-y-0",
-  secondary:
-    "border border-[#24140D]/20 bg-white/80 backdrop-blur-xs text-brun hover:bg-[#FAF7F2] hover:border-[#24140D]/40 shadow-xs hover:-translate-y-0.5 active:translate-y-0",
-  outline:
-    "border border-[#612D10]/30 bg-transparent text-brun hover:bg-[#FAF7F2] hover:border-[#612D10] hover:-translate-y-0.5 active:translate-y-0",
-  ia: "bg-gradient-to-b from-[#D8B07D] via-[#C99A68] to-[#B88755] text-brun-fonce font-bold border-t border-white/40 shadow-[0_2px_10px_rgba(201,154,104,0.3)] hover:shadow-[0_6px_22px_rgba(201,154,104,0.45)] hover:-translate-y-0.5 active:translate-y-0",
-  accent:
-    "bg-gradient-to-b from-[#D8B07D] via-[#C99A68] to-[#B88755] text-brun-fonce font-bold border-t border-white/40 shadow-[0_2px_10px_rgba(201,154,104,0.3)] hover:shadow-[0_6px_22px_rgba(201,154,104,0.45)] hover:-translate-y-0.5 active:translate-y-0",
-  danger:
-    "bg-gradient-to-b from-[#EF4444] to-[#DC2626] text-white border-t border-white/25 shadow-sm hover:brightness-95 hover:-translate-y-0.5 active:translate-y-0",
+  primary: "bg-brun text-white hover:bg-brun-fonce shadow-sm",
+  secondary: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
+  outline: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
+  ia: "bg-beige text-brun-fonce font-bold hover:brightness-95 border border-[#b88755] shadow-sm",
+  accent: "bg-beige text-brun-fonce hover:brightness-95 shadow-sm",
+  danger: "bg-erreur text-white hover:brightness-90 shadow-sm",
 } as const;
 
 export type Variant = keyof typeof VARIANTS;
@@ -84,14 +79,16 @@ export function ButtonLink({
   variant = "primary",
   className = "",
   children,
+  onClick,
 }: {
   href: string;
   variant?: Variant;
   className?: string;
   children: ReactNode;
+  onClick?: () => void;
 }) {
   return (
-    <Link href={href} className={`${BUTTON_BASE} ${VARIANTS[variant]} ${className}`}>
+    <Link href={href} onClick={onClick} className={`${BUTTON_BASE} ${VARIANTS[variant]} ${className}`}>
       {children}
     </Link>
   );
@@ -110,9 +107,9 @@ export function Card({
 }) {
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-bordure bg-white shadow-[0_4px_20px_-2px_rgba(36,20,13,0.04)] transition-all duration-300 motion-reduce:transition-none hover:border-[#C99A68]/60 hover:shadow-[0_16px_36px_-6px_rgba(97,45,16,0.1)] hover:-translate-y-1 ${className}`}
+      className={`overflow-hidden rounded-2xl border border-bordure bg-white shadow-xs transition-all duration-200 motion-reduce:transition-none hover:border-beige ${className}`}
     >
-      <div className="h-1 w-full bg-gradient-to-r from-[#612D10] via-[#C99A68] to-[#612D10] opacity-80 group-hover:opacity-100 transition-opacity" />
+      <div className="h-1.5 w-full bg-beige" />
       <div className="p-6">{children}</div>
     </div>
   );
