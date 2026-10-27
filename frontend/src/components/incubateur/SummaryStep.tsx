@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import type { Dossier } from "@/lib/incubator";
+import { telechargerAccuseReception, suiviErrorMessage, type Dossier } from "@/lib/incubator";
 import type { Domaine, ProjectInfo } from "./ProjectInfoStep";
 
 export const PIECE_LABELS: Record<string, string> = {
@@ -65,8 +65,31 @@ export default function SummaryStep({
   onEdit: (step: number) => void;
   onSubmit: () => void;
 }) {
+  const [downloadingAccuse, setDownloadingAccuse] = useState(false);
+  const [accuseError, setAccuseError] = useState<string | null>(null);
+
   const missing = dossier.pieces_manquantes ?? [];
   const incomplete = dossier.completude < 100 || missing.length > 0;
+
+  async function handleTelechargerAccuse() {
+    setDownloadingAccuse(true);
+    setAccuseError(null);
+    try {
+      const blob = await telechargerAccuseReception(dossier.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `accuse_reception_dossier_${dossier.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setAccuseError(suiviErrorMessage(err, "Impossible de télécharger l'accusé de réception. Veuillez réessayer."));
+    } finally {
+      setDownloadingAccuse(false);
+    }
+  }
 
   if (submitted) {
     return (
@@ -81,16 +104,38 @@ export default function SummaryStep({
           Votre dossier « {info.titre} » a bien été transmis à l&apos;équipe du CIAT. Il sera examiné par le comité de
           sélection ; vous serez informé de la suite.
         </p>
+
+        {accuseError && (
+          <div role="alert" className="mx-auto mt-4 max-w-md rounded-lg border border-[#DC2626]/30 bg-[#DC2626]/5 p-3 text-xs text-[#DC2626]">
+            {accuseError}
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleTelechargerAccuse}
+            disabled={downloadingAccuse}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-white transition-colors hover:bg-[#3F1D0A] disabled:opacity-60"
+          >
+            {downloadingAccuse ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            ) : (
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            )}
+            <span>Télécharger mon accusé de réception</span>
+          </button>
           <Link
             href="/compte"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-white hover:bg-[#3F1D0A]"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg border-[1.5px] border-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
           >
             Voir mon compte
           </Link>
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg border-[1.5px] border-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white px-6 font-[family-name:var(--font-title)] font-semibold text-[#6b5646] hover:bg-[#FAF7F2]"
           >
             Retour à l&apos;accueil
           </Link>

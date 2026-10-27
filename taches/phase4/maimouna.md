@@ -23,3 +23,9 @@
 
 ## Attention : conflits attendus
 Alioune a retiré des emojis dans `incubateur/page.tsx`, `incubateur/alertes/page.tsx` et `incubateur/projets/page.tsx`, déjà fusionné dans `test`. En tirant `test`, tu auras des conflits sur ces fichiers : garde ta version (refonte) et ne remets pas d'emojis.
+
+## Corrections issues de la recette (`docs/RECETTE.md`)
+- **C4 (majeur ; la barre unique d'Alioune dans `test` l'a résolu, re-vérifie après ton `git pull`) — `/documents` déborde à droite sur ordinateur (1359 px pour 1280).** Deux barres latérales se cumulent : `AppShell` (Alioune) et `AppSidebarLayout` (toi). Mets-toi d'accord avec Alioune : **une seule barre latérale par page**. Corrige le cumul sur `/documents` et vérifie `/incubateur`, `/galerie/gestion` et `/assistant`.
+- **C6 — avertissement d'hydratation Next.js** dans la console sur `/incubateur` à la première session (contenu qui dépend de la session ou de `localStorage` affiché côté serveur). Corrige-le.
+- **C8 — suivi des jalons sur téléphone (390 px)** : le tableau impose un défilement horizontal. Passe à des cartes empilées.
+Vérifie `npm run lint && npm run build`, ouvre l'écran en 390 px et en 1280 px, puis pousse.

@@ -77,7 +77,9 @@ def envoyer_alertes_jalons_en_retard(today=None) -> dict:
     alertes_ignorees = 0
     details = []
 
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <noreply@localhost>")
+    from_email = getattr(
+        settings, "DEFAULT_FROM_EMAIL", "CIAT Démonstration <contact@ciat-demo.example>"
+    )
 
     for jalon in jalons_en_retard:
         projet = jalon.projet
@@ -161,3 +163,17 @@ def envoyer_alertes_jalons_en_retard(today=None) -> dict:
         "alertes_ignorees": alertes_ignorees,
         "details": details,
     }
+
+
+# Export des fonctions d'envoi d'emails transactionnels (Phase 5)
+from .emails import (  # noqa: E402
+    envoyer_email_confirmation_soumission,
+    envoyer_email_decision_dossier,
+)
+
+__all__ = [
+    "AlerteJalonEnvoyee",
+    "envoyer_alertes_jalons_en_retard",
+    "envoyer_email_confirmation_soumission",
+    "envoyer_email_decision_dossier",
+]

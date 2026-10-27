@@ -138,6 +138,7 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 | `GET /fiches/` | Public : fiches publiées. Filtres `?domaine=&cohorte=&avancement=&search=` |
 | `GET /fiches/{slug}/` | Public : détail d'une fiche publiée (incrémente `vues`) |
 | `GET /fiches/{slug}/qr/` | Public : image PNG du QR code vers la fiche |
+| `GET /fiches/{slug}/fiche/` | Public : fiche promotionnelle officielle en PDF (1 page A4, charte CIAT, problème, solution, équipe, QR code). `404` si non publiée (sauf porteur / équipe). |
 | `POST /fiches/` | Porteur : crée une fiche pour son projet |
 | `POST /fiches/{id}/soumettre/` | Porteur : brouillon vers en validation |
 | `POST /fiches/{id}/valider/`, `POST /fiches/{id}/refuser/` | Coordonnateur ou administrateur |
@@ -173,3 +174,31 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 |---|---|
 | `GET /api/gallery/fiches/?mes_fiches=1` | Connecté : toutes les fiches de **ses** projets, quel que soit leur statut. Anonyme : ignoré (fiches publiées seulement). |
 | `GET /api/gallery/fiches/?en_validation=1` | Équipe CIAT (administrateur, coordonnateur) : les fiches « en validation ». Pour les autres : ignoré (fiches publiées seulement). |
+
+## P2 / P1 — Ajouts des Phases 4 et 5 (Pathé)
+
+### Accusé de réception et export compte-rendu (`/api/incubator/`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes d'erreur |
+|---|---|---|---|---|
+| `/dossiers/{id}/accuse/` | `GET` | Aucun | Télécharge l'accusé de réception officiel en PDF (`application/pdf`) reprenant les métadonnées officielles du dossier (référence `CIAT-AR-XXXXX`), l'équipe, la complétude, la liste des pièces justificatives et les mentions obligatoires du comité. **Droits :** porteur du projet, équipe CIAT ou membre du comité. | `400` : dossier encore en brouillon ; `403` : utilisateur non autorisé ; `404` : dossier inexistant. |
+| `/projets/{id}/compte-rendu/` | `GET` | `?format=xlsx` (défaut) ou `?format=pdf` | Génère et télécharge le compte rendu complet d'un projet incubé sous forme de document structuré en 4 blocs (Projet & Identité, Objectifs, Jalons clés, Bilans de suivi). **Droits :** porteur du projet, mentor affecté ou équipe CIAT. | `400` : format non supporté (seuls `xlsx` et `pdf` sont valides) ; `403` : utilisateur non autorisé ; `404` : projet inexistant. |
+
+### Calendrier des événements (`/api/portal/`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes de retour |
+|---|---|---|---|---|
+| `/evenements/calendrier.ics` | `GET` | `?a_venir=1` (optionnel) | Flux iCalendar conforme RFC 5545 (`text/calendar; charset=utf-8`) exportable dans Google Agenda, Outlook ou Apple Calendar. Si `?a_venir=1`, seuls les événements futurs sont renvoyés. **Droits :** Public (aucun token requis). | `200` : fichier `.ics` téléchargeable. |
+
+### Notifications et emails transactionnels (`Phase 5`)
+
+- **Soumission de dossier :** Lors de l'appel à `POST /api/incubator/dossiers/{id}/soumettre/`, un email de confirmation contenant la référence officielle et le lien direct vers l'accusé de réception (`/api/incubator/dossiers/{id}/accuse/`) est automatiquement transmis au porteur de projet.
+- **Décision du comité :** Lors de l'appel à `POST /api/incubator/dossiers/{id}/decision/`, un email notifiant l'acceptation ou le refus du dossier ainsi que le motif officiel saisi est envoyé au porteur de projet.
+- **Alertes de retard jalons :** La commande `python manage.py envoyer_alertes_retard` avertit quotidiennement les porteurs et mentors des échéances dépassées non validées (idempotence journalière garantie en base via le modèle `AlerteJalonEnvoyee`).
+
+### Fiche promotionnelle PDF (`Phase 6 — Galerie`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes de retour |
+|---|---|---|---|---|
+| `/api/gallery/fiches/{slug}/fiche/` | `GET` | Aucun | Génère un document PDF d'une page A4 aux couleurs officielles du CIAT / ISEP Amadou Trawaré de Diamniadio. Contient le titre, badges (domaine, cohorte, avancement), problème, solution innovante, équipe et le QR code officiel menant à la vitrine en ligne. **Droits :** Public pour une fiche au statut `publie`. Pour une fiche non publiée, seul le porteur propriétaire ou un membre de l'équipe CIAT peut y accéder. | `200` : fichier `.pdf` (`application/pdf`) ; `404` : fiche non publiée ou slug inexistant. |
+

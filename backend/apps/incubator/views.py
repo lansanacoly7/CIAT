@@ -9,6 +9,7 @@ from django.utils import timezone
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import generics, permissions, renderers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,6 +18,10 @@ from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role, User
 from apps.core.permissions import HasRole, IsEquipeCIAT
+from .emails import (
+    envoyer_email_confirmation_soumission,
+    envoyer_email_decision_dossier,
+)
 from .models import (
     AffectationMentor,
     CommentaireJalon,
@@ -187,7 +192,9 @@ class DossierSoumettreView(APIView):
                 )
 
             dossier.soumettre()
-            return Response(DossierSerializer(dossier).data, status=status.HTTP_200_OK)
+
+        envoyer_email_confirmation_soumission(dossier)
+        return Response(DossierSerializer(dossier).data, status=status.HTTP_200_OK)
 
 
 class GrilleActuelleView(APIView):
@@ -263,7 +270,9 @@ class DossierDecisionView(APIView):
             )
             serializer.is_valid(raise_exception=True)
             decision = serializer.save()
-            return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
+
+        envoyer_email_decision_dossier(decision)
+        return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
 
 
 class MentorListView(generics.ListAPIView):
@@ -606,6 +615,17 @@ class PDFRenderer(renderers.BaseRenderer):
         return data
 
 
+@extend_schema(
+    summary="Télécharger l'accusé de réception officiel en PDF",
+    description="Génère et télécharge l'accusé de réception officiel en PDF pour un dossier de candidature soumis. Accessible au porteur du projet, à l'équipe CIAT et aux membres du comité de sélection.",
+    responses={
+        200: OpenApiResponse(description="Fichier PDF officiel de l'accusé de réception (application/pdf)"),
+        400: OpenApiResponse(description="Dossier en brouillon (l'accusé de réception n'est disponible qu'après soumission)"),
+        403: OpenApiResponse(description="Accès interdit pour cet utilisateur"),
+        404: OpenApiResponse(description="Dossier de candidature non trouvé"),
+    },
+    tags=["Incubateur — Exports & Documents"],
+)
 class DossierAccuseReceptionView(APIView):
     """Téléchargement de l'accusé de réception officiel en PDF pour un dossier soumis (Phase 4 Pathé)."""
 
@@ -634,6 +654,27 @@ class DossierAccuseReceptionView(APIView):
         return response
 
 
+@extend_schema(
+    summary="Exporter le compte rendu d'un projet incubé (Excel ou PDF)",
+    description="Génération et téléchargement du compte rendu complet d'un projet incubé reprenant les 4 blocs essentiels : Projet & Identité, Objectifs d'incubation, Jalons clés et Bilans de suivi périodique. Formats supportés : 'xlsx' (défaut) ou 'pdf'.",
+    parameters=[
+        OpenApiParameter(
+            name="format",
+            type=str,
+            location=OpenApiParameter.QUERY,
+            description="Format d'export souhaité : 'xlsx' (Excel, par défaut) ou 'pdf' (PDF officiel)",
+            required=False,
+            enum=["xlsx", "pdf"],
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(description="Fichier binaire du compte rendu (.xlsx ou .pdf)"),
+        400: OpenApiResponse(description="Format non supporté (seuls 'xlsx' et 'pdf' sont autorisés)"),
+        403: OpenApiResponse(description="Accès interdit (réservé au porteur du projet, à son mentor et à l'équipe CIAT)"),
+        404: OpenApiResponse(description="Projet d'incubation non trouvé"),
+    },
+    tags=["Incubateur — Exports & Documents"],
+)
 class ProjetCompteRenduExportView(APIView):
     """Génération du compte rendu complet d'un projet incubé au format Excel (.xlsx) ou PDF (.pdf)."""
 
@@ -644,14 +685,12 @@ class ProjetCompteRenduExportView(APIView):
         if not force:
             fmt = request.query_params.get("format")
             if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
-                raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
+                for r in self.get_renderers():
+                    if isinstance(r, renderers.JSONRenderer):
+                        return (r, r.media_type)
         return super().perform_content_negotiation(request, force=force)
 
     def get(self, request, pk, format=None):
-        fmt = request.query_params.get("format", "xlsx")
-        if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
-            raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
-
         projet = get_object_or_404(
             Projet.objects.select_related("porteur", "domaine", "cohorte", "affectation_mentor__mentor"),
             pk=pk,
@@ -662,6 +701,10 @@ class ProjetCompteRenduExportView(APIView):
         # Contrôle strict d'accès : porteur du projet, mentor affecté ou équipe CIAT
         if not (user.is_equipe or (user.role == Role.PORTEUR and projet.porteur_id == user.id) or (user.role == Role.MENTOR and is_mentor)):
             raise PermissionDenied("Vous n'avez pas accès au compte rendu de ce projet.")
+
+        fmt = request.query_params.get("format", "xlsx")
+        if fmt and fmt.lower() not in ("xlsx", "excel", "pdf"):
+            raise ValidationError({"detail": f"Format '{fmt}' non supporté. Formats disponibles : 'xlsx', 'pdf'."})
 
         if fmt and fmt.lower() == "pdf":
             from apps.incubator.exports_pdf import generer_compte_rendu_pdf

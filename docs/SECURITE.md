@@ -52,12 +52,15 @@ Légende des statuts HTTP retournés :
 | `/api/incubator/dossiers/{id}/pieces/` | POST | 401 | 403 | 201 | 403 | 403 | 403 | 201 | 201 |
 | `/api/incubator/dossiers/{id}/pieces/{p_id}/` | DELETE | 401 | 403 | 204 | 403/404 | 403 | 403 | 204 | 204 |
 | `/api/incubator/dossiers/{id}/soumettre/` | POST | 401 | 403 | 200 | 403 | 403 | 403 | 200 | 200 |
+| `/api/incubator/dossiers/{id}/accuse/` | GET | 401 | 403 | 200 (PDF) | 403 | 403 | 200 | 200 | 200 |
+| `/api/incubator/projets/{id}/compte-rendu/` | GET | 401 | 403 | 200 (PDF/XLSX) | 403 | 200 (si assigné) / 403 | 403 | 200 | 200 |
 | `/api/incubator/dossiers/{id}/evaluations/` | GET | 401 | 403 | 403 | 403 | 403 | 200 | 200 | 200 |
 | `/api/incubator/dossiers/{id}/evaluations/` | POST | 401 | 403 | 403 | 403 | 403 | 201 | 201 | 201 |
 | `/api/incubator/dossiers/{id}/decision/` | POST | 401 | 403 | 403 | 403 | 403 | 403 | 201 | 201 |
 | `/api/incubator/alertes/` | GET | 401 | 403 | 403 | 403 | 200 (assignés) | 403 | 200 | 200 |
 | `/api/portal/actualites/` | GET | 200 | 200 | 200 | 200 | 200 | 200 | 200 | 200 |
 | `/api/portal/actualites/` | POST | 401 | 403 | 403 | 403 | 403 | 403 | 201 | 201 |
+| `/api/portal/evenements/calendrier.ics` | GET | 200 (ICS) | 200 | 200 | 200 | 200 | 200 | 200 | 200 |
 | `/api/portal/partenaires/` | GET | 200 | 200 | 200 | 200 | 200 | 200 | 200 | 200 |
 | `/api/portal/partenaires/` | POST | 401 | 403 | 403 | 403 | 403 | 403 | 201 | 201 |
 | `/api/portal/contact/` | POST | 201 | 201 | 201 | 201 | 201 | 201 | 201 | 201 |
@@ -68,6 +71,49 @@ Légende des statuts HTTP retournés :
 | `/api/analytics/indicateurs/` | GET | 401 | 403 | 403 | 403 | 403 | 200 | 200 | 200 |
 | `/api/documents/types/` | GET | 401 | 200 | 200 | 200 | 200 | 200 | 200 | 200 |
 | `/api/documents/generer/` | POST | 401 | 403 | 201 | 201 | 201 | 201 | 201 | 201 |
+
+---
+
+### 2.1 Spécifications de sécurité des nouvelles routes (Phase 4 — Pathé)
+
+1. **`/api/portal/evenements/calendrier.ics`** :
+   - Flux public iCalendar standardisé (RFC 5545).
+   - Accès anonyme et tous rôles autorisés (200).
+   - Aucune donnée personnelle de porteur ni de jury n'est injectée dans le calendrier.
+   - Paramètre optionnel `?a_venir=1` pour restreindre aux événements futurs.
+
+2. **`/api/incubator/dossiers/{id}/accuse/`** :
+   - Génération de l'accusé de réception officiel en PDF dès que le dossier est soumis.
+   - Accès strictement restreint au porteur propriétaire du projet (`dossier.projet.porteur_id == request.user.id`), aux membres du comité de sélection (`Role.COMITE`), au coordonnateur et à l'administrateur.
+   - Tout tiers (autre porteur, visiteur, mentor non habilité) reçoit un refus catégorique `HTTP 403 Forbidden`.
+   - Si le dossier est encore à l'état `BROUILLON`, l'accès est rejeté par `HTTP 400 Bad Request` (aucun accusé de réception n'est délivré avant soumission formelle).
+
+3. **`/api/incubator/projets/{id}/compte-rendu/`** :
+   - Export complet des données d'incubation (bilans de suivi, jalons, objectifs) au format PDF (`?format=pdf`) ou Excel (`?format=xlsx`).
+   - Accès restreint au porteur du projet, au mentor officiellement affecté au projet (`projet.affectation_mentor.mentor_id == request.user.id`), au coordonnateur et à l'administrateur.
+   - Rejet `HTTP 403 Forbidden` pour les porteurs tiers, visiteurs, membres du comité (non impliqués dans le suivi post-sélection) et mentors non assignés.
+   - Rejet `HTTP 400 Bad Request` en cas de format d'export invalide.
+
+---
+
+### 2.2 Matrice détaillée des routes de Pathé
+
+| Route | Méthode | Anonyme | Porteur proprio | Autre porteur | Mentor non affecté | Mentor affecté | Comité | Coordonnateur | Administrateur |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `/api/portal/evenements/calendrier.ics` | GET | 200 | 200 | 200 | 200 | 200 | 200 | 200 | 200 |
+| `/api/incubator/dossiers/{id}/accuse/` | GET | 401 | 200 (PDF) | 403 | 403 | 403 | 200 (PDF) | 200 (PDF) | 200 (PDF) |
+| `/api/incubator/projets/{id}/compte-rendu/` | GET | 401 | 200 (PDF/XLSX) | 403 | 403 | 200 (PDF/XLSX) | 403 | 200 (PDF/XLSX) | 200 (PDF/XLSX) |
+
+#### Règle d'ordre de réponse des codes HTTP
+Pour toute requête, l'évaluation des erreurs respecte strictement l'ordre hiérarchique suivant :
+1. **`401 Unauthorized`** : Si le client n'est pas authentifié (vérification prioritaire DRF).
+2. **`404 Not Found`** : Si l'identifiant d'objet (`pk`) ne correspond à aucune ressource en base.
+3. **`403 Forbidden`** : Si l'utilisateur authentifié ne possède pas les habilitations nécessaires sur l'objet.
+4. **`400 Bad Request`** : Si la ressource et les droits sont validés mais que les paramètres sont invalides (ex: `?format=csv` non supporté ou accusé demandé sur un dossier encore au statut `BROUILLON`).
+
+#### Justification métier des habilitations du Comité
+- **Accusé de réception (`dossiers/{id}/accuse/`)** : Le comité de sélection est chargé d'évaluer les candidatures soumises ; il doit avoir visibilité sur les pièces officielles et l'horodatage de soumission de chaque dossier pour statuer sur sa recevabilité.
+- **Compte-rendu d'incubation (`projets/{id}/compte-rendu/`)** : Le mandat du comité s'arrête à la délibération de sélection. Le suivi opérationnel d'incubation (jalons, objectifs, bilans intermédiaires) relève exclusivement du porteur, du mentor expressément affecté et de l'équipe de coordination CIAT.
 
 ---
 

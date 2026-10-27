@@ -26,6 +26,7 @@ from django.core.files.base import ContentFile
 from django.core.management import call_command, get_commands
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.utils.text import slugify
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.documents.models import Document, ModeleDocument, VersionDocument
@@ -615,10 +616,11 @@ class Command(BaseCommand):
                 f"Appui technique assuré par les mentors du CIAT Diamniadio."
             )
 
+            slug_fiche = slugify(projet.titre) or f"fiche_{projet.id}"
             medias = [
                 {
                     "type": "photo",
-                    "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800",
+                    "url": f"/media/galerie/fiche_{slug_fiche}.jpg",
                     "legende": f"Démonstration du prototype {projet.titre} dans les ateliers du CIAT",
                 },
                 {
@@ -750,5 +752,9 @@ class Command(BaseCommand):
 
         total_docs = Document.objects.count()
         self.stdout.write(f"Documents officiels : {total_docs} en base ({nb_docs_crees} créés).")
+
+        self.stdout.write(self.style.MIGRATE_HEADING("=== Étape 7 : Images de démonstration locales (Pillow) ==="))
+        from apps.core.demo_images import generer_toutes_images_demo
+        generer_toutes_images_demo(stdout=self.stdout)
 
         self.stdout.write(self.style.SUCCESS("\n[SUCCÈS] Commande seed_all terminée : cohérence complète et idempotente établie sur tous les modules."))

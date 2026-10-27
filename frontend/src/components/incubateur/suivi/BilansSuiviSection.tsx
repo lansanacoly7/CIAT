@@ -31,7 +31,7 @@ export default function BilansSuiviSection({
     { cle: "Progrès technique (%)", valeur: "" },
   ]);
   const [submitting, setSubmitting] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"xlsx" | "pdf" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -82,19 +82,19 @@ export default function BilansSuiviSection({
     }
   }
 
-  async function handleExportExcel() {
-    setExporting(true);
+  async function handleExport(format: "xlsx" | "pdf") {
+    setExporting(format);
     setExportError(null);
     try {
-      const blob = await telechargerCompteRendu(projetId);
+      const blob = await telechargerCompteRendu(projetId, format);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `compte_rendu_projet_${projetId}.xlsx`);
+      link.setAttribute("download", `compte_rendu_projet_${projetId}.${format}`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       setExportError(
         suiviErrorMessage(
@@ -103,7 +103,7 @@ export default function BilansSuiviSection({
         ),
       );
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   }
 
@@ -137,28 +137,45 @@ export default function BilansSuiviSection({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Bouton Export Excel officiel */}
+          {/* Bouton Export PDF */}
           <button
             type="button"
-            onClick={handleExportExcel}
-            disabled={exporting}
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-md border border-[#2E7D32]/40 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => handleExport("pdf")}
+            disabled={exporting !== null}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-[#612D10]/30 bg-[#FAF7F2] px-3.5 py-1.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#F2E7DC] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {exporting ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#2E7D32]/40 border-t-[#2E7D32]" />
+            {exporting === "pdf" ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
             ) : (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
             )}
-            <span>Télécharger le compte rendu (Excel)</span>
+            <span>Compte rendu (PDF)</span>
+          </button>
+
+          {/* Bouton Export Excel */}
+          <button
+            type="button"
+            onClick={() => handleExport("xlsx")}
+            disabled={exporting !== null}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-[#2E7D32]/40 bg-[#2E7D32]/10 px-3.5 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting === "xlsx" ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#2E7D32]/40 border-t-[#2E7D32]" />
+            ) : (
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            )}
+            <span>Compte rendu (Excel)</span>
           </button>
 
           {/* Formulaire accessible uniquement au mentor affecté ou à l'équipe CIAT */}
           {canWrite && echeanceDisponible && (
             <Button
               variant={showForm ? "outline" : "primary"}
-              className="min-h-[38px] px-3.5 py-1.5 text-xs"
+              className="min-h-11 px-3.5 py-1.5 text-xs"
               onClick={() => {
                 setEcheance(echeanceDisponible);
                 setShowForm((v) => !v);
@@ -207,7 +224,7 @@ export default function BilansSuiviSection({
 
       {/* Formulaire de création d'un bilan */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mt-5 rounded-lg border border-bordure bg-[#FAF7F2] p-4 text-xs">
+        <form onSubmit={handleSubmit} className="mt-5 rounded-lg border border-bordure bg-[#FAF7F2] p-4 text-sm">
           <h3 className="mb-3 text-sm font-bold text-brun">Nouveau bilan de suivi</h3>
 
           {error && (
@@ -224,7 +241,7 @@ export default function BilansSuiviSection({
               id="suivi-echeance"
               value={echeance}
               onChange={(e) => setEcheance(e.target.value as EcheanceSuivi)}
-              className="w-full rounded border border-bordure bg-white px-3 py-2 text-xs text-texte outline-none focus:border-brun"
+              className="min-h-11 w-full rounded border border-bordure bg-white px-3 py-2 text-sm text-texte outline-none focus:border-brun"
             >
               {!aSuivi3Mois && <option value="3_mois">Bilan à 3 mois</option>}
               {!aSuivi6Mois && <option value="6_mois">Bilan à 6 mois</option>}
@@ -242,7 +259,7 @@ export default function BilansSuiviSection({
               value={bilan}
               onChange={(e) => setBilan(e.target.value)}
               placeholder="Détaillez les avancées du projet, les difficultés rencontrées, les pivots éventuels et les recommandations pour la suite..."
-              className="w-full rounded border border-bordure bg-white p-3 text-xs text-texte outline-none placeholder:text-[#9c897a] focus:border-brun"
+              className="w-full rounded border border-bordure bg-white p-3 text-sm text-texte outline-none placeholder:text-[#9c897a] focus:border-brun"
             />
           </div>
 
@@ -253,7 +270,7 @@ export default function BilansSuiviSection({
               <button
                 type="button"
                 onClick={ajouterIndicateur}
-                className="text-[11px] font-semibold text-brun underline hover:text-brun-fonce"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brun underline hover:text-brun-fonce"
               >
                 + Ajouter un indicateur
               </button>
@@ -261,27 +278,29 @@ export default function BilansSuiviSection({
 
             <div className="space-y-2">
               {indicateurs.map((ind, idx) => (
-                <div key={idx} className="flex items-center gap-2">
+                <div key={idx} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <input
                     type="text"
                     value={ind.cle}
                     onChange={(e) => modifierIndicateur(idx, "cle", e.target.value)}
                     placeholder="Nom de l'indicateur (ex: CA réalisé)"
-                    className="flex-1 rounded border border-bordure bg-white px-2.5 py-1.5 text-xs text-texte outline-none focus:border-brun"
+                    aria-label={`Nom de l’indicateur ${idx + 1}`}
+                    className="min-h-11 w-full rounded border border-bordure bg-white px-2.5 py-1.5 text-sm text-texte outline-none focus:border-brun sm:flex-1"
                   />
                   <input
                     type="text"
                     value={ind.valeur}
                     onChange={(e) => modifierIndicateur(idx, "valeur", e.target.value)}
                     placeholder="Valeur (ex: 2 500 000 FCFA)"
-                    className="w-40 rounded border border-bordure bg-white px-2.5 py-1.5 text-xs text-texte outline-none focus:border-brun"
+                    aria-label={`Valeur de l’indicateur ${idx + 1}`}
+                    className="min-h-11 w-full rounded border border-bordure bg-white px-2.5 py-1.5 text-sm text-texte outline-none focus:border-brun sm:w-40"
                   />
                   {indicateurs.length > 1 && (
                     <button
                       type="button"
                       onClick={() => supprimerIndicateur(idx)}
                       aria-label="Supprimer cet indicateur"
-                      className="rounded p-1 text-texte-doux hover:text-[#DC2626]"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded text-texte-doux hover:bg-[#DC2626]/5 hover:text-[#DC2626]"
                     >
                       ✕
                     </button>
@@ -295,14 +314,14 @@ export default function BilansSuiviSection({
             <Button
               type="button"
               variant="outline"
-              className="min-h-[38px] px-3.5 py-1.5 text-xs"
+              className="min-h-11 px-3.5 py-1.5 text-xs"
               onClick={() => setShowForm(false)}
             >
               Annuler
             </Button>
             <Button
               type="submit"
-              className="min-h-[38px] px-3.5 py-1.5 text-xs"
+              className="min-h-11 px-3.5 py-1.5 text-xs"
               disabled={submitting}
             >
               {submitting ? "Enregistrement…" : "Enregistrer le bilan"}

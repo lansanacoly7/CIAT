@@ -1,8 +1,8 @@
 # Cahier des Charges Fonctionnel et Technique
 
 > **Plateforme Numérique Intégrée du CIAT et de son Incubateur**  
-> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Traoré, Diamniadio  
-> **Auteur :** Lansana Coly (Lead technique) — Phase 3 & 4  
+> **Institution :** Centre d'Innovation, d'Application et de Transfert (CIAT) — ISEP Amadou Trawaré, Diamniadio  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall  
 > **Référence académique :** Évaluation pratique du cours d'Intelligence Artificielle Générative (Livrable Obligatoire N° 1)  
 > **Avertissement méthodologique :** La plateforme n'est **pas déployée en production** (fonctionnement en local et en intégration continue). L'ensemble des données injectées sont **strictement fictives**. Les fonctionnalités d'IA générative **dépendent de fournisseurs externes gratuits** soumis à quotas et aléas réseau.
 
@@ -10,8 +10,8 @@
 
 ## 1. Contexte Institutionnel et Justification du Projet
 
-### 1.1 Le CIAT et l'ISEP Amadou Traoré
-L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
+### 1.1 Le CIAT et l'ISEP Amadou Trawaré
+L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio forme des techniciens supérieurs hautement qualifiés et promeut activement l'entrepreneuriat technologique au Sénégal. En son sein, le **Centre d'Innovation, d'Application et de Transfert (CIAT)** a pour mission stratégique :
 - La valorisation de la recherche appliquée et le transfert de technologies vers le tissu économique local.
 - L'accueil, la sélection et l'accompagnement des porteurs de projets innovants via son **Incubateur d'entreprises**.
 - L'animation de pôles technologiques répondant aux priorités du Plan Sénégal Émergent (agroécologie, énergies renouvelables, numérique/IA, mécanique, santé, éducation).
@@ -19,6 +19,17 @@ L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diam
 ### 1.2 Problématique et Besoins Numériques
 Jusqu'alors, les flux de candidatures, les délibérations de jurys, le suivi du mentorat et la valorisation des prototypes souffraient d'un fractionnement des outils (fichiers bureautiques non versionnés, échanges d'emails non sécurisés, absence de statistiques consolidées en temps réel).  
 La plateforme numérique CIAT a été conçue pour fédérer l'intégralité du cycle de vie de l'innovation au sein d'une architecture applicative unique, robuste, ergonomique et augmentée par des fonctionnalités d'**intelligence artificielle générative** strictement encadrées.
+
+### 1.3 Équipe Projet et Contribution de Chaque Membre
+Le développement de la plateforme CIAT est mené par un groupe de six apprenants (deux groupes de trois fusionnés), avec une spécialisation claire par membre du groupe :
+- **Lansana Coly** : coordination, architecture, socle, services d'IA, intégration, tests de bout en bout et livrables ;
+- **Pape Alioune Sène** : tableau de bord, données, indicateurs, qualité des données, tests de l'interface ;
+- **Maimouna Sall** : parcours du porteur, générateur de documents, suivi et alertes, maquettes ;
+- **El Hadji Massogui Diop** : site public, galerie, assistant, communication et vidéo ;
+- **Ibrahima Khalilou Diallo** : module incubateur, base de données, sécurité, PostgreSQL ;
+- **Pathé Fall** : portail, exports et PDF, statistiques, notifications.
+
+*Mention légale des documents de démonstration :* « Version de démonstration rédigée par l'équipe du projet, à valider par l'ISEP ».
 
 ---
 
@@ -95,7 +106,7 @@ La plateforme repose sur une segmentation stricte en **6 rôles d'utilisateurs**
 
 ### 4.2 Performance et Disponibilité
 - **Temps de réponse API :** Objectif de réponses rapides sur les requêtes standards, grâce à l'optimisation des requêtes Django (aucune mesure de charge n'a encore été réalisée) (`select_related`, `prefetch_related`, agrégations SQL natives).
-- **Vitesse de la suite de tests :** Exécution complète de la suite de 183 tests automatisés en environ 21 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
+- **Vitesse de la suite de tests :** Exécution complète de la suite de 256 tests automatisés (100 % passants) en environ 30 à 40 secondes sur machine standard grâce à l'usage de `MD5PasswordHasher` en contexte de test.
 - **Tolérance aux pannes des services d'IA :** Mécanisme de fallback ordonné multi-fournisseurs (Groq ➔ Gemini) avec gestion gracieuse des erreurs (`503 Service Unavailable` ou `502 Bad Gateway` avec messages clairs en français). Les services d'IA reposent sur des quotas gratuits de fournisseurs tiers et demeurent soumis à des limites de requêtes ou des indisponibilités ponctuelles.
 
 ### 4.3 Ergonomie et Identité Visuelle

@@ -361,7 +361,7 @@ export default function ContactPage() {
               <div>
                 <strong className="block text-brun-fonce">Localisation :</strong>
                 Institut Supérieur d&apos;Enseignement Professionnel (ISEP)<br />
-                Amadou Traoré de Diamniadio<br />
+                Amadou Trawaré de Diamniadio<br />
                 Cité du Savoir, Diamniadio, Sénégal
               </div>
 
@@ -372,7 +372,7 @@ export default function ContactPage() {
 
               <div>
                 <strong className="block text-brun-fonce">Courriel institutionnel :</strong>
-                contact@ciat.sn
+                contact@ciat-demo.example (coordonnées fictives de démonstration)
               </div>
 
               <div>

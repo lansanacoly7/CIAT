@@ -1,8 +1,8 @@
 # Scénario & Plan de la Vidéo de Démonstration Officielle (Phase 4 — T1)
 
 > **Projet :** Plateforme Numérique du Centre d'Innovation, d'Application et de Transfert (CIAT)  
-> **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio  
-> **Auteur :** El Hadji Massogui Diop (Front-end Lead)  
+> **Établissement :** Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio  
+> **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent vidéo : El Hadji Massogui Diop)  
 > **Durée totale ciblée :** 4 minutes 45 secondes (entre 4 et 5 minutes)  
 > **Résolution de capture :** 1080p (1920 × 1080 px à 60 fps)  
 > **Format audio :** Voix off claire en français, sans musique intrusive  
@@ -69,7 +69,7 @@ graph TD
   2. Défilement fluide mettant en valeur les piliers de la charte graphique CIAT 360 (Brun, Ocre doré, Sable doux).
   3. Clic sur le lien du portail : survol des actualités publiées et des appels à projets en cours.
 - **Texte dit à voix haute (Voix off) :**
-  > *« Bienvenue sur la plateforme officielle du Centre d'Innovation, d'Application et de Transfert (CIAT) de l'ISEP Amadou Traoré de Diamniadio. Conçue selon la charte graphique Écosystème CIAT 360, cette plateforme réunit en un point d'accès unique l'ensemble des acteurs de l'innovation : porteurs de projets, comités d'évaluation, mentors et partenaires industriels. Le portail diffuse les actualités réelles de l'institut, les appels à candidatures et les axes prioritaires de recherche appliquée au Sénégal. »*
+  > *« Bienvenue sur la plateforme officielle du Centre d'Innovation, d'Application et de Transfert (CIAT) de l'ISEP Amadou Trawaré de Diamniadio. Conçue selon la charte graphique Écosystème CIAT 360, cette plateforme réunit en un point d'accès unique l'ensemble des acteurs de l'innovation : porteurs de projets, comités d'évaluation, mentors et partenaires industriels. Le portail diffuse les actualités réelles de l'institut, les appels à candidatures et les axes prioritaires de recherche appliquée au Sénégal. »*
 
 ---
 

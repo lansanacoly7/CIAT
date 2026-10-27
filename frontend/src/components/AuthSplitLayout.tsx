@@ -57,8 +57,8 @@ export default function AuthSplitLayout({
         {/* Badge supérieur institutionnel */}
         <div className="relative z-10 p-6 xl:p-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/45 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white backdrop-blur-md shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#E3A869]" aria-hidden="true" />
-            <span>ISEP Amadou Traoré · Diamniadio</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" aria-hidden="true" />
+            <span>ISEP Amadou Trawaré · Diamniadio</span>
           </div>
         </div>
 
@@ -71,7 +71,7 @@ export default function AuthSplitLayout({
             Donnez vie à vos idées.
           </h2>
           {/* Ligne d'accentuation institutionnelle ocre CIAT */}
-          <div className="mt-3.5 h-1 w-10 rounded-full bg-[#E3A869]" aria-hidden="true" />
+          <div className="mt-3.5 h-1 w-10 rounded-full bg-[#C99A68]" aria-hidden="true" />
           <p
             style={{ color: "rgba(255, 255, 255, 0.95)" }}
             className="mt-3.5 max-w-xl text-base leading-relaxed !text-white xl:text-lg drop-shadow-sm"
@@ -134,7 +134,7 @@ export default function AuthSplitLayout({
 
             {/* Pied de carte institutionnel sobre */}
             <div className="mt-6 border-t border-[#EFE4D6]/70 pt-3 text-center text-[11px] text-[#6b5646]/90">
-              CIAT · ISEP Amadou Traoré de Diamniadio
+              CIAT · ISEP Amadou Trawaré de Diamniadio
             </div>
           </div>
         </div>

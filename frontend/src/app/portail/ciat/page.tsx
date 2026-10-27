@@ -4,7 +4,7 @@ import { ButtonLink, Card, PageTitle } from "@/components/ui";
 export const metadata = {
   title: "Le CIAT et sa mission",
   description:
-    "Découvrez le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Traoré de Diamniadio : missions, vision et ancrage territorial.",
+    "Découvrez le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Trawaré de Diamniadio : missions, vision et ancrage territorial.",
 };
 
 const PILIERS = [
@@ -54,7 +54,7 @@ export default function CiatPresentationPage() {
       <PageTitle
         tag="Institution & Vision"
         title="Le Centre d'Innovation, d'Application et de Transfert"
-        subtitle="Catalyseur technologique et entrepreneurial de l'ISEP Amadou Traoré de Diamniadio, au service de l'insertion et du développement économique."
+        subtitle="Catalyseur technologique et entrepreneurial de l'ISEP Amadou Trawaré de Diamniadio, au service de l'insertion et du développement économique."
       />
 
       {/* Section Présentation Institutionnelle avec Photo du Campus */}
@@ -67,7 +67,7 @@ export default function CiatPresentationPage() {
             <h2 className="mt-1 text-2xl font-bold text-brun">Un pôle stratégique à Diamniadio</h2>
             <div className="mt-4 space-y-4 text-base leading-relaxed text-texte">
               <p>
-                Créé au sein de l&apos;<strong>Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Traoré</strong>,
+                Créé au sein de l&apos;<strong>Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Trawaré</strong>,
                 le <strong>CIAT</strong> est le pôle d&apos;accélération technologique dédié aux apprenants, enseignants-chercheurs
                 et innovateurs du Sénégal.
               </p>
@@ -80,7 +80,7 @@ export default function CiatPresentationPage() {
           <div className="relative h-64 md:h-full md:min-h-[280px] md:col-span-5">
             <Image
               src="/images/campus-isep.png"
-              alt="Campus de l'ISEP Amadou Traoré de Diamniadio"
+              alt="Campus de l'ISEP Amadou Trawaré de Diamniadio"
               fill
               className="object-cover object-center"
             />

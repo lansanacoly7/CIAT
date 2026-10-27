@@ -28,11 +28,11 @@ class Command(BaseCommand):
             defaults={
                 "titre": "Lancement de la plateforme numérique unifiée de l'Écosystème CIAT 360",
                 "resume": (
-                    "L'ISEP Amadou Traoré de Diamniadio déploie sa nouvelle infrastructure digitale "
+                    "L'ISEP Amadou Trawaré de Diamniadio déploie sa nouvelle infrastructure digitale "
                     "dédiée à l'incubation, à l'évaluation des prototypes et au transfert technologique."
                 ),
                 "contenu": (
-                    "L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Traoré de Diamniadio "
+                    "L'Institut Supérieur d'Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio "
                     "marque une étape décisive dans son rayonnement national avec l'inauguration de la plateforme "
                     "numérique unifiée CIAT 360.\n\n"
                     "Conçue pour fédérer les six modules opérationnels du Centre d'Innovation, d'Application et "
@@ -43,10 +43,10 @@ class Command(BaseCommand):
             },
         )
 
-        actu2, _ = Actualite.objects.get_or_create(
+        actu2, created_actu2 = Actualite.objects.get_or_create(
             slug="partenariat-strategique-transfert-technologique",
             defaults={
-                "titre": "Signature d'un accord-cadre de transfert technologique avec le PTN",
+                "titre": "[Exemple] Signature d'un accord-cadre de transfert technologique avec le PTN",
                 "resume": (
                     "Le CIAT et le Parc des Technologies Numériques de Diamniadio unissent leurs "
                     "capacités de calcul et de prototypage pour accélérer l'industrialisation des projets incubés."
@@ -55,11 +55,23 @@ class Command(BaseCommand):
                     "Ce partenariat stratégique permet aux incubés du CIAT d'accéder directement aux bancs "
                     "de test avancés du Data Center Tier III de Diamniadio et aux infrastructures cloud nationales.\n\n"
                     "Les premiers prototypes en incubation dans la filière 'TIC & IA' et 'Énergies Renouvelables' "
-                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN."
+                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN.\n\n"
+                    "Actualité d'exemple pour la démonstration."
                 ),
                 "publie_le": now - timedelta(days=12),
             },
         )
+        if not created_actu2:
+            actu2.titre = "[Exemple] Signature d'un accord-cadre de transfert technologique avec le PTN"
+            if "Actualité d'exemple pour la démonstration" not in actu2.contenu:
+                actu2.contenu = (
+                    "Ce partenariat stratégique permet aux incubés du CIAT d'accéder directement aux bancs "
+                    "de test avancés du Data Center Tier III de Diamniadio et aux infrastructures cloud nationales.\n\n"
+                    "Les premiers prototypes en incubation dans la filière 'TIC & IA' et 'Énergies Renouvelables' "
+                    "bénéficieront d'un accompagnement conjoint assuré par les mentors du CIAT et les ingénieurs du PTN.\n\n"
+                    "Actualité d'exemple pour la démonstration."
+                )
+            actu2.save()
 
         # 2. Événements
         Evenement.objects.get_or_create(
@@ -69,7 +81,7 @@ class Command(BaseCommand):
                     "Présentation des réalisations des cohortes en incubation, visites guidées des ateliers "
                     "de mécanique et démonstrations des bancs solaires en fonctionnement."
                 ),
-                "lieu": "Campus ISEP Amadou Traoré, Cité du Savoir, Diamniadio",
+                "lieu": "Campus ISEP Amadou Trawaré, Cité du Savoir, Diamniadio",
                 "debut": now + timedelta(days=14, hours=2),
                 "fin": now + timedelta(days=14, hours=9),
                 "lien_inscription": "https://ciat.sn/portail",
@@ -149,28 +161,17 @@ class Command(BaseCommand):
             },
         )
 
-        # 5. Documents publics
-        DocumentPublic.objects.get_or_create(
-            titre="Dossier de Candidature Officiel — Cohorte d'Incubation 2026",
-            defaults={
-                "categorie": "Candidatures & Formulaires",
-            },
-        )
+        # 5. Documents publics réels (PDF de 2 à 4 pages, ReportLab, idempotents)
+        from apps.portal.portal_documents_pdf import generer_tous_documents_portail
+        generer_tous_documents_portail(stdout=self.stdout)
 
-        DocumentPublic.objects.get_or_create(
-            titre="Charte de Propriété Intellectuelle & Transfert Technologique",
-            defaults={
-                "categorie": "Règlements & Chartes",
-            },
-        )
-
-        DocumentPublic.objects.get_or_create(
-            titre="Règlement Intérieur de l'Incubateur & Sécurité des Ateliers",
-            defaults={
-                "categorie": "Règlements & Chartes",
-            },
-        )
+        # 6. Images de démonstration locales (Pillow)
+        from apps.core.demo_images import generer_image_actualite, generer_logo_partenaire
+        for actu in Actualite.objects.all():
+            generer_image_actualite(actu)
+        for part in Partenaire.objects.all():
+            generer_logo_partenaire(part)
 
         self.stdout.write(self.style.SUCCESS(
-            "Contenus de démonstration du portail (T1, T2) initialisés avec succès."
+            "Contenus de démonstration du portail (T1, T2) et visuels initialisés avec succès."
         ))

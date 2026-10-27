@@ -31,6 +31,20 @@ interface ProjetSuivi {
   statut: string;
 }
 
+const PROJET_STATUTS: Record<string, string> = {
+  idee: "Idée",
+  depose: "Dossier déposé",
+  selectionne: "Sélectionné",
+  incube: "En incubation",
+  prototype: "Prototype",
+  termine: "Incubation terminée",
+  rejete: "Non retenu",
+};
+
+function projetStatutLabel(statut: string) {
+  return PROJET_STATUTS[statut] ?? "Statut non reconnu";
+}
+
 function Suivi() {
   const params = useParams<{ id: string }>();
   const projetId = Number(params.id);
@@ -44,7 +58,7 @@ function Suivi() {
   const [error, setError] = useState<string | null>(null);
 
   const [tick, setTick] = useState(0);
-  const load = () => setTick((t) => t + 1);
+  const load = () => { setError(null); setLoading(true); setTick((t) => t + 1); };
 
   useEffect(() => {
     let cancelled = false;
@@ -61,9 +75,7 @@ function Suivi() {
         setProjet(p);
         setObjectifs(o);
         setJalons(j);
-        if (m?.mentor_details) {
-          setMentor(m.mentor_details);
-        }
+        setMentor(m?.mentor_details ?? null);
         setSuivis(s);
         setError(null);
       } catch (err) {
@@ -86,7 +98,7 @@ function Suivi() {
 
   const isEquipe = user?.role === "coordonnateur" || user?.role === "administrateur";
   const isMentorAffecte = user?.role === "mentor" && mentor?.id === user?.id;
-  const canManage = isEquipe || user?.role === "mentor";
+  const canManage = isEquipe || isMentorAffecte;
   const canWriteSuivi = isEquipe || isMentorAffecte;
 
   return (
@@ -111,7 +123,7 @@ function Suivi() {
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-texte-doux">
               {projet.porteur_nom && <span>{projet.porteur_nom}</span>}
               {projet.domaine_nom && <span>· {projet.domaine_nom}</span>}
-              <Badge>{projet.statut}</Badge>
+              <Badge>{projetStatutLabel(projet.statut)}</Badge>
             </p>
           </header>
           <div className="space-y-6">
