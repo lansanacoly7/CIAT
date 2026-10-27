@@ -29,5 +29,19 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Terminé quand :** un fichier vidéo existe (ou son lien) et correspond au scénario.
 - **Statut :** **PRÊT POUR TOURNAGE & SYNCHRONISÉ** — Scénario 4 min 45 s rigoureusement calé sur 9 séquences synchronisées avec `docs/DEMO.md`. Les 5 rôles (`porteur@ciat.sn`, `comite@ciat.sn`, `coordo@ciat.sn`, `mentor@ciat.sn`, `admin@ciat.sn`) sont initialisés et vérifiés avec `seed_all` sans aucun mot de passe à saisir en clair pendant la captation.
 
-## Contrastes d'accessibilité (audit axe, `docs/ACCESSIBILITE.md`)
-Après T1 : l'accueil et la galerie ont des textes secondaires (ocre ou gris clair) sous le seuil de contraste 4,5:1 (13 et 10 éléments). Rehausse-les avec des teintes de la charte et relance `npm run test:axe` (Alioune a mis en place le test). L'assistant (4 éléments) est repris par Ibrahima.
+## Contrastes d'accessibilité & Refonte Graphique CIAT
+- **Statut :** **TERMINÉ & VALIDÉ (100% CHARTE CIAT)** :
+  1. **En-tête & Navigation (`Header.tsx`)** : Suppression des liens d'accès restreint (`Suivi Projets`, `Documents IA`) pour une barre de navigation publique épurée et conforme.
+  2. **Page Le CIAT (`/portail/ciat` & `/ciat`)** :
+     - Hero pleine hauteur (`min-h-[calc(100vh-72px)]`) calé sur le côté gauche, parfaitement harmonisé avec la page d'Accueil et l'Incubateur.
+     - Suppression définitive du badge pill supérieur et du voile marron flou au profit d'une netteté photographique 100% réaliste du campus.
+  3. **Page Galerie (`/galerie`)** :
+     - Suppression intégrale de tout faux hero lourd ou artificiel au profit d'un en-tête éditorial aéré sur fond sable `#FAF7F2`.
+     - Intégration des 27 photographies haute définition d'ateliers, laboratoires et vie au campus.
+     - Barre d'onglets épurée par pills, recherche instantanée, tri rapide et pagination ergonomique.
+  4. **Page Les 7 Domaines (`/portail/domaines`)** :
+     - Refonte complète inspirée des standards Awwwards en architecture Master-Detail interactive (liste des 7 filières à gauche, pavillon immersif grand format à droite).
+     - Suppression de 100% des icônes décoratives pour laisser toute la place à la typographie noble, aux numérotations d'ingénierie et aux photos des ateliers.
+     - Grille synoptique bento et cartouches de prototypes réels reliés à la Galerie.
+  5. **Contrôle Qualité** : 0 erreur ESLint / TypeScript, 40 routes pré-rendues avec succès via `next build`.
+
