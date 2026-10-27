@@ -27,8 +27,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 142,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80"},
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_agrisol-pompes-solaires-connectees.jpg"},
             {"type": "demo", "url": "https://demo.agrisol.sn"},
             {"type": "video", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
         ],
@@ -51,8 +50,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 289,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80"},
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_sunudoc-telemedecine-langues-nationales.jpg"},
             {"type": "demo", "url": "https://sunudoc.ciat-demo.sn"},
         ],
     },
@@ -74,7 +72,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 310,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_jumeau-numerique-ateliers-isep.jpg"},
             {"type": "demo", "url": "https://jumeau-ateliers.isep.sn"},
         ],
     },
@@ -95,8 +93,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 195,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80"},
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_kayar-trace-tracabilite-peche-artisanale.jpg"},
             {"type": "demo", "url": "https://kayartrace.ciat-labs.org"},
         ],
     },
@@ -117,7 +114,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 412,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_presse-compacte-huile-arachide-sesame.jpg"},
             {"type": "video", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
         ],
     },
@@ -138,8 +135,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 528,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80"},
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_incubateur-neonatal-low-cost-maternites.jpg"},
             {"type": "demo", "url": "https://neociat.sante.sn"},
         ],
     },
@@ -160,7 +156,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 178,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1556742049-0a67e557224e?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_smarttax-collect-fiscalite-locale-marches.jpg"},
             {"type": "demo", "url": "https://smarttax.demo-collectivites.sn"},
         ],
     },
@@ -181,8 +177,7 @@ FICHES_DATA = [
         "statut": FicheInnovation.Statut.PUBLIE,
         "vues": 265,
         "medias": [
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80"},
-            {"type": "photo", "url": "https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=1200&q=80"},
+            {"type": "photo", "url": "/media/galerie/fiche_kit-robotique-pedagogique-lycees-techniques.jpg"},
             {"type": "video", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
         ],
     },
@@ -259,8 +254,13 @@ class Command(BaseCommand):
             else:
                 total_creees += 1
 
+        # Génération des images locales de démonstration (Pillow)
+        from apps.core.demo_images import generer_photo_galerie
+        for fiche in FicheInnovation.objects.all():
+            generer_photo_galerie(fiche)
+
         self.stdout.write(
             self.style.SUCCESS(
-                f"Galerie initialisée avec succès : {total_creees} créée(s), {total_mises_a_jour} mise(s) à jour."
+                f"Galerie initialisée avec succès : {total_creees} créée(s), {total_mises_a_jour} mise(s) à jour, visuels démo générés."
             )
         )

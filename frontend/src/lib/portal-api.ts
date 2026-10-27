@@ -548,6 +548,7 @@ function normalizePartenaire(item: Record<string, unknown>): Partenaire {
     type: (item.type as Partenaire["type"]) || "institutionnel",
     description: String(item.description || "Partenaire stratégique engagé dans le développement du CIAT."),
     sigle: typeof item.sigle === "string" ? item.sigle : nom.slice(0, 8),
+    logo: typeof item.logo === "string" ? item.logo : undefined,
     site_web: typeof item.site_web === "string" ? item.site_web : undefined,
     domaine_collaboration: String(item.domaine_collaboration || item.description || "Coopération technique"),
   };
@@ -707,6 +708,7 @@ export type Partenaire = {
   type: "institutionnel" | "academique" | "industriel" | "financier";
   description: string;
   sigle?: string;
+  logo?: string;
   site_web?: string;
   domaine_collaboration: string;
 };

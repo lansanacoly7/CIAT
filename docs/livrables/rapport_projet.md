@@ -63,7 +63,7 @@ La solution adopte une architecture moderne découplée reposant sur des protoco
        │   BASE DE DONNÉES    │         │     FOURNISSEURS      │
        │     RELATIONNELLE    │         │     IA GÉNÉRATIVE     │
        │ PostgreSQL / SQLite  │         │  Groq / Gemini Flash  │
-       │      (33 tables)     │         │  (Format OpenAI API)  │
+       │      (34 tables)     │         │  (Format OpenAI API)  │
        └──────────────────────┘         └───────────────────────┘
 ```
 
@@ -159,17 +159,19 @@ Pour offrir une démonstration réaliste et des dashboards immédiatement exploi
 - **49 partenariats** formalisés (dont 37 actifs) et **50 financements** d'amorçage (totalisant 467 500 000 FCFA mobilisés dont 403 000 000 FCFA décaissés).
 - **23 fiches de galerie** (19 publiées, 2 en validation, 2 brouillons) avec QR codes dynamiques.
 - **6 documents institutionnels** générés et archivés.
-- **Idempotence certifiée :** Une réexécution successive de la commande conserve strictement les totaux en base sans générer le moindre doublon.
+- **28 images de démonstration générées localement** (Pillow) : 2 visuels d'actualités, 3 logos partenaires, 23 photos de galerie, poids < 150 Ko (max 53 Ko), 100 % souveraines (zéro URL externe).
+- **1 740 enregistrements de démonstration au total** peuplés dans les 34 tables applicatives du CIAT.
+- **Idempotence certifiée :** Une réexécution successive de la commande conserve strictement les totaux en base sans générer le moindre doublon ni régénérer d'image.
 
 ### 6.2 Résultats de la Suite de Tests
 La validation de l'application repose sur deux suites de tests automatisées exécutées sur machine locale :
 1. **Parcours complet de bout en bout (`apps.core.tests.test_parcours_complet`) :**  
    Simule l'ensemble du cycle de vie d'un porteur (inscription ➔ dépôt ➔ complétude ➔ notation comité ➔ décision coordonnateur ➔ jalonnement mentor ➔ publication galerie ➔ export document officiel) :
-   - Temps d'exécution : **~0,92 seconde** (seuil exigé : < 30 secondes).
+   - Temps d'exécution : **~1,05 seconde** (seuil exigé : < 30 secondes).
    - Résultat : **2/2 tests passants** (100 %).
 2. **Suite globale de tests d'intégration (`python manage.py test apps`) :**  
-   - Couverture : **183 tests unitaires et fonctionnels** couvrant l'ensemble des 7 modules.
-   - Temps d'exécution total : **~21 secondes**.
+   - Couverture : **256 tests unitaires et fonctionnels** couvrant l'ensemble des 7 modules.
+   - Temps d'exécution total : **~30 à 40 secondes**.
    - Résultat : **100 % OK, 0 échec, 0 erreur**.
    - Contrôles système : `python manage.py check` (0 avertissement), `makemigrations --check` (0 divergence de schéma).
 
@@ -187,4 +189,4 @@ En toute transparence académique et technique, les limites suivantes constituen
 ## 8. Conclusion
 
 La plateforme numérique du CIAT conçue et livrée lors de cette évaluation pratique constitue une réponse technique complète, rigoureuse et pérenne aux défis d'accompagnement de l'ISEP Amadou Traoré de Diamniadio.  
-En mariant la solidité d'une modélisation relationnelle de 33 tables, une étanchéité de droits garantie par une matrice RBAC à 6 rôles, et une intégration de l'IA générative strictement encadrée par des garde-fous anti-hallucination, la solution démontre qu'il est possible de mobiliser l'intelligence artificielle au service de l'action publique et académique sans jamais sacrifier la sécurité, la souveraineté des données ni la rigueur méthodologique.
+En mariant la solidité d'une modélisation relationnelle de 34 tables, une étanchéité de droits garantie par une matrice RBAC à 6 rôles, et une intégration de l'IA générative strictement encadrée par des garde-fous anti-hallucination, la solution démontre qu'il est possible de mobiliser l'intelligence artificielle au service de l'action publique et académique sans jamais sacrifier la sécurité, la souveraineté des données ni la rigueur méthodologique.

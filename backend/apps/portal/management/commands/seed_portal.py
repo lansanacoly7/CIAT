@@ -171,6 +171,13 @@ class Command(BaseCommand):
             },
         )
 
+        # 6. Images de démonstration locales (Pillow)
+        from apps.core.demo_images import generer_image_actualite, generer_logo_partenaire
+        for actu in Actualite.objects.all():
+            generer_image_actualite(actu)
+        for part in Partenaire.objects.all():
+            generer_logo_partenaire(part)
+
         self.stdout.write(self.style.SUCCESS(
-            "Contenus de démonstration du portail (T1, T2) initialisés avec succès."
+            "Contenus de démonstration du portail (T1, T2) et visuels initialisés avec succès."
         ))

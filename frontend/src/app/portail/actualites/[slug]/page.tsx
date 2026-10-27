@@ -131,6 +131,17 @@ function ActualiteDetailContent({
         subtitle={actu.resume}
       />
 
+      {actu.image && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-bordure bg-ivoire shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={actu.image}
+            alt={actu.titre}
+            className="w-full max-h-[440px] object-cover"
+          />
+        </div>
+      )}
+
       {/* Contenu de l'article */}
       <div className="mt-8 rounded-2xl border border-bordure bg-white p-8 md:p-12 shadow-sm">
         <div className="space-y-6 text-base leading-relaxed text-texte">

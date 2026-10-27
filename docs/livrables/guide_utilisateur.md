@@ -212,11 +212,11 @@ L'administrateur système a la charge de la sécurité technique, du maintien op
    ```bash
    python manage.py seed_all
    ```
-2. Cette commande exécute séquentiellement et de manière **100 % idempotente** le peuplement de l'ensemble des modules avec des données de démonstration **strictement fictives** (64 projets, 8 domaines, 4 cohortes, 43 porteurs dont 16 femmes, 58 dossiers, 174 pièces obligatoires, 109 évaluations, 53 décisions, 49 affectations mentors, 147 objectifs, 147 jalons, 70 bilans de suivi, 49 partenariats, 50 financements, 23 fiches de galerie et 6 documents institutionnels).
+2. Cette commande exécute séquentiellement et de manière **100 % idempotente** le peuplement de l'ensemble des modules avec des données de démonstration **strictement fictives** (64 projets, 8 domaines, 4 cohortes, 43 porteurs dont 16 femmes, 58 dossiers, 174 pièces obligatoires, 109 évaluations, 53 décisions, 49 affectations mentors, 147 objectifs, 147 jalons, 70 bilans de suivi, 49 partenariats, 50 financements, 23 fiches de galerie, 6 documents institutionnels, 28 images de démonstration générées localement avec Pillow, pour un total de 1 740 lignes enregistrées en base).
 3. Vérifiez la conformité du système en lançant les contrôles qualité :
    ```bash
    python manage.py check
    python manage.py makemigrations --check
    python manage.py test apps
    ```
-   Ces contrôles valident 183 tests automatisés (100 % passants) en ~21 secondes, sans aucun avertissement système ni migration en attente.
+   Ces contrôles valident 256 tests automatisés (100 % passants) en ~30 à 40 secondes, sans aucun avertissement système ni migration en attente.
