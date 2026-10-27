@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button, ButtonLink } from "@/components/ui";
+
+const emptySubscribe = () => () => {};
 
 /**
  * Liens principaux institutionnels épurés (5 liens au lieu des 7 initiaux pour éviter la surcharge)
@@ -46,6 +48,11 @@ export default function Header() {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
   const isAppPage =
@@ -97,7 +104,7 @@ export default function Header() {
 
         {/* Actions à droite : Compte connecté OU Bouton Connexion officiel */}
         <div className="flex items-center gap-3">
-          {!loading && user ? (
+          {mounted && !loading && user ? (
             <div className="hidden items-center gap-3 lg:flex">
               <Link
                 href="/compte"
@@ -175,7 +182,7 @@ export default function Header() {
               );
             })}
             <div className="mt-3 border-t border-[#EFE4D6] pt-3">
-              {!loading && user ? (
+              {mounted && !loading && user ? (
                 <div className="flex items-center justify-between">
                   <Link
                     href="/compte"
