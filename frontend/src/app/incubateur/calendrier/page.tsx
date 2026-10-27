@@ -262,24 +262,26 @@ function CalendrierVue() {
 
   return (
     <div className="w-full">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-5">
-        {/* 1. EN-TÊTE DE NAVIGATION : FIL D'ARIANE HARMONISÉ & CLOCHE D'ALERTE COMPACTE */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58] mb-1">
-              <Link
-                href="/incubateur/projets"
-                className="hover:text-[#612D10] hover:underline transition-colors"
-              >
-                Suivi des projets
-              </Link>
-              <span className="text-[#C99A68]/60">/</span>
-              <span className="text-[#612D10] font-bold">Calendrier</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#4A2810]">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
+        {/* Fil d'Ariane harmonisé */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+          <Link
+            href="/incubateur/projets"
+            className="hover:text-[#612D10] hover:underline transition-colors"
+          >
+            Suivi des projets
+          </Link>
+          <span className="text-[#C99A68]/60">/</span>
+          <span className="text-[#612D10] font-bold">Calendrier</span>
+        </div>
+
+        {/* 1. EN-TÊTE ÉPURÉ ET HARMONISÉ : TITRE & CLOCHE D'ALERTE */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold tracking-tight text-[#24140D] sm:text-3xl">
               Calendrier des jalons & objectifs
             </h1>
-            <p className="mt-0.5 text-xs sm:text-sm text-[#7D6B5D]">
+            <p className="text-xs sm:text-sm text-[#6b5646]">
               Suivi chronologique des échéances, jalons de validation et objectifs opérationnels.
             </p>
           </div>

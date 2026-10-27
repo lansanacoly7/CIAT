@@ -70,10 +70,15 @@ function ListeProjets() {
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
         {/* Fil d'Ariane / Repère Espace Candidat */}
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#8C6D4F]">
-          <span>Espace Candidat</span>
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+          <Link
+            href="/incubateur"
+            className="hover:text-[#612D10] hover:underline transition-colors"
+          >
+            Espace Candidat
+          </Link>
           <span className="text-[#C99A68]/60">/</span>
-          <span className="text-[#612D10]">Suivi de mes projets</span>
+          <span className="text-[#612D10] font-bold">Suivi de mes projets</span>
         </div>
 
         {/* 1. EN-TÊTE ÉPURÉ ET HARMONISÉ (Standard CIAT de l'espace porteur) */}
