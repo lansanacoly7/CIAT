@@ -15,6 +15,12 @@
 | `GET/PATCH /auth/me/` | `{ id, email, first_name, last_name, role, telephone, genre, organisation }` |
 | `GET /domaines/`, `GET /cohortes/` | Listes sans pagination |
 | `GET/POST /projets/` | `{ id, titre, resume, probleme, solution, domaine, domaine_nom, cohorte, cohorte_nom, porteur, porteur_nom, statut, cree_le, modifie_le }` |
+| `GET /audit/` | Journal d'audit des actions sensibles (admin et coordonnateur, filtrable par acteur, action, date) |
+| `GET /notifications/` | Notifications internes de l'utilisateur connecté (filtre `?non_lues=1`) |
+| `POST /notifications/{id}/lue/` | Marquer une notification comme lue |
+| `POST /notifications/tout-lire/` | Marquer toutes les notifications comme lues |
+| `PATCH /users/{id}/role/` | Modification du rôle d'un utilisateur (administrateur) |
+
 
 Rôles : `administrateur`, `coordonnateur`, `mentor`, `membre_comite`, `porteur`, `visiteur`.
 Statuts d'un projet : `idee`, `depose`, `selectionne`, `incube`, `prototype`, `termine`, `rejete`.

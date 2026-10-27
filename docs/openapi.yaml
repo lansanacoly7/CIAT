@@ -341,6 +341,44 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/audit/:
+    get:
+      operationId: audit_list
+      description: Consultation en lecture seule du journal d'audit, filtrable par
+        acteur, action et date.
+      summary: Journal d'audit des actions sensibles
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - audit
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJournalAuditList'
+          description: ''
+        '403':
+          description: Accès réservé à l'équipe CIAT
   /api/auth/me/:
     get:
       operationId: auth_me_retrieve
@@ -1940,6 +1978,80 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      description: Renvoie les notifications de l'utilisateur connecté avec filtre
+        optionnel ?non_lues=1.
+      summary: Liste des notifications de l'utilisateur
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/notifications/{id}/lue/:
+    post:
+      operationId: notifications_lue_create
+      description: Passe la notification spécifiée au statut lu pour l'utilisateur
+        connecté.
+      summary: Marquer une notification comme lue
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+        '404':
+          description: Notification introuvable
+  /api/notifications/tout-lire/:
+    post:
+      operationId: notifications_tout_lire_create
+      description: Marque l'intégralité des notifications non lues de l'utilisateur
+        connecté comme lues.
+      summary: Marquer toutes les notifications comme lues
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Notifications marquées comme lues
   /api/portal/actualites/:
     get:
       operationId: portal_actualites_list
@@ -3353,6 +3465,41 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/users/{id}/role/:
+    patch:
+      operationId: users_role_partial_update
+      description: Permet à un administrateur de modifier le rôle d'un utilisateur.
+      summary: Modifier le rôle d'un utilisateur (Administrateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '403':
+          description: Accès réservé aux administrateurs
 components:
   schemas:
     Actualite:
@@ -3817,6 +3964,50 @@ components:
       description: |-
         * `jalon` - jalon
         * `objectif` - objectif
+    JournalAudit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        acteur:
+          type: integer
+          readOnly: true
+          nullable: true
+        acteur_nom:
+          type: string
+          readOnly: true
+        acteur_email:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+        objet:
+          type: string
+          readOnly: true
+        objet_concerne:
+          type: string
+          readOnly: true
+        avant:
+          readOnly: true
+        apres:
+          readOnly: true
+        date:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - acteur
+      - acteur_email
+      - acteur_nom
+      - action
+      - apres
+      - avant
+      - date
+      - id
+      - objet
+      - objet_concerne
     MentorUser:
       type: object
       description: Représentation publique d'un mentor pour affectation.
@@ -3930,6 +4121,58 @@ components:
       description: |-
         * `documents` - Recherche dans les documents
         * `atelier` - Atelier de rédaction
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          readOnly: true
+        type_libelle:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        lien:
+          type: string
+          readOnly: true
+        lue:
+          type: boolean
+        date:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date
+      - id
+      - lien
+      - message
+      - type
+      - type_libelle
+    NotificationTypeEnum:
+      enum:
+      - decision_dossier
+      - jalon_retard
+      - document_valide
+      - document_publie
+      - fiche_validee
+      - fiche_refusee
+      - mentor_affecte
+      - autre
+      type: string
+      description: |-
+        * `decision_dossier` - Décision sur le dossier
+        * `jalon_retard` - Jalon en retard
+        * `document_valide` - Document validé
+        * `document_publie` - Document publié
+        * `fiche_validee` - Fiche validée
+        * `fiche_refusee` - Fiche refusée
+        * `mentor_affecte` - Nouveau mentor affecté
+        * `autre` - Autre notification
     PaginatedActualiteList:
       type: object
       required:
@@ -4045,6 +4288,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Evenement'
+    PaginatedJournalAuditList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalAudit'
     PaginatedMentorUserList:
       type: object
       required:
@@ -4091,6 +4357,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MessageContact'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
     PaginatedProjetIncubeList:
       type: object
       required:
@@ -4447,7 +4736,7 @@ components:
           maxLength: 150
         role:
           allOf:
-          - $ref: '#/components/schemas/UserRoleEnum'
+          - $ref: '#/components/schemas/Role2bbEnum'
           readOnly: true
         telephone:
           type: string
@@ -4459,6 +4748,11 @@ components:
         organisation:
           type: string
           maxLength: 150
+    PatchedUserRoleUpdate:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/Role2bbEnum'
     Piece:
       type: object
       properties:
@@ -4636,6 +4930,22 @@ components:
       - email
       - id
       - password
+    Role2bbEnum:
+      enum:
+      - administrateur
+      - coordonnateur
+      - mentor
+      - membre_comite
+      - porteur
+      - visiteur
+      type: string
+      description: |-
+        * `administrateur` - Administrateur
+        * `coordonnateur` - Coordonnateur
+        * `mentor` - Mentor
+        * `membre_comite` - Membre du comité
+        * `porteur` - Porteur de projet
+        * `visiteur` - Visiteur
     StatistiquesGallery:
       type: object
       description: 'Format : { total_vues, par_fiche: [{ slug, titre, vues }] }'
@@ -4731,7 +5041,7 @@ components:
           maxLength: 150
         role:
           allOf:
-          - $ref: '#/components/schemas/UserRoleEnum'
+          - $ref: '#/components/schemas/Role2bbEnum'
           readOnly: true
         telephone:
           type: string
@@ -4747,22 +5057,6 @@ components:
       - email
       - id
       - role
-    UserRoleEnum:
-      enum:
-      - administrateur
-      - coordonnateur
-      - mentor
-      - membre_comite
-      - porteur
-      - visiteur
-      type: string
-      description: |-
-        * `administrateur` - Administrateur
-        * `coordonnateur` - Coordonnateur
-        * `mentor` - Mentor
-        * `membre_comite` - Membre du comité
-        * `porteur` - Porteur de projet
-        * `visiteur` - Visiteur
   securitySchemes:
     jwtAuth:
       type: http

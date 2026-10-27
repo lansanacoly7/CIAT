@@ -143,6 +143,11 @@ def envoyer_alertes_jalons_en_retard(today=None) -> dict:
                     destinataire=destinataire,
                     date_envoi=today,
                 )
+                try:
+                    from apps.core.services import notifier_jalon_retard
+                    notifier_jalon_retard(jalon, destinataire)
+                except Exception as ex_notif:
+                    logger.warning("Échec de création de la notification jalon retard: %s", ex_notif)
                 alertes_envoyees += 1
                 details.append({
                     "jalon_id": jalon.id,

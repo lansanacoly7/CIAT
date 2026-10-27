@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role, User
 from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.core.services import tracer_affectation_mentor, tracer_decision_dossier
 from .emails import (
     envoyer_email_confirmation_soumission,
     envoyer_email_decision_dossier,
@@ -276,6 +277,7 @@ class DossierDecisionView(APIView):
             decision = serializer.save()
 
         envoyer_email_decision_dossier(decision)
+        tracer_decision_dossier(request.user, decision)
         return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
 
 
@@ -313,12 +315,14 @@ class ProjetMentorView(APIView):
 
     def post(self, request, pk):
         projet = get_object_or_404(Projet, pk=pk)
+        mentor_precedent = getattr(getattr(projet, "affectation_mentor", None), "mentor", None)
         serializer = AffectationMentorSerializer(
             data=request.data,
             context={"request": request, "projet": projet},
         )
         serializer.is_valid(raise_exception=True)
         affectation = serializer.save()
+        tracer_affectation_mentor(request.user, affectation, mentor_precedent)
         return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
 
