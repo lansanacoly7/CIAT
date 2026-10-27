@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import Image from "next/image";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, DemoBanner } from "@/components/ui";
 import {
@@ -479,50 +478,16 @@ function AssistantApp() {
             />
           )}
 
-          {/* ÉTAT D'ACCUEIL ILLUSTRÉ (quand aucun message dans la conversation) */}
+          {/* ÉTAT D'ACCUEIL : SUGGESTIONS FONCTIONNELLES (quand aucun message dans la conversation) */}
           {!loadingMessages && messages.length === 0 && (
-            <div className="mx-auto max-w-5xl space-y-6 pt-2 pb-6">
-              {/* Carte Hero d'accueil */}
-              <div className="relative overflow-hidden rounded-3xl border border-[#EFE4D6] bg-gradient-to-br from-[#FAF7F2] via-[#F6F0E7] to-[#ECE1D3] p-6 sm:p-8 shadow-xs">
-                <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
-                  {/* Texte & Message */}
-                  <div className="lg:col-span-7 space-y-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EFE4D6] px-3 py-1 text-xs font-semibold tracking-wide text-[#7A583A]">
-                      Votre assistant IA
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#24140D]">
-                      Comment puis-je vous aider ?
-                    </h2>
-                    <p className="text-xs sm:text-sm leading-relaxed text-[#5C3D2E] max-w-xl">
-                      {mode === "documents"
-                        ? "Interrogez les documents officiels du CIAT (règlements, chartes, critères d'éligibilité) pour obtenir des réponses exactes et sourcées."
-                        : "Bénéficiez d'un accompagnement méthodique pour structurer votre pitch, formuler votre problème usager et préparer vos fiches de projet."}
-                    </p>
-                  </div>
-
-                  {/* Illustration vectorielle locale sobre */}
-                  <div className="lg:col-span-5 flex justify-center lg:justify-end">
-                    <div className="relative w-full max-w-[340px] overflow-hidden rounded-2xl border border-[#EFE4D6]/80 bg-white/40 shadow-xs">
-                      <Image
-                        src="/images/ciat-assistant-illustration.jpg"
-                        alt="Illustration Assistant IA CIAT"
-                        width={680}
-                        height={380}
-                        priority
-                        className="h-auto w-full object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            <div className="mx-auto max-w-5xl space-y-4 pt-4 pb-6">
               {/* 3 Cartes de suggestions fonctionnelles */}
               <div>
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <span className="text-xs font-bold text-[#24140D]">
+                  <span className="text-sm font-bold text-[#24140D]">
                     Suggestions d&apos;actions immédiates
                   </span>
-                  <span className="text-[11px] text-[#7A583A]">
+                  <span className="text-xs text-[#7A583A]">
                     Mode {mode === "documents" ? "Documents CIAT" : "Atelier Rédaction"}
                   </span>
                 </div>
