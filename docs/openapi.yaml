@@ -489,13 +489,13 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -544,7 +544,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: Un(une) valeur entière unique identifiant ce(cette) cohorte.
         required: true
       tags:
       - cohortes
@@ -564,7 +564,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: Un(une) valeur entière unique identifiant ce(cette) cohorte.
         required: true
       tags:
       - cohortes
@@ -596,7 +596,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: Un(une) valeur entière unique identifiant ce(cette) cohorte.
         required: true
       tags:
       - cohortes
@@ -627,7 +627,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this cohorte.
+        description: Un(une) valeur entière unique identifiant ce(cette) cohorte.
         required: true
       tags:
       - cohortes
@@ -850,13 +850,13 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -905,7 +905,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: Un(une) valeur entière unique identifiant ce(cette) domaine.
         required: true
       tags:
       - domaines
@@ -925,7 +925,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: Un(une) valeur entière unique identifiant ce(cette) domaine.
         required: true
       tags:
       - domaines
@@ -957,7 +957,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: Un(une) valeur entière unique identifiant ce(cette) domaine.
         required: true
       tags:
       - domaines
@@ -988,7 +988,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this domaine.
+        description: Un(une) valeur entière unique identifiant ce(cette) domaine.
         required: true
       tags:
       - domaines
@@ -1340,6 +1340,38 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/incubator/calendrier/:
+    get:
+      operationId: incubator_calendrier_list
+      description: Renvoie pour l'utilisateur connecté les jalons et objectifs du
+        mois spécifié sous la forme [{ date, type, titre, projet, statut, en_retard
+        }], triés par date. Les porteurs voient leurs projets, les mentors ceux qui
+        leur sont affectés, et l'équipe CIAT voit l'ensemble des projets de l'incubateur.
+      summary: Calendrier des jalons et objectifs du mois
+      parameters:
+      - in: query
+        name: mois
+        schema:
+          type: string
+        description: 'Mois d''échéance au format AAAA-MM (ex: 2026-10)'
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncubateurCalendrierItem'
+          description: ''
+        '400':
+          description: Paramètre mois manquant ou format invalide
+        '401':
+          description: Authentification requise
   /api/incubator/dossiers/:
     get:
       operationId: incubator_dossiers_list
@@ -1349,19 +1381,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -1696,19 +1728,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -1921,19 +1953,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -1992,7 +2024,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Actualité.
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
         required: true
       tags:
       - portal
@@ -2018,7 +2050,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Actualité.
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
         required: true
       tags:
       - portal
@@ -2056,7 +2088,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Actualité.
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
         required: true
       tags:
       - portal
@@ -2093,7 +2125,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Actualité.
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
         required: true
       tags:
       - portal
@@ -2114,19 +2146,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       - in: query
@@ -2188,7 +2220,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Appel à projets.
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
         required: true
       tags:
       - portal
@@ -2213,7 +2245,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Appel à projets.
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
         required: true
       tags:
       - portal
@@ -2250,7 +2282,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Appel à projets.
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
         required: true
       tags:
       - portal
@@ -2286,7 +2318,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Appel à projets.
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
         required: true
       tags:
       - portal
@@ -2304,19 +2336,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -2368,7 +2400,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Message de contact.
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
         required: true
       tags:
       - portal
@@ -2389,7 +2422,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Message de contact.
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
         required: true
       tags:
       - portal
@@ -2422,7 +2456,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Message de contact.
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
         required: true
       tags:
       - portal
@@ -2455,19 +2490,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -2518,7 +2553,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Document public.
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
         required: true
       tags:
       - portal
@@ -2540,7 +2576,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Document public.
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
         required: true
       tags:
       - portal
@@ -2574,7 +2611,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Document public.
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
         required: true
       tags:
       - portal
@@ -2607,7 +2645,8 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Document public.
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
         required: true
       tags:
       - portal
@@ -2633,19 +2672,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -2702,7 +2741,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Événement.
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
         required: true
       tags:
       - portal
@@ -2727,7 +2766,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Événement.
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
         required: true
       tags:
       - portal
@@ -2764,7 +2803,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Événement.
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
         required: true
       tags:
       - portal
@@ -2800,7 +2839,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Événement.
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
         required: true
       tags:
       - portal
@@ -2846,13 +2885,13 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       tags:
@@ -2911,7 +2950,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Partenaire.
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
         required: true
       tags:
       - portal
@@ -2936,7 +2975,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Partenaire.
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
         required: true
       tags:
       - portal
@@ -2973,7 +3012,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Partenaire.
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
         required: true
       tags:
       - portal
@@ -3009,7 +3048,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this Partenaire.
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
         required: true
       tags:
       - portal
@@ -3038,13 +3077,13 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - in: query
@@ -3082,7 +3121,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: Un(une) valeur entière unique identifiant ce(cette) projet.
         required: true
       tags:
       - portal
@@ -3133,19 +3172,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Which field to use when ordering the results.
+        description: Quel champ utiliser pour classer les résultats.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: A page number within the paginated result set.
+        description: Un numéro de page de l'ensemble des résultats.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: A search term.
+        description: Un terme de recherche.
         schema:
           type: string
       - in: query
@@ -3216,7 +3255,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: Un(une) valeur entière unique identifiant ce(cette) projet.
         required: true
       tags:
       - projets
@@ -3238,7 +3277,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: Un(une) valeur entière unique identifiant ce(cette) projet.
         required: true
       tags:
       - projets
@@ -3272,7 +3311,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: Un(une) valeur entière unique identifiant ce(cette) projet.
         required: true
       tags:
       - projets
@@ -3305,7 +3344,7 @@ paths:
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this projet.
+        description: Un(une) valeur entière unique identifiant ce(cette) projet.
         required: true
       tags:
       - projets
@@ -3576,9 +3615,12 @@ components:
           format: date-time
           nullable: true
         lien_inscription:
-          type: string
-          format: uri
-          maxLength: 500
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
       required:
       - debut
       - description
@@ -3732,6 +3774,49 @@ components:
         * `F` - Femme
         * `H` - Homme
         * `A` - Autre / non précisé
+    IncubateurCalendrierItem:
+      type: object
+      description: Élément du calendrier d'incubation (jalon ou objectif).
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date d'échéance au format ISO AAAA-MM-JJ
+        type:
+          allOf:
+          - $ref: '#/components/schemas/IncubateurCalendrierItemTypeEnum'
+          description: |-
+            Type d'élément (jalon ou objectif)
+
+            * `jalon` - jalon
+            * `objectif` - objectif
+        titre:
+          type: string
+          description: Intitulé du jalon ou de l'objectif
+        projet:
+          type: string
+          description: Titre du projet associé
+        statut:
+          type: string
+          description: Statut d'avancement
+        en_retard:
+          type: boolean
+          description: Indicateur d'échéance dépassée non validée
+      required:
+      - date
+      - en_retard
+      - projet
+      - statut
+      - titre
+      - type
+    IncubateurCalendrierItemTypeEnum:
+      enum:
+      - jalon
+      - objectif
+      type: string
+      description: |-
+        * `jalon` - jalon
+        * `objectif` - objectif
     MentorUser:
       type: object
       description: Représentation publique d'un mentor pour affectation.
@@ -4067,9 +4152,12 @@ components:
           format: uri
           nullable: true
         site_web:
-          type: string
-          format: uri
-          maxLength: 300
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 300
+          - type: string
+            maxLength: 0
         description:
           type: string
       required:
@@ -4246,9 +4334,12 @@ components:
           format: date-time
           nullable: true
         lien_inscription:
-          type: string
-          format: uri
-          maxLength: 500
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
     PatchedMessageContact:
       type: object
       description: 'Format : { nom, email, sujet, message }'
@@ -4286,9 +4377,12 @@ components:
           format: uri
           nullable: true
         site_web:
-          type: string
-          format: uri
-          maxLength: 300
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 300
+          - type: string
+            maxLength: 0
         description:
           type: string
     PatchedProjet:
@@ -4372,7 +4466,7 @@ components:
           type: integer
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/PieceTypeEnum'
         nom:
           type: string
         fichier:
@@ -4388,6 +4482,18 @@ components:
       - fichier
       - id
       - type
+    PieceTypeEnum:
+      enum:
+      - fiche_projet
+      - presentation_equipe
+      - budget_previsionnel
+      - autre
+      type: string
+      description: |-
+        * `fiche_projet` - Fiche de projet
+        * `presentation_equipe` - Présentation de l'équipe
+        * `budget_previsionnel` - Budget prévisionnel
+        * `autre` - Autre pièce
     Projet:
       type: object
       properties:
@@ -4605,18 +4711,6 @@ components:
       required:
       - access
       - refresh
-    TypeEnum:
-      enum:
-      - fiche_projet
-      - presentation_equipe
-      - budget_previsionnel
-      - autre
-      type: string
-      description: |-
-        * `fiche_projet` - Fiche de projet
-        * `presentation_equipe` - Présentation de l'équipe
-        * `budget_previsionnel` - Budget prévisionnel
-        * `autre` - Autre pièce
     User:
       type: object
       properties:
