@@ -74,14 +74,23 @@ test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 
       if (results.violations.length > 0) {
         for (const v of results.violations) {
           console.log(`  - [${v.impact?.toUpperCase()}] ${v.id}: ${v.description} (${v.nodes.length} occurrences)`);
+          for (const node of v.nodes) {
+            console.log(`    * Target: ${JSON.stringify(node.target)}`);
+            console.log(`      HTML: ${node.html}`);
+            console.log(`      Failure: ${node.failureSummary}`);
+          }
         }
       }
 
-      // Pour les écrans sous la responsabilité d'Alioune (tableau de bord et méthodologie), zéro violation critique/sérieuse tolérée
-      if (screen.url.startsWith("/tableau-de-bord")) {
+      // Écrans conformes : tableau de bord, méthodologie, générateur de documents et assistant IA (0 violation critique/sérieuse)
+      if (
+        screen.url.startsWith("/tableau-de-bord") ||
+        screen.url === "/documents" ||
+        screen.url === "/assistant"
+      ) {
         expect(
           criticalViolations,
-          `Violations critiques ou sérieuses détectées sur le tableau de bord : ${JSON.stringify(
+          `Violations critiques ou sérieuses détectées sur ${screen.name} (${screen.url}) : ${JSON.stringify(
             criticalViolations.map((v) => ({ id: v.id, impact: v.impact, desc: v.description })),
             null,
             2
