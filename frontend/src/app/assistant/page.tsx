@@ -378,14 +378,6 @@ function AssistantApp() {
             })}
         </div>
       </div>
-
-      {/* Pied Volet Historique */}
-      <div className="border-t border-[#EFE4D6] bg-[#FAF7F2] p-3 text-center">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#7A583A]">
-          <span className="h-2 w-2 rounded-full bg-[#166534]" />
-          Corpus conforme Charte CIAT
-        </span>
-      </div>
     </div>
   );
 
