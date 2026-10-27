@@ -26,6 +26,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Écrans d'authentification plein écran
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
 
+  // Espaces applicatifs dotés de leur propre barre latérale intégrée (AppSidebarLayout)
+  const hasDedicatedSidebar =
+    pathname.startsWith("/incubateur") ||
+    pathname.startsWith("/documents") ||
+    pathname.startsWith("/compte");
+
   // Rôles administratifs et de gestion habilités
   const isStaffUser = Boolean(
     user &&
@@ -37,12 +43,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Le tableau de bord décisionnel active systématiquement la barre latérale
   const isDashboardRoute = pathname.startsWith("/tableau-de-bord");
 
-  // Détermination de l'affichage de la barre latérale d'administration
-  const showAdminSidebar = !isAuthPage && (isStaffUser || isDashboardRoute);
-
-  if (isAuthPage) {
+  // Sur les écrans d'auth ou les espaces ayant déjà leur propre barre latérale dédiée
+  if (isAuthPage || hasDedicatedSidebar) {
     return <main className="flex-1">{children}</main>;
   }
+
+  // Détermination de l'affichage de la barre latérale d'administration
+  const showAdminSidebar = isStaffUser || isDashboardRoute;
 
   if (showAdminSidebar) {
     return (
