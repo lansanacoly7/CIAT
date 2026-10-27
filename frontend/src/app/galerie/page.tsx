@@ -3,11 +3,7 @@
 import { useEffect, useState, useTransition, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ApiErrorBanner,
-  Badge,
-  Button,
-} from "@/components/ui";
+import { ApiErrorBanner, Button } from "@/components/ui";
 import {
   getDomainesOptions,
   getCohortesOptions,
@@ -18,7 +14,7 @@ import {
   type GalleryFilterParams,
 } from "@/lib/gallery-api";
 
-// Mapping des photos réelles pour chaque fiche
+// Mapping des photos réelles pour chaque fiche d'innovation
 const REAL_FICHE_PHOTOS: Record<string, string> = {
   "gestion-partagee-des-espaces-marchands-de-diamniadio": "/images/galerie_moments/nos-espaces.jpg",
   "guichet-unique-numerique-des-permis-communaux": "/images/galerie_moments/collaboration-numerique.jpg",
@@ -48,128 +44,277 @@ const REAL_FICHE_PHOTOS: Record<string, string> = {
   "agrisol-pompe-solaire-connectee": "/images/galerie_moments/solaire-campus.jpg",
 };
 
-// Moments institutionnels de la vie du CIAT
+// Moments clés du CIAT conformes à la maquette
 const CAMPUS_MOMENTS = [
   {
-    id: 101,
-    slug: "nos-espaces-coworking",
-    titre: "Nos espaces de travail collaboratif",
-    probleme: "Besoin d'espaces partagés modulaires pour réunir chercheurs, étudiants et entrepreneurs.",
-    solution: "Open space moderne équipé, connexions haut débit et terrasses végétalisées.",
+    id: 1,
+    slug: "nos-espaces",
+    titre: "Nos espaces",
+    sousTitre: "Le CIAT en images",
+    description: "Des espaces de coworking modulaires, des terrasses végétalisées et des laboratoires équipés au cœur de la Cité du Savoir.",
     equipe: "Direction des Espaces & Campus Diamniadio",
     avancement: "Opérationnel",
     categorie: "Espaces",
     photo: "/images/galerie_moments/nos-espaces.jpg",
-    vues: 420,
+    vues: 840,
     isMoment: true,
   },
   {
-    id: 102,
-    slug: "formation-metiers-numeriques",
-    titre: "Formation professionnelle & Ateliers pratiques",
-    probleme: "Adéquation des compétences techniques aux besoins industriels 4.0.",
-    solution: "Parcours de formation certifiants en mécatronique, IoT et intelligence artificielle.",
-    equipe: "Pôle Pédagogique ISEP Diamniadio",
-    avancement: "En cours",
+    id: 2,
+    slug: "formation-metiers-futur",
+    titre: "Formation",
+    sousTitre: "Des compétences pour demain",
+    description: "Ateliers pratiques, certifications techniques et accompagnement immersif en mécatronique, IoT et intelligence artificielle.",
+    equipe: "Pôle Pédagogique ISEP Amadou Trawaré",
+    avancement: "En continu",
     categorie: "Formation",
     photo: "/images/galerie_moments/formation.jpg",
-    vues: 388,
+    vues: 720,
     isMoment: true,
   },
   {
-    id: 103,
-    slug: "vie-au-ciat-communaute-talents",
-    titre: "Vie au CIAT & Synergies Féminines",
-    probleme: "Valorisation des talents féminins dans les filières scientifiques et technologiques.",
-    solution: "Mentorat actif, bourses d'excellence et projets de recherche dirigés par des ingénieures.",
-    equipe: "Communauté Scientifique CIAT",
+    id: 3,
+    slug: "vie-au-ciat",
+    titre: "Vie au CIAT",
+    sousTitre: "Une communauté engagée",
+    description: "Une communauté scientifique et entrepreneuriale dynamique, valorisant les talents féminins et les synergies pluridisciplinaires.",
+    equipe: "Communauté Scientifique & Étudiante",
     avancement: "Actif",
     categorie: "Vie au CIAT",
     photo: "/images/galerie_moments/vie-au-ciat.jpg",
-    vues: 512,
+    vues: 950,
     isMoment: true,
   },
   {
-    id: 104,
-    slug: "evenements-conferences-restitution",
-    titre: "Conférences, Salons & Restitutions Annuelles",
-    probleme: "Visibilité des résultats de recherche appliquée auprès des investisseurs.",
-    solution: "Événements trimestriels de présentation des prototypes et rencontres B2B.",
-    equipe: "Pôle Partenariats & Communication",
+    id: 4,
+    slug: "evenements-rencontres",
+    titre: "Événements",
+    sousTitre: "Des rencontres qui inspirent",
+    description: "Restitutions annuelles, journées portes ouvertes, salons de l'innovation et démonstrations en direct des prototypes.",
+    equipe: "Pôle Partenariats & Événements",
     avancement: "Trimestriel",
     categorie: "Événements",
     photo: "/images/galerie_moments/evenements.jpg",
-    vues: 640,
+    vues: 890,
     isMoment: true,
   },
   {
-    id: 105,
-    slug: "espaces-atrium-et-rencontres",
-    titre: "Atrium d'accueil & Hall Technologique",
-    probleme: "Cadre d'accueil des délégations industrielles et des partenaires internationaux.",
-    solution: "Architecture bioclimatique favorisant la lumière naturelle et la convivialité.",
+    id: 5,
+    slug: "projets-innovation",
+    titre: "Projets",
+    sousTitre: "Des idées qui prennent vie",
+    description: "Conception, assemblage et validation fonctionnelle de prototypes mécatroniques et de systèmes automatisés sur mesure.",
+    equipe: "Laboratoire de Prototypage CIAT",
+    avancement: "Prototype",
+    categorie: "Projets",
+    photo: "/images/galerie_moments/projets-robotique.jpg",
+    vues: 1040,
+    isMoment: true,
+  },
+  {
+    id: 6,
+    slug: "espaces-de-travail",
+    titre: "Espaces de travail",
+    sousTitre: "Un cadre propice à l'innovation",
+    description: "Architecture bioclimatique favorisant la concentration, le partage d'idées et l'émergence de solutions à fort impact territorial.",
     equipe: "Services Généraux Campus",
     avancement: "Opérationnel",
     categorie: "Espaces",
     photo: "/images/galerie_moments/espaces-travail.jpg",
-    vues: 310,
+    vues: 610,
     isMoment: true,
   },
   {
-    id: 106,
-    slug: "moments-institutionnels-accords",
-    titre: "Signatures d'Accords & Partenariats Public-Privé",
-    probleme: "Pérennisation des filières de transfert technologique vers les PME locales.",
-    solution: "Conventions pluriannuelles signées avec les ministères et fédérations patronales.",
-    equipe: "Comité de Direction ISEP-CIAT",
-    avancement: "Certifié",
+    id: 7,
+    slug: "incubation-talents",
+    titre: "Incubation",
+    sousTitre: "Accompagner les talents",
+    description: "Programme structuré de pré-incubation et d'accélération pour transformer la recherche appliquée en entreprises viables.",
+    equipe: "Pôle Entrepreneuriat & Incubation",
+    avancement: "En cours",
+    categorie: "Formation",
+    photo: "/images/galerie_moments/incubation.jpg",
+    vues: 780,
+    isMoment: true,
+  },
+  {
+    id: 8,
+    slug: "inauguration-ciat",
+    titre: "Inauguration",
+    sousTitre: "Le CIAT, une vision pour l'avenir",
+    description: "Lancement officiel des infrastructures du Centre d'Innovation avec les autorités académiques et les partenaires industriels.",
+    equipe: "Direction Générale ISEP Diamniadio",
+    avancement: "Jalon Clé",
     categorie: "Événements",
+    photo: "/images/galerie_moments/inauguration.jpg",
+    vues: 1250,
+    isMoment: true,
+  },
+  {
+    id: 9,
+    slug: "moments-institutionnels",
+    titre: "Moments institutionnels",
+    sousTitre: "Une dynamique collective",
+    description: "Signatures de conventions public-privé et partenariats stratégiques pour pérenniser le transfert technologique au Sénégal.",
+    equipe: "Comité de Direction CIAT-ISEP",
+    avancement: "Certifié",
+    categorie: "Vie au CIAT",
     photo: "/images/galerie_moments/moments-institutionnels.jpg",
-    vues: 445,
+    vues: 670,
+    isMoment: true,
+  },
+  // Éléments supplémentaires pour la pagination (Pages 2 & 3)
+  {
+    id: 10,
+    slug: "fablab-machines",
+    titre: "FabLab & Prototypage",
+    sousTitre: "Machines de pointe et découpe CNC",
+    description: "Parc de machines industrielles, découpe laser, usinage numérique et impression 3D pour les créateurs.",
+    equipe: "Makers & Ingénieurs FabLab",
+    avancement: "Opérationnel",
+    categorie: "Espaces",
+    photo: "/images/galerie_moments/fablab-prototypage.jpg",
+    vues: 540,
+    isMoment: true,
+  },
+  {
+    id: 11,
+    slug: "pitch-startups-investisseurs",
+    titre: "Pitch & Investisseurs",
+    sousTitre: "Présentation des solutions d'impact",
+    description: "Sessions de pitch devant des fonds d'amorçage, banques de développement et business angels régionaux.",
+    equipe: "Pôle Incubation CIAT",
+    avancement: "Trimestriel",
+    categorie: "Événements",
+    photo: "/images/galerie_moments/pitch-startups.jpg",
+    vues: 820,
+    isMoment: true,
+  },
+  {
+    id: 12,
+    slug: "microgrid-solaire",
+    titre: "Transition Énergétique",
+    sousTitre: "Micro-réseaux et monitoring intelligent",
+    description: "Systèmes photovoltaïques connectés et bancs d'essai pour l'électrification rurale autonome.",
+    equipe: "Département Énergies Renouvelables",
+    avancement: "Pilote",
+    categorie: "Projets",
+    photo: "/images/galerie_moments/smart-microgrid.jpg",
+    vues: 910,
+    isMoment: true,
+  },
+  {
+    id: 13,
+    slug: "realite-virtuelle-simulateurs",
+    titre: "Immersion Réalité Virtuelle",
+    sousTitre: "Simulateurs d'ateliers techniques",
+    description: "Casques VR et jumeaux numériques pour former les techniciens aux gestes professionnels à haute technicité.",
+    equipe: "Laboratoire Numérique ISEP",
+    avancement: "Déploiement",
+    categorie: "Formation",
+    photo: "/images/galerie_moments/realite-virtuelle-isep.jpg",
+    vues: 730,
+    isMoment: true,
+  },
+  {
+    id: 14,
+    slug: "hackathon-sprint-diamniadio",
+    titre: "Hackathons & Sprints",
+    sousTitre: "48h d'innovation intensive",
+    description: "Compétitions de code et de mécatronique réunissant étudiants, designers et développeurs chevronnés.",
+    equipe: "Club Innovation ISEP",
+    avancement: "Annuel",
+    categorie: "Événements",
+    photo: "/images/galerie_moments/hackathon-sprint.jpg",
+    vues: 640,
+    isMoment: true,
+  },
+  {
+    id: 15,
+    slug: "serre-hydroponique-urbaine",
+    titre: "AgriTech & Serres",
+    sousTitre: "Irrigation raisonnée et capteurs IoT",
+    description: "Modèles de culture hydroponique et pilotage automatisé de la fertilisation pour le climat sahélien.",
+    equipe: "Filière Bio-Industries CIAT",
+    avancement: "Prototype",
+    categorie: "Projets",
+    photo: "/images/galerie_moments/hydroponie-serre.jpg",
+    vues: 890,
+    isMoment: true,
+  },
+  {
+    id: 16,
+    slug: "drones-telemetrie-agricole",
+    titre: "Télémétrie & Drones",
+    sousTitre: "Surveillance et cartographie aérienne",
+    description: "Drones équipés de caméras multispectrales pour l'analyse de la santé des cultures et la détection hydrique.",
+    equipe: "Unité Robotique & Drones",
+    avancement: "Pilote",
+    categorie: "Projets",
+    photo: "/images/galerie_moments/drone-field-test.jpg",
+    vues: 770,
+    isMoment: true,
+  },
+  {
+    id: 17,
+    slug: "visites-officielles-campus",
+    titre: "Accueil & Rayonnement",
+    sousTitre: "Délégations nationales et internationales",
+    description: "Présentation des résultats de recherche aux délégations ministérielles et aux institutions partenaires.",
+    equipe: "Relations Extérieures CIAT",
+    avancement: "Régulier",
+    categorie: "Vie au CIAT",
+    photo: "/images/galerie_moments/visite-campus-isep.jpg",
+    vues: 590,
+    isMoment: true,
+  },
+  {
+    id: 18,
+    slug: "remise-certificats-laureats",
+    titre: "Cérémonies de Remise",
+    sousTitre: "Célébration des lauréats et diplômés",
+    description: "Remise officielle des parchemins aux cohortes d'entrepreneurs formés et incubés au CIAT.",
+    equipe: "Direction Pédagogique ISEP",
+    avancement: "Célébration",
+    categorie: "Formation",
+    photo: "/images/galerie_moments/remise-certificats.jpg",
+    vues: 810,
     isMoment: true,
   },
 ];
 
 const CATEGORIES_NAV = [
   "Tous",
-  "Projets & Innovations",
   "Espaces",
   "Événements",
   "Formation",
+  "Projets",
   "Vie au CIAT",
 ] as const;
 
 type NavCategory = (typeof CATEGORIES_NAV)[number];
 
 const AVANCEMENT_OPTIONS = [
-  { value: "", label: "Tous les niveaux d'avancement" },
+  { value: "", label: "Tous les niveaux TRL" },
   { value: "Prototype", label: "Prototype fonctionnel (TRL 4-6)" },
   { value: "MVP", label: "MVP (Produit Minimum Viable)" },
-  { value: "Pilote", label: "Pilote / Phase test terrain (TRL 7)" },
+  { value: "Pilote", label: "Pilote terrain (TRL 7)" },
   { value: "Déploiement", label: "Déploiement industriel (TRL 8)" },
 ];
-
-function getAvancementBadgeTone(avancement: string): "succes" | "alerte" | "info" | "neutre" {
-  const norm = avancement.toLowerCase();
-  if (norm.includes("déploiement") || norm.includes("deploiement") || norm.includes("opérationnel")) return "succes";
-  if (norm.includes("pilote") || norm.includes("certifié")) return "succes";
-  if (norm.includes("mvp") || norm.includes("en cours")) return "alerte";
-  if (norm.includes("prototype")) return "info";
-  return "neutre";
-}
 
 export default function GaleriePage() {
   const [, startTransition] = useTransition();
 
-  // Navigation par catégorie principale (Maquette)
+  // Navigation par catégorie principale (Maquette officielle)
   const [navCategory, setNavCategory] = useState<NavCategory>("Tous");
 
-  // Filtres détaillés restaurés
+  // Filtres détaillés & recherche
   const [search, setSearch] = useState("");
   const [domaine, setDomaine] = useState("");
   const [cohorte, setCohorte] = useState("");
   const [avancement, setAvancement] = useState("");
   const [sortBy, setSortBy] = useState<"recents" | "vues" | "alpha">("recents");
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
 
   // Options dynamiques
@@ -185,6 +330,7 @@ export default function GaleriePage() {
   const [activeItem, setActiveItem] = useState<{
     id: number;
     titre: string;
+    sousTitre?: string;
     photo: string;
     categorie: string;
     avancement: string;
@@ -208,7 +354,7 @@ export default function GaleriePage() {
     };
   }, []);
 
-  // Fonction manuelle de rechargement (recherche)
+  // Fonction de rechargement API
   const fetchFiches = useCallback((params: GalleryFilterParams) => {
     setLoading(true);
     setError(null);
@@ -258,12 +404,6 @@ export default function GaleriePage() {
     };
   }, [search, domaine, cohorte, avancement]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchFiches({ search, domaine, cohorte, avancement, page: 1, pageSize: 50 });
-  };
-
   const handleResetFilters = () => {
     startTransition(() => {
       setSearch("");
@@ -276,11 +416,11 @@ export default function GaleriePage() {
     });
   };
 
-  const hasActiveFilters = Boolean(search || domaine || cohorte || avancement || navCategory !== "Tous");
+  const hasActiveFilters = Boolean(search || domaine || cohorte || avancement);
 
   // Fusion et filtrage unifié des éléments affichés
   const combinedItems = useMemo(() => {
-    // 1. Adapter les fiches API
+    // 1. Adapter les fiches API réelles
     const protoItems = fiches.map((f) => {
       const realPhoto =
         REAL_FICHE_PHOTOS[f.slug] ||
@@ -291,64 +431,76 @@ export default function GaleriePage() {
         id: f.id,
         slug: f.slug,
         titre: f.titre,
-        probleme: f.probleme,
-        solution: f.solution,
+        sousTitre: f.avancement ? `${f.avancement} • Fiche technique` : "Innovation CIAT",
+        description: f.solution || f.probleme,
         equipe: f.equipe,
         avancement: f.avancement || "Prototype",
-        categorie: "Projets & Innovations",
+        categorie: "Projets",
         photo: realPhoto,
         vues: f.vues,
         isPrototype: true,
-        hasVideo: f.medias?.some((m) => m.type === "video"),
-        hasDemo: f.medias?.some((m) => m.type === "demo"),
       };
     });
 
-    // 2. Adapter les moments campus
+    // 2. Adapter les moments campus du CIAT
     const momentItems = CAMPUS_MOMENTS.map((m) => ({
       id: m.id,
       slug: m.slug,
       titre: m.titre,
-      probleme: m.probleme,
-      solution: m.solution,
+      sousTitre: m.sousTitre,
+      description: m.description,
       equipe: m.equipe,
       avancement: m.avancement,
       categorie: m.categorie,
       photo: m.photo,
       vues: m.vues,
       isPrototype: false,
-      hasVideo: false,
-      hasDemo: false,
     }));
 
-    // 3. Filtrer par catégorie d'onglet (Maquette)
-    let list = [...protoItems, ...momentItems];
+    // 3. Filtrer par catégorie de la barre d'onglets
+    let list: Array<{
+      id: number;
+      slug: string;
+      titre: string;
+      sousTitre: string;
+      description: string;
+      equipe: string;
+      avancement: string;
+      categorie: string;
+      photo: string;
+      vues: number;
+      isPrototype: boolean;
+    }> = [];
 
-    if (navCategory === "Projets & Innovations") {
-      list = protoItems;
+    if (navCategory === "Tous") {
+      // Pour l'onglet "Tous", afficher en priorité les 9 moments phares de la maquette
+      list = [...momentItems, ...protoItems];
     } else if (navCategory === "Espaces") {
       list = momentItems.filter((i) => i.categorie === "Espaces");
     } else if (navCategory === "Événements") {
       list = momentItems.filter((i) => i.categorie === "Événements");
     } else if (navCategory === "Formation") {
       list = momentItems.filter((i) => i.categorie === "Formation");
+    } else if (navCategory === "Projets") {
+      const momentProjets = momentItems.filter((i) => i.categorie === "Projets");
+      list = [...momentProjets, ...protoItems];
     } else if (navCategory === "Vie au CIAT") {
       list = momentItems.filter((i) => i.categorie === "Vie au CIAT");
     }
 
-    // 4. Filtrer par texte (si non géré par API)
+    // 4. Filtrer par texte (recherche)
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (i) =>
           i.titre.toLowerCase().includes(q) ||
-          i.probleme.toLowerCase().includes(q) ||
-          i.solution.toLowerCase().includes(q) ||
+          i.sousTitre.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q) ||
           i.equipe.toLowerCase().includes(q)
       );
     }
 
-    // 5. Filtrer par avancement
+    // 5. Filtrer par niveau d'avancement
     if (avancement) {
       list = list.filter((i) => i.avancement.toLowerCase().includes(avancement.toLowerCase()));
     }
@@ -365,7 +517,7 @@ export default function GaleriePage() {
     return list;
   }, [fiches, navCategory, search, avancement, sortBy]);
 
-  // Pagination (9 par page conforme à la maquette 3x3)
+  // Pagination (9 cartes par page = format 3x3 strict de la maquette)
   const itemsPerPage = 9;
   const totalPages = Math.max(1, Math.ceil(combinedItems.length / itemsPerPage));
   const displayedItems = useMemo(() => {
@@ -386,10 +538,11 @@ export default function GaleriePage() {
           setActiveItem({
             id: prev.id,
             titre: prev.titre,
+            sousTitre: prev.sousTitre,
             photo: prev.photo,
             categorie: prev.categorie,
             avancement: prev.avancement,
-            description: prev.solution || prev.probleme,
+            description: prev.description,
             equipe: prev.equipe,
             slug: prev.slug,
             isPrototype: prev.isPrototype,
@@ -402,10 +555,11 @@ export default function GaleriePage() {
           setActiveItem({
             id: next.id,
             titre: next.titre,
+            sousTitre: next.sousTitre,
             photo: next.photo,
             categorie: next.categorie,
             avancement: next.avancement,
-            description: next.solution || next.probleme,
+            description: next.description,
             equipe: next.equipe,
             slug: next.slug,
             isPrototype: next.isPrototype,
@@ -424,105 +578,63 @@ export default function GaleriePage() {
   return (
     <div className="bg-[#FAF7F2] min-h-screen text-[#24140D] font-sans antialiased selection:bg-[#C99A68]/30">
       {/* ========================================================= */}
-      {/* SECTION 1: HERO HEADER ÉDITORIAL (MAQUETTE OFFICIELLE)    */}
+      {/* SECTION 1: HERO BANNER CINÉMATIQUE PLEIN ÉCRAN            */}
       {/* ========================================================= */}
-      <section className="relative overflow-hidden pt-8 pb-12 lg:pt-12 lg:pb-16 border-b border-[#E8DFD3]/80">
-        <div
-          aria-hidden="true"
-          className="absolute -left-20 top-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-[#EFE8DE]/60 blur-3xl pointer-events-none"
+      <section className="relative w-full h-[360px] sm:h-[420px] lg:h-[460px] overflow-hidden bg-[#24140D]">
+        <Image
+          src="/images/ciat-header-panoramique.jpg"
+          alt="Galerie et Campus du Centre d'Innovation et d'Accélération Technologique (CIAT) à Diamniadio"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            {/* Colonne Gauche: Titre éditorial prestige */}
-            <div className="lg:col-span-6 z-10">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-xs font-bold tracking-[0.2em] text-[#612D10] uppercase">
-                  GALERIE
-                </span>
-                <span className="h-[1.5px] w-12 bg-[#612D10]/40" />
-              </div>
+        {/* Dégradé doux et contrasté conforme aux standards du site */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 pointer-events-none" />
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#24140D] font-serif leading-[1.1]">
-                Nos moments,
-                <br />
-                <span className="text-[#612D10]">en images.</span>
-              </h1>
+        {/* Contenu textuel noble & épuré */}
+        <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
+            <span className="text-xs font-bold tracking-[0.25em] text-[#C99A68] uppercase">
+              GALERIE OFFICIELLE • ÉCOSYSTÈME CIAT 360
+            </span>
+          </div>
 
-              <p className="mt-6 text-base sm:text-lg text-[#6B5A4E] leading-relaxed max-w-xl">
-                Découvrez en images la vie du CIAT : nos espaces, nos équipes,
-                nos prototypes validés et l&apos;énergie qui anime notre écosystème
-                d&apos;innovation à l&apos;ISEP Diamniadio.
-              </p>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.08] font-serif max-w-3xl">
+            Nos moments,{" "}
+            <span className="italic text-[#C99A68]">en images.</span>
+          </h1>
 
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <a
-                  href="#galerie-catalogue"
-                  className="group inline-flex items-center gap-2 text-sm font-bold text-[#612D10] hover:text-[#24140D] transition-colors"
-                >
-                  <span className="underline underline-offset-4 decoration-[#612D10]/50 group-hover:decoration-[#24140D]">
-                    Explorer la galerie
-                  </span>
-                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-                    →
-                  </span>
-                </a>
+          <p className="mt-4 text-sm sm:text-base lg:text-lg text-white/90 max-w-2xl leading-relaxed font-normal">
+            Découvrez en images la vie du CIAT : nos ateliers technologiques, nos équipes
+            de chercheurs et d&apos;étudiants, nos événements et l&apos;énergie qui anime notre écosystème
+            d&apos;innovation à l&apos;ISEP Amadou Trawaré de Diamniadio.
+          </p>
 
-                <span className="text-[#D0C4B4]">•</span>
-
-                <Link
-                  href="/galerie/gestion"
-                  className="text-xs font-semibold text-[#8C7A6D] hover:text-[#612D10] transition-colors"
-                >
-                  Espace Porteur & Fiches TRL →
-                </Link>
-              </div>
-            </div>
-
-            {/* Colonne Droite: Architecture arquée avec verbes flottants */}
-            <div className="lg:col-span-6 relative">
-              <div className="relative rounded-tl-[90px] sm:rounded-tl-[120px] rounded-br-[60px] sm:rounded-br-[80px] overflow-hidden shadow-2xl bg-[#E8DFD3] border-4 border-white aspect-[16/11]">
-                <Image
-                  src="/images/galerie_moments/hero-ciat-facade.jpg"
-                  alt="Campus et Bâtiment Principal du CIAT à Diamniadio"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover object-center"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-black/60 pointer-events-none" />
-
-                {/* Mots-clés flottants en haut à droite */}
-                <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-right pointer-events-none">
-                  <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.25em] text-white/95 leading-loose drop-shadow-md">
-                    INNOVER
-                    <br />
-                    FORMER
-                    <br />
-                    ENTREPRENDRE
-                    <br />
-                    TRANSFÉRER
-                  </p>
-                </div>
-
-                {/* Badge d'ancrage campus */}
-                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-black/60 px-3.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
-                    <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
-                    Campus ISEP Amadou Trawaré • Diamniadio
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="mt-6 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-white/80 font-medium">
+            <a
+              href="#galerie-catalogue"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all active:scale-95 border border-[#C99A68]/40"
+            >
+              Explorer les réalisations
+              <span>↓</span>
+            </a>
+            <span className="hidden sm:inline text-white/40">•</span>
+            <span className="hidden sm:inline">9 Sélections phares</span>
+            <span className="hidden sm:inline text-white/40">•</span>
+            <span className="hidden sm:inline">+50 Prototypes documentés</span>
+            <span className="hidden sm:inline text-white/40">•</span>
+            <span className="hidden sm:inline">Cité du Savoir, Diamniadio</span>
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 2: FILTRES RESTAURÉS & NAVIGATION PAR ONGLETS     */}
+      {/* SECTION 2: BARRE D'ONGLETS SANS CADRE LOURD (MAQUETTE)     */}
       {/* ========================================================= */}
-      <div id="galerie-catalogue" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
+      <div id="galerie-catalogue" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
         {/* Bandeau d'erreur API si panne */}
         {error && (
           <ApiErrorBanner
@@ -532,9 +644,9 @@ export default function GaleriePage() {
           />
         )}
 
-        {/* 1. Onglets Catégories Principaux (Conformes à la Maquette) */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E0D7CC] pb-4 mb-6">
-          <nav aria-label="Catégories principales" className="flex items-center gap-6 overflow-x-auto scrollbar-none py-1">
+        {/* 1. Barre d'onglets épurée directement sur le fond sable */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E0D7CC] pb-3 mb-6">
+          <nav aria-label="Catégories principales" className="flex items-center gap-6 sm:gap-8 overflow-x-auto scrollbar-none py-1">
             {CATEGORIES_NAV.map((cat) => {
               const isActive = navCategory === cat;
               return (
@@ -545,206 +657,207 @@ export default function GaleriePage() {
                     setNavCategory(cat);
                     setPage(1);
                   }}
-                  className={`text-sm tracking-wide transition-all duration-200 shrink-0 relative py-1 focus:outline-none ${
+                  className={`text-sm tracking-wide transition-all duration-200 shrink-0 relative py-1 focus:outline-none cursor-pointer ${
                     isActive
-                      ? "font-bold text-[#24140D]"
-                      : "font-medium text-[#7A6A5E] hover:text-[#24140D]"
+                      ? "font-bold text-[#612D10]"
+                      : "font-normal text-[#6B5A4E] hover:text-[#24140D]"
                   }`}
                 >
                   {cat}
                   {isActive && (
-                    <span className="absolute -bottom-[17px] left-0 right-0 h-[2.5px] bg-[#612D10] rounded-full" />
+                    <span className="absolute -bottom-[13px] left-0 right-0 h-[2px] bg-[#612D10]" />
                   )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Sélecteur de tri rapide */}
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <label htmlFor="sort-select" className="text-xs text-[#7A6A5E] font-medium">
-              Trier par
-            </label>
-            <select
-              id="sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "recents" | "vues" | "alpha")}
-              className="text-xs font-semibold text-[#24140D] bg-transparent border-none py-1 pl-1 pr-6 focus:ring-0 cursor-pointer"
+          {/* Droite: Sélecteur de tri + Bouton filtre discret */}
+          <div className="flex items-center gap-4 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="sort-select" className="text-xs text-[#7A6A5E] font-medium">
+                Trier par
+              </label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "recents" | "vues" | "alpha")}
+                className="text-xs font-semibold text-[#24140D] bg-transparent border-none py-1 pl-1 pr-4 focus:ring-0 cursor-pointer"
+              >
+                <option value="recents">Plus récents</option>
+                <option value="vues">Plus consultés</option>
+                <option value="alpha">Titre (A-Z)</option>
+              </select>
+            </div>
+
+            {/* Bouton pour ouvrir les filtres de recherche / TRL */}
+            <button
+              type="button"
+              onClick={() => setShowFilters((prev) => !prev)}
+              aria-label="Recherche et filtres TRL"
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
+                showFilters || hasActiveFilters
+                  ? "bg-[#612D10] text-white border-[#612D10]"
+                  : "bg-white/80 text-[#612D10] border-[#D5C9BB] hover:bg-white"
+              }`}
             >
-              <option value="recents">Plus récents</option>
-              <option value="vues">Plus consultés</option>
-              <option value="alpha">Titre (A-Z)</option>
-            </select>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>{hasActiveFilters ? "Filtres actifs" : "Filtrer"}</span>
+            </button>
           </div>
         </div>
 
-        {/* 2. Barre de Recherche et Filtres Détaillés (LE FILTRE RESTAURÉ & AMÉLIORÉ) */}
-        <section aria-label="Filtres détaillés de la galerie" className="mb-8 rounded-2xl border border-[#E0D7CC] bg-white p-5 shadow-xs">
-          <form onSubmit={handleSearchSubmit} className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              {/* Champ de recherche */}
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  id="search-input"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher par mot-clé, prototype, défi, équipement ou équipe..."
-                  className="w-full min-h-[44px] rounded-xl border border-[#D5C9BB] bg-white px-4 py-2.5 text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:border-[#612D10] focus:outline-none focus:ring-1 focus:ring-[#612D10]"
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
+        {/* 2. Tiroir escamotable pour la recherche & filtres TRL (ne pollue pas la vue par défaut) */}
+        {showFilters && (
+          <section aria-label="Recherche et filtres détaillés" className="mb-8 rounded-2xl border border-[#E0D7CC] bg-white p-5 shadow-xs transition-all">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setPage(1);
+                fetchFiches({ search, domaine, cohorte, avancement, page: 1, pageSize: 50 });
+              }}
+              className="space-y-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    id="search-input"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Rechercher par mot-clé, prototype, défi ou équipement..."
+                    className="w-full min-h-[42px] rounded-xl border border-[#D5C9BB] bg-white px-4 py-2 text-xs sm:text-sm text-[#24140D] placeholder:text-[#9C8B7E] focus:border-[#612D10] focus:outline-none focus:ring-1 focus:ring-[#612D10]"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setPage(1);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7A6A5E] hover:text-[#24140D]"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <Button type="submit" variant="primary" className="shrink-0 rounded-xl px-4 text-xs font-bold bg-[#612D10] hover:bg-[#48210B] text-white">
+                  Rechercher
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 pt-2">
+                <div>
+                  <label htmlFor="filter-domaine" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#7A6A5E]">
+                    Pôle technologique
+                  </label>
+                  <select
+                    id="filter-domaine"
+                    value={domaine}
+                    onChange={(e) => {
+                      setDomaine(e.target.value);
                       setPage(1);
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7A6A5E] hover:text-[#24140D]"
+                    className="w-full min-h-[40px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-1.5 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none"
                   >
-                    ✕
+                    <option value="">Tous les domaines</option>
+                    {domainesList.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="filter-cohorte" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#7A6A5E]">
+                    Cohorte
+                  </label>
+                  <select
+                    id="filter-cohorte"
+                    value={cohorte}
+                    onChange={(e) => {
+                      setCohorte(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full min-h-[40px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-1.5 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none"
+                  >
+                    <option value="">Toutes les cohortes</option>
+                    {cohortesList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="filter-avancement" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#7A6A5E]">
+                    Maturité TRL
+                  </label>
+                  <select
+                    id="filter-avancement"
+                    value={avancement}
+                    onChange={(e) => {
+                      setAvancement(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full min-h-[40px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-1.5 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none"
+                  >
+                    {AVANCEMENT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="flex items-center justify-between border-t border-[#E8DFD3] pt-3 text-xs">
+                  <span className="text-[#7A6A5E]">Filtres actifs appliqués</span>
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="font-bold text-[#612D10] underline transition hover:text-[#C99A68]"
+                  >
+                    Réinitialiser
                   </button>
-                )}
-              </div>
-
-              {/* Bouton Rechercher */}
-              <Button type="submit" variant="primary" className="shrink-0 rounded-xl px-5 bg-[#612D10] hover:bg-[#48210B] text-white">
-                <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Rechercher
-              </Button>
-            </div>
-
-            {/* Sélecteurs de filtres (Domaine, Cohorte, Avancement) */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 pt-2">
-              {/* Domaine technologique */}
-              <div>
-                <label htmlFor="filter-domaine" className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#7A6A5E]">
-                  Pôle d&apos;intervention
-                </label>
-                <select
-                  id="filter-domaine"
-                  value={domaine}
-                  onChange={(e) => {
-                    setDomaine(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full min-h-[42px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-2 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none focus:ring-1 focus:ring-[#612D10]"
-                >
-                  <option value="">Tous les domaines technologiques</option>
-                  {domainesList.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Cohorte */}
-              <div>
-                <label htmlFor="filter-cohorte" className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#7A6A5E]">
-                  Cohorte d&apos;incubation
-                </label>
-                <select
-                  id="filter-cohorte"
-                  value={cohorte}
-                  onChange={(e) => {
-                    setCohorte(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full min-h-[42px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-2 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none focus:ring-1 focus:ring-[#612D10]"
-                >
-                  <option value="">Toutes les cohortes</option>
-                  {cohortesList.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Avancement / TRL */}
-              <div>
-                <label htmlFor="filter-avancement" className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#7A6A5E]">
-                  Niveau d&apos;avancement TRL
-                </label>
-                <select
-                  id="filter-avancement"
-                  value={avancement}
-                  onChange={(e) => {
-                    setAvancement(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full min-h-[42px] rounded-xl border border-[#D5C9BB] bg-white px-3 py-2 text-xs text-[#24140D] focus:border-[#612D10] focus:outline-none focus:ring-1 focus:ring-[#612D10]"
-                >
-                  {AVANCEMENT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Réinitialisation active */}
-            {hasActiveFilters && (
-              <div className="flex items-center justify-between border-t border-[#E8DFD3] pt-3 text-xs">
-                <span className="text-[#7A6A5E] font-medium">Filtres actifs appliqués</span>
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="font-bold text-[#612D10] underline transition hover:text-[#C99A68]"
-                >
-                  Réinitialiser tous les filtres
-                </button>
-              </div>
-            )}
-          </form>
-        </section>
-
-        {/* Compteur de résultats vérifiable */}
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm font-semibold text-[#24140D]">
-            {loading
-              ? "Actualisation de la galerie en cours..."
-              : combinedItems.length === 0
-              ? "Aucun résultat trouvé"
-              : combinedItems.length === 1
-              ? "1 élément affiché"
-              : `${combinedItems.length} éléments affichés`}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs text-[#7A6A5E] font-semibold">Contenu certifié CIAT Diamniadio</span>
-          </div>
-        </div>
+                </div>
+              )}
+            </form>
+          </section>
+        )}
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 3: GRILLE 3x3 VRAIES PHOTOS + PAGINATION VERTICALE */}
+      {/* SECTION 3: GRILLE 3x3 CARTES PHOTOS + PAGINATION VERTICALE */}
       {/* ========================================================= */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
         {loading ? (
           /* Squelettes de chargement */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
               <div key={i} className="aspect-[4/3] rounded-2xl bg-[#EFE8DE] animate-pulse" />
             ))}
           </div>
         ) : displayedItems.length === 0 ? (
           /* État vide */
           <div className="rounded-2xl border border-dashed border-[#D5C9BB] bg-white p-12 text-center shadow-xs">
-            <p className="text-base font-bold text-[#24140D]">Aucun élément ne correspond aux filtres</p>
+            <p className="text-base font-bold text-[#24140D]">Aucun élément ne correspond aux critères</p>
             <p className="mt-2 text-xs text-[#7A6A5E]">
-              Essayez de réinitialiser la recherche ou de choisir un autre domaine technologique.
+              Essayez de réinitialiser la recherche ou de sélectionner un autre onglet.
             </p>
             <Button onClick={handleResetFilters} variant="secondary" className="mt-6 text-xs font-bold">
-              Réinitialiser la recherche
+              Réinitialiser
             </Button>
           </div>
         ) : (
           <div className="relative flex gap-6 lg:gap-8 items-start">
-            {/* Grille Principale 3x3 */}
+            {/* Grille Principale 3x3 fidèle à la maquette */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedItems.map((item) => (
                 <article
@@ -753,18 +866,19 @@ export default function GaleriePage() {
                     setActiveItem({
                       id: item.id,
                       titre: item.titre,
+                      sousTitre: item.sousTitre,
                       photo: item.photo,
                       categorie: item.categorie,
                       avancement: item.avancement,
-                      description: item.solution || item.probleme,
+                      description: item.description,
                       equipe: item.equipe,
                       slug: item.slug,
                       isPrototype: item.isPrototype,
                     })
                   }
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer bg-[#EFE8DE] hover:-translate-y-1"
+                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer bg-[#24140D]"
                 >
-                  {/* Vraie Photographie HD */}
+                  {/* Photographie HD */}
                   <Image
                     src={item.photo}
                     alt={item.titre}
@@ -774,44 +888,20 @@ export default function GaleriePage() {
                   />
 
                   {/* Dégradé sombre inférieur de la maquette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent transition-opacity duration-300" />
-
-                  {/* Badges Flottants Supérieurs */}
-                  <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none z-10">
-                    <Badge tone={getAvancementBadgeTone(item.avancement)}>
-                      {item.avancement}
-                    </Badge>
-                    <span className="rounded-md bg-black/60 px-2 py-0.5 font-mono text-[11px] font-bold text-white backdrop-blur-xs">
-                      #{item.id}
-                    </span>
-                  </div>
-
-                  {/* Badges Vidéo / Démo si présents */}
-                  <div className="absolute bottom-16 right-3 flex items-center gap-1.5 z-10">
-                    {item.hasVideo && (
-                      <span className="inline-flex h-6 items-center gap-1 rounded-md bg-[#24140D]/85 px-2 text-[10px] font-bold text-white backdrop-blur-xs">
-                        Vidéo
-                      </span>
-                    )}
-                    {item.hasDemo && (
-                      <span className="inline-flex h-6 items-center gap-1 rounded-md bg-[#C99A68] px-2 text-[10px] font-bold text-[#24140D] backdrop-blur-xs">
-                        Démo
-                      </span>
-                    )}
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-300" />
 
                   {/* Typographie blanche en pied d'image conforme à la maquette */}
                   <div className="absolute bottom-0 inset-x-0 p-5 flex items-end justify-between gap-3 text-white z-10">
                     <div className="max-w-[85%]">
-                      <h3 className="line-clamp-1 text-base sm:text-lg font-bold text-white tracking-tight drop-shadow-sm font-title leading-snug">
+                      <h3 className="line-clamp-1 text-base sm:text-lg font-bold text-white tracking-tight drop-shadow-sm font-serif leading-snug">
                         {item.titre}
                       </h3>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-white/80 font-medium tracking-wide flex items-center gap-1 group-hover:text-[#C99A68] transition-colors">
-                        {item.isPrototype ? "Consulter la fiche & QR Code →" : `${item.categorie} • Le CIAT en images →`}
+                      <p className="mt-0.5 line-clamp-1 text-xs text-white/80 font-normal tracking-wide flex items-center gap-1 group-hover:text-[#C99A68] transition-colors">
+                        {item.sousTitre}
                       </p>
                     </div>
 
-                    <span className="shrink-0 h-7 w-7 rounded-full bg-white/10 group-hover:bg-[#C99A68] flex items-center justify-center text-white group-hover:text-[#24140D] transition-colors text-xs font-bold backdrop-blur-xs">
+                    <span className="shrink-0 text-white/90 group-hover:text-[#C99A68] transition-colors text-sm font-bold">
                       →
                     </span>
                   </div>
@@ -819,14 +909,14 @@ export default function GaleriePage() {
               ))}
             </div>
 
-            {/* Pagination Verticale (Signature Maquette) */}
+            {/* Pagination Verticale Signature Maquette (01 / 03 avec slider fin et boutons ronds) */}
             <aside aria-label="Pagination verticale" className="hidden lg:flex flex-col items-center gap-3 shrink-0 pt-2 select-none">
               <span className="font-mono text-xs font-bold text-[#612D10]">
                 {String(page).padStart(2, "0")} <span className="text-[#AFA496]">/</span>{" "}
                 <span className="text-[#AFA496]">{String(totalPages).padStart(2, "0")}</span>
               </span>
 
-              <div className="w-[2px] h-32 bg-[#E2D8CC] rounded-full relative overflow-hidden">
+              <div className="w-[1.5px] h-32 bg-[#E2D8CC] rounded-full relative overflow-hidden">
                 <div
                   className="absolute top-0 w-full bg-[#612D10] transition-all duration-300 rounded-full"
                   style={{
@@ -874,18 +964,18 @@ export default function GaleriePage() {
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="rounded-xl border border-[#D5C9BB] bg-white px-4 py-2 text-xs font-bold text-brun disabled:opacity-30"
+              className="rounded-xl border border-[#D5C9BB] bg-white px-4 py-2 text-xs font-bold text-[#612D10] disabled:opacity-30"
             >
               ← Précédent
             </button>
-            <span className="text-xs font-semibold text-brun font-mono px-2">
-              Page {page} sur {totalPages}
+            <span className="text-xs font-semibold text-[#24140D] font-mono px-2">
+              Page {page} / {totalPages}
             </span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="rounded-xl border border-[#D5C9BB] bg-white px-4 py-2 text-xs font-bold text-brun disabled:opacity-30"
+              className="rounded-xl border border-[#D5C9BB] bg-white px-4 py-2 text-xs font-bold text-[#612D10] disabled:opacity-30"
             >
               Suivant →
             </button>
@@ -894,7 +984,7 @@ export default function GaleriePage() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 4: PASSERELLE INSTITUTIONNELLE & GESTION          */}
+      {/* SECTION 4: PASSERELLE GESTION & HOMOLOGATION              */}
       {/* ========================================================= */}
       <section className="bg-white py-12 border-t border-[#E8DFD3]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -928,7 +1018,7 @@ export default function GaleriePage() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 sm:p-6 backdrop-blur-md animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 sm:p-6 backdrop-blur-md"
           onClick={() => setActiveItem(null)}
         >
           <div

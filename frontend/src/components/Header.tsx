@@ -16,8 +16,12 @@ const NAV_LINKS = [
   { href: "/", label: "Accueil" },
   { href: "/portail/ciat", label: "Le CIAT" },
   { href: "/portail/incubateur", label: "L'Incubateur" },
+  { href: "/incubateur/projets", label: "Suivi Projets" },
   { href: "/galerie", label: "Galerie" },
-  { href: "/portail/contact", label: "Contact" },
+  { href: "/documents", label: "Documents IA" },
+  { href: "/portail/domaines", label: "7 Domaines" },
+  { href: "/portail/appels", label: "Appels" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
@@ -33,7 +37,12 @@ function isActiveRoute(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
   if (href === "/portail/ciat") return pathname === "/portail/ciat" || pathname === "/ciat";
   if (href === "/portail/incubateur") return pathname === "/portail/incubateur";
-  if (href === "/portail/contact") return pathname === "/portail/contact" || pathname === "/contact";
+  if (href === "/contact") return pathname === "/portail/contact" || pathname === "/contact";
+  if (href === "/galerie") return pathname.startsWith("/galerie");
+  if (href === "/documents") return pathname.startsWith("/documents") || pathname.startsWith("/portail/documents");
+  if (href === "/incubateur/projets") return pathname.startsWith("/incubateur/projets");
+  if (href === "/portail/domaines") return pathname.startsWith("/portail/domaines");
+  if (href === "/portail/appels") return pathname.startsWith("/portail/appels");
   return pathname.startsWith(href);
 }
 
@@ -70,7 +79,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation principale Desktop — Sobre, épurée, sans gadget */}
-        <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
+        <nav aria-label="Navigation principale" className="hidden items-center gap-4 xl:gap-6 lg:flex">
           {NAV_LINKS.map((link) => {
             const active = isActiveRoute(link.href, pathname);
 
@@ -78,7 +87,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`font-[family-name:var(--font-title)] text-sm transition-colors py-1 ${
+                className={`font-[family-name:var(--font-title)] text-xs xl:text-sm transition-colors py-1 whitespace-nowrap ${
                   active
                     ? "font-bold text-[#612D10] border-b-2 border-[#C99A68] pb-1"
                     : "font-semibold text-[#24140D] hover:text-[#612D10]"
@@ -93,7 +102,7 @@ export default function Header() {
         {/* Actions à droite : Compte connecté OU Bouton Connexion officiel */}
         <div className="flex items-center gap-3">
           {!loading && user ? (
-            <div className="hidden items-center gap-3 md:flex">
+            <div className="hidden items-center gap-3 lg:flex">
               <Link
                 href="/compte"
                 className="group flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-[#FAF7F2] border border-[#EFE4D6]"
@@ -121,7 +130,7 @@ export default function Header() {
               </Button>
             </div>
           ) : (
-            <div className="hidden md:flex items-center">
+            <div className="hidden lg:flex items-center">
               <ButtonLink href="/connexion" variant="primary">
                 Connexion
               </ButtonLink>
@@ -132,7 +141,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2 text-[#612D10] hover:bg-[#FAF7F2] border border-[#EFE4D6] md:hidden"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2 text-[#612D10] hover:bg-[#FAF7F2] border border-[#EFE4D6] lg:hidden"
             aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={mobileMenuOpen}
           >
@@ -149,7 +158,7 @@ export default function Header() {
 
       {/* Tiroir Mobile Déroulant (blanc, sobre, accessible) */}
       {mobileMenuOpen && (
-        <div className="border-t border-[#EFE4D6] bg-white px-4 pb-6 pt-3 md:hidden shadow-md">
+        <div className="border-t border-[#EFE4D6] bg-white px-4 pb-6 pt-3 lg:hidden shadow-md">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
               const active = isActiveRoute(link.href, pathname);

@@ -265,24 +265,20 @@ export default function Home() {
       {/* 4. À PROPOS DU CIAT */}
       <section className="about">
         <div className="about-visual">
-          <div className="about-card-frame">
+          <div className="relative w-full max-w-[500px] aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-[#EBE4DC] bg-[#FAF7F2]">
             <img
               src="/images/about-lab-students.png"
               alt="Des idées d’aujourd’hui aux solutions de demain — Prototypage et projets au CIAT"
-              className="about-card-img"
+              className="w-full h-full object-cover block"
             />
-            {/* Capsule oblique Brun CIAT avec filigrane symbole */}
-            <div className="about-capsule-badge" aria-hidden="true">
-              <img
-                src="/images/brand/symbole_blanc.png"
-                alt=""
-                className="about-capsule-symbol"
-              />
-            </div>
-            {/* Ruban horizontal d'ancrage avec devise officielle */}
-            <div className="about-caption-ribbon">
-              <span className="ribbon-title">Des idées d’aujourd’hui</span>
-              <span className="ribbon-subtitle">aux solutions de demain</span>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-5 left-5 z-10 rounded-2xl bg-[#612D10]/95 px-5 py-3 border border-[#C99A68]/40 shadow-lg backdrop-blur-xs">
+              <p className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug">
+                Des idées d&apos;aujourd&apos;hui
+              </p>
+              <p className="text-[11px] sm:text-xs font-medium text-[#C99A68] mt-0.5">
+                aux solutions de demain
+              </p>
             </div>
           </div>
         </div>

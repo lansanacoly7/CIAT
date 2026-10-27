@@ -155,14 +155,14 @@ export default function Footer() {
         {/* =====================================================================
          * TIER 2 : 4 COLONNES DE NAVIGATION INSTITUTIONNELLE CIAT
          * ===================================================================== */}
-        <div className="border-t border-[#3d2315] pt-12 pb-10">
-          <div className="grid gap-8 grid-cols-2 md:grid-cols-4">
+        <div className="border-t border-[#3d2315] pt-14 pb-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 justify-items-start lg:justify-items-center">
             {/* Col 1 : Institution */}
-            <div>
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
+            <div className="w-fit text-left">
+              <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
                 Institution
               </h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className="space-y-3.5 text-[13px]">
                 <li>
                   <Link href="/" className="hover:text-white transition-colors">
                     Accueil
@@ -192,11 +192,11 @@ export default function Footer() {
             </div>
 
             {/* Col 2 : Écosystème CIAT */}
-            <div>
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
+            <div className="w-fit text-left">
+              <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
                 Écosystème CIAT
               </h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className="space-y-3.5 text-[13px]">
                 <li>
                   <Link href="/portail/ciat" className="hover:text-white transition-colors">
                     Portail Institutionnel
@@ -226,11 +226,11 @@ export default function Footer() {
             </div>
 
             {/* Col 3 : Innovations & Projets */}
-            <div>
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
+            <div className="w-fit text-left">
+              <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
                 Innovations
               </h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className="space-y-3.5 text-[13px]">
                 <li>
                   <Link href="/galerie" className="hover:text-white transition-colors">
                     Galerie des Innovations
@@ -260,11 +260,11 @@ export default function Footer() {
             </div>
 
             {/* Col 4 : Outils & Services IA */}
-            <div>
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
+            <div className="w-fit text-left">
+              <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-[#C99A68]">
                 Outils &amp; Services
               </h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className="space-y-3.5 text-[13px]">
                 <li>
                   <Link href="/assistant" className="hover:text-white transition-colors">
                     Assistant Virtuel IA

@@ -55,7 +55,7 @@ const PROJETS_INCUBES = [
     tag: "AgriTech",
     desc: "Station IoT agrométéo et régulation solaire de micro-irrigation pour les maraîchers de la zone des Niayes.",
     lieu: "Niayes & Vallée, Sénégal",
-    image: "/images/incubateur/incubateur-projet-agro.jpg",
+    image: "/images/galerie_moments/irrigation-intelligente.jpg",
     href: "/galerie",
   },
   {
@@ -63,7 +63,7 @@ const PROJETS_INCUBES = [
     tag: "Énergies Propres",
     desc: "Mini-réseaux intelligents et kits solaires modulaires pour ateliers artisanaux et fermes maraîchères.",
     lieu: "Diamniadio, Sénégal",
-    image: "/images/incubateur/incubateur-projet-solaire.jpg",
+    image: "/images/galerie_moments/solaire-campus.jpg",
     href: "/galerie",
   },
   {
@@ -71,7 +71,7 @@ const PROJETS_INCUBES = [
     tag: "Logistique & Mobilité",
     desc: "Tricycles utilitaires électriques et gestion logistique du dernier kilomètre pour les marchés urbains.",
     lieu: "Dakar & Régions, Sénégal",
-    image: "/images/incubateur/incubateur-projet-mobilite.jpg",
+    image: "/images/galerie_moments/projets-robotique.jpg",
     href: "/galerie",
   },
 ];
@@ -137,11 +137,11 @@ export default function IncubateurPage() {
               votre projet et avoir un impact durable.
             </p>
 
-            {/* Boutons disposés côte à côte horizontalement sans superposition */}
+            {/* Boutons d'action harmonisés avec la charte CIAT */}
             <div className="flex flex-row flex-wrap items-center gap-4 pt-3">
               <Link
                 href="/connexion?next=/incubateur"
-                className="inline-flex items-center justify-center rounded-full bg-[#963E15] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#B34E1E] hover:shadow-xl active:scale-95 shrink-0"
+                className="inline-flex items-center justify-center rounded-xl bg-[#612D10] px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#48210B] hover:shadow-lg active:scale-95 shrink-0"
               >
                 Candidater maintenant
                 <ArrowRight size={16} className="ml-2" />
@@ -149,7 +149,7 @@ export default function IncubateurPage() {
 
               <a
                 href="#parcours"
-                className="inline-flex items-center justify-center rounded-full border border-white/60 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/15 hover:border-white active:scale-95 shrink-0"
+                className="inline-flex items-center justify-center rounded-xl border border-white/60 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:border-white backdrop-blur-xs active:scale-95 shrink-0"
               >
                 Découvrir l&apos;accompagnement
               </a>
