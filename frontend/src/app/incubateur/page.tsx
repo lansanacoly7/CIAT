@@ -17,7 +17,7 @@ import ProjectInfoStep, {
   type ProjectInfo,
 } from "@/components/incubateur/ProjectInfoStep";
 import SummaryStep from "@/components/incubateur/SummaryStep";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ProjetApi extends ProjectInfo {
   id: number;
@@ -164,6 +164,17 @@ function DepotDossier() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
+        {/* Lien de retour fluide vers le suivi des projets */}
+        <div>
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Retour au suivi de mes projets</span>
+          </Link>
+        </div>
+
         {/* 1. HERO BANNER EN CARTE INTÉGRÉE (Harmonisée avec /incubateur/projets et /compte) */}
         <div className="relative overflow-hidden rounded-2xl border border-[#3d2315] bg-[#1F130B] shadow-sm">
           {/* Photo panoramique de fond — 100% nette et contrastée, sans voile blanc */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, DemoBanner } from "@/components/ui";
 import {
@@ -14,6 +15,7 @@ import {
   type MessageAssistant,
 } from "@/lib/assistant-api";
 import {
+  ArrowLeft,
   BookOpen,
   ChevronDown,
   ChevronRight,
@@ -386,14 +388,24 @@ function AssistantApp() {
       <main className="flex flex-1 flex-col overflow-hidden bg-[#FAF7F2]">
         {/* Barre Supérieure du Chat */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#EFE4D6] bg-white px-4 sm:px-6">
-          {/* Titre sans aucun bouton à gauche */}
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-[#24140D] truncate">
-              Assistant IA du CIAT
-            </h1>
-            <p className="text-[11px] text-[#7A583A] truncate">
-              Des réponses sourcées ou un accompagnement pour structurer votre projet.
-            </p>
+          {/* Titre avec bouton retour vers le suivi des projets */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/incubateur/projets"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] text-[#612D10] hover:bg-[#F5EDE4] hover:border-[#C99A68] transition-colors shadow-2xs"
+              title="Retour à mes projets"
+              aria-label="Retour à mes projets"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-bold text-[#24140D] truncate">
+                Assistant IA du CIAT
+              </h1>
+              <p className="text-[11px] text-[#7A583A] truncate">
+                Des réponses sourcées ou un accompagnement pour structurer votre projet.
+              </p>
+            </div>
           </div>
 
           {/* Contrôles à droite : Modes & Bouton Historique */}

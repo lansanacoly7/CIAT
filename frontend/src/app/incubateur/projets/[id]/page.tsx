@@ -22,6 +22,7 @@ import MentorBlock from "@/components/incubateur/suivi/MentorBlock";
 import ObjectifsBlock from "@/components/incubateur/suivi/ObjectifsBlock";
 import JalonsBlock from "@/components/incubateur/suivi/JalonsBlock";
 import BilansSuiviSection from "@/components/incubateur/suivi/BilansSuiviSection";
+import { Bot } from "lucide-react";
 
 interface ProjetSuivi {
   id: number;
@@ -157,17 +158,27 @@ function Suivi() {
 
   return (
     <div className="w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-      {/* 1. LIEN RETOUR & EN-TÊTE PROJET */}
+      {/* 1. LIEN RETOUR & PASSERELLE ASSISTANT IA */}
       <div className="space-y-4">
-        <Link
-          href="/incubateur/projets"
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          <span>Retour à mes projets</span>
-        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#612D10] hover:text-[#3D1A04] transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <span>Retour à mes projets</span>
+          </Link>
+
+          <Link
+            href="/assistant"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2] w-fit"
+          >
+            <Bot className="h-4 w-4 text-[#A35926]" />
+            <span>Échanger avec l&apos;Assistant IA sur ce projet</span>
+          </Link>
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-16" role="status" aria-label="Chargement">

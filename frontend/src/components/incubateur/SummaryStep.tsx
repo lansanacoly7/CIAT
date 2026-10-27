@@ -127,14 +127,21 @@ export default function SummaryStep({
         )}
 
         <div className="pt-4 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.01]"
+          >
+            <span>Accéder au suivi de mes projets</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
           <button
             type="button"
             onClick={handleTelechargerAccuse}
             disabled={downloadingAccuse}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#612D10] bg-white px-6 text-xs sm:text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2] disabled:opacity-60"
           >
             {downloadingAccuse ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
             ) : (
               <Download className="h-4 w-4" aria-hidden="true" />
             )}
@@ -142,15 +149,9 @@ export default function SummaryStep({
           </button>
           <Link
             href="/compte"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#612D10] bg-white px-6 text-xs sm:text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
-          >
-            Voir mon compte
-          </Link>
-          <Link
-            href="/"
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-semibold text-[#6b5646] transition-colors hover:bg-[#FAF7F2]"
           >
-            Retour à l&apos;accueil
+            Voir mon compte
           </Link>
         </div>
       </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bell,
+  Bot,
   Calendar,
   ChevronRight,
   FileText,
@@ -68,7 +69,13 @@ function ListeProjets() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-        
+        {/* Fil d'Ariane / Repère Espace Candidat */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#8C6D4F]">
+          <span>Espace Candidat</span>
+          <span className="text-[#C99A68]/60">/</span>
+          <span className="text-[#612D10]">Suivi de mes projets</span>
+        </div>
+
         {/* 1. EN-TÊTE ÉPURÉ ET HARMONISÉ (Standard CIAT de l'espace porteur) */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -80,7 +87,14 @@ function ListeProjets() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Link
+              href="/assistant"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
+            >
+              <Bot className="h-4 w-4 text-[#A35926]" />
+              <span>Assistant IA</span>
+            </Link>
             {canEvaluate && (
               <Link
                 href="/incubateur/evaluation"
