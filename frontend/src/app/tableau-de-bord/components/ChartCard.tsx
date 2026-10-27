@@ -16,7 +16,7 @@ import {
   LabelList,
   ReferenceLine,
 } from "recharts";
-import { Table, EyeOff } from "lucide-react";
+import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
@@ -42,6 +42,12 @@ interface ChartCardProps {
   summaryValue?: string;
   tableData?: Array<Record<string, string | number>>;
   tableColumns?: { key: string; label: string }[];
+  isEmpty?: boolean;
+  emptyTitle?: string;
+  emptyMessage?: string;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   children: React.ReactNode;
 }
 
@@ -52,6 +58,12 @@ export function ChartCard({
   summaryValue,
   tableData,
   tableColumns,
+  isEmpty,
+  emptyTitle,
+  emptyMessage,
+  isError,
+  errorMessage,
+  onRetry,
   children,
 }: ChartCardProps) {
   const [showTable, setShowTable] = useState(false);
@@ -142,6 +154,40 @@ export function ChartCard({
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : isError ? (
+          <div className="flex h-[260px] flex-col items-center justify-center rounded-xl border border-dashed border-[#B85D43]/30 bg-[#B85D43]/5 p-6 text-center">
+            <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-[#B85D43]/15 text-[#8B3B26]">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-semibold text-[#21130D]">
+              Erreur de chargement des données
+            </h4>
+            <p className="mt-1 max-w-xs text-xs text-[#5A4B42]">
+              {errorMessage || "Une anomalie réseau est survenue lors de la synchronisation de ce graphique."}
+            </p>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#21130D] px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3D2314] active:scale-95"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Réessayer</span>
+              </button>
+            )}
+          </div>
+        ) : isEmpty ? (
+          <div className="flex h-[260px] flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(60,35,20,0.12)] bg-[#FBF8F3]/60 p-6 text-center">
+            <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-white border border-[rgba(60,35,20,0.08)] shadow-xs text-[#5A4B42]">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-semibold text-[#21130D]">
+              {emptyTitle || "Aucune donnée disponible"}
+            </h4>
+            <p className="mt-1 max-w-xs text-xs text-[#5A4B42]">
+              {emptyMessage || "Aucun projet ne correspond aux filtres temporels, de cohorte ou de domaine sélectionnés."}
+            </p>
           </div>
         ) : (
           children

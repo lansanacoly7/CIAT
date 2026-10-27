@@ -43,6 +43,139 @@ const PRESETS = [
   { label: "Année en cours", value: "year" },
 ];
 
+// Helpers de conversion ISO <-> Français (jj/mm/aaaa)
+function isoToFr(iso?: string): string {
+  if (!iso) return "";
+  const parts = iso.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return iso;
+}
+
+function frToIso(fr?: string): string | undefined {
+  if (!fr) return undefined;
+  const cleaned = fr.trim();
+  const match = cleaned.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return undefined;
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+  if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+    return undefined;
+  }
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
+interface FrenchDateInputProps {
+  id: string;
+  label: string;
+  value?: string;
+  onChange: (iso?: string) => void;
+  max?: string;
+  min?: string;
+}
+
+function FrenchDateInput({ id, label, value, onChange, max, min }: FrenchDateInputProps) {
+  const [textInput, setTextInput] = useState<string | null>(null);
+  const [prevValue, setPrevValue] = useState<string | undefined>(value);
+
+  // Synchronisation lors d'un changement de prop externe sans déclencher d'effet en cascade
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setTextInput(null);
+  }
+
+  const displayVal = textInput !== null ? textInput : isoToFr(value);
+  const isValid = !displayVal || displayVal.length < 10 || Boolean(frToIso(displayVal));
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const digits = raw.replace(/\D/g, "").slice(0, 8);
+    let formatted = "";
+    if (digits.length <= 2) {
+      formatted = digits;
+    } else if (digits.length <= 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    } else {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    }
+
+    setTextInput(formatted);
+
+    if (formatted === "") {
+      onChange(undefined);
+      return;
+    }
+
+    if (formatted.length === 10) {
+      const iso = frToIso(formatted);
+      if (iso) {
+        onChange(iso);
+      }
+    }
+  };
+
+  const handleNativePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const iso = e.target.value;
+    if (iso) {
+      setTextInput(isoToFr(iso));
+      onChange(iso);
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[11px]">
+        <label htmlFor={id} className="font-medium text-[#5A4B42]">
+          {label}
+        </label>
+        <span className="text-[10px] text-[#5A4B42]/70 font-mono">jj/mm/aaaa</span>
+      </div>
+      <div className="relative flex items-center">
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          pattern="\d{2}/\d{2}/\d{4}"
+          placeholder="jj/mm/aaaa"
+          maxLength={10}
+          value={displayVal}
+          onChange={handleTextChange}
+          className={`h-8 w-full rounded-lg border bg-[#FBF8F3] pl-2.5 pr-8 text-xs text-[#21130D] placeholder:text-[#5A4B42]/60 transition focus:bg-white focus:outline-hidden ${
+            !isValid
+              ? "border-[#B85D43] focus:border-[#B85D43]"
+              : "border-[rgba(60,35,20,0.12)] focus:border-[#C99A68]"
+          }`}
+        />
+        <label
+          htmlFor={`${id}-native`}
+          className="absolute right-2 cursor-pointer text-[#5A4B42] hover:text-[#21130D] transition p-0.5"
+          title="Ouvrir le calendrier"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          <input
+            id={`${id}-native`}
+            type="date"
+            value={value || ""}
+            onChange={handleNativePicker}
+            max={max}
+            min={min}
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        </label>
+      </div>
+      {!isValid && (
+        <span className="text-[10px] text-[#B85D43] font-medium">
+          Format invalide (ex : 15/01/2025)
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function StickyFiltersBar({
   filters,
   onChange,
@@ -166,6 +299,7 @@ export function StickyFiltersBar({
             <div className="relative">
               <button
                 type="button"
+                id="period-filter-button"
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition ${
                   filters.debut || filters.fin
@@ -176,69 +310,79 @@ export function StickyFiltersBar({
                 <Calendar className="h-3.5 w-3.5 text-[#5A4B42]" />
                 <span>
                   {filters.debut && filters.fin
-                    ? `${filters.debut} au ${filters.fin}`
+                    ? `${isoToFr(filters.debut)} au ${isoToFr(filters.fin)}`
                     : filters.debut
-                    ? `Depuis ${filters.debut}`
+                    ? `Depuis le ${isoToFr(filters.debut)}`
+                    : filters.fin
+                    ? `Jusqu'au ${isoToFr(filters.fin)}`
                     : "Période temporelle"}
                 </span>
               </button>
 
               {isCalendarOpen && (
-                <div className="absolute left-0 mt-2 w-64 origin-top-left rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-3 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up">
+                <div className="absolute left-0 mt-2 w-72 origin-top-left rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-3.5 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-2">
                     Présets rapides
                   </div>
-                  <div className="grid grid-cols-2 gap-1 mb-3">
+                  <div className="grid grid-cols-2 gap-1.5 mb-3">
                     {PRESETS.map((p) => (
                       <button
                         key={p.value}
                         type="button"
                         onClick={() => handlePreset(p.value)}
-                        className="rounded-lg bg-[#FBF8F3] px-2 py-1 text-left text-[11px] font-medium text-[#21130D] transition hover:bg-[#C99A68]/15"
+                        className="rounded-lg bg-[#FBF8F3] px-2.5 py-1.5 text-left text-[11px] font-medium text-[#21130D] transition hover:bg-[#C99A68]/15"
                       >
                         {p.label}
                       </button>
                     ))}
                   </div>
 
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-1.5">
-                    Dates personnalisées
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42] mb-2">
+                    Dates personnalisées (jj/mm/aaaa)
                   </div>
-                  <div className="space-y-1.5">
-                    <div>
-                      <span className="text-[10px] text-[#5A4B42]">Du :</span>
-                      <input
-                        type="date"
-                        value={filters.debut || ""}
-                        onChange={(e) =>
-                          onChange({
-                            ...filters,
-                            debut: e.target.value || undefined,
-                          })
-                        }
-                        className="w-full h-7 rounded border border-[rgba(60,35,20,0.12)] px-2 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-[#5A4B42]">Au :</span>
-                      <input
-                        type="date"
-                        value={filters.fin || ""}
-                        onChange={(e) =>
-                          onChange({
-                            ...filters,
-                            fin: e.target.value || undefined,
-                          })
-                        }
-                        className="w-full h-7 rounded border border-[rgba(60,35,20,0.12)] px-2 text-xs"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <FrenchDateInput
+                      id="date-debut-input"
+                      label="Du (date de début) :"
+                      value={filters.debut}
+                      onChange={(iso) =>
+                        onChange({
+                          ...filters,
+                          debut: iso,
+                        })
+                      }
+                    />
+                    <FrenchDateInput
+                      id="date-fin-input"
+                      label="Au (date de fin) :"
+                      value={filters.fin}
+                      onChange={(iso) =>
+                        onChange({
+                          ...filters,
+                          fin: iso,
+                        })
+                      }
+                    />
                   </div>
-                  <div className="mt-2.5 flex justify-end">
+                  <div className="mt-3 flex items-center justify-between border-t border-[rgba(60,35,20,0.06)] pt-2.5">
                     <button
                       type="button"
+                      onClick={() =>
+                        onChange({
+                          ...filters,
+                          debut: undefined,
+                          fin: undefined,
+                        })
+                      }
+                      className="text-[11px] font-medium text-[#5A4B42] hover:text-[#B85D43] transition"
+                    >
+                      Effacer la période
+                    </button>
+                    <button
+                      type="button"
+                      id="apply-period-button"
                       onClick={() => setIsCalendarOpen(false)}
-                      className="rounded bg-[#21130D] px-2.5 py-1 text-[11px] font-medium text-white"
+                      className="rounded-lg bg-[#21130D] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#3D2314] active:scale-95"
                     >
                       Appliquer
                     </button>

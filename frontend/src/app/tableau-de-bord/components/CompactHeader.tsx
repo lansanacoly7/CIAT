@@ -164,7 +164,7 @@ export function CompactHeader({
   };
 
   return (
-    <header className="h-16 flex items-center justify-between border-b border-[rgba(60,35,20,0.08)] bg-white/60 px-4 sm:px-6 backdrop-blur-xs">
+    <header className="sticky top-0 z-40 h-16 flex items-center justify-between border-b border-[rgba(60,35,20,0.08)] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
       {/* Titre éditorial en serif */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <h1 className="font-serif text-xl sm:text-[28px] font-bold text-[#21130D] tracking-tight whitespace-nowrap">
@@ -247,39 +247,54 @@ export function CompactHeader({
 
               <button
                 type="button"
+                id="export-pdf-button"
                 onClick={handleExportPdf}
                 disabled={isExporting !== null}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3]"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3] disabled:opacity-60"
               >
-                <FileText className="h-4 w-4 text-[#B85D43]" />
+                {isExporting === "pdf" ? (
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#B85D43]" />
+                ) : (
+                  <FileText className="h-4 w-4 text-[#B85D43]" />
+                )}
                 <div className="flex-1">
-                  <div>Rapport PDF officiel</div>
+                  <div>{isExporting === "pdf" ? "Génération PDF en cours..." : "Rapport PDF officiel"}</div>
                   <div className="text-[11px] text-[#5A4B42]">Document certifié A4</div>
                 </div>
               </button>
 
               <button
                 type="button"
+                id="export-xlsx-button"
                 onClick={handleExportXlsx}
                 disabled={isExporting !== null}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3]"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3] disabled:opacity-60"
               >
-                <FileSpreadsheet className="h-4 w-4 text-[#5A7D65]" />
+                {isExporting === "xlsx" ? (
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#5A7D65]" />
+                ) : (
+                  <FileSpreadsheet className="h-4 w-4 text-[#5A7D65]" />
+                )}
                 <div className="flex-1">
-                  <div>Tableur Excel (.xlsx)</div>
+                  <div>{isExporting === "xlsx" ? "Génération Excel en cours..." : "Tableur Excel (.xlsx)"}</div>
                   <div className="text-[11px] text-[#5A4B42]">Données brutes & agrégats</div>
                 </div>
               </button>
 
               <button
                 type="button"
+                id="export-png-button"
                 onClick={handleExportPng}
                 disabled={isExporting !== null}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3]"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3] disabled:opacity-60"
               >
-                <ImageIcon className="h-4 w-4 text-[#4A6B82]" />
+                {isExporting === "png" ? (
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#4A6B82]" />
+                ) : (
+                  <ImageIcon className="h-4 w-4 text-[#4A6B82]" />
+                )}
                 <div className="flex-1">
-                  <div>Image haute résolution (PNG)</div>
+                  <div>{isExporting === "png" ? "Capture image en cours..." : "Image haute résolution (PNG)"}</div>
                   <div className="text-[11px] text-[#5A4B42]">Capture de la vue active</div>
                 </div>
               </button>
@@ -288,6 +303,7 @@ export function CompactHeader({
 
               <button
                 type="button"
+                id="export-print-button"
                 onClick={() => {
                   setIsExportOpen(false);
                   onOpenPrintModal();

@@ -61,6 +61,7 @@ export function DashboardContent() {
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("en direct");
+  const [hasNetworkError, setHasNetworkError] = useState(false);
 
   // Synchronisation des filtres avec l'URL searchParams
   const filters: DashboardFilters = useMemo(() => {
@@ -95,6 +96,7 @@ export function DashboardContent() {
           setData(getMockAnalyticsData(filters));
           setIsLiveConnected(false);
           setIsLoading(false);
+          setHasNetworkError(false);
         }
         return;
       }
@@ -156,6 +158,7 @@ export function DashboardContent() {
           setFinancementsStats(partStats);
           setIsLiveConnected(true);
           setIsLoading(false);
+          setHasNetworkError(false);
           setLastUpdatedTime(
             new Date().toLocaleTimeString("fr-FR", {
               hour: "2-digit",
@@ -168,6 +171,7 @@ export function DashboardContent() {
           setData(getMockAnalyticsData(filters));
           setIsLiveConnected(false);
           setIsLoading(false);
+          setHasNetworkError(true);
           setLastUpdatedTime(
             new Date().toLocaleTimeString("fr-FR", {
               hour: "2-digit",
@@ -364,6 +368,10 @@ export function DashboardContent() {
                           { key: "Mois", label: "Mois" },
                           { key: "Projets", label: "Projets créés" },
                         ]}
+                        isEmpty={!data.evolution || data.evolution.length === 0 || data.evolution.every((e) => e.total === 0)}
+                        emptyMessage="Aucun projet enregistré sur l'intervalle temporel sélectionné."
+                        isError={hasNetworkError && (!data.evolution || data.evolution.length === 0)}
+                        onRetry={handleRefresh}
                       >
                         <EvolutionChart data={data.evolution} />
                       </ChartCard>
@@ -381,6 +389,10 @@ export function DashboardContent() {
                           { key: "Domaine", label: "Domaine prioritaire" },
                           { key: "Total", label: "Nombre de projets" },
                         ]}
+                        isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
+                        emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
+                        isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
+                        onRetry={handleRefresh}
                       >
                         <DomaineChart data={data.parDomaine} />
                       </ChartCard>
@@ -405,6 +417,10 @@ export function DashboardContent() {
                           { key: "Retenus", label: "Projets retenus" },
                           { key: "Prototypes", label: "Prototypes validés" },
                         ]}
+                        isEmpty={!data.parCohorte || data.parCohorte.length === 0 || data.parCohorte.every((c) => c.total === 0)}
+                        emptyMessage="Aucun projet soumis ou retenu pour ces promotions."
+                        isError={hasNetworkError && (!data.parCohorte || data.parCohorte.length === 0)}
+                        onRetry={handleRefresh}
                       >
                         <CohorteChart data={data.parCohorte} />
                       </ChartCard>
@@ -422,6 +438,10 @@ export function DashboardContent() {
                           { key: "Genre", label: "Catégorie" },
                           { key: "Porteurs", label: "Effectif" },
                         ]}
+                        isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
+                        emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
+                        isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
+                        onRetry={handleRefresh}
                       >
                         <GenreChart data={data.parGenre} />
                       </ChartCard>
