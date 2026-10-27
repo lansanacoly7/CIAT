@@ -144,13 +144,13 @@ function ListeProjets() {
                 Du dépôt de votre candidature jusqu’à la décision finale, le CIAT vous accompagne à chaque étape de votre projet innovant.
               </p>
               {canSubmit && (
-                <div className="pt-0.5">
+                <div className="pt-1">
                   <Link
                     href="/incubateur"
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#612D10] hover:bg-[#3F1D0A] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition-all"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-4.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all"
                   >
                     <span>Déposer une candidature</span>
-                    <ArrowRight className="h-3.5 w-3.5 stroke-[2]" aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
                   </Link>
                 </div>
               )}
@@ -158,7 +158,7 @@ function ListeProjets() {
           </div>
 
           {/* VERSION DESKTOP (>= md) : Format compact et affiné avec courbe SVG et texte aéré */}
-          <div className="hidden md:block relative min-h-[135px] lg:min-h-[145px]">
+          <div className="hidden md:block relative min-h-[140px] lg:min-h-[150px]">
             {/* Motifs de fond décoratifs organiques doux */}
             <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[#EFE4D6]/50 blur-2xl" />
             <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-[#E8D9C9]/50 blur-xl" />
@@ -193,7 +193,7 @@ function ListeProjets() {
             </div>
 
             {/* Contenu Texte compact à gauche */}
-            <div className="relative z-20 w-[58%] lg:w-[55%] py-3.5 px-5 lg:py-4 lg:px-6 flex flex-col justify-center space-y-1.5">
+            <div className="relative z-20 w-[58%] lg:w-[55%] py-3.5 px-5 lg:py-4 lg:px-6 flex flex-col justify-center space-y-2">
               <div className="h-0.5 w-6 rounded-full bg-[#A35926]" />
               <h2 className="font-[family-name:var(--font-title)] text-base lg:text-lg font-bold text-[#24140D] tracking-tight leading-snug">
                 <span className="whitespace-nowrap">Votre parcours de projet,</span>{" "}
@@ -203,13 +203,13 @@ function ListeProjets() {
                 Du dépôt de votre candidature jusqu’à la décision finale, le CIAT vous accompagne à chaque étape de votre projet innovant.
               </p>
               {canSubmit && (
-                <div className="pt-0.5">
+                <div className="pt-1">
                   <Link
                     href="/incubateur"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#612D10] hover:bg-[#3F1D0A] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:shadow-xs transition-all hover:scale-[1.01]"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all hover:scale-[1.01]"
                   >
                     <span>Déposer une candidature</span>
-                    <ArrowRight className="h-3.5 w-3.5 stroke-[2]" aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
                   </Link>
                 </div>
               )}
