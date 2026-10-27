@@ -171,13 +171,7 @@ export default function CiatPresentationPage() {
         {/* Contenu textuel calé sur le côté gauche (cohérence globale avec Accueil & Incubateur) */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="max-w-2xl lg:max-w-3xl flex flex-col items-start text-left">
-            {/* Badge institutionnel officiel */}
-            <div className="inline-flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-1.5 border border-white/20 backdrop-blur-md mb-6">
-              <span className="h-2 w-2 rounded-full bg-[#C99A68]" />
-              <span className="text-xs font-bold tracking-[0.2em] text-[#C99A68] uppercase">
-                LE CIAT DIAMNIADIO • ISEP AMADOU TRAWARÉ
-              </span>
-            </div>
+
 
             {/* Titre monumental aligné à gauche */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
