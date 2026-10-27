@@ -17,8 +17,9 @@ import type {
 import { getMockAnalyticsData } from "./mockData";
 import { CompactHeader } from "./components/CompactHeader";
 import { StickyFiltersBar } from "./components/StickyFiltersBar";
-import { KpiGrid } from "./components/KpiGrid";
-import { WatchZone } from "./components/WatchZone";
+import { EntonnoirCard } from "./components/EntonnoirCard";
+import { FinancesCard } from "./components/FinancesCard";
+import { ATraiterCard } from "./components/ATraiterCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
 import {
   ChartCard,
@@ -312,6 +313,36 @@ export function DashboardContent() {
 
   const hasNoData = Boolean(data && data.indicateurs.idees_recues === 0);
 
+  // Sous-titres dynamiques calculés depuis les données réelles (pas de répétition statique du "62")
+  const peakMonthInsight = useMemo(() => {
+    if (!data?.evolution || data.evolution.length === 0) return undefined;
+    const peak = data.evolution.reduce(
+      (prev, curr) => (curr.total > prev.total ? curr : prev),
+      data.evolution[0]
+    );
+    if (!peak || peak.total === 0) return undefined;
+    try {
+      const parts = peak.mois.split("-");
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+      const moisFr = new Intl.DateTimeFormat("fr-FR", {
+        month: "short",
+        year: "numeric",
+      }).format(d);
+      return `Pic en ${moisFr} : ${peak.total} projets`;
+    } catch {
+      return `Pic : ${peak.total} projets`;
+    }
+  }, [data?.evolution]);
+
+  const cohorteInsight = useMemo(() => {
+    if (!data?.parCohorte || data.parCohorte.length === 0) return undefined;
+    const top = data.parCohorte.reduce(
+      (prev, curr) => (curr.total > prev.total ? curr : prev),
+      data.parCohorte[0]
+    );
+    return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
+  }, [data?.parCohorte]);
+
   return (
     <div
       id="dashboard-root"
@@ -331,7 +362,7 @@ export function DashboardContent() {
         targetCaptureId="dashboard-capture-zone"
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 space-y-6">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 space-y-4">
         {/* =========================================================================
             2. BARRE DE FILTRES STICKY (PILULE FLOTTANTE AVEC FLOU)
            ========================================================================= */}
@@ -343,11 +374,11 @@ export function DashboardContent() {
         />
 
         {/* Zone de contenu principale ciblée pour l'export */}
-        <div id="dashboard-capture-zone" className="space-y-6">
+        <div id="dashboard-capture-zone" className="space-y-4">
           {isLoading ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <KpiSkeletonGrid />
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <ChartSkeleton />
                 <ChartSkeleton />
               </div>
@@ -368,24 +399,29 @@ export function DashboardContent() {
                   VUE 1 : VUE D'ENSEMBLE (DÉFAUT)
                  ========================================================================= */}
               {activeTab === "vue-d-ensemble" && (
-                <div className="space-y-6">
-                  {/* KPI Grid */}
-                  <KpiGrid
+                <div className="space-y-4">
+                  {/* ENTONNOIR (1 seule carte, 5 colonnes, hauteur <= 120 px) */}
+                  <EntonnoirCard
                     indicateurs={data.indicateurs}
-                    totalFinance={financementsStats?.total_finance ?? 472000000}
-                    partenariatsActifs={
-                      financementsStats?.nombre_partenariats_actifs ?? 33
-                    }
                     onFilterStatut={(statut) => {
                       updateFilters({ ...filters, statut });
                     }}
+                  />
+
+                  {/* FINANCES (1 seule carte, 3 cellules séparées par des filets, hauteur <= 80 px) */}
+                  <FinancesCard
+                    totalFinance={financementsStats?.total_finance ?? 472000000}
+                    totalDecaisse={financementsStats?.financements_decaisses ?? 402000000}
+                    partenariatsActifs={
+                      financementsStats?.nombre_partenariats_actifs ?? 33
+                    }
                     onNavigateTab={(tab) => {
                       handleTabChange(tab);
                     }}
                   />
 
-                  {/* Points d'attention / À surveiller */}
-                  <WatchZone
+                  {/* À TRAITER (1 seule carte, 3 lignes de 48 px) */}
+                  <ATraiterCard
                     counts={watchCounts}
                     onFilterStatut={(statut) => {
                       updateFilters({ ...filters, statut });
@@ -395,12 +431,12 @@ export function DashboardContent() {
                     }}
                   />
 
-                  {/* 2 Graphiques de la vue d'ensemble : Évolution mensuelle et Comparaison promotions */}
+                  {/* 2 GRAPHIQUES : Évolution mensuelle et Comparaison promotions */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <ChartCard
                       title="Évolution mensuelle des projets"
                       description="Flux de création et d'enregistrement au fil du temps"
-                      summaryValue={`${data.indicateurs.idees_recues} créés`}
+                      summaryValue={peakMonthInsight}
                       tableData={data.evolution.map((e) => ({
                         Mois: e.mois,
                         Projets: e.total,
@@ -420,7 +456,7 @@ export function DashboardContent() {
                     <ChartCard
                       title="Comparaison entre promotions"
                       description="Progression comparée des cohortes annuelles 2024 — 2026"
-                      summaryValue={`${data.indicateurs.idees_recues} au total`}
+                      summaryValue={cohorteInsight}
                       tableData={data.parCohorte.map((c) => ({
                         Cohorte: c.cohorte,
                         Soumissions: c.total,
