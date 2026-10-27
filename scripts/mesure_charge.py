@@ -10,12 +10,11 @@ sous différents paliers de concurrence (5, 20 et 50 clients simultanés, 200 re
 5. Liste des dossiers de candidature (/api/incubator/dossiers/) — porteur authentifié
 6. Indicateurs statistiques du tableau de bord (/api/analytics/indicateurs/) — coordonnateur authentifié
 
-Métriques calculées par route et par palier :
-- Nombre total de requêtes
-- Codes de statut et erreurs (200 OK, 429 Throttle, erreurs réseau/5xx)
-- Temps médian (p50 en millisecondes)
-- 95e centile (p95 en millisecondes)
-- Débit réel mesuré (requêtes par seconde : req/s)
+Conformément à la directive de révision de Phase 6 (taches/phase6/pathe_correction.md),
+ce script sépare rigoureusement :
+- Les mesures de service réelles (HTTP 200) sans être faussées par des refus rapides 429.
+- L'analyse du comportement du mécanisme de limitation de débit (Throttling).
+- Le support des serveurs WSGI (runserver et waitress).
 
 Usage :
     python scripts/mesure_charge.py [--base-url http://127.0.0.1:8000] [--requests 200] [--concurrency 5 20 50]
@@ -33,7 +32,7 @@ from typing import Dict, List, Optional, Tuple
 
 
 def calculate_percentile(data: List[float], percentile: float) -> float:
-    """Calcule un centile précis (ex: 95e centile) sur une liste de durées triée."""
+    """Calcule un centile précis (ex: 95e centile) sur une liste de durées."""
     if not data:
         return 0.0
     sorted_data = sorted(data)
@@ -55,7 +54,7 @@ class Benchmarker:
         self.coordo_token: Optional[str] = None
         self.sample_slug: str = "agrisol-irrigation-intelligente"
 
-    def obtain_token(self, email: str, password: str, max_retries: int = 3) -> Optional[str]:
+    def obtain_token(self, email: str, password: str, max_retries: int = 5) -> Optional[str]:
         """Obtient un token JWT Bearer pour un utilisateur donné avec nouvelle tentative."""
         url = f"{self.base_url}/api/auth/token/"
         payload = json.dumps({"email": email, "password": password}).encode("utf-8")
@@ -109,13 +108,14 @@ class Benchmarker:
         path: str,
         token: Optional[str] = None,
         data: Optional[bytes] = None,
-        timeout: float = 15.0,
+        timeout: float = 60.0,
     ) -> Tuple[int, float, Optional[str]]:
         """Exécute une requête HTTP unitaire et mesure sa durée exacte en millisecondes."""
         url = f"{self.base_url}{path}"
         headers = {
             "Accept": "application/json",
             "User-Agent": "CIAT-LoadTest/1.0",
+            "Connection": "close",
         }
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -147,7 +147,9 @@ class Benchmarker:
         total_requests: int = 200,
     ) -> Dict:
         """Lance une campagne de charge sur une route pour un niveau de concurrence donné."""
-        durations: List[float] = []
+        durations_all: List[float] = []
+        durations_ok: List[float] = []
+        durations_throttled: List[float] = []
         status_counts: Dict[int, int] = {}
         error_count = 0
 
@@ -160,30 +162,40 @@ class Benchmarker:
             ]
             for future in concurrent.futures.as_completed(futures):
                 status_code, dur_ms, err = future.result()
-                durations.append(dur_ms)
+                durations_all.append(dur_ms)
                 status_counts[status_code] = status_counts.get(status_code, 0) + 1
-                if status_code >= 500 or status_code == 0:
+
+                if 200 <= status_code < 400:
+                    durations_ok.append(dur_ms)
+                elif status_code == 429:
+                    durations_throttled.append(dur_ms)
+                else:
                     error_count += 1
 
         t_global_end = time.perf_counter()
         total_wall_time = max(t_global_end - t_global_start, 0.001)
 
-        median_ms = statistics.median(durations) if durations else 0.0
-        p95_ms = calculate_percentile(durations, 95.0)
-        mean_ms = statistics.mean(durations) if durations else 0.0
-        throughput = total_requests / total_wall_time
+        # Métriques calculées sur les requêtes traitées avec succès (vrai temps de service)
+        target_durations = durations_ok if durations_ok else durations_all
+        median_ms = statistics.median(target_durations) if target_durations else 0.0
+        p95_ms = calculate_percentile(target_durations, 95.0)
+        mean_ms = statistics.mean(target_durations) if target_durations else 0.0
+        throughput = len(durations_ok) / total_wall_time if durations_ok else total_requests / total_wall_time
 
         return {
             "name": name,
             "path": path,
             "concurrency": concurrency,
             "total_requests": total_requests,
-            "durations": durations,
+            "count_200": len(durations_ok),
+            "count_429": len(durations_throttled),
+            "durations_ok": durations_ok,
+            "durations_all": durations_all,
             "median_ms": median_ms,
             "p95_ms": p95_ms,
             "mean_ms": mean_ms,
-            "min_ms": min(durations) if durations else 0.0,
-            "max_ms": max(durations) if durations else 0.0,
+            "min_ms": min(target_durations) if target_durations else 0.0,
+            "max_ms": max(target_durations) if target_durations else 0.0,
             "throughput": throughput,
             "status_counts": status_counts,
             "errors": error_count,
@@ -191,27 +203,49 @@ class Benchmarker:
         }
 
 
-def format_table(results_by_concurrency: Dict[int, List[Dict]]) -> str:
-    """Génère un tableau comparatif formaté en Markdown clair et lisible."""
+def format_table_service(results_by_concurrency: Dict[int, List[Dict]], server_name: str = "Serveur") -> str:
+    """Génère le tableau 'Temps de réponse sans limitation de débit' (vraies performances de service)."""
     lines = []
-    lines.append("| Route | Clients | Req. | Erreurs / 429 | Médiane (ms) | p95 (ms) | Débit (req/s) |")
-    lines.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: |")
+    lines.append(f"### Temps de réponse sous charge (Service réel sans limitation — {server_name})\n")
+    lines.append("| Route | Clients | Requêtes | 200 OK | Erreurs | Médiane (ms) | p95 (ms) | Débit effectif (req/s) |")
+    lines.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
 
     for conc, routes in results_by_concurrency.items():
         for r in routes:
-            # Affichage des erreurs ou status 429
-            status_summary = []
-            c429 = r["status_counts"].get(429, 0)
-            if c429 > 0:
-                status_summary.append(f"{c429} lim.")
             errs = r["errors"]
-            if errs > 0:
-                status_summary.append(f"{errs} err.")
-            status_str = ", ".join(status_summary) if status_summary else "0"
+            c200 = r["count_200"]
+            lines.append(
+                f"| {r['name']} | **{conc}** | {r['total_requests']} | {c200} | {errs} | "
+                f"{r['median_ms']:.1f} | {r['p95_ms']:.1f} | **{r['throughput']:.1f}** |"
+            )
+
+    return "\n".join(lines)
+
+
+def format_table_throttling(results_by_concurrency: Dict[int, List[Dict]]) -> str:
+    """Génère le tableau 'Comportement de la limitation de débit (Throttling)'."""
+    lines = []
+    lines.append("### Comportement de la limitation de débit (Throttling de production)\n")
+    lines.append("| Route | Clients | Requêtes | 200 Traitées | 429 Bloquées | Taux rejet (%) | Seuil théorique prod |")
+    lines.append("| :--- | :---: | :---: | :---: | :---: | :---: | :--- |")
+
+    for conc, routes in results_by_concurrency.items():
+        for r in routes:
+            c200 = r["count_200"]
+            c429 = r["count_429"]
+            total = r["total_requests"]
+            taux = (c429 / total * 100.0) if total > 0 else 0.0
+
+            # Détermination du seuil configuré
+            if "Connexion" in r["name"]:
+                seuil = "5 / minute (`auth`)"
+            elif "Dossiers" in r["name"] or "Indicateurs" in r["name"]:
+                seuil = "300 / minute (`user`)"
+            else:
+                seuil = "60 / minute (`anon`)"
 
             lines.append(
-                f"| {r['name']} | **{conc}** | {r['total_requests']} | {status_str} | "
-                f"{r['median_ms']:.1f} | {r['p95_ms']:.1f} | **{r['throughput']:.1f}** |"
+                f"| {r['name']} | **{conc}** | {total} | {c200} | **{c429}** | {taux:.1f} % | {seuil} |"
             )
 
     return "\n".join(lines)
@@ -221,7 +255,10 @@ def run_benchmark(
     base_url: str = "http://127.0.0.1:8000",
     concurrencies: List[int] = None,
     requests_per_test: int = 200,
+    server_name: str = "Waitress WSGI",
     output_md: Optional[str] = None,
+    output_throttling_md: Optional[str] = None,
+    routes: Optional[List[str]] = None,
 ) -> Dict[int, List[Dict]]:
     """Exécute la campagne complète de mesure de charge sur les 6 routes."""
     if concurrencies is None:
@@ -230,7 +267,6 @@ def run_benchmark(
     bench = Benchmarker(base_url)
     bench.initialize()
 
-    # Définition des 6 routes du protocole de test
     routes_def = [
         {
             "name": "Actualités (public)",
@@ -276,10 +312,14 @@ def run_benchmark(
         },
     ]
 
+    if routes:
+        mots = [r.lower() for r in routes]
+        routes_def = [r for r in routes_def if any(m in r["name"].lower() for m in mots)]
+
     all_results: Dict[int, List[Dict]] = {}
 
     print("\n" + "=" * 70)
-    print(f" DÉBUT DE LA CAMPAGNE DE CHARGE CIAT ({requests_per_test} req. par palier)")
+    print(f" CAMPAGNE DE CHARGE CIAT : {requests_per_test} req/test sur {server_name}")
     print("=" * 70)
 
     for conc in concurrencies:
@@ -287,37 +327,55 @@ def run_benchmark(
         all_results[conc] = []
 
         for rdef in routes_def:
+            # Renouvellement systématique des jetons d'accès pour éviter l'expiration (durée 30 min)
+            token = rdef["token"]
+            if token:
+                if "porteur" in rdef["name"]:
+                    token = bench.obtain_token("porteur@ciat.sn", "Ciat2026!") or token
+                elif "coordonnateur" in rdef["name"]:
+                    token = bench.obtain_token("coordo@ciat.sn", "Ciat2026!") or token
+
             print(f"  - Test de {rdef['name']:<28} ... ", end="", flush=True)
             res = bench.benchmark_route(
                 name=rdef["name"],
                 method=rdef["method"],
                 path=rdef["path"],
-                token=rdef["token"],
+                token=token,
                 data=rdef["data"],
                 concurrency=conc,
                 total_requests=requests_per_test,
             )
             all_results[conc].append(res)
-            c200 = res["status_counts"].get(200, 0)
-            c429 = res["status_counts"].get(429, 0)
+            c200 = res["count_200"]
+            c429 = res["count_429"]
+            errs = res["errors"]
             print(
                 f"Médiane: {res['median_ms']:>6.1f} ms | p95: {res['p95_ms']:>6.1f} ms | "
-                f"Débit: {res['throughput']:>5.1f} req/s | Statuts: [200: {c200}, 429: {c429}]"
+                f"Débit: {res['throughput']:>5.1f} req/s | [200: {c200}, 429: {c429}, err: {errs}]"
             )
 
     print("\n" + "=" * 70)
-    print(" RÉSULTATS SYNTHÉTIQUES (FORMAT TABLEAU MARKDOWN)")
+    print(" RÉSULTATS SYNTHÉTIQUES DE CHARGE")
     print("=" * 70)
-    table_str = format_table(all_results)
-    print(table_str)
+    table_service = format_table_service(all_results, server_name=server_name)
+    print(table_service)
 
     if output_md:
         try:
             with open(output_md, "w", encoding="utf-8") as f:
-                f.write(table_str + "\n")
-            print(f"\nRésultats enregistrés dans {output_md}")
+                f.write(table_service + "\n")
+            print(f"\nRésultats de service enregistrés dans {output_md}")
         except Exception as exc:
             print(f"Erreur lors de l'enregistrement de {output_md}: {exc}")
+
+    if output_throttling_md:
+        try:
+            table_throttling = format_table_throttling(all_results)
+            with open(output_throttling_md, "w", encoding="utf-8") as f:
+                f.write(table_throttling + "\n")
+            print(f"Résultats de limitation enregistrés dans {output_throttling_md}")
+        except Exception as exc:
+            print(f"Erreur lors de l'enregistrement de {output_throttling_md}: {exc}")
 
     return all_results
 
@@ -345,9 +403,24 @@ def main():
         help="Nombre total de requêtes par palier et par route (défaut: 200)",
     )
     parser.add_argument(
+        "--server",
+        default="Waitress WSGI",
+        help="Nom descriptif du serveur testé (défaut: Waitress WSGI)",
+    )
+    parser.add_argument(
         "--output",
         default=None,
-        help="Fichier de sortie Markdown pour stocker le tableau de résultats",
+        help="Fichier de sortie Markdown pour stocker le tableau de temps de service",
+    )
+    parser.add_argument(
+        "--output-throttling",
+        default=None,
+        help="Fichier de sortie Markdown pour stocker le tableau de limitation de débit",
+    )
+    parser.add_argument(
+        "--routes",
+        default=None,
+        help="Routes à tester, séparées par des virgules (ex: dossiers,indicateurs)",
     )
     args = parser.parse_args()
 
@@ -355,7 +428,10 @@ def main():
         base_url=args.base_url,
         concurrencies=args.concurrency,
         requests_per_test=args.requests,
+        server_name=args.server,
         output_md=args.output,
+        output_throttling_md=args.output_throttling,
+        routes=[r.strip() for r in args.routes.split(",") if r.strip()] if args.routes else None,
     )
 
 

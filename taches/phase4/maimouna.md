@@ -29,3 +29,6 @@ Alioune a retiré des emojis dans `incubateur/page.tsx`, `incubateur/alertes/pag
 - **C6 — avertissement d'hydratation Next.js** dans la console sur `/incubateur` à la première session (contenu qui dépend de la session ou de `localStorage` affiché côté serveur). Corrige-le.
 - **C8 — suivi des jalons sur téléphone (390 px)** : le tableau impose un défilement horizontal. Passe à des cartes empilées.
 Vérifie `npm run lint && npm run build`, ouvre l'écran en 390 px et en 1280 px, puis pousse.
+
+## Contrastes d'accessibilité (audit axe, `docs/ACCESSIBILITE.md`)
+`/incubateur` a 5 éléments dont le contraste est insuffisant (texte secondaire ou badge sous 4,5:1). Rehausse-les avec des teintes de la charte et relance `npm run test:axe`. `/documents` est repris par Ibrahima, ne le touche pas pour cette correction.

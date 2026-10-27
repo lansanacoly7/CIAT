@@ -13,7 +13,7 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Terminé quand :** en passant de l'accueil aux autres pages publiques, rien ne change d'en-tête ni de style, vérifié en 1280 px et en 390 px.
 - **Statut :** **TERMINÉ & VALIDÉ** — `AppShell`, `Header` et `Footer` unifiés sur 100% des routes publiques (`/`, `/ciat`, `/portail/ciat`, `/portail/incubateur`, `/actualites`, `/portail/actualites`, `/galerie`, `/partenaires`, `/portail/partenaires`, `/portail/documents`, `/contact`, `/portail/contact`, `/connexion`, `/mentions-legales`, `/confidentialite`). Toutes testées et vérifiées avec code HTTP 200. Menu burger mobile responsive à 390 px sans débordement horizontal.
 
-## T2 — Images de la galerie et des actualités
+## T2 — Images de la galerie et des actualités (REPRISE PAR ALIOUNE : ne la fais pas)
 - **Complexité :** Faible · **Importance :** Haute · **Durée estimée :** 1 h 30
 - **À faire :** après `python manage.py seed_all` (qui génère les images de démonstration), vérifie que chaque carte de la galerie, des actualités et des partenaires affiche son image. Réserve la place des images (`aspect-ratio`) pour éviter les sauts de page (constat C5 de la recette). En cas d'image manquante : un repli visuel propre, jamais le texte alternatif seul.
 - **Tu attends :** rien. Branche : `dev-massogui`.
@@ -28,3 +28,6 @@ Ordre conseillé : T1, puis T2, puis T3.
 - **Attendu par :** Lansana (livrable 9, vidéo de démonstration).
 - **Terminé quand :** un fichier vidéo existe (ou son lien) et correspond au scénario.
 - **Statut :** **PRÊT POUR TOURNAGE & SYNCHRONISÉ** — Scénario 4 min 45 s rigoureusement calé sur 9 séquences synchronisées avec `docs/DEMO.md`. Les 5 rôles (`porteur@ciat.sn`, `comite@ciat.sn`, `coordo@ciat.sn`, `mentor@ciat.sn`, `admin@ciat.sn`) sont initialisés et vérifiés avec `seed_all` sans aucun mot de passe à saisir en clair pendant la captation.
+
+## Contrastes d'accessibilité (audit axe, `docs/ACCESSIBILITE.md`)
+Après T1 : l'accueil et la galerie ont des textes secondaires (ocre ou gris clair) sous le seuil de contraste 4,5:1 (13 et 10 éléments). Rehausse-les avec des teintes de la charte et relance `npm run test:axe` (Alioune a mis en place le test). L'assistant (4 éléments) est repris par Ibrahima.

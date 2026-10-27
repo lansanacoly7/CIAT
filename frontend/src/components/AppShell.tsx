@@ -57,8 +57,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {/* Barre latérale officielle unique CIAT */}
         <DashboardSidebar />
 
-        {/* Contenu principal décalé sur grand écran pour la barre latérale fixe (w-64 = 256px) */}
-        <div className="lg:pl-64 flex flex-col min-h-screen">
+        {/* Contenu principal décalé sur grand écran pour la barre latérale fixe (264px) */}
+        <div className="lg:pl-[264px] flex flex-col min-h-screen">
           <main className="flex-1">{children}</main>
         </div>
       </div>

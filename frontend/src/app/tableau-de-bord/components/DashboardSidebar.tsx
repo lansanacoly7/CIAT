@@ -191,32 +191,32 @@ export function DashboardSidebar() {
               <Link
                 href="/tableau-de-bord"
                 onClick={onItemClick}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-all ${
                   isDashboardActive
-                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
-                    : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                    ? "bg-white/10 text-white font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
+                    : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <Home className="h-5 w-5 stroke-[1.75]" />
+                <Home className="h-4.5 w-4.5 stroke-[1.75]" />
                 <span>Tableau de bord</span>
               </Link>
               <Link
                 href="/tableau-de-bord/methodologie"
                 onClick={onItemClick}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-all ${
                   isMethodologieActive
-                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
-                    : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                    ? "bg-white/10 text-white font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
+                    : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
+                <BookOpen className="h-4.5 w-4.5 stroke-[1.75] text-[#ebd9c0]" />
                 <span>Méthodologie</span>
               </Link>
             </div>
           )}
 
           {/* 3. Section : ESPACES DE GESTION ou ESPACE CANDIDAT */}
-          <div className="mb-2 mt-5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[#cbb7a3]">
+          <div className="mb-2 mt-5 px-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#cbb7a3]">
             {isPorteur ? "ESPACE CANDIDAT" : "ESPACES DE GESTION"}
           </div>
 
@@ -234,16 +234,16 @@ export function DashboardSidebar() {
                   key={item.slug}
                   href={item.href}
                   onClick={onItemClick}
-                  className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                  className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-[#523624] font-semibold text-white shadow-xs"
-                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                      ? "bg-white/10 font-semibold text-white shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
+                      : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <IconComponent
                     className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90 group-hover:text-white"
                   />
-                  <span className="truncate">{item.titre}</span>
+                  <span>{item.titre}</span>
                 </Link>
               );
             })}
@@ -257,10 +257,10 @@ export function DashboardSidebar() {
             <Link
               href="/"
               onClick={onItemClick}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+              className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                 isHomeActive
-                  ? "bg-[#523624] font-semibold text-white"
-                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                  ? "bg-white/10 font-semibold text-white before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
+                  : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
               }`}
             >
               <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
@@ -342,19 +342,8 @@ export function DashboardSidebar() {
       */}
       <aside
         aria-label="Navigation latérale principale"
-        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#21130d] lg:text-white lg:shadow-xl lg:overflow-hidden"
+        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-[264px] lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#1E110A] lg:text-white lg:shadow-xl lg:overflow-hidden"
       >
-        {/* Filigrane emblème CIAT en arrière-plan en bas de la sidebar */}
-        <div className="pointer-events-none absolute -bottom-8 -left-6 z-0 select-none opacity-[0.06]">
-          <Image
-            src="/images/brand/symbole_blanc.png"
-            alt=""
-            width={280}
-            height={280}
-            priority
-          />
-        </div>
-
         {renderSidebarContent()}
       </aside>
 

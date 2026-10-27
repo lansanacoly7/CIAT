@@ -11,10 +11,10 @@
   --color-text: #24140D;          /* Brun Nuit - Typo courante */
   --color-text-muted: #6B5646;    /* Texte secondaire & légendes */
   --color-border: #EFE4D6;        /* Lin Bordure - Séparateurs & inputs */
-  --color-success: #2E7D32;       /* Vert succès / Validé */
-  --color-warning: #D97706;       /* Ocre alerte / Retard */
-  --color-danger: #DC2626;        /* Rouge rejet / Bloqué */
-  --color-info: #2563EB;          /* Bleu info / En cours */
+  --color-success: #1B5E20;       /* Vert succès / Validé (contraste AA) */
+  --color-warning: #854D0E;       /* Ocre alerte / Retard (contraste AA) */
+  --color-danger: #B91C1C;        /* Rouge rejet / Bloqué (contraste AA) */
+  --color-info: #1D4ED8;          /* Bleu info / En cours (contraste AA) */
 }
 
 @theme inline {
@@ -29,6 +29,7 @@
   --color-alerte: var(--color-warning);
   --color-erreur: var(--color-danger);
   --color-info: var(--color-info);
+  --font-serif: var(--font-serif), "Fraunces", Georgia, serif;
   --font-title: var(--font-jakarta), "Segoe UI", Arial, sans-serif;
   --font-body: var(--font-inter), "Segoe UI", Arial, sans-serif;
   --radius-lg: 8px;
