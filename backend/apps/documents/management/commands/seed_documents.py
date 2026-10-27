@@ -2,7 +2,7 @@
 
     python manage.py seed_documents
 
-Idempotent : recharge ou met à jour les 4 types et 12 modèles de documents.
+Idempotent : recharge ou met à jour les 9 types et 27 modèles de documents.
 """
 import importlib
 from django.core.management.base import BaseCommand
@@ -14,7 +14,7 @@ INITIAL_DATA = migration_0002.INITIAL_DATA
 
 
 class Command(BaseCommand):
-    help = "Charge les 4 types de documents et les 12 modèles prédéfinis du CIAT."
+    help = "Charge les 9 types de documents et les 27 modèles prédéfinis du CIAT."
 
     def handle(self, *args, **options):
         nb_types = 0

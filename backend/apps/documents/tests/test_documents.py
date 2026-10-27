@@ -55,33 +55,45 @@ class DocumentsAPITestCase(TestCase):
         self.assertEqual(resp_generer.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_liste_types_et_modeles_authentifie(self):
-        """Vérifie le contrat d'API pour /types/ et /modeles/ avec filtrage."""
+        """Vérifie le contrat d'API pour /types/ et /modeles/ avec filtrage pour les 9 types et 27 modèles."""
         self.client.force_authenticate(user=self.user)
 
-        # 1. Types
+        # 1. Types (9 types requis par le sujet CIAT)
         resp_types = self.client.get("/api/documents/types/")
         self.assertEqual(resp_types.status_code, status.HTTP_200_OK)
         types_data = resp_types.json()
         self.assertIsInstance(types_data, list)
-        self.assertGreaterEqual(len(types_data), 4)
+        self.assertEqual(len(types_data), 9)
         type_codes = {t["code"] for t in types_data}
-        self.assertTrue({"appel_candidatures", "fiche_projet", "convention", "proces_verbal"}.issubset(type_codes))
+        types_attendus = {
+            "appel_candidatures",
+            "fiche_projet",
+            "convention",
+            "proces_verbal",
+            "attestation",
+            "fiche_partenaire",
+            "rapport_suivi",
+            "compte_rendu",
+            "rapport_annuel",
+        }
+        self.assertEqual(type_codes, types_attendus)
 
-        # 2. Modèles sans filtre
+        # 2. Modèles sans filtre (27 modèles au total : 3 par type)
         resp_modeles = self.client.get("/api/documents/modeles/")
         self.assertEqual(resp_modeles.status_code, status.HTTP_200_OK)
         modeles_data = resp_modeles.json()
-        self.assertGreaterEqual(len(modeles_data), 12)
+        self.assertEqual(len(modeles_data), 27)
 
-        # 3. Modèles avec filtre par code de type (?type=fiche_projet)
-        resp_filtre = self.client.get("/api/documents/modeles/?type=fiche_projet")
-        self.assertEqual(resp_filtre.status_code, status.HTTP_200_OK)
-        filtre_data = resp_filtre.json()
-        self.assertEqual(len(filtre_data), 3)
-        for m in filtre_data:
-            self.assertIn("sections", m)
-            self.assertIsInstance(m["sections"], list)
-            self.assertGreaterEqual(len(m["sections"]), 1)
+        # 3. Modèles avec filtre par code de type (?type=<code>) pour chacun des 9 types
+        for code in types_attendus:
+            resp_filtre = self.client.get(f"/api/documents/modeles/?type={code}")
+            self.assertEqual(resp_filtre.status_code, status.HTTP_200_OK)
+            filtre_data = resp_filtre.json()
+            self.assertEqual(len(filtre_data), 3, f"Le type {code} doit avoir exactement 3 modèles.")
+            for m in filtre_data:
+                self.assertIn("sections", m)
+                self.assertIsInstance(m["sections"], list)
+                self.assertGreaterEqual(len(m["sections"]), 1)
 
     @patch("apps.documents.services.ai.chat")
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
@@ -254,4 +266,54 @@ class DocumentsAPITestCase(TestCase):
 
         # 3. Vérification de la consigne d'écriture explicite « [À COMPLÉTER : ...] »
         self.assertIn("[À COMPLÉTER : ...]", full_prompt)
+
+    @patch("apps.documents.services.ai.chat")
+    @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
+    def test_generer_document_tous_les_nouveaux_types_sujet(self, mock_configured, mock_chat):
+        """Vérifie que la génération fonctionne pour les 5 nouveaux types : attestation, fiche partenaire, rapport de suivi, compte rendu, rapport annuel."""
+        mock_configured.return_value = True
+        self.client.force_authenticate(user=self.user)
+
+        nouveaux_types = [
+            ("attestation", "Attestation officielle d'incubation CIAT"),
+            ("fiche_partenaire", "Fiche de partenariat technologique avec l'entreprise partenaire"),
+            ("rapport_suivi", "Rapport trimestriel d'étape du projet"),
+            ("compte_rendu", "Compte rendu de session de mentorat technique"),
+            ("rapport_annuel", "Bilan annuel d'activité et d'impact du centre"),
+        ]
+
+        for code_type, sujet_test in nouveaux_types:
+            modele = ModeleDocument.objects.filter(type__code=code_type).first()
+            self.assertIsNotNone(modele, f"Le modèle pour {code_type} doit exister.")
+
+            mock_response = {
+                s["code"]: f"Contenu généré pour {s['titre']} du type {code_type}."
+                for s in modele.sections
+            }
+            mock_chat.return_value = json.dumps(mock_response)
+
+            payload = {
+                "modele": modele.id,
+                "sujet": sujet_test,
+                "infos": {"contexte": "Test de génération automatique CIAT"},
+                "projet": self.projet.id,
+            }
+
+            resp = self.client.post("/api/documents/generer/", payload, format="json")
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_201_CREATED,
+                f"La génération pour {code_type} doit renvoyer 201 Created.",
+            )
+
+            data = resp.json()
+            self.assertEqual(data["statut"], "brouillon")
+            self.assertEqual(data["version"], 1)
+            self.assertEqual(len(data["sections"]), len(modele.sections))
+
+            # Vérification de l'enregistrement en base
+            doc = Document.objects.filter(id=data["id"]).first()
+            self.assertIsNotNone(doc)
+            self.assertEqual(doc.modele, modele)
+            self.assertEqual(doc.versions.count(), 1)
 
