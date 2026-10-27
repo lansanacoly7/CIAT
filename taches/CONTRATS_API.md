@@ -114,6 +114,7 @@ Jalon : `{ id, projet, titre, echeance, statut, en_retard, preuves: [...], comme
 | `POST /jalons/{id}/preuves/` | `multipart/form-data` : `fichier` |
 | `POST /jalons/{id}/commentaires/` | `{ texte }` |
 | `GET /alertes/` | Jalons en retard visibles pour l'utilisateur connecté |
+| `GET /calendrier/?mois=AAAA-MM` | Renvoie les jalons et objectifs du mois : `[{ date, type, titre, projet, statut, en_retard }]`, triés par date. Droits : porteur (ses projets), mentor (projets affectés), coordonnateur/admin (tout). |
 | `GET/POST /projets/{id}/suivis/` | `{ echeance: "3_mois"\|"6_mois", bilan, indicateurs }` |
 | `GET /projets/{id}/compte-rendu/?format=xlsx` | Fichier Excel à télécharger |
 
@@ -202,3 +203,8 @@ Fiche : `{ id, slug, projet, titre, probleme, solution, equipe, avancement, medi
 |---|---|---|---|---|
 | `/api/gallery/fiches/{slug}/fiche/` | `GET` | Aucun | Génère un document PDF d'une page A4 aux couleurs officielles du CIAT / ISEP Amadou Trawaré de Diamniadio. Contient le titre, badges (domaine, cohorte, avancement), problème, solution innovante, équipe et le QR code officiel menant à la vitrine en ligne. **Droits :** Public pour une fiche au statut `publie`. Pour une fiche non publiée, seul le porteur propriétaire ou un membre de l'équipe CIAT peut y accéder. | `200` : fichier `.pdf` (`application/pdf`) ; `404` : fiche non publiée ou slug inexistant. |
 
+### Calendrier de l'incubateur (`Phase 7 — T1`)
+
+| Route | Méthode | Paramètres | Description & Droits | Codes de retour |
+|---|---|---|---|---|
+| `/api/incubator/calendrier/` | `GET` | `?mois=AAAA-MM` (obligatoire) | Liste chronologique agrégée des jalons et objectifs d'accompagnement du mois spécifié sous la forme `[{ date, type, titre, projet, statut, en_retard }]`. **Droits :** le porteur voit ses projets, le mentor ceux qui lui sont affectés, l'équipe CIAT voit l'ensemble des projets ; le visiteur et porteur étranger ne voient rien (`[]`). | `200` : liste d'événements ordonnés par date ; `400` : mois manquant ou format invalide (attendu `AAAA-MM`) ; `401` : utilisateur non connecté. |
