@@ -258,6 +258,7 @@ def run_benchmark(
     server_name: str = "Waitress WSGI",
     output_md: Optional[str] = None,
     output_throttling_md: Optional[str] = None,
+    routes: Optional[List[str]] = None,
 ) -> Dict[int, List[Dict]]:
     """Exécute la campagne complète de mesure de charge sur les 6 routes."""
     if concurrencies is None:
@@ -310,6 +311,10 @@ def run_benchmark(
             "data": None,
         },
     ]
+
+    if routes:
+        mots = [r.lower() for r in routes]
+        routes_def = [r for r in routes_def if any(m in r["name"].lower() for m in mots)]
 
     all_results: Dict[int, List[Dict]] = {}
 
@@ -412,6 +417,11 @@ def main():
         default=None,
         help="Fichier de sortie Markdown pour stocker le tableau de limitation de débit",
     )
+    parser.add_argument(
+        "--routes",
+        default=None,
+        help="Routes à tester, séparées par des virgules (ex: dossiers,indicateurs)",
+    )
     args = parser.parse_args()
 
     run_benchmark(
@@ -421,6 +431,7 @@ def main():
         server_name=args.server,
         output_md=args.output,
         output_throttling_md=args.output_throttling,
+        routes=[r.strip() for r in args.routes.split(",") if r.strip()] if args.routes else None,
     )
 
 
