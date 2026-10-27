@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   CheckCircle2,
   Download,
-  BookOpen,
 } from "lucide-react";
 
 export const metadata = {
@@ -108,34 +107,6 @@ const PIECES_JUSTIFICATIVES_DEMANDEES = [
     num: "3",
     titre: "Budget prévisionnel & besoins de prototypage",
     detail: "Chiffrage réaliste des matières premières, composants électroniques et bancs d'essai sollicités auprès du CIAT.",
-  },
-];
-
-// Documents officiels téléchargeables
-const DOCUMENTS_OFFICIELS = [
-  {
-    titre: "Dossier de Candidature Officiel — Cohorte 2026",
-    categorie: "Candidatures & Formulaires",
-    format: "PDF & DOCX",
-    badge: "Indispensable pour postuler",
-    desc: "Le canevas officiel complet à remplir par le porteur de projet avant soumission au comité de sélection.",
-    href: "/portail/documents",
-  },
-  {
-    titre: "Charte de Propriété Intellectuelle & Transfert Technologique",
-    categorie: "Règlements & Droits",
-    format: "PDF Officiel",
-    badge: "Protection des inventeurs",
-    desc: "Définit les règles de copropriété, de brevetabilité et de protection des innovations développées au CIAT.",
-    href: "/portail/documents",
-  },
-  {
-    titre: "Règlement Intérieur de l'Incubateur & Sécurité des Ateliers",
-    categorie: "Normes & Ateliers",
-    format: "PDF Officiel",
-    badge: "Sécurité & vie commune",
-    desc: "Normes d'accès aux bancs d'essai, consignes d'hygiène et charte d'utilisation des équipements de prototypage.",
-    href: "/portail/documents",
   },
 ];
 
@@ -418,130 +389,186 @@ export default function CiatPresentationPage() {
       {/* =====================================================================
        * SECTION 5 — LES DOCUMENTS DEMANDÉS & CADRE OFFICIEL DE CANDIDATURE
        * ===================================================================== */}
-      <section id="documents-demandes" className="py-16 md:py-24 bg-white border-b border-[#EBE4DC]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mb-12">
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
-              MODALITÉS OFFICIELLES
-            </span>
-            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#24140D] tracking-tight">
-              Les documents demandés pour intégrer le CIAT
-            </h2>
-            <p className="mt-3 text-sm sm:text-base leading-relaxed text-[#6B5646]">
-              Pour garantir l&apos;équité et la rigueur de l&apos;évaluation, chaque dossier de candidature
-              doit comporter les trois pièces obligatoires définies par le comité scientifique.
-            </p>
-          </div>
+      <section id="documents-demandes" className="py-20 md:py-28 bg-[#FAF7F2] border-b border-[#EBE4DC] relative overflow-hidden">
+        {/* Voiles lumineux d'arrière-plan très doux */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#C99A68]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#24140D]/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            {/* Colonne Gauche : Les 3 pièces justificatives obligatoires */}
-            <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EBE4DC]">
-                <h3 className="text-base font-bold text-[#612D10] flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-[#C99A68]" />
-                  Les 3 Pièces Obligatoires au Dossier
-                </h3>
-                <span className="text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#EBE4DC] text-[#612D10]">
-                  Contrôle de complétude
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* En-tête solennel & institutionnel */}
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
+                  MODALITÉS OFFICIELLES &amp; SÉLECTION
                 </span>
               </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#24140D] tracking-tight leading-tight">
+                Les documents demandés pour intégrer le CIAT
+              </h2>
+              <p className="mt-4 text-sm sm:text-base leading-relaxed text-[#6B5646]">
+                Pour garantir l&apos;équité, la transparence et la rigueur de l&apos;instruction, chaque dossier de candidature
+                doit comporter les trois pièces obligatoires définies par le comité scientifique de l&apos;ISEP Diamniadio.
+              </p>
+            </div>
 
-              {PIECES_JUSTIFICATIVES_DEMANDEES.map((piece) => (
-                <div
-                  key={piece.num}
-                  className="rounded-2xl border border-[#EBE4DC] bg-[#FAF7F2] p-5 transition-all hover:border-[#612D10]"
-                >
-                  <div className="flex items-start gap-3.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#612D10] text-xs font-bold text-white">
-                      0{piece.num}
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-sm font-bold text-[#24140D]">
-                          {piece.titre}
-                        </h4>
-                        <span className="text-[10px] font-bold uppercase text-[#2E7D32] bg-[#2E7D32]/10 px-2 py-0.5 rounded-md">
-                          Requis
-                        </span>
+            <div className="shrink-0 flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-2xl border border-[#EBE4DC] shadow-xs text-xs font-semibold text-[#612D10]">
+              <ShieldCheck size={18} className="text-[#C99A68]" />
+              <span>Contrôle de conformité officiel ISEP</span>
+            </div>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
+            {/* Colonne Gauche (7 cols) : Les 3 pièces justificatives sous forme de fiches d'excellence */}
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#EBE4DC]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                    PIÈCES OBLIGATOIRES AU DOSSIER
+                  </span>
+                  <span className="text-xs font-semibold text-[#8C7A6B]">
+                    3 pièces exigées
+                  </span>
+                </div>
+
+                {PIECES_JUSTIFICATIVES_DEMANDEES.map((piece) => (
+                  <div
+                    key={piece.num}
+                    className="group relative rounded-2xl border border-[#EBE4DC] bg-white p-6 shadow-xs hover:shadow-md hover:border-[#C99A68] transition-all duration-200"
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Numéro Typographique Noble */}
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FAF7F2] border border-[#EBE4DC] font-serif text-base font-bold text-[#612D10] group-hover:bg-[#28150C] group-hover:text-white transition-colors">
+                        0{piece.num}
+                      </span>
+
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h4 className="text-base font-bold text-[#24140D] tracking-tight group-hover:text-[#612D10] transition-colors">
+                            {piece.titre}
+                          </h4>
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 border border-emerald-200/80">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                            Requis
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#6B5646]">
+                          {piece.detail}
+                        </p>
                       </div>
-                      <p className="mt-1.5 text-xs leading-relaxed text-[#6B5646]">
-                        {piece.detail}
-                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
-              <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DC] text-xs text-[#6B5646] flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-[#2E7D32] shrink-0" />
-                <span>
-                  Un dossier incomplet ne peut être soumis à l&apos;évaluation. Vos saisies sont sauvegardées en temps réel.
-                </span>
+              {/* Note d'intégrité & instruction académique */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EBE4DC] shadow-xs text-xs text-[#6B5646] flex items-start gap-3.5 mt-4">
+                <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200/60">
+                  <CheckCircle2 size={18} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-[#24140D]">Instruction collégiale &amp; Sauvegarde temps réel</p>
+                  <p className="mt-0.5 text-[#6B5646] leading-relaxed">
+                    Un dossier incomplet ne peut être soumis à l&apos;évaluation. Vos saisies et pièces jointes sont protégées et automatiquement enregistrées dans votre espace candidat.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Colonne Droite : Documents officiels téléchargeables */}
-            <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EBE4DC]">
-                <h3 className="text-base font-bold text-[#612D10] flex items-center gap-2">
-                  <BookOpen size={18} className="text-[#C99A68]" />
-                  Canevas &amp; Textes Réglementaires
-                </h3>
+            {/* Colonne Droite (5 cols) : Canevas officiel & Accès direct portail */}
+            <div className="lg:col-span-5 flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between pb-2.5 border-b border-[#EBE4DC]">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
+                  CANEVAS &amp; CADRE JURIDIQUE
+                </span>
                 <Link
                   href="/portail/documents"
-                  className="text-xs font-semibold text-[#612D10] hover:text-[#C99A68] flex items-center gap-1"
+                  className="text-xs font-bold text-[#612D10] hover:text-[#C99A68] flex items-center gap-1 transition-colors"
                 >
-                  Voir tous les documents <ArrowRight size={12} />
+                  Tous les documents <ArrowRight size={13} />
                 </Link>
               </div>
 
-              {DOCUMENTS_OFFICIELS.map((doc, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-2xl border border-[#EBE4DC] bg-white p-5 shadow-xs transition-all hover:border-[#612D10] flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#C99A68]">
-                        {doc.categorie}
-                      </span>
-                      <span className="text-[10px] font-semibold text-[#612D10] bg-[#EBE4DC] px-2 py-0.5 rounded">
-                        {doc.format}
-                      </span>
-                    </div>
+              {/* Carte 1 : Dossier Officiel (Dark Card Prestigieuse) */}
+              <div className="relative overflow-hidden rounded-3xl bg-[#24140D] p-6 sm:p-7 text-white shadow-lg border border-black/10 flex flex-col justify-between">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#C99A68]/15 rounded-full blur-2xl pointer-events-none" />
 
-                    <h4 className="mt-1.5 text-sm font-bold text-[#24140D]">
-                      {doc.titre}
-                    </h4>
-                    <p className="mt-1 text-xs leading-relaxed text-[#6B5646]">
-                      {doc.desc}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-[#FAF7F2] flex items-center justify-between">
-                    <span className="text-[11px] text-[#2E7D32] font-semibold flex items-center gap-1">
-                      ✓ {doc.badge}
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#F3CA9C] bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
+                      CANDIDATURE COHORTE 2026
                     </span>
-                    <Link
-                      href={doc.href}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#612D10] hover:text-[#C99A68]"
-                    >
-                      <Download size={13} />
-                      Télécharger
-                    </Link>
+                    <span className="text-[10px] font-mono font-semibold text-white/70 bg-white/5 px-2 py-0.5 rounded">
+                      DOCX &amp; PDF
+                    </span>
                   </div>
-                </div>
-              ))}
 
-              <div className="pt-2">
-                <Link
-                  href="/connexion?next=/incubateur"
-                  className="w-full inline-flex items-center justify-center rounded-xl bg-[#612D10] px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#48210B] active:scale-95"
-                >
-                  Déposer mon dossier de candidature en ligne
-                  <ArrowRight size={16} className="ml-2 text-[#C99A68]" />
-                </Link>
+                  <h4 className="text-lg font-bold text-white tracking-tight">
+                    Dossier de Candidature Officiel
+                  </h4>
+                  <p className="mt-2 text-xs leading-relaxed text-white/80">
+                    Trame officielle standardisée à compléter par le porteur de projet avant transmission au comité de sélection du CIAT.
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-[11px] text-[#F3CA9C] font-semibold flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#F3CA9C]" />
+                    Modèle indispensable
+                  </span>
+                  <Link
+                    href="/portail/documents"
+                    className="inline-flex items-center gap-2 text-xs font-bold bg-[#C99A68] hover:bg-[#D8AB7A] text-[#24140D] py-2 px-3.5 rounded-xl transition shadow-sm active:scale-95"
+                  >
+                    <Download size={14} />
+                    Télécharger
+                  </Link>
+                </div>
               </div>
+
+              {/* Carte 2 : Charte PI & Déontologie */}
+              <div className="rounded-3xl border border-[#EBE4DC] bg-white p-6 shadow-xs hover:border-[#C99A68] transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#612D10]">
+                      RÈGLEMENTS &amp; DROITS
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#612D10] bg-[#FAF7F2] border border-[#EBE4DC] px-2 py-0.5 rounded">
+                      PDF Officiel
+                    </span>
+                  </div>
+
+                  <h4 className="text-base font-bold text-[#24140D]">
+                    Charte de Propriété Intellectuelle (PI)
+                  </h4>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#6B5646]">
+                    Définit les règles de copropriété, de brevetabilité et de protection intégrale des inventions conçues sur les plateformes du CIAT.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3.5 border-t border-[#FAF7F2] flex items-center justify-between">
+                  <span className="text-[11px] text-emerald-800 font-semibold flex items-center gap-1">
+                    ✓ Protection des inventeurs
+                  </span>
+                  <Link
+                    href="/portail/documents"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] hover:text-[#C99A68] transition-colors"
+                  >
+                    <Download size={13} />
+                    Consulter
+                  </Link>
+                </div>
+              </div>
+
+              {/* Bouton de Soumission Principal */}
+              <Link
+                href="/connexion?next=/incubateur"
+                className="w-full inline-flex items-center justify-center rounded-2xl bg-[#28150C] hover:bg-[#3D2012] px-6 py-4 text-sm font-bold text-white shadow-md transition-all active:scale-[0.99] gap-2.5"
+              >
+                <span>Déposer mon dossier de candidature en ligne</span>
+                <ArrowRight size={16} className="text-[#E2A669]" />
+              </Link>
             </div>
           </div>
         </div>

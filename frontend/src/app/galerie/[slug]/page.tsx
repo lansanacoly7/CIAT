@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState, use } from "react";
+import { Suspense, useEffect, useState, use, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   ApiErrorBanner,
@@ -57,6 +58,11 @@ function FicheDetailContent({
   const [isDemo, setIsDemo] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // États Formulaire "Je suis intéressé" (Phase 8 — T1)
   const [showInteretModal, setShowInteretModal] = useState(false);
@@ -148,15 +154,23 @@ function FicheDetailContent({
     }
   };
 
-  // Fermeture du modal par touche Échap (Accessibilité WCAG 2.1 AA)
+  // Fermeture du modal par touche Échap et blocage du défilement de fond
   useEffect(() => {
+    if (showInteretModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && showInteretModal) {
         setShowInteretModal(false);
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [showInteretModal]);
 
   const handleInteretSubmit = async (e: React.FormEvent) => {
@@ -609,18 +623,18 @@ function FicheDetailContent({
       </div>
 
       {/* ========================================================= */}
-      {/* MODAL « JE SUIS INTÉRESSÉ » — DESIGN CHARTE CONTACT CIAT  */}
+      {/* MODAL « JE SUIS INTÉRESSÉ » — PORTAL DANS DOCUMENT.BODY  */}
       {/* ========================================================= */}
-      {showInteretModal && (
+      {showInteretModal && mounted && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="interet-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto"
           onClick={() => setShowInteretModal(false)}
         >
           <div
-            className="relative w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#EBE4DC] my-8"
+            className="relative w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#EBE4DC] my-auto animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Bouton Fermer */}
@@ -814,7 +828,8 @@ function FicheDetailContent({
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
