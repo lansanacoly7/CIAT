@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 
 export interface Domaine {
   id: number;
@@ -59,6 +59,12 @@ export default function ProjectInfoStep({
 }) {
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<{ titre?: string; domaine?: string }>({});
+
+  useEffect(() => {
+    if (initial && initial.titre) {
+      setForm(initial);
+    }
+  }, [initial]);
 
   const set = (key: keyof ProjectInfo) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: key === "domaine" ? (e.target.value ? Number(e.target.value) : null) : e.target.value }));
