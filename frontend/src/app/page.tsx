@@ -203,7 +203,7 @@ export default function Home() {
             {/* Badge officiel de cadrage républicain & académique */}
             <div className="inline-flex items-center gap-2.5 rounded-full border border-beige/40 bg-[#1C0D06]/75 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-beige backdrop-blur-md shadow-sm">
               <span className="inline-block h-2 w-2 rounded-full bg-beige animate-pulse" />
-              <span>RÉPUBLIQUE DU SÉNÉGAL · ISEP AMADOU TRAORÉ DE DIAMNIADIO</span>
+              <span>RÉPUBLIQUE DU SÉNÉGAL · ISEP AMADOU TRAWARÉ DE DIAMNIADIO</span>
             </div>
 
             {/* Titre Institutionnel avec typographie Plus Jakarta Sans */}
