@@ -220,25 +220,10 @@ function DepotDossier() {
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8">
-            {/* Passerelle d'étape : console en carte blanche douce avec ombre légère faisant la jonction naturelle */}
+            {/* Bannière des 3 étapes du dépôt (disposition épurée conforme à la maquette) */}
             {!submitted && (
               <div className="rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-sm">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} theme="light" />
-                  </div>
-                  {/* Annonce claire de l'étape suivante */}
-                  <div className="hidden border-l border-[#EFE4D6] pl-6 lg:block lg:max-w-xs">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D4F]">
-                      Prochaine étape
-                    </span>
-                    <p className="mt-0.5 text-xs font-semibold text-[#612D10]">
-                      {step === 0 && "2. Dépôt des 3 pièces justificatives"}
-                      {step === 1 && "3. Récapitulatif & Soumission au comité"}
-                      {step === 2 && "Instruction par le comité CIAT"}
-                    </p>
-                  </div>
-                </div>
+                <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} theme="light" />
               </div>
             )}
 
