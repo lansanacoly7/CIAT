@@ -187,7 +187,7 @@ function PieceCard({
                     href={mediaUrl(p.fichier)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-8 items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold text-[#612D10] hover:bg-white hover:text-[#3F1D0A]"
+                    className="inline-flex min-h-8 items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold text-[#612D10] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] transition-colors cursor-pointer"
                   >
                     <Eye className="h-3.5 w-3.5" />
                     <span>Aperçu</span>
@@ -199,7 +199,7 @@ function PieceCard({
                     disabled={deletingId === p.id}
                     onClick={() => onDelete(p.id)}
                     aria-label={`Supprimer ${p.nom}`}
-                    className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-md text-[#DC2626] hover:bg-[#DC2626]/10 disabled:opacity-50"
+                    className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-md text-[#DC2626] hover:bg-[#DC2626]/15 hover:scale-105 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {deletingId === p.id ? (
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#DC2626] border-t-transparent" />
@@ -257,7 +257,7 @@ function PieceCard({
             type="button"
             disabled={disabled || busy}
             onClick={() => inputRef.current?.click()}
-            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-2xs transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-2xs transition-all active:scale-[0.98] hover:scale-[1.02] hover:shadow-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
               !required
                 ? "bg-[#786555] hover:bg-[#5C4D41]"
                 : "bg-[#612D10] hover:bg-[#3F1D0A]"

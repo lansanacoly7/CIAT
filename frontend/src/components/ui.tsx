@@ -56,12 +56,12 @@ const BUTTON_BASE =
   "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68] cursor-pointer select-none";
 
 const VARIANTS = {
-  primary: "bg-brun text-white hover:bg-brun-fonce shadow-sm",
-  secondary: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
-  outline: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-ivoire",
-  ia: "bg-beige text-brun-fonce font-bold hover:brightness-95 border border-[#b88755] shadow-sm",
-  accent: "bg-beige text-brun-fonce hover:brightness-95 shadow-sm",
-  danger: "bg-erreur text-white hover:brightness-90 shadow-sm",
+  primary: "bg-brun text-white hover:bg-brun-fonce hover:shadow-md hover:scale-[1.01] shadow-sm",
+  secondary: "border-[1.5px] border-brun bg-white text-brun hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs",
+  outline: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs",
+  ia: "bg-beige text-brun-fonce font-bold hover:bg-[#DDA76A] hover:text-[#24140D] hover:shadow-sm border border-[#b88755] shadow-sm",
+  accent: "bg-beige text-brun-fonce hover:bg-[#DDA76A] hover:text-[#24140D] hover:shadow-sm shadow-sm",
+  danger: "bg-erreur text-white hover:bg-[#B91C1C] hover:shadow-md shadow-sm",
 } as const;
 
 export type Variant = keyof typeof VARIANTS;

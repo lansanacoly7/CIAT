@@ -176,7 +176,7 @@ function Suivi() {
 
           <Link
             href="/assistant"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2] w-fit"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-1.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] w-fit cursor-pointer"
           >
             <Bot className="h-4 w-4 text-[#A35926]" />
             <span>Échanger avec l&apos;Assistant IA sur ce projet</span>

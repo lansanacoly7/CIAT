@@ -215,7 +215,7 @@ function DepotDossier() {
                 <div className="flex items-center shrink-0">
                   <Link
                     href="/incubateur/projets"
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#FAF7F2] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10]"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10] active:scale-[0.98] cursor-pointer"
                   >
                     Mes projets
                   </Link>
@@ -288,7 +288,7 @@ function DepotDossier() {
                           <button
                             type="button"
                             onClick={() => goTo(0)}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border-1.5 border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] text-sm font-bold text-[#612D10] transition-all hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
                           >
                             ← Retour aux informations
                           </button>
@@ -298,7 +298,7 @@ function DepotDossier() {
                               setMaxReached(2);
                               goTo(2);
                             }}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#612D10] px-7 font-[family-name:var(--font-title)] text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#3F1D0A]"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#612D10] px-7 font-[family-name:var(--font-title)] text-sm font-bold text-white shadow-xs transition-all hover:bg-[#3F1D0A] hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                           >
                             Continuer vers le récapitulatif →
                           </button>

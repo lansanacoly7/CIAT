@@ -290,7 +290,7 @@ function CalendrierVue() {
           <div className="flex items-center gap-2">
             <Link
               href="/incubateur/alertes"
-              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2] transition-colors relative shadow-xs"
+              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-xs cursor-pointer"
               aria-label="Alertes de retard"
               title="Consulter les alertes de retard"
             >
@@ -319,7 +319,7 @@ function CalendrierVue() {
                   type="button"
                   onClick={handlePrevMonth}
                   aria-label="Mois précédent"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#612D10] hover:bg-white hover:shadow-xs transition-all cursor-pointer"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#612D10] hover:bg-[#EFE4D6] hover:text-[#3F1D0A] hover:shadow-xs transition-all cursor-pointer"
                 >
                   <ChevronLeft className="h-4.5 w-4.5" />
                 </button>
@@ -332,7 +332,7 @@ function CalendrierVue() {
                   type="button"
                   onClick={handleNextMonth}
                   aria-label="Mois suivant"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#612D10] hover:bg-white hover:shadow-xs transition-all cursor-pointer"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#612D10] hover:bg-[#EFE4D6] hover:text-[#3F1D0A] hover:shadow-xs transition-all cursor-pointer"
                 >
                   <ChevronRight className="h-4.5 w-4.5" />
                 </button>
@@ -357,8 +357,8 @@ function CalendrierVue() {
                 onClick={() => setFiltreType("tous")}
                 className={`rounded-xl px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs ${
                   filtreType === "tous"
-                    ? "bg-[#612D10] text-white shadow-xs"
-                    : "border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2]"
+                    ? "bg-[#612D10] text-white shadow-xs hover:bg-[#3F1D0A] hover:shadow-md"
+                    : "border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A]"
                 }`}
               >
                 Tous ({stats.total})
@@ -369,8 +369,8 @@ function CalendrierVue() {
                 onClick={() => setFiltreType(filtreType === "jalon" ? "tous" : "jalon")}
                 className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs ${
                   filtreType === "jalon"
-                    ? "bg-[#A35926] text-white shadow-xs"
-                    : "border border-[#EFE4D6] bg-white text-[#A35926] hover:bg-[#FAF7F2]"
+                    ? "bg-[#A35926] text-white shadow-xs hover:bg-[#78350F] hover:shadow-md"
+                    : "border border-[#EFE4D6] bg-white text-[#A35926] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#78350F]"
                 }`}
               >
                 <Flag className="h-3 w-3" />
@@ -382,8 +382,8 @@ function CalendrierVue() {
                 onClick={() => setFiltreType(filtreType === "objectif" ? "tous" : "objectif")}
                 className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs ${
                   filtreType === "objectif"
-                    ? "bg-[#2563EB] text-white shadow-xs"
-                    : "border border-[#EFE4D6] bg-white text-[#2563EB] hover:bg-[#FAF7F2]"
+                    ? "bg-[#2563EB] text-white shadow-xs hover:bg-[#1D4ED8] hover:shadow-md"
+                    : "border border-[#EFE4D6] bg-white text-[#2563EB] hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#1D4ED8]"
                 }`}
               >
                 <Target className="h-3 w-3" />
@@ -395,10 +395,10 @@ function CalendrierVue() {
                 onClick={() => setFiltreRetard(!filtreRetard)}
                 className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs ${
                   filtreRetard
-                    ? "bg-[#B91C1C] text-white shadow-xs"
+                    ? "bg-[#B91C1C] text-white shadow-xs hover:bg-[#991B1B] hover:shadow-md"
                     : stats.enRetard > 0
-                    ? "border border-red-200 bg-red-50 text-[#B91C1C] hover:bg-red-100"
-                    : "border border-[#EFE4D6] bg-white text-[#8C6D58] hover:bg-[#FAF7F2]"
+                    ? "border border-red-200 bg-red-50 text-[#B91C1C] hover:bg-red-100 hover:border-red-300"
+                    : "border border-[#EFE4D6] bg-white text-[#8C6D58] hover:border-[#A35926] hover:bg-[#F2E5D5]"
                 }`}
               >
                 <AlertTriangle className="h-3 w-3" />
@@ -455,10 +455,10 @@ function CalendrierVue() {
                           isSelected
                             ? "bg-[#FAF7F2] ring-2 ring-inset ring-[#A35926] z-10"
                             : !cell.isCurrentMonth
-                            ? "bg-[#FAF7F2]/30 text-[#A8988B]"
+                            ? "bg-[#FAF7F2]/30 text-[#A8988B] hover:bg-[#F2E5D5]/50 hover:text-[#612D10]"
                             : cell.isToday
-                            ? "bg-[#FAF7F2]/70 hover:bg-[#FAF7F2]"
-                            : "bg-white hover:bg-[#FAF7F2]/40"
+                            ? "bg-[#FAF7F2]/70 hover:bg-[#F2E5D5] hover:shadow-2xs"
+                            : "bg-white hover:bg-[#F2E5D5] hover:shadow-2xs"
                         }`}
                       >
                         {/* Numéro du jour & statut de sélection */}
@@ -549,8 +549,8 @@ function CalendrierVue() {
                             onClick={() => setSelectedEvent(ev)}
                             className={`rounded-xl p-3 border transition-all cursor-pointer ${
                               isOverdue
-                                ? "bg-red-50/70 border-red-300 hover:bg-red-100/70"
-                                : "bg-[#FAF7F2]/60 border-[#EFE4D6] hover:bg-[#FAF7F2]"
+                                ? "bg-red-50/70 border-red-300 hover:bg-red-100 hover:shadow-xs hover:translate-x-0.5"
+                                : "bg-[#FAF7F2]/60 border-[#EFE4D6] hover:bg-[#F2E5D5] hover:border-[#A35926] hover:shadow-xs hover:translate-x-0.5"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-1 mb-1.5">

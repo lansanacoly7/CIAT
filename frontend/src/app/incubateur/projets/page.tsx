@@ -95,14 +95,14 @@ function ListeProjets() {
           <div className="flex items-center gap-2.5 flex-wrap">
             <Link
               href="/incubateur/calendrier"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
             >
               <Calendar className="h-4 w-4 text-[#A35926]" />
               <span>Calendrier</span>
             </Link>
             <Link
               href="/assistant"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-semibold text-[#612D10] shadow-2xs transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2]"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
             >
               <Bot className="h-4 w-4 text-[#A35926]" />
               <span>Assistant IA</span>
@@ -110,15 +110,16 @@ function ListeProjets() {
             {canEvaluate && (
               <Link
                 href="/incubateur/evaluation"
-                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-semibold text-[#6b5646] shadow-2xs transition-all hover:border-[#C99A68] hover:text-[#612D10]"
+                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#6b5646] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
               >
                 Évaluations comité
               </Link>
             )}
             <Link
               href="/incubateur/alertes"
-              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2] transition-colors relative shadow-xs"
+              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-xs cursor-pointer"
               aria-label="Alertes de retard"
+              title="Consulter les alertes de retard"
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
               <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#A35926]" />
@@ -337,7 +338,7 @@ function ListeProjets() {
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/incubateur"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.01]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer"
                 >
                   <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Déposer une candidature</span>
@@ -345,7 +346,7 @@ function ListeProjets() {
                 </Link>
                 <Link
                   href="/incubateur"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A35926] hover:text-[#612D10] underline underline-offset-4 py-2"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A35926] hover:text-[#612D10] underline underline-offset-4 py-2 transition-colors cursor-pointer"
                 >
                   <span>Comprendre les étapes du suivi</span>
                 </Link>
@@ -365,7 +366,7 @@ function ListeProjets() {
               <li key={p.id}>
                 <Link
                   href={`/incubateur/projets/${p.id}`}
-                  className="block rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-sm transition-all hover:border-[#C99A68] hover:shadow-md"
+                  className="block rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-sm transition-all hover:border-[#A35926] hover:bg-[#FAF7F2] hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">

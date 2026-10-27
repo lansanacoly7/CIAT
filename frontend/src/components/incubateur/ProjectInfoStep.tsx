@@ -108,7 +108,7 @@ function CustomSelect({
                   className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                     isSelected
                       ? "bg-[#FAF7F2] font-semibold text-[#612D10]"
-                      : "text-[#24140D] hover:bg-[#FAF7F2]/80 hover:text-[#612D10]"
+                      : "text-[#24140D] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] cursor-pointer"
                   }`}
                 >
                   <span className="truncate">{d.nom}</span>
@@ -271,7 +271,7 @@ export default function ProjectInfoStep({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7A3E1D] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#5C2E15] hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7A3E1D] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#5C2E15] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           <span>{saving ? "Enregistrement…" : "Enregistrer et continuer"}</span>

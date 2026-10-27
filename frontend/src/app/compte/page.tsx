@@ -390,7 +390,7 @@ function ProfilSection({ user }: { user: User }) {
               <button
                 type="button"
                 onClick={() => setPasswordNotice((v) => !v)}
-                className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-[#612D10] bg-white text-xs font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-[#612D10] bg-white text-xs font-bold text-[#612D10] hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] transition-all cursor-pointer"
               >
                 <KeyRound className="h-4 w-4" aria-hidden="true" />
                 <span>Modifier le mot de passe</span>
@@ -431,14 +431,14 @@ function ProfilSection({ user }: { user: User }) {
               type="button"
               onClick={resetForm}
               disabled={saving}
-              className="px-5 h-11 rounded-xl border border-[#EFE4D6] bg-white text-xs font-bold text-[#6b5646] hover:bg-[#FAF7F2] transition-colors disabled:opacity-50"
+              className="px-5 h-11 rounded-xl border border-[#EFE4D6] bg-white text-xs font-bold text-[#6b5646] hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 h-11 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] text-xs font-bold text-white shadow-sm flex items-center gap-2 transition-all hover:scale-[1.01] disabled:opacity-50 cursor-pointer"
+              className="px-6 h-11 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] text-xs font-bold text-white shadow-sm flex items-center gap-2 transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               <Save className="h-4 w-4" aria-hidden="true" />
               <span>{saving ? "Enregistrement…" : "Enregistrer les modifications"}</span>
@@ -671,15 +671,16 @@ function Compte() {
         <div className="flex items-center gap-2.5">
           <Link
             href="/incubateur/projets"
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#612D10] hover:bg-[#FAF7F2] shadow-xs transition-all"
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] shadow-xs transition-all cursor-pointer"
           >
             <FolderOpen className="h-3.5 w-3.5 text-[#A35926]" aria-hidden="true" />
             <span>Suivi de mes projets</span>
           </Link>
           <Link
             href="/incubateur/alertes"
-            className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2] transition-colors relative shadow-xs"
+            className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-xs cursor-pointer"
             aria-label="Alertes"
+            title="Consulter les alertes"
           >
             <Bell className="h-4 w-4" aria-hidden="true" />
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#A35926]" />

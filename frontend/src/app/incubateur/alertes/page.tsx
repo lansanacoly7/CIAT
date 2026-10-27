@@ -208,10 +208,10 @@ function Alertes() {
               role="tab"
               aria-selected={filtre === "toutes"}
               onClick={() => setFiltre("toutes")}
-              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all ${
+              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all cursor-pointer ${
                 filtre === "toutes"
-                  ? "bg-[#612D10] text-white shadow-xs"
-                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF4ED] hover:border-[#C99A68]"
+                  ? "bg-[#612D10] text-white shadow-xs hover:bg-[#3F1D0A] hover:shadow-md"
+                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A]"
               }`}
             >
               <ListFilter className="h-3.5 w-3.5" aria-hidden="true" />
@@ -230,10 +230,10 @@ function Alertes() {
               role="tab"
               aria-selected={filtre === "a_faire"}
               onClick={() => setFiltre("a_faire")}
-              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all ${
+              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all cursor-pointer ${
                 filtre === "a_faire"
-                  ? "bg-[#612D10] text-white shadow-xs"
-                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF4ED] hover:border-[#C99A68]"
+                  ? "bg-[#612D10] text-white shadow-xs hover:bg-[#3F1D0A] hover:shadow-md"
+                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A]"
               }`}
             >
               <Clock className="h-3.5 w-3.5" aria-hidden="true" />
@@ -252,10 +252,10 @@ function Alertes() {
               role="tab"
               aria-selected={filtre === "en_cours"}
               onClick={() => setFiltre("en_cours")}
-              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all ${
+              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all cursor-pointer ${
                 filtre === "en_cours"
-                  ? "bg-[#612D10] text-white shadow-xs"
-                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF4ED] hover:border-[#C99A68]"
+                  ? "bg-[#612D10] text-white shadow-xs hover:bg-[#3F1D0A] hover:shadow-md"
+                  : "border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A]"
               }`}
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
@@ -319,7 +319,7 @@ function Alertes() {
               <div className="pt-3">
                 <Link
                   href="/incubateur/projets"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#612D10] bg-white px-6 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:bg-[#FAF4ED] hover:border-[#3F1D0A]"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#612D10] bg-white px-6 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
                 >
                   <FolderKanban className="h-4 w-4" aria-hidden="true" />
                   <span>Consulter mes projets</span>
@@ -339,7 +339,7 @@ function Alertes() {
             <button
               type="button"
               onClick={() => setFiltre("toutes")}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#FAF4ED] px-4 text-xs font-bold text-[#612D10] hover:bg-[#EFE4D6] transition-colors"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#FAF4ED] px-4 text-xs font-bold text-[#612D10] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] transition-colors cursor-pointer"
             >
               Afficher toutes les alertes ({counts.toutes})
             </button>
@@ -350,7 +350,7 @@ function Alertes() {
             {alertesTraitees.map((a) => (
               <div
                 key={a.id}
-                className="group relative overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-[#C99A68] hover:shadow-md"
+                className="group relative overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-[#A35926] hover:bg-[#FAF7F2] hover:shadow-md hover:-translate-y-0.5"
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   {/* Informations du jalon et du projet */}
@@ -388,7 +388,7 @@ function Alertes() {
                   <div className="shrink-0 pt-2 sm:pt-0">
                     <Link
                       href={`/incubateur/projets/${a.projet}#jalon-${a.id}`}
-                      className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01]"
+                      className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer"
                     >
                       <span>Voir le jalon</span>
                       <ChevronRight className="h-4 w-4" aria-hidden="true" />

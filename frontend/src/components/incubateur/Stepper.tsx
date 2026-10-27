@@ -94,7 +94,7 @@ export default function Stepper({
                 <button
                   type="button"
                   onClick={() => onSelect?.(i)}
-                  className="flex items-center rounded-lg text-left hover:opacity-80 transition-opacity"
+                  className="flex items-center rounded-lg text-left p-1 transition-all hover:bg-[#F2E5D5] hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68]"
                   aria-label={`Revenir à : ${step.title}`}
                 >
                   {content}
