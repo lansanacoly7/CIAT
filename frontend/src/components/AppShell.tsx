@@ -26,35 +26,22 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Écrans d'authentification plein écran
   const isAuthPage = pathname === "/connexion" || pathname === "/inscription";
 
-  // Espaces applicatifs dotés de leur propre barre latérale intégrée (AppSidebarLayout)
-  const hasDedicatedSidebar =
-    pathname.startsWith("/incubateur") ||
-    pathname.startsWith("/documents") ||
-    pathname.startsWith("/compte");
-
-  // Rôles administratifs et de gestion habilités
-  const isStaffUser = Boolean(
-    user &&
-      (user.role === "administrateur" ||
-        user.role === "coordonnateur" ||
-        user.role === "membre_comite")
-  );
-
-  // Le tableau de bord décisionnel active systématiquement la barre latérale
+  // Utilisateur connecté ou route tableau de bord
+  const isAuthenticated = Boolean(user);
   const isDashboardRoute = pathname.startsWith("/tableau-de-bord");
 
-  // Sur les écrans d'auth ou les espaces ayant déjà leur propre barre latérale dédiée
-  if (isAuthPage || hasDedicatedSidebar) {
+  // La barre latérale unifiée officielle est active dès qu'un utilisateur est connecté
+  // (administrateur, coordonnateur, membre de comité, mentor, porteur) ainsi que sur le tableau de bord
+  const showSidebar = !isAuthPage && (isAuthenticated || isDashboardRoute);
+
+  if (isAuthPage) {
     return <main className="flex-1">{children}</main>;
   }
 
-  // Détermination de l'affichage de la barre latérale d'administration
-  const showAdminSidebar = isStaffUser || isDashboardRoute;
-
-  if (showAdminSidebar) {
+  if (showSidebar) {
     return (
       <div id="admin-shell-root" className="relative min-h-screen w-full bg-[#fcfbf9]">
-        {/* Barre latérale officielle de l'administrateur */}
+        {/* Barre latérale officielle unique CIAT */}
         <DashboardSidebar />
 
         {/* Contenu principal décalé sur grand écran pour la barre latérale fixe (w-64 = 256px) */}
