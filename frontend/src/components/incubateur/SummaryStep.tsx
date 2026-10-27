@@ -83,7 +83,7 @@ export default function SummaryStep({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       setAccuseError(suiviErrorMessage(err, "Impossible de télécharger l'accusé de réception. Veuillez réessayer."));
     } finally {

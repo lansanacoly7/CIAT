@@ -99,8 +99,8 @@ function ProfilForm({ user }: { user: User }) {
       <label htmlFor={key} className="mb-1 block text-sm font-medium text-[#24140D]">
         {FIELD_NAMES[key]}
       </label>
-      <input id={key} type={type} autoComplete={auto} value={form[key]} onChange={set(key)} className={INPUT} aria-invalid={Boolean(fieldErrors[key])} />
-      {fieldErrors[key] && <p className="mt-1 text-sm text-[#DC2626]">{fieldErrors[key]}</p>}
+      <input id={key} type={type} autoComplete={auto} value={form[key]} onChange={set(key)} className={INPUT} aria-invalid={Boolean(fieldErrors[key])} aria-describedby={fieldErrors[key] ? `${key}-error` : undefined} />
+      {fieldErrors[key] && <p id={`${key}-error`} className="mt-1 text-sm text-[#DC2626]">{fieldErrors[key]}</p>}
     </div>
   );
 
@@ -125,14 +125,14 @@ function ProfilForm({ user }: { user: User }) {
         <label htmlFor="genre" className="mb-1 block text-sm font-medium text-[#24140D]">
           Genre
         </label>
-        <select id="genre" value={form.genre} onChange={set("genre")} className={INPUT}>
+        <select id="genre" value={form.genre} onChange={set("genre")} className={INPUT} aria-invalid={Boolean(fieldErrors.genre)} aria-describedby={fieldErrors.genre ? "genre-error" : undefined}>
           {GENRES.map((g) => (
             <option key={g.value} value={g.value}>
               {g.label}
             </option>
           ))}
         </select>
-        {fieldErrors.genre && <p className="mt-1 text-sm text-[#DC2626]">{fieldErrors.genre}</p>}
+        {fieldErrors.genre && <p id="genre-error" className="mt-1 text-sm text-[#DC2626]">{fieldErrors.genre}</p>}
       </div>
 
       {status && (
@@ -175,6 +175,10 @@ const DOSSIER_TONES = { brouillon: "neutre", soumis: "alerte", complet: "succes"
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 
+function dossierStatutLabel(statut: string) {
+  return STATUT_LABELS[statut as keyof typeof STATUT_LABELS]?.label ?? "Statut non reconnu";
+}
+
 function MesProjets() {
   const [data, setData] = useState<{ projets: ProjetCompte[]; dossiers: Dossier[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +198,7 @@ function MesProjets() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       setAccuseError({
         id: dossierId,
@@ -293,8 +297,8 @@ function MesProjets() {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={DOSSIER_TONES[d.statut]}>{STATUT_LABELS[d.statut].label}</Badge>
-                    {d.statut !== "brouillon" && (
+                    <Badge tone={DOSSIER_TONES[d.statut as keyof typeof DOSSIER_TONES] ?? "neutre"}>{dossierStatutLabel(d.statut)}</Badge>
+                    {Boolean(d.soumis_le) && (
                       <button
                         type="button"
                         onClick={() => handleTelechargerAccuse(d.id)}

@@ -4,19 +4,34 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, PageTitle } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 import { formatDateFr, getAlertes, suiviErrorMessage, type AlerteJalon } from "@/lib/incubator";
 
 function joursDeRetard(echeance: string) {
-  const diff = Date.now() - new Date(`${echeance}T00:00:00`).getTime();
-  return Math.max(1, Math.floor(diff / 86_400_000));
+  const [year, month, day] = echeance.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  const dateEcheance = Date.UTC(year, month - 1, day);
+  const now = new Date();
+  const aujourdHui = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.max(0, Math.floor((aujourdHui - dateEcheance) / 86_400_000));
+}
+
+function libelleRetard(echeance: string) {
+  const jours = joursDeRetard(echeance);
+  if (jours === null) return "retard signalé";
+  if (jours === 0) return "moins d’un jour de retard";
+  return `${jours} jour(s) de retard`;
 }
 
 function Alertes() {
+  const { user } = useAuth();
+  const canSubmit = user?.role === "porteur" || user?.role === "coordonnateur" || user?.role === "administrateur";
+  const canEvaluate = user?.role === "membre_comite" || user?.role === "coordonnateur" || user?.role === "administrateur";
   const [alertes, setAlertes] = useState<AlerteJalon[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [tick, setTick] = useState(0);
-  const load = () => setTick((t) => t + 1);
+  const load = () => { setError(null); setAlertes(null); setTick((t) => t + 1); };
 
   useEffect(() => {
     let cancelled = false;
@@ -38,27 +53,25 @@ function Alertes() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-12">
       <div className="mb-6 flex flex-wrap gap-2 border-b border-bordure pb-3">
-        <Link
-          href="/incubateur"
-          className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
-        >
-          Dépôt de dossier
-        </Link>
+        {canSubmit && (
+          <Link href="/incubateur" className="inline-flex min-h-11 items-center rounded-lg border border-bordure bg-white px-4 text-sm font-semibold text-texte-doux transition-colors hover:bg-ivoire hover:text-brun">
+            Dépôt de dossier
+          </Link>
+        )}
         <Link
           href="/incubateur/projets"
           className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
         >
           Suivi des projets
         </Link>
-        <span className="rounded-lg bg-brun px-4 py-2 text-xs font-bold text-white shadow-xs">
+        <span aria-current="page" className="inline-flex min-h-11 items-center rounded-lg bg-brun px-4 text-sm font-bold text-white shadow-xs">
           Alertes de retard
         </span>
-        <Link
-          href="/incubateur/evaluation"
-          className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
-        >
-          Évaluations comité
-        </Link>
+        {canEvaluate && (
+          <Link href="/incubateur/evaluation" className="inline-flex min-h-11 items-center rounded-lg border border-bordure bg-white px-4 text-sm font-semibold text-texte-doux transition-colors hover:bg-ivoire hover:text-brun">
+            Évaluations comité
+          </Link>
+        )}
       </div>
 
       <PageTitle title="Alertes de retard" subtitle="Jalons dont l'échéance est dépassée et qui ne sont pas terminés." />
@@ -82,7 +95,7 @@ function Alertes() {
                   <p className="font-[family-name:var(--font-title)] font-bold text-brun">{a.titre}</p>
                   <p className="text-sm text-texte">Projet : {a.projet_titre}</p>
                   <p className="text-sm text-erreur">
-                    Échéance du {formatDateFr(a.echeance)} · {joursDeRetard(a.echeance)} jour(s) de retard
+                    Échéance du {formatDateFr(a.echeance)} · {libelleRetard(a.echeance)}
                   </p>
                 </div>
                 <Link

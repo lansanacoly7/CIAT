@@ -29,7 +29,7 @@ export const PIECE_LABELS: Record<PieceType, { label: string; description: strin
   },
   budget_previsionnel: {
     label: "Budget prévisionnel",
-    description: "Estimation financière et besoins matériels / prototypage (PDF / Excel)",
+    description: "Estimation financière et besoins matériels / prototypage (PDF ou document Word).",
   },
   autre: {
     label: "Document complémentaire (optionnel)",
@@ -356,13 +356,8 @@ function unwrap<T>(res: T[] | { results: T[] }): T[] {
 
 export const getMentors = async () => unwrap(await api<Mentor[] | { results: Mentor[] }>("/incubator/mentors/"));
 
-export const getProjetMentor = async (projetId: number): Promise<AffectationMentor | null> => {
-  try {
-    return await api<AffectationMentor | null>(`/incubator/projets/${projetId}/mentor/`);
-  } catch {
-    return null;
-  }
-};
+export const getProjetMentor = (projetId: number): Promise<AffectationMentor | null> =>
+  api<AffectationMentor | null>(`/incubator/projets/${projetId}/mentor/`);
 
 export const affecterMentor = (projetId: number, mentor: number) =>
   api<AffectationMentor>(`/incubator/projets/${projetId}/mentor/`, { method: "POST", body: { mentor } });

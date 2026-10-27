@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, Badge, PageTitle } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 import { api, type Page } from "@/lib/api";
 import { suiviErrorMessage } from "@/lib/incubator";
 
@@ -26,11 +27,14 @@ const STATUTS: Record<string, string> = {
 };
 
 function ListeProjets() {
+  const { user } = useAuth();
+  const canSubmit = user?.role === "porteur" || user?.role === "coordonnateur" || user?.role === "administrateur";
+  const canEvaluate = user?.role === "membre_comite" || user?.role === "coordonnateur" || user?.role === "administrateur";
   const [projets, setProjets] = useState<ProjetListe[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [tick, setTick] = useState(0);
-  const load = () => setTick((t) => t + 1);
+  const load = () => { setError(null); setProjets(null); setTick((t) => t + 1); };
 
   useEffect(() => {
     let cancelled = false;
@@ -52,27 +56,22 @@ function ListeProjets() {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
       <div className="mb-6 flex flex-wrap gap-2 border-b border-bordure pb-3">
-        <Link
-          href="/incubateur"
-          className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
-        >
-          Dépôt de dossier
-        </Link>
-        <span className="rounded-lg bg-brun px-4 py-2 text-xs font-bold text-white shadow-xs">
+        {canSubmit && (
+          <Link href="/incubateur" className="inline-flex min-h-11 items-center rounded-lg border border-bordure bg-white px-4 text-sm font-semibold text-texte-doux transition-colors hover:bg-ivoire hover:text-brun">
+            Dépôt de dossier
+          </Link>
+        )}
+        <span aria-current="page" className="inline-flex min-h-11 items-center rounded-lg bg-brun px-4 text-sm font-bold text-white shadow-xs">
           Suivi des projets
         </span>
-        <Link
-          href="/incubateur/alertes"
-          className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
-        >
+        <Link href="/incubateur/alertes" className="inline-flex min-h-11 items-center rounded-lg border border-bordure bg-white px-4 text-sm font-semibold text-texte-doux transition-colors hover:bg-ivoire hover:text-brun">
           Alertes de retard
         </Link>
-        <Link
-          href="/incubateur/evaluation"
-          className="rounded-lg border border-bordure bg-white px-4 py-2 text-xs font-semibold text-texte-doux hover:bg-ivoire hover:text-brun transition-colors"
-        >
-          Évaluations comité
-        </Link>
+        {canEvaluate && (
+          <Link href="/incubateur/evaluation" className="inline-flex min-h-11 items-center rounded-lg border border-bordure bg-white px-4 text-sm font-semibold text-texte-doux transition-colors hover:bg-ivoire hover:text-brun">
+            Évaluations comité
+          </Link>
+        )}
       </div>
 
       <PageTitle title="Suivi des projets" subtitle="Mentor, objectifs, jalons et preuves de chaque projet incubé." />
@@ -97,7 +96,7 @@ function ListeProjets() {
               >
                 <span className="flex items-start justify-between gap-2">
                   <span className="font-[family-name:var(--font-title)] font-bold text-brun">{p.titre}</span>
-                  <Badge>{STATUTS[p.statut] ?? p.statut}</Badge>
+                  <Badge>{STATUTS[p.statut] ?? "Statut non reconnu"}</Badge>
                 </span>
                 <span className="mt-1 block text-sm text-texte-doux">{p.domaine_nom}</span>
                 {p.porteur_nom && <span className="block text-sm text-texte-doux">{p.porteur_nom}</span>}
