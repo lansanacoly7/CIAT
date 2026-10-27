@@ -53,7 +53,7 @@ import type {
  * -------------------------------------------------------------------------- */
 
 const BUTTON_BASE =
-  "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68] cursor-pointer select-none";
 
 const VARIANTS = {
   primary: "bg-brun text-white hover:bg-brun-fonce shadow-sm",
@@ -79,14 +79,16 @@ export function ButtonLink({
   variant = "primary",
   className = "",
   children,
+  onClick,
 }: {
   href: string;
   variant?: Variant;
   className?: string;
   children: ReactNode;
+  onClick?: () => void;
 }) {
   return (
-    <Link href={href} className={`${BUTTON_BASE} ${VARIANTS[variant]} ${className}`}>
+    <Link href={href} onClick={onClick} className={`${BUTTON_BASE} ${VARIANTS[variant]} ${className}`}>
       {children}
     </Link>
   );
@@ -105,7 +107,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-bordure bg-ivoire shadow-xs transition-all duration-150 motion-reduce:transition-none hover:border-beige ${className}`}
+      className={`overflow-hidden rounded-2xl border border-bordure bg-white shadow-xs transition-all duration-200 motion-reduce:transition-none hover:border-beige ${className}`}
     >
       <div className="h-1.5 w-full bg-beige" />
       <div className="p-6">{children}</div>

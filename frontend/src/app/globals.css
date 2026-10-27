@@ -1,4 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 @import "tailwindcss";
+@import "./home-design.css";
 
 /* Charte graphique CIAT : voir Charte_Graphique_CIAT_ISEP.pdf (Écosystème CIAT 360) */
 :root {
@@ -40,9 +42,11 @@ body {
   line-height: 1.5;
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-title);
-  color: var(--color-primary);
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-title);
+    color: var(--color-primary);
+  }
 }
 
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
@@ -58,6 +62,27 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: pageEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition {
+    animation: none !important;
   }
 }
 
@@ -78,6 +103,55 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 .animate-pulse-subtle {
   animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * UTILITAIRES DE FINITION ÉLITE (DESIGN SYSTEM CIAT PRESTIGE)
+ * ============================================================================= */
+
+/* Surfaces à élévation architecturale douce */
+.surface-card {
+  background: #FFFFFF;
+  border: 1px solid #EFE4D6;
+  box-shadow: 0 4px 20px -2px rgba(36, 20, 13, 0.04), 0 2px 6px -1px rgba(36, 20, 13, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.surface-card:hover {
+  border-color: rgba(201, 154, 104, 0.6);
+  box-shadow: 0 16px 36px -6px rgba(97, 45, 16, 0.1), 0 4px 12px -2px rgba(97, 45, 16, 0.04);
+  transform: translateY(-3px);
+}
+
+/* Panneaux de verre sombre institutionnel (Hero & Accents) */
+.glass-panel-dark {
+  background: rgba(28, 13, 6, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
+}
+
+/* Liseré or ultra-fin (Hairline Gold) */
+.hairline-gold {
+  position: relative;
+}
+
+.hairline-gold::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 154, 104, 0.7), transparent);
+}
+
+/* Dégradé or textuel officiel */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #F5E5D3 0%, #C99A68 50%, #EAD8C2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Masquage automatique du Header et Footer publics dans l'espace administration / tableau de bord */
