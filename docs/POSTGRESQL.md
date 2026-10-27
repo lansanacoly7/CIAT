@@ -156,16 +156,48 @@ python manage.py test
 
 ---
 
-## 5. Pièges identifiés et différences avec SQLite
+## 5. Pièges identifiés et différences mesurées entre SQLite et PostgreSQL
 
-1. **Sensibilité à la casse (`ILIKE` vs `LIKE`)** :
-   - SQLite traite l'opérateur `LIKE` de manière insensible à la casse pour les caractères ASCII. PostgreSQL distingue strictement `LIKE` (sensible) et `ILIKE` (insensible).
-   - Le code utilise systématiquement les filtres Django `icontains` et `iexact` pour assurer une stricte compatibilité entre les deux moteurs.
-2. **Ordre par défaut des QuerySets** :
-   - PostgreSQL ne garantit aucun ordre d'extraction sans clause explicite `ORDER BY`.
-   - Tous les modèles exposés dans les API disposent d'un tri explicite dans leur `Meta.ordering` ou dans le `ViewSet` (`ordering = ["-cree_le"]`).
-3. **Champs JSON (`JSONField`)** :
-   - PostgreSQL valide strictement la syntaxe JSON native (`jsonb`). Les serializers CIAT valident la structure des dictionnaires et listes avant écriture.
+1. **Recherche insensible à la casse (`icontains`) sur caractères accentués** :
+   - **Commande de reproduction** :
+     ```python
+     from apps.core.models import Domaine
+     Domaine.objects.filter(nom__icontains="éducation").count()
+     ```
+   - **Comportement SQLite** : Renvoie **`0`** résultat. SQLite n'implémente le pliage de casse (`case folding`) que pour les 26 caractères ASCII de base (`a-z`). Tout caractère accentué UTF-8 (`É` = `\xc3\x89`) n'est pas converti en minuscule par SQLite.
+   - **Comportement PostgreSQL** : Renvoie **`1`** résultat (`Éducation, formation professionnelle et insertion`). Sous PostgreSQL avec un fournisseur de locale ICU (`ICU_LOCALE='fr-FR'`), l'opérateur `ILIKE` applique les règles Unicode complètes et associe correctement `É` et `é`.
+   - **Règle pour l'équipe** : Le développement et la recette doivent obligatoirement être validés sur PostgreSQL, car SQLite masque ces comportements de recherche sur les textes en français.
+   - **Test de non-régression** : [`backend/apps/core/tests/test_compatibilite_moteur.py`](../backend/apps/core/tests/test_compatibilite_moteur.py) valide ce comportement (test décoré `@unittest.skipUnless(connection.vendor == "postgresql", ...)`).
+
+2. **Tri alphabétique (`order_by("nom")`) et collation** :
+   - **Commande de reproduction** :
+     ```python
+     from apps.core.models import Domaine
+     list(Domaine.objects.order_by("nom").values_list("nom", flat=True))
+     ```
+   - **Collation de la base PostgreSQL hôte** : Mesurée via `SELECT datcollate, datctype, datlocprovider FROM pg_database WHERE datname='ciat_db';` : `datcollate='French_France.utf8'`, `datlocprovider='i'` (fournisseur ICU `fr-FR`).
+   - **Ordre sous PostgreSQL** :
+     1. `Agriculture, transformation et environnement`
+     2. `Éducation, formation professionnelle et insertion`
+     3. `Énergie, efficacité énergétique et énergies renouvelables`
+     4. `Mécanique, fabrication et maintenance`
+     5. `Pharmaceutique et biomédical`
+     6. `Services aux collectivités, entrepreneuriat et incubation`
+     7. `TIC, numérique, intelligence artificielle et données`
+     *(Le tri alphabétique français ICU place le `É` immédiatement après le `E`, entre Agriculture et Mécanique).*
+   - **Ordre sous SQLite** :
+     1. `Agriculture, transformation et environnement`
+     2. `Mécanique, fabrication et maintenance`
+     3. `Pharmaceutique et biomédical`
+     4. `Services aux collectivités, entrepreneuriat et incubation`
+     5. `TIC, numérique, intelligence artificielle et données`
+     6. `Éducation, formation professionnelle et insertion`
+     7. `Énergie, efficacité énergétique et énergies renouvelables`
+     *(En collation binaire standard SQLite, l'octet UTF-8 `\xc3` de `É` est supérieur à `T` (0x54) et `Z` (0x5A), renvoyant tous les mots accentués à la fin).*
+
+3. **Champs JSON (`JSONField`) et contraintes d'intégrité** :
+   - *Champs JSON* : PostgreSQL valide strictement la syntaxe native (`jsonb`), aucune différence observée par la suite de tests.
+   - *Contraintes d'intégrité et clés étrangères* : Les contraintes d'unicité partielles et globales (`unique_grille_active`) : aucune différence observée par la suite de tests.
 
 ---
 
@@ -196,42 +228,73 @@ Conformément à la directive stricte de transparence (« on n'écrit que ce qui
 2. **Exécution réelle et mesurée sur PostgreSQL 16 (installateur officiel Windows, service `postgresql-x64-16`)** :
    - **Mode de déploiement** : Installateur officiel Windows PostgreSQL 16 déployé dans `C:\Program Files\PostgreSQL\16\bin\`, service Windows `postgresql-x64-16` actif sur le port `5434` (le port `5432` étant réservé par l'ancienne instance PostgreSQL 12).
    - **Version exacte mesurée** : `PostgreSQL 16.10, compiled by Visual C++ build 1944, 64-bit` (mesurée via `connection.cursor().execute("SELECT version()")`).
-   - **Configuration `DATABASE_URL`** : `postgres://postgres@127.0.0.1:5434/ciat_db`.
+   - **Collation de la base** : `datcollate = 'French_France.utf8'`, fournisseur ICU `fr-FR` (`datlocprovider = 'i'`).
+   - **Configuration `DATABASE_URL`** : `postgres://postgres@127.0.0.1:5434/ciat_db` (sur conteneur Docker Linux, la convention du projet est `postgres://ciat:ciat@localhost:5432/ciat`).
    - **Migrations et chargement** :
      - `python manage.py migrate` : 30+ migrations appliquées avec succès (`admin`, `analytics`, `assistant`, `auth`, `contenttypes`, `core`, `documents`, `gallery`, `incubator`, `portal`, `sessions`).
-     - `python manage.py seed_all` : initialisation complète et idempotente de tous les modules (62 projets, 41 porteurs, 58 dossiers d'incubation, 174 pièces, 27 modèles de documents, etc.).
+     - `python manage.py seed_all` (dernières lignes de sortie réelle) :
+       ```text
+       === Étape 6 : Documents institutionnels générés ===
+       Documents officiels : 6 en base (6 créés).
+       === Étape 7 : Images de démonstration locales (Pillow) ===
+       Images démo prêtes (idempotent) : 0 actualités, 0 partenaires, 23 fiches galerie générées (5 déjà présentes).
+
+       [SUCCÈS] Commande seed_all terminée : cohérence complète et idempotente établie sur tous les modules.
+       ```
+   - **Historique des mesures** :
+     La première exécution locale décrite au commit `ec5f832` (binaires temporaires 16.4 sur port 5433) a été remplacée par le commit `71a4b60` (service officiel Windows `postgresql-x64-16` en version 16.10 sur le port 5434) afin d'utiliser le service permanent installé sur la machine de développement [détails additionnels à compléter par Ibrahima].
    - **Commande exécutée** :
      ```bash
      $env:DATABASE_URL = "postgres://postgres@127.0.0.1:5434/ciat_db"
      python manage.py test --timing
      ```
-   - **Sortie exacte mesurée** :
+   - **Sortie exacte mesurée (sortie brute complète)** :
      ```text
+     Found 278 test(s).
+     System check identified no issues (0 silenced).
      Creating test database for alias 'default'...
      ................................................................................
      ----------------------------------------------------------------------
-     Ran 276 tests in 24.143s
+     Ran 278 tests in 25.522s
 
      OK
      Destroying test database for alias 'default'...
 
-     Total database setup took 2.263s
-       Creating 'default' took 2.263s
-     Total database teardown took 0.792s
-     Total run took 27.917s
+     Total database setup took 2.100s
+       Creating 'default' took 2.100s
+     Total database teardown took 0.970s
+     Total run took 29.298s
      ```
    - **Résultats obtenus** :
-     - **276 / 276 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
-     - **Durée réelle mesurée** : **24,143 secondes** (27,917 secondes incluant la création et suppression de la base temporaire `test_ciat_db`).
-   - **Différences constatées entre SQLite et PostgreSQL 16** :
-     - *Contraintes d'intégrité et clés étrangères* : les contraintes d'unicité partielles et globales (`GrilleEvaluation.unique_grille_active`, paires de code types de documents) fonctionnent à l'identique.
-     - *Champs JSON (`JSONField`)* : stockés de façon optimale en format natif `jsonb` sous PostgreSQL 16, aucune anomalie de structure lors des lectures/écritures.
-     - *Performances* : l'exécution globale sous PostgreSQL 16.10 (24,14 s) est nettement plus rapide que sur SQLite (37,28 s), démontrant l'efficacité du moteur de requêtes et de la gestion transactionnelle de PostgreSQL 16.
+     - **278 / 278 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
+     - **Durée mesurée** : **25,522 secondes** pour l'exécution des tests (29,298 secondes au total avec initialisation et suppression de la base temporaire de test).
 
-3. **Exécution de référence sur SQLite (base de repli standard sans installation)** :
+3. **Exécution de référence sur SQLite (mesurée immédiatement après sur la même machine)** :
    - **Date d'exécution** : 27 octobre 2026
-   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test`
-   - **Résultat réel obtenu** : 276 / 276 tests réussis en 37,28 s.
+   - **Version SQLite mesurée** : `3.50.4`
+   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test --timing` (sans `DATABASE_URL`)
+   - **Sortie exacte mesurée (sortie brute complète)** :
+     ```text
+     Found 278 test(s).
+     System check identified no issues (0 silenced).
+     Creating test database for alias 'default'...
+     ...........s....................................................................
+     ----------------------------------------------------------------------
+     Ran 278 tests in 13.881s
+
+     OK (skipped=1)
+     Destroying test database for alias 'default'...
+
+     Total database setup took 1.071s
+       Creating 'default' took 1.071s
+     Total database teardown took 0.000s
+     Total run took 15.700s
+     ```
+   - **Résultats obtenus** :
+     - **277 / 278 tests réussis, 1 ignoré (`skipped=1`)** : le test `test_recherche_icontains_accentuee_postgresql` est ignoré conformément à sa condition d'exclusion sur SQLite.
+     - **Durée mesurée** : **13,881 secondes** (15,700 secondes au total).
+   - **Comparaison factuelle des durées** :
+     Sur la même machine de développement, la suite de tests automatisée s'exécute en 13,88 s sur SQLite et en 25,52 s sur PostgreSQL 16.10 local. L'écart s'explique par le surcoût de communication inter-processus via sockets TCP et de gestion des transactions par le serveur PostgreSQL pour chaque cas de test, alors que SQLite opère directement en accès fichier/mémoire local dans le même processus.
 
 ---
 
