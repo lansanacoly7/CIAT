@@ -5,16 +5,11 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bell,
-  BookOpen,
   Bot,
   Calendar,
   ChevronRight,
   FileText,
   FolderOpen,
-  Rocket,
-  Sparkles,
-  Users,
-  Wrench,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, Badge } from "@/components/ui";
@@ -228,55 +223,6 @@ function ListeProjets() {
           </div>
         </div>
 
-      {/* 2.1 BANDEAU DE MÉTRIQUES SYNTHÉTIQUES */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-        <div className="flex items-center gap-3.5 rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4ED] text-[#612D10]">
-            <FolderOpen className="h-5 w-5 text-[#A35926]" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D58]">
-              Projets enregistrés
-            </p>
-            <p className="text-xl font-extrabold text-[#24140D] font-[family-name:var(--font-title)] mt-0.5">
-              {projets ? projets.length : "—"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3.5 rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4ED] text-[#612D10]">
-            <Rocket className="h-5 w-5 text-[#A35926]" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D58]">
-              Stade d&apos;accompagnement
-            </p>
-            <p className="text-sm font-bold text-[#24140D] truncate mt-0.5">
-              {premierProjet ? (STATUTS[premierProjet.statut] || premierProjet.statut) : "Prêt à candidater"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3.5 rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4ED] text-[#612D10]">
-            <Calendar className="h-5 w-5 text-[#A35926]" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D58]">
-              Calendrier & Jalons
-            </p>
-            <Link
-              href="/incubateur/calendrier"
-              className="text-xs font-bold text-[#612D10] hover:text-[#A35926] hover:underline transition-colors flex items-center gap-1 mt-0.5"
-            >
-              <span>Consulter l&apos;agenda</span>
-              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* 3. CARTES D'ACCÈS RAPIDE AÉRÉES ET INTERACTIVES */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
@@ -436,57 +382,6 @@ function ListeProjets() {
           </ul>
         </div>
       )}
-
-      {/* 4. BOÎTE À OUTILS & RESSOURCES D'ACCOMPAGNEMENT DE L'INCUBÉ */}
-      <div className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-[#FAF7F2] p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#EFE4D6] pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#612D10] text-white shadow-2xs">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <div>
-              <h3 className="font-[family-name:var(--font-title)] text-base font-bold text-[#24140D]">
-                Boîte à outils de l&apos;incubé
-              </h3>
-              <p className="text-xs text-[#6b5646]">
-                Ressources et dispositifs d&apos;appui mobilisables pour faire grandir votre projet au CIAT.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 space-y-1.5 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#612D10]">
-              <Wrench className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
-              <span>Ateliers & Prototypage</span>
-            </div>
-            <p className="text-xs text-[#6b5646] leading-relaxed">
-              Accès aux bancs d&apos;essai, imprimantes 3D et équipements techniques du CIAT à Diamniadio.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 space-y-1.5 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#612D10]">
-              <BookOpen className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
-              <span>Guide méthodologique</span>
-            </div>
-            <p className="text-xs text-[#6b5646] leading-relaxed">
-              Documentation sur les critères de validation des jalons et les grilles d&apos;évaluation.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 space-y-1.5 shadow-2xs transition-all hover:border-[#A35926] hover:shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#612D10]">
-              <Users className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
-              <span>Permanence Mentorat</span>
-            </div>
-            <p className="text-xs text-[#6b5646] leading-relaxed">
-              Sessions de travail bimensuelles avec votre mentor référent pour lever les points de blocage.
-            </p>
-          </div>
-        </div>
-      </div>
 
       </div>
     </div>
