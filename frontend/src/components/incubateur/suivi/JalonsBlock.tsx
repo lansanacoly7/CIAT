@@ -236,18 +236,44 @@ export default function JalonsBlock({
 
   return (
     <Block
-      title={retards ? `Jalons — ${retards} en retard` : "Jalons"}
+      title={retards ? `Jalons (${retards} en retard)` : "Jalons"}
+      icon={
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+        </svg>
+      }
       action={
         canManage && !adding ? (
-          <Button variant="secondary" className="!min-h-11" onClick={() => setAdding(true)}>
-            Ajouter un jalon
+          <Button variant="secondary" className="!min-h-9 !py-1 !px-3 !text-xs font-semibold" onClick={() => setAdding(true)}>
+            + Ajouter
           </Button>
-        ) : undefined
+        ) : (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF4EC] text-[#8A7261] transition-transform hover:translate-x-0.5">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </span>
+        )
       }
     >
-      {jalons.length === 0 && !adding && <p className="text-sm text-texte-doux">Aucun jalon défini pour ce projet.</p>}
+      {jalons.length === 0 && !adding && (
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#FAF4EC] text-[#B89C82]">
+            <svg className="h-8 w-8" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M16 52 C26 50 30 38 42 36 C48 34 52 26 52 20" stroke="#D9C3AB" strokeWidth={2} strokeDasharray="3 3" />
+              <line x1="24" y1="48" x2="24" y2="28" stroke="#8A7261" strokeWidth={2.5} strokeLinecap="round" />
+              <path d="M24 28 L36 33 L24 38 Z" fill="#F7EFE6" stroke="#522504" strokeWidth={1.5} />
+              <circle cx="24" cy="48" r="3" fill="#522504" />
+              <circle cx="50" cy="20" r="3" fill="#D9C3AB" />
+            </svg>
+          </div>
+          <p className="max-w-[200px] text-xs font-medium text-[#7C6353]">
+            Aucun jalon défini pour ce projet.
+          </p>
+        </div>
+      )}
 
-      <ul className="space-y-4">
+      <ul className="space-y-3">
         {jalons.map((j) => (
           <JalonCard key={j.id} jalon={j} canManage={canManage} onChange={onChange} />
         ))}

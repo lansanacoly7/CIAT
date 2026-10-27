@@ -62,3 +62,4 @@ backups/
 bench_settings.py
 backend/bench_settings.py
 scratch/
+*.zip

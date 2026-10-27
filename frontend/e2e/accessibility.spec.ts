@@ -64,7 +64,7 @@ test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 
         .analyze();
 
       const criticalViolations = results.violations.filter(
-        (v) => v.impact === "critical" || v.impact === "serious"
+        (v: { impact?: string | null }) => v.impact === "critical" || v.impact === "serious"
       );
 
       console.log(
@@ -91,7 +91,11 @@ test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 
         expect(
           criticalViolations,
           `Violations critiques ou sérieuses détectées sur ${screen.name} (${screen.url}) : ${JSON.stringify(
-            criticalViolations.map((v) => ({ id: v.id, impact: v.impact, desc: v.description })),
+            criticalViolations.map((v: { id: string; impact?: string | null; description: string }) => ({
+              id: v.id,
+              impact: v.impact,
+              desc: v.description,
+            })),
             null,
             2
           )}`

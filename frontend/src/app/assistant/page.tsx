@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import {
-  ApiErrorBanner,
-  Badge,
-  Button,
-  DemoBanner,
-} from "@/components/ui";
+import { ApiErrorBanner, DemoBanner } from "@/components/ui";
 import {
   createConversation,
   getConversations,
@@ -18,20 +14,94 @@ import {
   type Conversation,
   type MessageAssistant,
 } from "@/lib/assistant-api";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  FileText,
+  Info,
+  Loader2,
+  MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
+  PenTool,
+  Plus,
+  Send,
+} from "lucide-react";
 
-function formatConversationDate(dateStr: string) {
+function formatRelativeTime(dateStr: string): string {
   try {
     const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 5) return "À l'instant";
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours} heure${diffHours > 1 ? "s" : ""}`;
+    if (diffDays === 1) return "Hier";
+    if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
     return new Intl.DateTimeFormat("fr-FR", {
       day: "numeric",
       month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
     }).format(d);
   } catch {
     return "";
   }
 }
+
+interface SuggestionCard {
+  tag: string;
+  titre: string;
+  description: string;
+  prompt: string;
+}
+
+const SUGGESTIONS_DOCUMENTS: SuggestionCard[] = [
+  {
+    tag: "DOCUMENTS",
+    titre: "Comprendre le parcours d'incubation",
+    description: "Découvrez les 4 étapes, la durée et les conditions du programme.",
+    prompt: "Quelles sont les 4 étapes du parcours d'incubation du CIAT et comment se déroulent-elles ?",
+  },
+  {
+    tag: "DOCUMENTS",
+    titre: "Retrouver une règle dans les documents",
+    description: "Accédez aux textes officiels, propriété intellectuelle et guides du CIAT.",
+    prompt: "Comment est encadrée la propriété intellectuelle des brevets et innovations développés au CIAT ?",
+  },
+  {
+    tag: "DOCUMENTS",
+    titre: "Filières et critères d'éligibilité",
+    description: "Vérifiez les 7 filières stratégiques et les conditions requises pour postuler.",
+    prompt: "Quelles sont les 7 filières prioritaires et les critères de sélection pour intégrer le CIAT ?",
+  },
+];
+
+const SUGGESTIONS_ATELIER: SuggestionCard[] = [
+  {
+    tag: "RÉDACTION",
+    titre: "Structurer le pitch de mon projet",
+    description: "Bénéficiez de conseils pour un pitch clair, percutant et convaincant.",
+    prompt: "Aide-moi à structurer le pitch de mon projet en suivant la méthodologie CIAT.",
+  },
+  {
+    tag: "RÉDACTION",
+    titre: "Clarifier le problème & l'impact",
+    description: "Formulez le problème critique et chiffrez les pertes pour vos usagers.",
+    prompt: "Comment formuler clairement le problème usager et démontrer l'impact mesurable de mon projet ?",
+  },
+  {
+    tag: "RÉDACTION",
+    titre: "Préparer la fiche synthétique",
+    description: "Définissez la proposition de valeur et les verrous techniques à lever.",
+    prompt: "Aide-moi à rédiger une fiche projet synthétique avec proposition de valeur et verrous techniques.",
+  },
+];
 
 function AssistantApp() {
   const [, startTransition] = useTransition();
@@ -49,7 +119,10 @@ function AssistantApp() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isDemo = isDemoMode();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Volet historique repliable (visible par défaut sur grand écran)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Accordéon des sources par message ID
   const [expandedSources, setExpandedSources] = useState<Record<number, boolean>>({});
@@ -62,8 +135,13 @@ function AssistantApp() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0 || sending) {
+      scrollToBottom();
+    }
   }, [messages, sending]);
+
+  // Compteur pour identifiants locaux optimistes
+  const msgCounterRef = useRef(1);
 
   // 1. Charger les conversations au montage
   useEffect(() => {
@@ -96,26 +174,33 @@ function AssistantApp() {
 
   // 2. Charger les messages quand la conversation active change
   useEffect(() => {
+    let ignore = false;
     if (!activeConvId) return;
 
-    let ignore = false;
-    getMessages(activeConvId)
-      .then((msgs) => {
+    const loadMessages = async () => {
+      setLoadingMessages(true);
+      try {
+        const msgs = await getMessages(activeConvId);
         if (!ignore) {
           setMessages(msgs);
-          setLoadingMessages(false);
         }
-      })
-      .catch((err) => {
+      } catch (err: unknown) {
         if (!ignore) {
+          const apiErr = err as { status?: number };
           setError(
-            err?.status === 503
+            apiErr?.status === 503
               ? "Service IA temporairement indisponible (503)."
               : "Impossible de charger les messages de cette conversation."
           );
+        }
+      } finally {
+        if (!ignore) {
           setLoadingMessages(false);
         }
-      });
+      }
+    };
+
+    void loadMessages();
 
     return () => {
       ignore = true;
@@ -130,7 +215,7 @@ function AssistantApp() {
       setConversations((prev) => [newConv, ...prev]);
       setActiveConvId(newConv.id);
       setMessages([]);
-      setSidebarOpen(false);
+      setIsMobileDrawerOpen(false);
       setTimeout(() => inputRef.current?.focus(), 100);
     } catch {
       setError("Erreur lors de la création d'une nouvelle conversation.");
@@ -138,9 +223,8 @@ function AssistantApp() {
   };
 
   // Envoi d'un message
-  const handleSend = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const texte = inputMessage.trim();
+  const executeSendMessage = async (textToSend: string) => {
+    const texte = textToSend.trim();
     if (!texte || sending) return;
 
     setError(null);
@@ -161,9 +245,10 @@ function AssistantApp() {
       }
     }
 
-    // Message utilisateur optimiste
+    // Message utilisateur optimiste avec identifiant local
+    const tempId = -(msgCounterRef.current++);
     const userMsgOptimiste: MessageAssistant = {
-      id: Date.now(),
+      id: tempId,
       role: "user",
       contenu: texte,
       sources: [],
@@ -181,7 +266,7 @@ function AssistantApp() {
       // Mettre à jour le titre dans la liste si c'était le premier message
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id === targetConvId && c.titre === "Nouvelle conversation") {
+          if (c.id === targetConvId && (c.titre === "Nouvelle conversation" || c.titre.startsWith("Nouvelle"))) {
             const newTitre = texte.slice(0, 50) + (texte.length > 50 ? "..." : "");
             return { ...c, titre: newTitre };
           }
@@ -203,192 +288,186 @@ function AssistantApp() {
     }
   };
 
+  const handleSend = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    executeSendMessage(inputMessage);
+  };
+
   const toggleSourceExpand = (msgId: number) => {
     setExpandedSources((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setInputMessage(suggestion);
-    inputRef.current?.focus();
+  const handleSuggestionClick = (prompt: string) => {
+    executeSendMessage(prompt);
   };
 
-  return (
-    <div className="flex h-[calc(100vh-65px)] min-h-[600px] bg-[#FAF8F5]">
-      {/* 1. Volet Latéral / Liste des Conversations */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 transform border-r border-bordure bg-white transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex h-full flex-col justify-between">
-          <div>
-            {/* En-tête Volet */}
-            <div className="border-b border-bordure/60 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-beige text-brun-fonce font-black text-xs">
-                    IA
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-brun">Assistant CIAT</h2>
-                    <p className="text-[11px] text-texte-doux">RAG & Atelier</p>
-                  </div>
-                </div>
+  const currentSuggestions = mode === "documents" ? SUGGESTIONS_DOCUMENTS : SUGGESTIONS_ATELIER;
 
-                {/* Bouton fermeture sur mobile */}
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="rounded-lg p-1.5 text-texte-doux hover:bg-ivoire md:hidden"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Bouton Nouvelle Conversation */}
-              <Button
-                variant="primary"
-                onClick={handleNewConversation}
-                className="mt-4 w-full justify-center text-xs font-bold"
-              >
-                <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Nouvelle conversation
-              </Button>
-            </div>
-
-            {/* Liste scrollable des conversations */}
-            <div className="overflow-y-auto p-2" style={{ maxHeight: "calc(100vh - 220px)" }}>
-              <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-texte-doux">
-                Historique des échanges
-              </div>
-
-              {loadingConversations && (
-                <div className="space-y-2 p-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-12 w-full animate-pulse rounded-lg bg-ivoire" />
-                  ))}
-                </div>
-              )}
-
-              {!loadingConversations && conversations.length === 0 && (
-                <p className="p-4 text-center text-xs text-texte-doux">
-                  Aucune conversation enregistrée. Démarrez un échange !
-                </p>
-              )}
-
-              {!loadingConversations &&
-                conversations.map((conv) => {
-                  const isActive = conv.id === activeConvId;
-                  return (
-                    <button
-                      key={conv.id}
-                      type="button"
-                      onClick={() => {
-                        startTransition(() => {
-                          setActiveConvId(conv.id);
-                          setSidebarOpen(false);
-                        });
-                      }}
-                      className={`group mb-1 flex w-full flex-col items-start rounded-xl p-3 text-left transition-all ${
-                        isActive
-                          ? "bg-ivoire border border-beige shadow-xs text-brun font-bold"
-                          : "text-texte-doux hover:bg-[#FAF8F5] hover:text-brun"
-                      }`}
-                    >
-                      <span className="line-clamp-1 text-xs">{conv.titre}</span>
-                      <span className="mt-1 text-[10px] text-[#5A4B42] font-normal">
-                        {formatConversationDate(conv.cree_le)}
-                      </span>
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Pied Volet Latéral */}
-          <div className="border-t border-bordure/60 p-3 bg-ivoire/40 text-center">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-texte-doux font-medium">
-              <span className="h-2 w-2 rounded-full bg-succes"></span>
-              Modèle conforme Charte CIAT
-            </span>
-          </div>
+  // Rendu de la colonne historique
+  const renderHistoryContent = () => (
+    <div className="flex h-full flex-col justify-between bg-white">
+      <div>
+        {/* En-tête épuré Volet Historique : Action directe */}
+        <div className="border-b border-[#EFE4D6] p-3.5">
+          <button
+            type="button"
+            onClick={handleNewConversation}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2E1605] px-3.5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#422212] active:scale-[0.99]"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Nouvelle conversation</span>
+          </button>
         </div>
-      </aside>
 
-      {/* Masque sombre pour mobile quand la sidebar est ouverte */}
-      {sidebarOpen && (
-        <div
-          role="presentation"
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/30 md:hidden"
-        />
-      )}
+        {/* Liste scrollable des conversations */}
+        <div className="overflow-y-auto p-2" style={{ maxHeight: "calc(100vh - 180px)" }}>
+          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#8C6D4F]">
+            Historique des échanges
+          </div>
 
-      {/* 2. Zone Principale du Chat */}
-      <main className="flex flex-1 flex-col overflow-hidden">
-        {/* Barre Supérieure du Chat */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-bordure bg-white px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="rounded-lg p-2 text-brun hover:bg-ivoire md:hidden"
-              aria-label="Ouvrir le menu des conversations"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+          {loadingConversations && (
+            <div className="space-y-2 p-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-14 w-full animate-pulse rounded-xl bg-[#FAF7F2]" />
+              ))}
+            </div>
+          )}
 
-            <div>
-              <h1 className="text-sm font-bold text-brun sm:text-base">
-                {conversations.find((c) => c.id === activeConvId)?.titre || "Assistant IA CIAT"}
-              </h1>
-              <p className="text-[11px] text-texte-doux">
-                {mode === "documents"
-                  ? "Mode Documents : recherche stricte basée sur les textes officiels"
-                  : "Mode Atelier : accompagnement méthodologique à la rédaction"}
+          {!loadingConversations && conversations.length === 0 && (
+            <div className="p-6 text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#FAF7F2] text-[#8C6D4F]">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <p className="mt-2 text-xs font-semibold text-[#24140D]">Vos échanges apparaîtront ici</p>
+              <p className="mt-1 text-[11px] text-[#7A583A]">
+                Commencez une nouvelle conversation pour retrouver vos échanges.
               </p>
             </div>
+          )}
+
+          {!loadingConversations &&
+            conversations.map((conv) => {
+              const isActive = conv.id === activeConvId;
+              return (
+                <button
+                  key={conv.id}
+                  type="button"
+                  onClick={() => {
+                    startTransition(() => {
+                      setActiveConvId(conv.id);
+                      setIsMobileDrawerOpen(false);
+                    });
+                  }}
+                  className={`group mb-1.5 flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
+                    isActive
+                      ? "border border-[#E8DACB] bg-[#F5EFE6] font-bold text-[#24140D] shadow-xs"
+                      : "text-[#5C3D2E] hover:bg-[#FAF7F2] hover:text-[#24140D]"
+                  }`}
+                >
+                  <div className="min-w-0 flex-1 pr-2">
+                    <span className="line-clamp-1 text-xs font-semibold">{conv.titre}</span>
+                    <span className="mt-1 block text-[10px] text-[#8C6D4F]">
+                      {formatRelativeTime(conv.cree_le)}
+                    </span>
+                  </div>
+                  <ChevronRight
+                    className={`h-4 w-4 shrink-0 transition-transform ${
+                      isActive ? "text-[#24140D]" : "text-[#8C6D4F]/60 group-hover:translate-x-0.5 group-hover:text-[#24140D]"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* Pied Volet Historique */}
+      <div className="border-t border-[#EFE4D6] bg-[#FAF7F2] p-3 text-center">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#7A583A]">
+          <span className="h-2 w-2 rounded-full bg-[#166534]" />
+          Corpus conforme Charte CIAT
+        </span>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-[calc(100dvh-56px)] lg:h-screen min-h-0 lg:min-h-[640px] bg-[#FAF7F2] overflow-hidden">
+      {/* 1. ZONE PRINCIPALE DU CHAT (À GAUCHE, COLLÉE AU SIDEBAR PRINCIPAL) */}
+      <main className="flex flex-1 flex-col overflow-hidden bg-[#FAF7F2]">
+        {/* Barre Supérieure du Chat */}
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#EFE4D6] bg-white px-4 sm:px-6">
+          {/* Titre sans aucun bouton à gauche */}
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-bold text-[#24140D] truncate">
+              Assistant IA du CIAT
+            </h1>
+            <p className="text-[11px] text-[#7A583A] truncate">
+              Des réponses sourcées ou un accompagnement pour structurer votre projet.
+            </p>
           </div>
 
-          {/* Sélecteur de Mode (Documents / Atelier) */}
-          <div className="flex items-center rounded-xl border border-bordure bg-[#FAF8F5] p-1">
+          {/* Contrôles à droite : Modes & Bouton Historique */}
+          <div className="flex items-center gap-3">
+            {/* Sélecteur de Mode Segmenté */}
+            <div className="flex items-center rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-1 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setMode("documents")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  mode === "documents"
+                    ? "bg-[#2E1605] text-white shadow-xs"
+                    : "text-[#5C3D2E] hover:text-[#24140D]"
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Documents CIAT</span>
+                <span className="sm:hidden">Documents</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("atelier")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  mode === "atelier"
+                    ? "bg-[#2E1605] text-white shadow-xs"
+                    : "text-[#5C3D2E] hover:text-[#24140D]"
+                }`}
+              >
+                <PenTool className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Atelier Rédaction</span>
+                <span className="sm:hidden">Atelier</span>
+              </button>
+            </div>
+
+            {/* Bouton icône compact unique pour Replier / Déplier l'historique sur la droite */}
             <button
               type="button"
-              onClick={() => setMode("documents")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                mode === "documents"
-                  ? "bg-brun text-white shadow-xs"
-                  : "text-texte-doux hover:text-brun"
-              }`}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+                  setIsHistoryOpen(!isHistoryOpen);
+                } else {
+                  setIsMobileDrawerOpen(!isMobileDrawerOpen);
+                }
+              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white text-[#5C3D2E] hover:border-[#C99A68] hover:bg-[#FAF7F2] hover:text-[#24140D] transition-colors shadow-2xs"
+              title={isHistoryOpen ? "Replier le volet d'historique" : "Déplier le volet d'historique"}
+              aria-label={isHistoryOpen ? "Replier le volet d'historique" : "Déplier le volet d'historique"}
             >
-              <span>Documents CIAT</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("atelier")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                mode === "atelier"
-                  ? "bg-beige text-brun-fonce font-bold shadow-xs"
-                  : "text-texte-doux hover:text-brun"
-              }`}
-            >
-              <span>Atelier Rédaction</span>
+              {isHistoryOpen ? (
+                <PanelRightClose className="h-4.5 w-4.5" />
+              ) : (
+                <PanelRightOpen className="h-4.5 w-4.5" />
+              )}
             </button>
           </div>
         </header>
 
-        {/* Corps des Messages */}
+        {/* Corps des Messages & Accueil */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {/* Bandeau Mode Démonstration */}
           {isDemo && <DemoBanner />}
 
-          {/* Bandeau d'erreur globale */}
+          {/* Bandeau d'erreur */}
           {error && (
             <ApiErrorBanner
               message={error}
@@ -400,80 +479,110 @@ function AssistantApp() {
             />
           )}
 
-          {/* Écran d'accueil si conversation vide */}
+          {/* ÉTAT D'ACCUEIL ILLUSTRÉ (quand aucun message dans la conversation) */}
           {!loadingMessages && messages.length === 0 && (
-            <div className="mx-auto max-w-2xl py-8 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-beige/20 text-brun">
-                <svg className="h-8 w-8 text-beige" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <h2 className="mt-4 text-xl font-bold text-brun">
-                Bienvenue sur l&apos;Assistant IA du CIAT
-              </h2>
-              <p className="mt-2 text-xs text-texte-doux max-w-lg mx-auto leading-relaxed">
-                {mode === "documents"
-                  ? "Interrogez le corpus officiel (règlements, chartes, dossiers d'appel) pour obtenir des réponses exactes et sourcées."
-                  : "Bénéficiez d'un accompagnement pas-à-pas pour structurer votre pitch, votre matrice SWOT ou votre fiche projet."}
-              </p>
+            <div className="mx-auto max-w-5xl space-y-6 pt-2 pb-6">
+              {/* Carte Hero d'accueil */}
+              <div className="relative overflow-hidden rounded-3xl border border-[#EFE4D6] bg-gradient-to-br from-[#FAF7F2] via-[#F6F0E7] to-[#ECE1D3] p-6 sm:p-8 shadow-xs">
+                <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
+                  {/* Texte & Message */}
+                  <div className="lg:col-span-7 space-y-3">
+                    <span className="inline-flex items-center rounded-full bg-[#EFE4D6] px-3 py-1 text-xs font-semibold tracking-wide text-[#7A583A]">
+                      Votre assistant IA
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#24140D]">
+                      Comment puis-je vous aider ?
+                    </h2>
+                    <p className="text-xs sm:text-sm leading-relaxed text-[#5C3D2E] max-w-xl">
+                      {mode === "documents"
+                        ? "Interrogez les documents officiels du CIAT (règlements, chartes, critères d'éligibilité) pour obtenir des réponses exactes et sourcées."
+                        : "Bénéficiez d'un accompagnement méthodique pour structurer votre pitch, formuler votre problème usager et préparer vos fiches de projet."}
+                    </p>
+                  </div>
 
-              {/* Suggestions cliquables */}
-              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSuggestionClick("Quelles sont les 4 étapes du parcours d'incubation du CIAT ?")
-                  }
-                  className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
-                >
-                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
-                    Parcours
+                  {/* Illustration vectorielle locale sobre */}
+                  <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                    <div className="relative w-full max-w-[340px] overflow-hidden rounded-2xl border border-[#EFE4D6]/80 bg-white/40 shadow-xs">
+                      <Image
+                        src="/images/ciat-assistant-illustration.jpg"
+                        alt="Illustration Assistant IA CIAT"
+                        width={680}
+                        height={380}
+                        priority
+                        className="h-auto w-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Cartes de suggestions fonctionnelles */}
+              <div>
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <span className="text-xs font-bold text-[#24140D]">
+                    Suggestions d&apos;actions immédiates
                   </span>
-                  Quelles sont les étapes du parcours d&apos;incubation ?
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSuggestionClick("Comment est gérée la propriété intellectuelle des projets incubés ?")
-                  }
-                  className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
-                >
-                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
-                    Propriété
+                  <span className="text-[11px] text-[#7A583A]">
+                    Mode {mode === "documents" ? "Documents CIAT" : "Atelier Rédaction"}
                   </span>
-                  Comment est gérée la propriété intellectuelle des brevets ?
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleSuggestionClick("Aide-moi à structurer le pitch de mon projet d'irrigation solaire.")
-                  }
-                  className="rounded-xl border border-bordure bg-white p-3 text-left text-xs font-semibold text-brun transition hover:border-beige hover:bg-ivoire shadow-xs"
-                >
-                  <span className="block text-[11px] text-[#5A4B42] font-bold uppercase mb-1">
-                    Atelier
-                  </span>
-                  Aide-moi à structurer le pitch de mon projet innovant.
-                </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {currentSuggestions.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSuggestionClick(item.prompt)}
+                      className="group flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 text-left shadow-xs transition-all hover:border-[#C99A68] hover:shadow-md active:scale-[0.99]"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#A35926]">
+                            {item.tag}
+                          </span>
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2E1605] text-white">
+                            {mode === "documents" ? (
+                              <FileText className="h-3.5 w-3.5" />
+                            ) : (
+                              <PenTool className="h-3.5 w-3.5" />
+                            )}
+                          </div>
+                        </div>
+                        <h3 className="mt-3 text-sm font-bold text-[#24140D] group-hover:text-[#A35926] transition-colors">
+                          {item.titre}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-[#5C3D2E] leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-end">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-[#24140D] transition-transform group-hover:translate-x-1 group-hover:bg-[#F5EFE6]">
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* Chargement des messages */}
           {loadingMessages && (
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-4xl mx-auto">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
                 >
-                  <div className="h-16 w-64 animate-pulse rounded-2xl bg-white border border-bordure" />
+                  <div className="h-20 w-72 animate-pulse rounded-2xl bg-white border border-[#EFE4D6]" />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Fil des Messages */}
+          {/* Fil des Messages de la conversation */}
           {!loadingMessages &&
             messages.map((msg) => {
               const isUser = msg.role === "user";
@@ -483,16 +592,16 @@ function AssistantApp() {
               return (
                 <div
                   key={msg.id}
-                  className={`flex items-start gap-3 ${
+                  className={`flex items-start gap-3 max-w-4xl mx-auto ${
                     isUser ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Avatar */}
+                  {/* Avatar sobre institutionnel */}
                   <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-xs ${
                       isUser
-                        ? "bg-brun text-white"
-                        : "bg-beige text-brun-fonce border border-[#b88755]"
+                        ? "bg-[#2E1605] text-white"
+                        : "bg-[#F0E7DB] text-[#24140D] border border-[#E8DACB]"
                     }`}
                   >
                     {isUser ? "Vous" : "CIAT"}
@@ -502,31 +611,39 @@ function AssistantApp() {
                   <div
                     className={`max-w-2xl rounded-2xl p-4 sm:p-5 shadow-xs ${
                       isUser
-                        ? "bg-brun text-white"
-                        : "bg-white text-brun border border-bordure"
+                        ? "bg-[#2E1605] text-white"
+                        : "bg-white text-[#24140D] border border-[#EFE4D6]"
                     }`}
                   >
-                    {/* Corps du texte */}
+                    {/* Contenu */}
                     <div className="whitespace-pre-line text-sm leading-relaxed">
                       {msg.contenu}
                     </div>
 
-                    {/* Sources Documentaires Citées */}
+                    {/* Sources Documentaires Citées (Mode Documents) */}
                     {!isUser && hasSources && (
-                      <div className="mt-4 border-t border-bordure/60 pt-3">
+                      <div className="mt-4 border-t border-[#EFE4D6] pt-3">
                         <button
                           type="button"
                           onClick={() => toggleSourceExpand(msg.id)}
-                          className="flex w-full items-center justify-between text-xs font-bold text-brun hover:text-beige"
+                          className="flex w-full items-center justify-between text-xs font-bold text-[#24140D] hover:text-[#A35926] transition-colors"
                         >
                           <span className="flex items-center gap-1.5">
-                            <svg className="h-4 w-4 text-beige" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1.5 1.5 0 011.06.44l5.414 5.414a1.5 1.5 0 01.44 1.06V19a2 2 0 01-2 2z" />
-                            </svg>
-                            {msg.sources.length} source{msg.sources.length > 1 ? "s" : ""} documentaire{msg.sources.length > 1 ? "s" : ""} citée{msg.sources.length > 1 ? "s" : ""}
+                            <BookOpen className="h-4 w-4 text-[#A35926]" />
+                            {msg.sources.length} source{msg.sources.length > 1 ? "s" : ""} documentaire{msg.sources.length > 1 ? "s" : ""} officielle{msg.sources.length > 1 ? "s" : ""}
                           </span>
-                          <span className="text-[11px] text-texte-doux">
-                            {isExpanded ? "Masquer ▲" : "Afficher ▼"}
+                          <span className="flex items-center gap-1 text-[11px] text-[#7A583A]">
+                            {isExpanded ? (
+                              <>
+                                <span>Masquer</span>
+                                <ChevronUp className="h-3.5 w-3.5" />
+                              </>
+                            ) : (
+                              <>
+                                <span>Afficher</span>
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </>
+                            )}
                           </span>
                         </button>
 
@@ -535,13 +652,15 @@ function AssistantApp() {
                             {msg.sources.map((src, sIdx) => (
                               <div
                                 key={sIdx}
-                                className="rounded-xl border border-bordure bg-[#FAF8F5] p-3 text-xs"
+                                className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-3 text-xs"
                               >
-                                <div className="flex items-center justify-between font-bold text-brun">
+                                <div className="flex items-center justify-between font-bold text-[#24140D]">
                                   <span>{src.titre}</span>
-                                  <Badge tone="info">Doc #{src.document_id}</Badge>
+                                  <span className="rounded-md bg-[#F0E7DB] px-2 py-0.5 text-[10px] text-[#7A583A] font-semibold">
+                                    Doc #{src.document_id}
+                                  </span>
                                 </div>
-                                <blockquote className="mt-1.5 text-texte-doux italic leading-relaxed border-l-2 border-beige pl-2">
+                                <blockquote className="mt-2 text-[#5C3D2E] italic leading-relaxed border-l-2 border-[#A35926] pl-2.5">
                                   « {src.extrait} »
                                 </blockquote>
                               </div>
@@ -551,9 +670,9 @@ function AssistantApp() {
                       </div>
                     )}
 
-                    {/* Mention légale obligatoire IA */}
+                    {/* Mention légale institutionnelle */}
                     {!isUser && (
-                      <p className="mt-3 text-[10px] text-texte-doux italic border-t border-bordure/40 pt-2">
+                      <p className="mt-3 text-[10px] text-[#7A583A] italic border-t border-[#EFE4D6]/50 pt-2">
                         {msg.avertissement_ia ||
                           "Réponse générée par l'intelligence artificielle du CIAT à titre informatif."}
                       </p>
@@ -563,15 +682,15 @@ function AssistantApp() {
               );
             })}
 
-          {/* Animation Pendant la Réflexion */}
+          {/* Animation pendant la réflexion (sobre, aucun emoji) */}
           {sending && (
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-beige text-brun-fonce font-bold text-xs animate-pulse">
-                IA
+            <div className="flex items-start gap-3 max-w-4xl mx-auto">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0E7DB] text-[#24140D] font-bold text-xs border border-[#E8DACB]">
+                CIAT
               </div>
-              <div className="rounded-2xl border border-bordure bg-white p-4 shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-semibold text-brun">
-                  <span className="flex h-2 w-2 rounded-full bg-beige animate-ping" />
+              <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-xs">
+                <div className="flex items-center gap-2.5 text-xs font-semibold text-[#24140D]">
+                  <Loader2 className="h-4 w-4 animate-spin text-[#A35926]" />
                   <span>
                     {mode === "documents"
                       ? "Consultation et extraction des documents officiels..."
@@ -585,10 +704,10 @@ function AssistantApp() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Barre de Saisie Inférieure */}
-        <footer className="border-t border-bordure bg-white p-4 sm:p-5">
+        {/* Zone de Saisie Inférieure */}
+        <footer className="border-t border-[#EFE4D6] bg-white p-4 sm:p-5">
           <form onSubmit={handleSend} className="mx-auto max-w-4xl">
-            <div className="relative flex items-end gap-2 rounded-2xl border border-bordure bg-white p-2 shadow-sm focus-within:border-beige focus-within:ring-1 focus-within:ring-beige">
+            <div className="relative flex items-end gap-2 rounded-2xl border border-[#EFE4D6] bg-white p-2.5 shadow-sm transition-all focus-within:border-[#A35926] focus-within:ring-2 focus-within:ring-[#C99A68]/20">
               <textarea
                 ref={inputRef}
                 rows={2}
@@ -603,41 +722,65 @@ function AssistantApp() {
                 }}
                 placeholder={
                   mode === "documents"
-                    ? "Posez votre question sur les règles, filières ou documents du CIAT (Entrée pour envoyer)..."
-                    : "Décrivez votre projet pour structurer votre pitch ou matrice SWOT (Entrée pour envoyer)..."
+                    ? "Posez votre question sur les textes officiels, le parcours ou les critères du CIAT (Entrée pour envoyer)..."
+                    : "Décrivez votre projet, vos objectifs ou votre besoin de rédaction (Entrée pour envoyer)..."
                 }
-                className="w-full resize-none bg-transparent px-3 py-2 text-sm text-brun placeholder:text-texte-doux focus:outline-none disabled:opacity-50"
+                className="w-full resize-none bg-transparent px-3 py-2 text-sm text-[#24140D] placeholder:text-[#8C6D4F]/70 focus:outline-none disabled:opacity-50"
               />
 
-              <Button
+              <button
                 type="submit"
-                variant="primary"
                 disabled={!inputMessage.trim() || sending}
-                className="shrink-0 !min-h-[44px] !px-4 text-xs font-bold"
+                className="flex items-center justify-center shrink-0 min-h-[44px] px-4 rounded-xl bg-[#2E1605] text-white font-bold text-xs shadow-xs transition-all hover:bg-[#422212] disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Envoyer le message"
               >
                 {sending ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                  <Send className="h-4 w-4" />
                 )}
-                <span className="hidden sm:inline ml-1.5">Envoyer</span>
-              </Button>
+                <span className="hidden sm:inline ml-2">Envoyer</span>
+              </button>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-[11px] text-texte-doux px-1">
-              <span>
-                Mode actuel :{" "}
-                <strong className="text-brun">
-                  {mode === "documents" ? "Recherche documentaire stricte" : "Atelier de rédaction assistée"}
-                </strong>
+            <div className="mt-2.5 flex items-center justify-between text-[11px] text-[#7A583A] px-1">
+              <span className="flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-[#8C6D4F]" />
+                <span>
+                  {mode === "documents"
+                    ? "Les réponses documentaires s'appuient sur les sources disponibles."
+                    : "Atelier méthodologique d'aide à la structuration de projet."}
+                </span>
               </span>
-              <span>Maj+Entrée pour retour à la ligne</span>
+              <span className="hidden sm:inline text-[#8C6D4F]/70">
+                Entrée pour envoyer &bull; Maj+Entrée pour retour à la ligne
+              </span>
             </div>
           </form>
         </footer>
       </main>
+
+      {/* 2. ZONE HISTORIQUE (REPLIABLE SUR LA DROITE) */}
+      <aside
+        className={`hidden lg:flex flex-col transition-all duration-300 ease-in-out border-l border-[#EFE4D6] bg-white ${
+          isHistoryOpen ? "w-72 xl:w-80" : "w-0 border-l-0 overflow-hidden"
+        }`}
+      >
+        <div className="w-72 xl:w-80 h-full">{renderHistoryContent()}</div>
+      </aside>
+
+      {/* TIROIR MOBILE POUR L'HISTORIQUE (GLISSANT DEPUIS LA DROITE) */}
+      {isMobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileDrawerOpen(false)}
+          />
+          <div className="relative z-10 flex w-full max-w-xs flex-1 flex-col shadow-2xl bg-white">
+            {renderHistoryContent()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
