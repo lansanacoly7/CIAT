@@ -1,6 +1,11 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import styles from "./page.module.css";
+import "./appels.css";
+
+const styles: Record<string, string> = new Proxy(
+  {},
+  { get: (_, prop: string) => String(prop) }
+);
 
 export const metadata: Metadata = {
   title: "Appel à candidature | CIAT",
