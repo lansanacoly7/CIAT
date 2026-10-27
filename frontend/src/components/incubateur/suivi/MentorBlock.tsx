@@ -72,8 +72,7 @@ export default function MentorBlock({
         </div>
       ) : (
         <p className="text-sm text-texte-doux">
-          Le mentor actuel de ce projet n&apos;est pas communiqué par l&apos;API. Il apparaît ici dès qu&apos;un mentor est
-          affecté depuis cet écran.
+          Aucun mentor n&apos;est actuellement affecté à ce projet.
         </p>
       )}
 

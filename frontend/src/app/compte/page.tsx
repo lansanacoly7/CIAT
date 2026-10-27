@@ -7,7 +7,7 @@ import { useAuth, type Role, type User } from "@/context/AuthContext";
 import { ApiErrorBanner, Badge, Button, PageTitle } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { fetchAll } from "@/lib/paginate";
-import { STATUT_LABELS, suiviErrorMessage, type Dossier } from "@/lib/incubator";
+import { STATUT_LABELS, suiviErrorMessage, telechargerAccuseReception, type Dossier } from "@/lib/incubator";
 
 const ROLE_LABELS: Record<Role, string> = {
   porteur: "Porteur de projet",
@@ -99,8 +99,8 @@ function ProfilForm({ user }: { user: User }) {
       <label htmlFor={key} className="mb-1 block text-sm font-medium text-[#24140D]">
         {FIELD_NAMES[key]}
       </label>
-      <input id={key} type={type} autoComplete={auto} value={form[key]} onChange={set(key)} className={INPUT} aria-invalid={Boolean(fieldErrors[key])} />
-      {fieldErrors[key] && <p className="mt-1 text-sm text-[#DC2626]">{fieldErrors[key]}</p>}
+      <input id={key} type={type} autoComplete={auto} value={form[key]} onChange={set(key)} className={INPUT} aria-invalid={Boolean(fieldErrors[key])} aria-describedby={fieldErrors[key] ? `${key}-error` : undefined} />
+      {fieldErrors[key] && <p id={`${key}-error`} className="mt-1 text-sm text-[#DC2626]">{fieldErrors[key]}</p>}
     </div>
   );
 
@@ -125,14 +125,14 @@ function ProfilForm({ user }: { user: User }) {
         <label htmlFor="genre" className="mb-1 block text-sm font-medium text-[#24140D]">
           Genre
         </label>
-        <select id="genre" value={form.genre} onChange={set("genre")} className={INPUT}>
+        <select id="genre" value={form.genre} onChange={set("genre")} className={INPUT} aria-invalid={Boolean(fieldErrors.genre)} aria-describedby={fieldErrors.genre ? "genre-error" : undefined}>
           {GENRES.map((g) => (
             <option key={g.value} value={g.value}>
               {g.label}
             </option>
           ))}
         </select>
-        {fieldErrors.genre && <p className="mt-1 text-sm text-[#DC2626]">{fieldErrors.genre}</p>}
+        {fieldErrors.genre && <p id="genre-error" className="mt-1 text-sm text-[#DC2626]">{fieldErrors.genre}</p>}
       </div>
 
       {status && (
@@ -175,10 +175,39 @@ const DOSSIER_TONES = { brouillon: "neutre", soumis: "alerte", complet: "succes"
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 
+function dossierStatutLabel(statut: string) {
+  return STATUT_LABELS[statut as keyof typeof STATUT_LABELS]?.label ?? "Statut non reconnu";
+}
+
 function MesProjets() {
   const [data, setData] = useState<{ projets: ProjetCompte[]; dossiers: Dossier[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [downloadingAccuseId, setDownloadingAccuseId] = useState<number | null>(null);
+  const [accuseError, setAccuseError] = useState<{ id: number; message: string } | null>(null);
+
+  async function handleTelechargerAccuse(dossierId: number) {
+    setDownloadingAccuseId(dossierId);
+    setAccuseError(null);
+    try {
+      const blob = await telechargerAccuseReception(dossierId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `accuse_reception_dossier_${dossierId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setAccuseError({
+        id: dossierId,
+        message: suiviErrorMessage(err, "Impossible de télécharger l'accusé de réception. Veuillez réessayer."),
+      });
+    } finally {
+      setDownloadingAccuseId(null);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -257,24 +286,48 @@ function MesProjets() {
         ) : (
           <ul className="space-y-2">
             {dossiers.map((d) => (
-              <li key={d.id} className="flex flex-col gap-2 rounded-lg border border-[#EFE4D6] bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="font-semibold text-[#24140D]">
-                    Dossier n°{d.id} — {d.projet.titre}
-                  </p>
-                  <p className="text-xs text-[#6b5646]">
-                    {d.soumis_le ? `Soumis le ${date(d.soumis_le)}` : "Non soumis"} · complétude {d.completude}%
-                  </p>
+              <li key={d.id} className="flex flex-col gap-2 rounded-lg border border-[#EFE4D6] bg-white p-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#24140D]">
+                      Dossier n°{d.id} — {d.projet.titre}
+                    </p>
+                    <p className="text-xs text-[#6b5646]">
+                      {d.soumis_le ? `Soumis le ${date(d.soumis_le)}` : "Non soumis"} · complétude {d.completude}%
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone={DOSSIER_TONES[d.statut as keyof typeof DOSSIER_TONES] ?? "neutre"}>{dossierStatutLabel(d.statut)}</Badge>
+                    {Boolean(d.soumis_le) && (
+                      <button
+                        type="button"
+                        onClick={() => handleTelechargerAccuse(d.id)}
+                        disabled={downloadingAccuseId === d.id}
+                        className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-[#612D10] bg-white px-3 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2] disabled:opacity-50"
+                      >
+                        {downloadingAccuseId === d.id ? (
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
+                        ) : (
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                          </svg>
+                        )}
+                        <span>Accusé (PDF)</span>
+                      </button>
+                    )}
+                    <Link
+                      href={d.statut === "brouillon" ? "/incubateur" : `/incubateur/projets/${d.projet.id}`}
+                      className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-[#612D10] underline hover:text-[#3F1D0A]"
+                    >
+                      {d.statut === "brouillon" ? "Reprendre" : "Voir le suivi"}
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={DOSSIER_TONES[d.statut]}>{STATUT_LABELS[d.statut].label}</Badge>
-                  <Link
-                    href={d.statut === "brouillon" ? "/incubateur" : `/incubateur/projets/${d.projet.id}`}
-                    className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-[#612D10] underline hover:text-[#3F1D0A]"
-                  >
-                    {d.statut === "brouillon" ? "Reprendre" : "Voir le suivi"}
-                  </Link>
-                </div>
+                {accuseError?.id === d.id && (
+                  <p role="alert" className="mt-1 rounded-md border border-[#DC2626]/30 bg-[#DC2626]/5 p-2 text-xs text-[#DC2626]">
+                    {accuseError.message}
+                  </p>
+                )}
               </li>
             ))}
           </ul>

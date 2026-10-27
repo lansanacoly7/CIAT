@@ -102,10 +102,11 @@ export default function ProjectInfoStep({
               value={form.titre}
               onChange={set("titre")}
               aria-invalid={Boolean(errors.titre)}
+              aria-describedby={errors.titre ? "titre-error" : undefined}
               placeholder="Ex. : Irrigation solaire pour maraîchers"
               className={`${CONTROL} min-h-11 ${errors.titre ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
             />
-            {errors.titre && <p className="mt-1.5 text-xs text-[#DC2626]">{errors.titre}</p>}
+            {errors.titre && <p id="titre-error" className="mt-1.5 text-xs text-[#DC2626]">{errors.titre}</p>}
           </div>
           <div>
             <Label htmlFor="domaine" required>Domaine d&apos;activité</Label>
@@ -114,6 +115,7 @@ export default function ProjectInfoStep({
               value={form.domaine ?? ""}
               onChange={set("domaine")}
               aria-invalid={Boolean(errors.domaine)}
+              aria-describedby={errors.domaine ? "domaine-error" : undefined}
               className={`${CONTROL} min-h-11 ${errors.domaine ? "border-[#DC2626]" : "border-[#EFE4D6]"}`}
             >
               <option value="">Sélectionnez…</option>
@@ -123,7 +125,7 @@ export default function ProjectInfoStep({
                 </option>
               ))}
             </select>
-            {errors.domaine && <p className="mt-1.5 text-xs text-[#DC2626]">{errors.domaine}</p>}
+            {errors.domaine && <p id="domaine-error" className="mt-1.5 text-xs text-[#DC2626]">{errors.domaine}</p>}
           </div>
         </div>
       </div>
