@@ -161,3 +161,17 @@ def envoyer_alertes_jalons_en_retard(today=None) -> dict:
         "alertes_ignorees": alertes_ignorees,
         "details": details,
     }
+
+
+# Export des fonctions d'envoi d'emails transactionnels (Phase 5)
+from .emails import (  # noqa: E402
+    envoyer_email_confirmation_soumission,
+    envoyer_email_decision_dossier,
+)
+
+__all__ = [
+    "AlerteJalonEnvoyee",
+    "envoyer_alertes_jalons_en_retard",
+    "envoyer_email_confirmation_soumission",
+    "envoyer_email_decision_dossier",
+]
