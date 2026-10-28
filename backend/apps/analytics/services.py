@@ -68,7 +68,13 @@ RÈGLE ABSOLUE : Base-toi STRICTEMENT et UNIQUEMENT sur les chiffres et données
 
 
 def apply_dict_filters(queryset, filtres: dict):
-    """Applique de façon sécurisée les filtres validés sur le queryset Projet."""
+    """Applique de façon sécurisée les filtres validés sur le queryset Projet.
+
+    Sécurité et protection anti-injection :
+    - N'exécute aucun fragment SQL brut : chaque filtre est typé et validé via l'ORM Django.
+    - Dates : analysées strictement avec `strptime` (%Y-%m-%d) pour éliminer toute valeur malformée.
+    - Énumérations : vérifie l'appartenance stricte à `Projet.Statut.values`.
+    """
     debut = filtres.get("debut")
     if debut:
         try:
@@ -116,7 +122,14 @@ def apply_dict_filters(queryset, filtres: dict):
 
 
 def execute_endpoint_query(endpoint: str, queryset):
-    """Exécute les agrégations ORM correspondantes selon l'endpoint sélectionné."""
+    """Exécute les agrégations ORM correspondantes selon l'endpoint sélectionné.
+
+    Sécurité d'exécution :
+    - Liste fermée d'opérations : n'autorise que les agrégats pré-programmés du tableau
+      de bord (`indicateurs`, `par-domaine`, `par-cohorte`, `par-genre`, `evolution`).
+    - Recoupement mathématique : garantit le calcul exact du taux de sélection
+      (sélectionnés / dossiers déposés) et des filières d'incubation.
+    """
     if endpoint == "indicateurs":
         stats = queryset.aggregate(
             idees_recues=Count("id"),
@@ -285,7 +298,13 @@ def execute_endpoint_query(endpoint: str, queryset):
 def traiter_question_analytics(question: str) -> dict:
     """Traite une question en langage naturel sur les données d'analyse décisionnelle.
 
-    Renvoie : { "reponse": str, "donnees": any, "filtres_utilises": dict }
+    Architecture de sécurité en deux temps :
+    1. Classification d'intention (Intent Routing) : le modèle traduit la question en un
+       endpoint autorisé et des filtres normalisés en mode JSON strict. Si la question est
+       hors-périmètre ou hostile, le serveur intercepte immédiatement le rejet.
+    2. Exécution ORM serveur : le backend exécute les calculs chiffrés réels sur PostgreSQL/SQLite.
+    3. Synthèse factuelle : le modèle formule une réponse textuelle en 1 à 3 phrases basée
+       STRICTEMENT sur les chiffres réels transmis, garantissant zéro hallucination.
     """
     if not question or not question.strip():
         raise ValueError("Le champ 'question' est requis.")

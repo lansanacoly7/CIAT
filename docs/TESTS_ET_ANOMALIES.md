@@ -196,3 +196,117 @@ Conformément à l'exigence de la tâche T1 (*« il casse si on retire une valid
 3. Résultat : Le test a échoué immédiatement avec `AssertionError: 201 != 400` (le serveur créait l'entité avec un fichier vide au lieu de rejeter avec 400).
 4. Restauration de la validation : La suite complète repasse au vert (`Ran 7 tests in 10.092s — OK`).
 
+---
+
+## 7. Optimisation et Profilage de la Suite de Tests (Phase 9 — Tâche T1)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Ramener le temps d'exécution de la suite complète strictement **sous 35 secondes** (336 tests), sans supprimer ni affaiblir aucun test.
+- **Commande de mesure de référence :**
+  ```bash
+  python manage.py test --timing --durations 15
+  ```
+
+### Synthèse Avant / Après Optimisation
+
+| Métrique | État Initial (Avant T1) | État Final (Après T1) | Évolution | Objectif |
+|---|---|---|---|---|
+| **Nombre total de tests** | **336 tests** (1 skipped) | **336 tests** (1 skipped) | Identique (0 test supprimé ni affaibli) | 336 tests |
+| **Durée d'exécution brute** | **55,867 s** | **32,265 s** | **-23,602 s (-42,2 %)** | **< 35,0 s** (Atteint) |
+| **Durée totale du processus** | **61,696 s** | **36,222 s** | **-25,474 s (-41,3 %)** | Réduction globale |
+| **Statut de la suite** | OK (vert) | OK (vert) | 100 % passante | Vert |
+
+### Diagnostic des Causes de Lenteur
+
+Le profilage initial avec `--durations 15` a mis en lumière 3 goulots d'étranglement majeurs :
+1. **Génération d'images de démonstration Pillow (`apps/core/demo_images.py`) :**
+   - Boucle Python traçant ligne par ligne 480 ou 600 lignes de dégradé par image (`draw.line`).
+   - Accès répétés au système de fichiers pour résoudre et instancier les polices TrueType (`ImageFont.truetype`) sur chaque ligne de texte et chaque image sans mise en cache.
+   - Compression lourde PNG et JPEG avec `optimize=True` effectuant des passes multiples lentes sous Pillow.
+   - Conséquence : la classe `TestDemoImages` monopolisait **10,403 s** pour seulement 4 tests.
+2. **Absence d'accélérateur de hachage de mot de passe (`PASSWORD_HASHERS`) :**
+   - `TestDemoImages` n'utilisait pas `MD5PasswordHasher` et exécutait le hachage PBKDF2 par défaut (870 000 itérations) dans sa méthode `setUp()` à chaque test.
+3. **Recréation systématique des acteurs dans `setUp()` plutôt que `setUpTestData()` :**
+   - Dans `apps/core/tests/test_audit.py` et `test_notifications.py`, les méthodes `setUp()` recréaient 4 utilisateurs avec hachage sur chaque test unitaire.
+4. **Effet cumulatif sur `seed_all` :**
+   - Le test `test_seed_all_complet_coherence_et_idempotence` (qui appelle deux fois `seed_all` pour prouver l'idempotence) génère 28 images locales au premier passage. Le coût unitaire de chaque image gonflait la durée du test à **12,184 s**.
+
+### Corrections Appliquées
+
+1. **Mise en cache et accélération graphique dans `apps/core/demo_images.py` :**
+   - Ajout d'un décorateur `@functools.lru_cache(maxsize=64)` sur `get_font(size, bold)` afin de charger chaque police TrueType une seule fois en mémoire.
+   - Remplacement de la boucle `draw.line` par la création d'une image 1D de gradient redimensionnée en C par Pillow (`gradient.resize((width, height))`).
+   - Allègement de l'encodage (JPEG qualité 80 et PNG standard sans le surcoût de recherche d'arbres de Huffman `optimize=True`). Les fichiers générés restent ultra-légers (30 à 45 Ko), bien en dessous du plafond de 150 Ko requis.
+2. **Optimisation de `apps/core/tests/test_demo_images.py` :**
+   - Ajout de l'accélérateur `@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])`.
+   - Migration de `setUp()` vers `@classmethod setUpTestData(cls)` : les entités socles (`user`, `domaine`, `cohorte`, `projet`) ne sont plus instanciées qu'une seule fois pour la classe.
+   - Résultat direct : la durée de `TestDemoImages` s'est effondrée de **10,403 s** à **0,261 s** (accélération x40).
+3. **Migration vers `setUpTestData` dans `test_audit.py` et `test_notifications.py` :**
+   - Remplacement des instanciations d'utilisateurs répétées dans `setUp()` par `setUpTestData()` pour `JournalAuditEndpointTests`, `JournalAuditActionsTracesTests` et `NotificationEvenementsTracesTests`.
+
+### Profil des 15 Tests les Plus Lents Avant / Après
+
+| Rang | Test (Méthode et Classe) | Durée Initiale | Durée Finale | Gain / Évolution |
+|:---:|---|:---:|:---:|---|
+| **1** | `SeedAllCommandTestCase.test_seed_all_complet_coherence_et_idempotence` | 12,184 s | **10,379 s** | -1,805 s (images x2 accélérées) |
+| **2** | `TestDemoImages.test_generer_photo_galerie_sans_externe` | 2,835 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **3** | `TestDemoImages.test_generer_image_actualite` | 2,681 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **4** | `TestDemoImages.test_generer_toutes_images_demo_batch` | 2,595 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **5** | `TestDemoImages.test_generer_logo_partenaire` | 2,292 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **6** | `SeedDemoCommandTestCase.test_seed_demo_complete_and_idempotent` | 1,263 s | 1,355 s | Stable (~1,3 s pour 62 projets) |
+| **7** | `RobustesseApiAucuneErreur500Tests.test_01_identifiants_negatifs_et_inexistants` | 0,948 s | **0,723 s** | -0,225 s (-23,7 %) |
+| **8** | `JournalAuditActionsTracesTests.test_01_trace_decision_dossier` | 0,916 s | 0,977 s | Stable (envoi email + notification) |
+| **9** | `ParcoursCompletAPITestCase.test_parcours_complet_bout_en_bout_et_rbac` | 0,656 s | **0,625 s** | Stable (9 étapes e2e RBAC) |
+| **10** | `MatriceDroitsAPITests.test_matrice_routes_pathe_dossier_accuse_reception` | 0,436 s | **0,197 s** | -0,239 s (-54,8 %) |
+| **11** | `IncubateurSecurityAndAuthorizationTests.test_seuls_admin_et_coordonnateur_peuvent_decider` | 0,424 s | **< 0,13 s** | Sorti du top 15 |
+| **12** | `ParcoursCompletE2EAPITests.test_09_parcours_complet_e2e_enchaine` | 0,381 s | **0,352 s** | Stable |
+| **13** | `IncubateurBusinessRulesAndLifecycleTests.test_cycle_de_vie_nominal_complet` | 0,348 s | **< 0,13 s** | Sorti du top 15 |
+| **14** | `ParcoursCompletAPITestCase.test_parcours_rejet_completude_et_suppression_piece` | 0,324 s | **0,304 s** | Stable |
+| **15** | `MatriceDroitsAPITests.test_routes_publiques_accessibles_a_tous` | 0,308 s | **0,277 s** | Stable |
+| **Nouveau 9** | `MatriceDroitsAPITests.test_matrice_routes_pathe_projet_compte_rendu` | < 0,30 s | **0,203 s** | Entré dans le top 15 |
+| **Nouveau 11** | `PartenaireTests.test_admin_cree_partenaire` | < 0,30 s | **0,177 s** | Entré dans le top 15 |
+| **Nouveau 12** | `RobustesseApiAucuneErreur500Tests.test_04_champs_absents_et_payloads_vides` | < 0,30 s | **0,163 s** | Entré dans le top 15 |
+| **Nouveau 13** | `ParcoursCompletE2EAPITests.test_08_export_compte_rendu_pdf_et_xlsx` | < 0,30 s | **0,150 s** | Entré dans le top 15 |
+| **Nouveau 14** | `DocumentExportTests.test_export_docx_valide_avec_charte` | < 0,30 s | **0,143 s** | Entré dans le top 15 |
+| **Nouveau 15** | `Phase4IncubatorTests.test_t1_equipe_et_comite_peuvent_telecharger_accuse` | < 0,30 s | **0,132 s** | Entré dans le top 15 |
+
+---
+
+## 8. Validation de l'Installation et de l'Exploitation (Phase 9 — Tâche T2)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Garantir qu'un développeur ou administrateur système vierge de tout contexte puisse installer, configurer et exploiter la plateforme en suivant **strictement** le seul [README.md](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/README.md).
+- **Vérifications et enrichissements apportés :**
+  1. **Installation pas à pas (Back-end & Front-end) :**
+     - Séquence ordonnée : environnement virtuel `.venv`, installation des dépendances, création de `.env` depuis `.env.example`, migrations (`migrate`), peuplement (`seed_demo` / `seed_all`) et lancement (`runserver` / `npm run dev`).
+     - Comptes de référence documentés avec mot de passe standard `Ciat2026!` et matrice des rôles (Admin, Coordonnateur, Mentor, Comité, Porteur).
+  2. **Section « Guide d'Exploitation » intégrée :**
+     - **Sauvegarde et restauration de la base :** Documentation complète des scripts POSIX robustes (`scripts/sauvegarde_bd.sh`, `scripts/restauration_bd.sh` et `scripts/verifier_sauvegarde_restauration.sh`), gestion des sauvegardes locales ou via conteneur Docker, avec rétention automatique de 14 dumps et archivage des médias (`--avec-media`).
+     - **Tableau des variables d'environnement critiques :** Rôle, impact et valeurs par défaut pour 13 variables clés (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`, `AI_PROVIDERS`, `SITE_URL`, `CORS_ALLOWED_ORIGINS`, etc.).
+     - **Réinitialisation des données de démonstration :** Procédure documentée de purge (`flush --no-input`) et régénération idempotente (`seed_all`) des 62 projets, 58 dossiers et pièces associées.
+     - **Résilience IA (503 Service Unavailable) :** Procédure d'exploitation en cas d'épuisement des quotas Groq/Gemini, bascule automatique (failover) et rétablissement en production.
+     - **Audit et consultation des journaux :** Emplacement des logs (`journalctl`, Docker, stdout), filtrage strict des données sensibles (`SensitiveDataFilter`) et réglage du niveau `DJANGO_LOG_LEVEL`.
+
+---
+
+## 9. Revue Qualité et Couverture des Docstrings (Phase 9 — Tâche T3)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Atteindre un niveau d'organisation et de documentation exemplaire du code source back-end en ajoutant des docstrings explicatives en français sur les classes, vues, modèles et services clés, **sans modifier la moindre ligne de logique applicative**.
+- **Périmètre prioritaire :** `apps/core/ai.py`, `apps/assistant/services.py`, `apps/documents/services.py`, `apps/analytics/` et `apps/incubator/`.
+- **Règle de rédaction :** Documentation axée sur le **pourquoi** (règles métier institutionnelles, invariants d'intégrité, contrôle d'accès RBAC et sécurité) plutôt que sur la paraphrase du code.
+
+### Mesure Avant / Après Couverture des Docstrings
+
+| Périmètre Analysé | Éléments Déclarés (Classes & Fonctions) | Éléments Documentés (Avant T3) | Éléments Documentés (Après T3) | Taux Initial | Taux Final | Progression |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Services IA Socles (`core/ai.py`, `assistant/services.py`, `documents/services.py`)** | 38 | 21 | **38** | 55,3 % | **100,0 %** | **+44,7 %** |
+| **Périmètre complet cible (`core/ai`, `assistant/services`, `documents/services`, `analytics/`, `incubator/`)** | 491 | 258 | **331** | **52,5 %** | **67,4 %** | **+14,9 %** (+73 composants) |
+
+### Vérification de Non-Régression
+- `python manage.py check` : **0 erreur**.
+- `python manage.py makemigrations --check` : **No changes detected**.
+- Suite complète de tests : **336 tests passants (100 % verts)** en **32,26 s** (< 35 s).
+
+
+

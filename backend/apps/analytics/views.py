@@ -115,6 +115,13 @@ class IndicateursView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Calcule les indicateurs globaux du pipeline en une seule requête SQL performante.
+
+        Règles d'intégrité métier :
+        - Recoupement : croise les projets déclarés avec les dossiers formels d'incubation.
+        - Taux de sélection : calculé rigoureusement sur le ratio des projets retenus par rapport
+          aux dossiers déposés éligibles.
+        """
         qs = apply_filters(Projet.objects.all(), request)
 
         # Agrégats en une seule requête SQL performante
@@ -215,6 +222,7 @@ class ParDomaineView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Agrège le volume de projets par filière technologique pour guider l'affectation des ressources."""
         qs = apply_filters(Projet.objects.all(), request)
         data = (
             qs.values("domaine__nom")
@@ -242,6 +250,7 @@ class ParCohorteView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Compare la performance et le passage à l'échelle (prototypes) entre promotions annuelles."""
         qs = apply_filters(Projet.objects.all(), request)
         data = (
             qs.values("cohorte__nom", "cohorte__annee")
@@ -293,6 +302,7 @@ class ParGenreView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Mesure la parité femmes/hommes des porteurs de projets selon les engagements institutionnels."""
         qs = apply_filters(Projet.objects.all(), request)
         data = (
             qs.values("porteur__genre")
@@ -329,6 +339,7 @@ class EvolutionView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Restitue l'évolution mensuelle des dépôts de projets pour analyser la saisonnalité."""
         qs = apply_filters(Projet.objects.all(), request)
         data = (
             qs.annotate(mois=TruncMonth("cree_le"))
@@ -368,6 +379,7 @@ class AnalyticsExportView(APIView):
         return (renderers[0], renderers[0].media_type)
 
     def get(self, request):
+        """Génère et télécharge le rapport consolidé du tableau de bord au format Excel ou PDF institutionnel."""
         fmt = request.query_params.get("format", "").strip().lower()
         if fmt not in ("xlsx", "pdf"):
             return Response(
@@ -427,6 +439,7 @@ class QuestionView(APIView):
     throttle_scope = "ai"
 
     def post(self, request):
+        """Traite une question décisionnelle en langage naturel avec limitation de débit et capture d'erreur 503."""
         question = request.data.get("question")
         if not question or not str(question).strip():
             return Response(
@@ -582,6 +595,7 @@ class PartenariatsListView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Liste les conventions et partenariats rattachés aux projets selon les filtres actifs."""
         qs = Partenariat.objects.select_related(
             "projet", "projet__domaine", "projet__cohorte", "projet__porteur"
         )
@@ -600,6 +614,7 @@ class FinancementsListView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Liste les financements accordés et décaissés avec traçabilité des guichets d'origine."""
         qs = Financement.objects.select_related(
             "projet", "projet__domaine", "projet__cohorte", "projet__porteur"
         )
@@ -624,6 +639,7 @@ class PartenariatsFinancementsStatsView(APIView):
     permission_classes = [IsAnalyticsAuthorized]
 
     def get(self, request):
+        """Calcule les agrégats financiers globaux (montant mobilisé vs décaissé) et le taux de partenariats actifs."""
         fin_qs = Financement.objects.select_related("projet")
         part_qs = Partenariat.objects.select_related("projet")
 

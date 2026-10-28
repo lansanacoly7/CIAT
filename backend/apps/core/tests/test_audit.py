@@ -25,30 +25,30 @@ FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 class JournalAuditEndpointTests(TestCase):
     """Vérification des droits d'accès et des filtres de GET /api/audit/."""
 
-    def setUp(self):
-        self.client = APIClient()
-        self.admin = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user(
             email="admin.audit@ciat.sn",
             password="Password123!",
             role=Role.ADMIN,
             first_name="Admin",
             last_name="CIAT",
         )
-        self.coordo = User.objects.create_user(
+        cls.coordo = User.objects.create_user(
             email="coordo.audit@ciat.sn",
             password="Password123!",
             role=Role.COORDONNATEUR,
             first_name="Coordo",
             last_name="CIAT",
         )
-        self.porteur = User.objects.create_user(
+        cls.porteur = User.objects.create_user(
             email="porteur.audit@ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
             first_name="Porteur",
             last_name="Audit",
         )
-        self.mentor = User.objects.create_user(
+        cls.mentor = User.objects.create_user(
             email="mentor.audit@ciat.sn",
             password="Password123!",
             role=Role.MENTOR,
@@ -57,19 +57,22 @@ class JournalAuditEndpointTests(TestCase):
         )
 
         enregistrer_audit(
-            acteur=self.admin,
+            acteur=cls.admin,
             action="decision_dossier",
             objet="Dossier #1 (Projet Solaire)",
             avant={"statut": "depose"},
             apres={"statut": "accepte", "decision": "accepte"},
         )
         enregistrer_audit(
-            acteur=self.coordo,
+            acteur=cls.coordo,
             action="affectation_mentor",
             objet="Projet #1 (Projet Solaire)",
             avant={},
-            apres={"mentor_id": self.mentor.id, "mentor_nom": "Mentor Audit"},
+            apres={"mentor_id": cls.mentor.id, "mentor_nom": "Mentor Audit"},
         )
+
+    def setUp(self):
+        self.client = APIClient()
 
     def test_acces_non_authentifie_refuse_401(self):
         resp = self.client.get("/api/audit/")
@@ -147,34 +150,37 @@ class JournalAuditEndpointTests(TestCase):
 class JournalAuditActionsTracesTests(TestCase):
     """Vérifie que chaque action sensible requise laisse une trace testée."""
 
-    def setUp(self):
-        self.client = APIClient()
-        self.admin = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user(
             email="admin.actions@ciat.sn",
             password="Password123!",
             role=Role.ADMIN,
         )
-        self.coordo = User.objects.create_user(
+        cls.coordo = User.objects.create_user(
             email="coordo.actions@ciat.sn",
             password="Password123!",
             role=Role.COORDONNATEUR,
         )
-        self.porteur = User.objects.create_user(
+        cls.porteur = User.objects.create_user(
             email="porteur.actions@ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
         )
-        self.mentor = User.objects.create_user(
+        cls.mentor = User.objects.create_user(
             email="mentor.actions@ciat.sn",
             password="Password123!",
             role=Role.MENTOR,
         )
-        self.domaine = Domaine.objects.create(nom="AgriTech Audit")
-        self.projet = Projet.objects.create(
+        cls.domaine = Domaine.objects.create(nom="AgriTech Audit")
+        cls.projet = Projet.objects.create(
             titre="Système d'irrigation solaire",
-            domaine=self.domaine,
-            porteur=self.porteur,
+            domaine=cls.domaine,
+            porteur=cls.porteur,
         )
+
+    def setUp(self):
+        self.client = APIClient()
 
     def test_01_trace_decision_dossier(self):
         from apps.incubator.models import StatutDossier
