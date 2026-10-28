@@ -876,11 +876,14 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             aria-hidden="true"
           />
 
-          {/* Carte modale centrée */}
+          {/* Carte modale centrée avec hauteur définie pour le layout split */}
           <div
-            className="relative z-10 flex flex-col w-full max-w-6xl max-h-[88vh] rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
+            className="relative z-10 flex flex-col w-full max-w-6xl rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
             style={{
               margin: "auto",
+              height: "min(88vh, 820px)",
+              minHeight: "480px",
+              maxHeight: "88vh",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -914,10 +917,10 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             </div>
 
             {/* Corps split en 2 colonnes */}
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
 
               {/* ═══════ PANNEAU GAUCHE : Filtres + Graphiques ═══════ */}
-              <div className="w-full lg:w-[410px] shrink-0 border-b lg:border-b-0 lg:border-r border-[#EFE4D6] bg-[#FAF7F2]/40 flex flex-col overflow-y-auto">
+              <div className="w-full md:w-[380px] lg:w-[420px] shrink-0 border-b md:border-b-0 md:border-r border-[#EFE4D6] bg-[#FAF7F2]/40 flex flex-col overflow-y-auto">
 
                 {/* Filtres */}
                 <div className="p-4 space-y-3 border-b border-[#EFE4D6]">
@@ -968,17 +971,17 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                 </div>
 
                 {/* Diagramme en barres — Flux par mois */}
-                <div className="p-4 border-b border-[#EFE4D6]">
-                  <div className="flex items-center gap-1.5 mb-2.5">
+                <div className="p-3.5 border-b border-[#EFE4D6]">
+                  <div className="flex items-center gap-1.5 mb-2">
                     <TrendingUp className="h-3.5 w-3.5 text-[#8C5E2D]" />
                     <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
                       Flux par mois (diagramme en barres)
                     </span>
                   </div>
                   {barChartData.length >= 1 ? (
-                    <div style={{ width: "100%", height: 170, minHeight: 170 }}>
+                    <div style={{ width: "100%", height: 145, minHeight: 145 }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={barChartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                        <BarChart data={barChartData} margin={{ top: 2, right: 6, left: -22, bottom: 0 }}>
                           <XAxis
                             dataKey="mois"
                             tick={{ fontSize: 9, fill: "#8C6D4F" }}
@@ -987,7 +990,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                             interval={0}
                             angle={-45}
                             textAnchor="end"
-                            height={38}
+                            height={34}
                           />
                           <YAxis
                             tick={{ fontSize: 8, fill: "#A08B7A" }}
@@ -1021,21 +1024,21 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                             dataKey="montant"
                             fill="#8C5E2D"
                             radius={[4, 4, 0, 0]}
-                            maxBarSize={28}
+                            maxBarSize={26}
                           />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   ) : (
-                    <div className="py-6 text-center text-[11px] text-[#8C6D4F]">
+                    <div className="py-4 text-center text-[11px] text-[#8C6D4F]">
                       Aucune donnée disponible
                     </div>
                   )}
                 </div>
 
                 {/* Diagramme anneau — Répartition par statut */}
-                <div className="p-4 flex-1">
-                  <div className="flex items-center gap-1.5 mb-2.5">
+                <div className="p-3.5 shrink-0">
+                  <div className="flex items-center gap-1.5 mb-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-[#8C5E2D]" />
                     <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
                       Répartition par statut (anneau)
@@ -1043,15 +1046,15 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                   </div>
                   {donutData.length > 0 ? (
                     <div className="flex items-center gap-3">
-                      <div style={{ width: 130, height: 130, minHeight: 130 }} className="shrink-0">
+                      <div style={{ width: 105, height: 105, minHeight: 105 }} className="shrink-0">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
                               data={donutData}
                               cx="50%"
                               cy="50%"
-                              innerRadius={34}
-                              outerRadius={56}
+                              innerRadius={26}
+                              outerRadius={46}
                               paddingAngle={3}
                               dataKey="value"
                               strokeWidth={0}
@@ -1082,18 +1085,18 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                         </ResponsiveContainer>
                       </div>
                       {/* Légende */}
-                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
                         {donutData.map((entry) => (
                           <div key={entry.name} className="flex items-center gap-2">
                             <span
-                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              className="h-2 w-2 rounded-full shrink-0"
                               style={{ backgroundColor: entry.color }}
                             />
                             <div className="flex-1 min-w-0">
-                              <span className="text-[11px] font-medium text-[#21130D] block truncate">
+                              <span className="text-[10px] font-medium text-[#21130D] block truncate">
                                 {entry.name}
                               </span>
-                              <span className="text-[10px] text-[#8C6D4F] tabular-nums">
+                              <span className="text-[9px] text-[#8C6D4F] tabular-nums font-semibold">
                                 {formatNumber(entry.value)} FCFA
                               </span>
                             </div>
@@ -1102,7 +1105,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                       </div>
                     </div>
                   ) : (
-                    <div className="py-6 text-center text-[11px] text-[#8C6D4F]">
+                    <div className="py-4 text-center text-[11px] text-[#8C6D4F]">
                       Aucune donnée disponible
                     </div>
                   )}
