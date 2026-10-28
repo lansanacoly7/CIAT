@@ -22,6 +22,7 @@ import { EntonnoirCard } from "./components/EntonnoirCard";
 import { FinancesCard } from "./components/FinancesCard";
 import { ATraiterCard } from "./components/ATraiterCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
+import dynamic from "next/dynamic";
 import {
   ChartCard,
   CohorteChart,
@@ -29,11 +30,22 @@ import {
   EvolutionChart,
   GenreChart,
 } from "./components/ChartCard";
-import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
-import { AiDrawer } from "./components/AiDrawer";
-import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
+
+// Chargement asynchrone des composants lourds (recharts, tiroir IA, impression PDF)
+const DetailTable = dynamic(
+  () => import("./components/DetailTable").then((mod) => mod.DetailTable),
+  { ssr: false }
+);
+const AiDrawer = dynamic(
+  () => import("./components/AiDrawer").then((mod) => mod.AiDrawer),
+  { ssr: false }
+);
+const PrintSummaryModal = dynamic(
+  () => import("./components/PrintSummaryModal").then((mod) => mod.PrintSummaryModal),
+  { ssr: false }
+);
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();

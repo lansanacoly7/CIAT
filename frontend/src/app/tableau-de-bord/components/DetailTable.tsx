@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUpDown,
@@ -49,11 +49,12 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // État de montage client (pour le portail du document)
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Détection du montage client (conforme React 19 / sans setState in effect)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // État de la modale d'historique des fonds
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);

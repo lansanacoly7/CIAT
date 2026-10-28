@@ -1471,6 +1471,12 @@ class AnalyticsDataConsistencyTests(TestCase):
         self.assertEqual(dossiers_count, 5, "Le nombre de dossiers à évaluer doit être exactement de 5.")
 
 
+# Import des tests de recoupement exhaustifs de la Phase 8 (T1)
+from .test_recoupement_indicateurs import RecoupementIndicateursTests
+
+__all__ = ["RecoupementIndicateursTests"]
+
+
 
 
 

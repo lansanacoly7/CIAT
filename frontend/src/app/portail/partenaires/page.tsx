@@ -28,9 +28,12 @@ function PartenaireLogo({ src, alt, sigle }: { src?: string; alt: string; sigle?
       <img
         src={src}
         alt={alt}
+        width={56}
+        height={56}
         onError={() => setLoadError(true)}
         className="h-full w-full object-contain"
         loading="lazy"
+        decoding="async"
       />
     </div>
   );

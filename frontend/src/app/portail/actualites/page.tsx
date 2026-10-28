@@ -36,9 +36,12 @@ function ActuCardImage({ src, alt }: { src?: string; alt: string }) {
     <img
       src={src}
       alt={alt}
+      width={600}
+      height={340}
       onError={() => setLoadError(true)}
       className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
       loading="lazy"
+      decoding="async"
     />
   );
 }

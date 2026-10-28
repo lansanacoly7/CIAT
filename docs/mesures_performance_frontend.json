@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-10-28T03:23:15.279Z",
+  "host": "Windows_NT 10.0.22000 (x64)",
+  "cpu": "Intel(R) Core(TM) i7-7600U CPU @ 2.80GHz",
+  "results": [
+    {
+      "page": "Tableau de bord",
+      "path": "/tableau-de-bord",
+      "score": 92,
+      "fcpMs": 2132,
+      "lcpMs": 2800,
+      "cls": 0,
+      "ttfbMs": 1846,
+      "loadMs": 6390,
+      "requests": 70,
+      "totalKb": 504,
+      "imageKb": 0,
+      "imageCount": 0,
+      "domNodes": 660
+    },
+    {
+      "page": "Portail public",
+      "path": "/portail",
+      "score": 86,
+      "fcpMs": 2388,
+      "lcpMs": 3020,
+      "cls": 0,
+      "ttfbMs": 1013,
+      "loadMs": 4832,
+      "requests": 25,
+      "totalKb": 4286,
+      "imageKb": 13,
+      "imageCount": 2,
+      "domNodes": 300
+    },
+    {
+      "page": "Galerie des innovations",
+      "path": "/galerie",
+      "score": 100,
+      "fcpMs": 1064,
+      "lcpMs": 2444,
+      "cls": 0,
+      "ttfbMs": 380,
+      "loadMs": 4470,
+      "requests": 41,
+      "totalKb": 4825,
+      "imageKb": 463,
+      "imageCount": 11,
+      "domNodes": 422
+    },
+    {
+      "page": "Connexion",
+      "path": "/connexion",
+      "score": 100,
+      "fcpMs": 1448,
+      "lcpMs": 1448,
+      "cls": 0,
+      "ttfbMs": 201,
+      "loadMs": 2761,
+      "requests": 26,
+      "totalKb": 4366,
+      "imageKb": 74,
+      "imageCount": 2,
+      "domNodes": 113
+    }
+  ]
+}
