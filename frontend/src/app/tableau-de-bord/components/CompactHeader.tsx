@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Download,
   FileSpreadsheet,
@@ -9,6 +10,7 @@ import {
   Printer,
   RefreshCw,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { DashboardFilters } from "../types";
@@ -245,6 +247,16 @@ export function CompactHeader({
           />
         </button>
 
+        {/* Accès direct au guide méthodologique */}
+        <Link
+          href="/tableau-de-bord/methodologie"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-[#5A4B42] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:text-[#21130D] active:scale-95"
+          title="Consulter le référentiel méthodologique et les formules de calcul"
+        >
+          <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
+          <span className="hidden md:inline">Méthodologie</span>
+        </Link>
+
         {/* Bouton Poser une question (Tiroir IA) */}
         <button
           type="button"
@@ -255,6 +267,7 @@ export function CompactHeader({
         >
           <MessageSquare className="h-3.5 w-3.5 text-[#C99A68]" />
           <span className="hidden sm:inline">Poser une question</span>
+          <span className="sm:hidden font-medium">Question</span>
         </button>
 
         {/* Menu Exporter Unique */}

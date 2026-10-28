@@ -10,6 +10,8 @@ import {
   Home,
   BookOpen,
   Rocket,
+  ClipboardCheck,
+  AlertTriangle,
   FileText,
   Globe,
   MessageSquare,
@@ -28,6 +30,18 @@ const STAFF_ITEMS = [
     href: "/incubateur",
     titre: "Gestion de l'incubateur",
     icon: Rocket,
+  },
+  {
+    slug: "evaluation",
+    href: "/incubateur/evaluation",
+    titre: "Évaluation des dossiers",
+    icon: ClipboardCheck,
+  },
+  {
+    slug: "alertes",
+    href: "/incubateur/alertes",
+    titre: "Alertes & Jalons",
+    icon: AlertTriangle,
   },
   {
     slug: "calendrier",
@@ -55,8 +69,8 @@ const STAFF_ITEMS = [
   },
   {
     slug: "galerie",
-    href: "/galerie",
-    titre: "Galerie des innovations",
+    href: "/galerie/gestion",
+    titre: "Validation Galerie",
     icon: Layers,
   },
   {

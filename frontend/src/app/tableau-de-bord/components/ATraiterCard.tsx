@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 
@@ -17,7 +18,6 @@ interface ATraiterCardProps {
 
 export function ATraiterCard({
   counts = { retards: 8, conventions: 2, dossiers: 5 },
-  onFilterStatut,
   onNavigateTab,
 }: ATraiterCardProps) {
   const items = [
@@ -27,8 +27,8 @@ export function ATraiterCard({
       text: "jalons en retard sur le calendrier d'incubation",
       shortText: "jalons en retard",
       dotClass: "bg-[#B85D43]", // Rouge terracotta
-      onClick: () => onFilterStatut?.("incube"),
-      actionLabel: "Filtrer les projets incubés",
+      href: "/incubateur/alertes",
+      actionLabel: "Consulter la liste des jalons en retard",
     },
     {
       id: "conventions",
@@ -37,7 +37,8 @@ export function ATraiterCard({
       shortText: "conventions en attente",
       dotClass: "bg-[#C99A68]", // Cuivre / Ocre
       onClick: () => onNavigateTab?.("financements"),
-      actionLabel: "Consulter les conventions",
+      href: "/tableau-de-bord?vue=financements",
+      actionLabel: "Consulter les conventions de partenariat",
     },
     {
       id: "dossiers",
@@ -45,8 +46,8 @@ export function ATraiterCard({
       text: "dossiers à évaluer par le comité de sélection",
       shortText: "dossiers à évaluer",
       dotClass: "bg-[#4A6B82]", // Bleu ardoise
-      onClick: () => onFilterStatut?.("depose"),
-      actionLabel: "Filtrer les dossiers déposés",
+      href: "/incubateur/evaluation",
+      actionLabel: "Accéder au cockpit d'évaluation des candidatures",
     },
   ];
 
@@ -80,16 +81,27 @@ export function ATraiterCard({
               </span>
             </div>
 
-            {/* Droite : lien 'Voir →' */}
-            <button
-              type="button"
-              onClick={item.onClick}
-              title={item.actionLabel}
-              className="group inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#21130D] transition hover:text-[#C99A68] focus:outline-hidden"
-            >
-              <span>Voir</span>
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </button>
+            {/* Droite : lien direct 'Voir →' */}
+            {item.onClick ? (
+              <button
+                type="button"
+                onClick={item.onClick}
+                title={item.actionLabel}
+                className="group inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#21130D] transition hover:text-[#C99A68] focus:outline-hidden"
+              >
+                <span>Voir</span>
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            ) : (
+              <Link
+                href={item.href}
+                title={item.actionLabel}
+                className="group inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#21130D] transition hover:text-[#C99A68] focus:outline-hidden"
+              >
+                <span>Voir</span>
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            )}
           </div>
         ))}
       </div>

@@ -35,6 +35,7 @@ import {
 } from "./components/ChartCard";
 import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
+import { ProjetsPortfolioSection } from "./components/ProjetsPortfolioSection";
 import { AiDrawer } from "./components/AiDrawer";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
@@ -546,52 +547,55 @@ export function DashboardContent() {
               )}
 
               {/* =========================================================================
-                  VUE 2 : PROJETS ("Projets par domaine" + "Mixité et parité". Rien d'autre.)
+                  VUE 2 : PORTEFEUILLE PROJETS (Graphiques d'analyse + Répertoire exhaustif)
                  ========================================================================= */}
               {activeTab === "projets" && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <ChartCard
-                      title="Projets par domaine prioritaire"
-                      description="Répartition des innovations par filière d'excellence"
-                      summaryValue={`${data.parDomaine.length} domaines`}
-                      tableData={data.parDomaine.map((d) => ({
-                        Domaine: d.domaine,
-                        Total: d.total,
-                      }))}
-                      tableColumns={[
-                        { key: "Domaine", label: "Domaine prioritaire" },
-                        { key: "Total", label: "Nombre de projets" },
-                      ]}
-                      isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
-                      emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
-                      isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <DomaineChart data={data.parDomaine} />
-                    </ChartCard>
+                <ProjetsPortfolioSection
+                  filters={filters}
+                  chartsSlot={
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <ChartCard
+                        title="Projets par domaine prioritaire"
+                        description="Répartition des innovations par filière d'excellence"
+                        summaryValue={`${data.parDomaine.length} domaines`}
+                        tableData={data.parDomaine.map((d) => ({
+                          Domaine: d.domaine,
+                          Total: d.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Domaine", label: "Domaine prioritaire" },
+                          { key: "Total", label: "Nombre de projets" },
+                        ]}
+                        isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
+                        emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
+                        isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
+                        onRetry={handleRefresh}
+                      >
+                        <DomaineChart data={data.parDomaine} />
+                      </ChartCard>
 
-                    <ChartCard
-                      title="Mixité et parité des équipes"
-                      description="Représentativité et répartition par genre des porteurs"
-                      summaryValue={`${data.indicateurs.idees_recues} porteurs`}
-                      tableData={data.parGenre.map((g) => ({
-                        Genre: g.genre,
-                        Porteurs: g.total,
-                      }))}
-                      tableColumns={[
-                        { key: "Genre", label: "Catégorie" },
-                        { key: "Porteurs", label: "Effectif" },
-                      ]}
-                      isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
-                      emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
-                      isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <GenreChart data={data.parGenre} />
-                    </ChartCard>
-                  </div>
-                </div>
+                      <ChartCard
+                        title="Mixité et parité des équipes"
+                        description="Représentativité et répartition par genre des porteurs"
+                        summaryValue={`${data.indicateurs.idees_recues} porteurs`}
+                        tableData={data.parGenre.map((g) => ({
+                          Genre: g.genre,
+                          Porteurs: g.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Genre", label: "Catégorie" },
+                          { key: "Porteurs", label: "Effectif" },
+                        ]}
+                        isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
+                        emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
+                        isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
+                        onRetry={handleRefresh}
+                      >
+                        <GenreChart data={data.parGenre} />
+                      </ChartCard>
+                    </div>
+                  }
+                />
               )}
 
               {/* =========================================================================

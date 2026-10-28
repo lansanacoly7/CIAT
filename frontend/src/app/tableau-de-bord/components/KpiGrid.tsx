@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import {
   Users,
   FileText,
@@ -13,6 +14,7 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
+  Info,
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
 import type { IndicateursGlobaux } from "../types";
@@ -238,6 +240,14 @@ export function KpiGrid({
                   >
                     {card.label}
                   </span>
+                  <Link
+                    href={`/tableau-de-bord/methodologie#${card.id}`}
+                    className="text-[#8C6D58]/60 hover:text-[#612D10] transition-colors p-0.5 rounded-full hover:bg-[rgba(60,35,20,0.06)]"
+                    title={`Consulter la définition et formule de "${card.label}"`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
 
                 <button

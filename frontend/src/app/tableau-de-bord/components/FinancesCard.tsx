@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import Link from "next/link";
+import { Info } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 
 const emptySubscribe = () => () => {};
@@ -84,16 +86,25 @@ export function FinancesCard({
               </span>
             </div>
 
-            {onNavigateTab && (
-              <button
-                type="button"
-                onClick={() => onNavigateTab("financements")}
-                className="text-[12px] font-medium text-[#C99A68] hover:text-[#21130D] transition inline-flex items-center gap-0.5 min-h-[36px] min-w-[36px]"
+            <div className="flex items-center gap-2">
+              <Link
+                href="/tableau-de-bord/methodologie#financements"
+                className="text-[#8C6D58]/60 hover:text-[#612D10] transition-colors p-1 rounded-full hover:bg-[rgba(60,35,20,0.06)]"
+                title="Consulter les définitions méthodologiques des financements"
               >
-                <span>Détails</span>
-                <span aria-hidden="true">&rarr;</span>
-              </button>
-            )}
+                <Info className="h-3.5 w-3.5" />
+              </Link>
+              {onNavigateTab && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab("financements")}
+                  className="text-[12px] font-medium text-[#C99A68] hover:text-[#21130D] transition inline-flex items-center gap-0.5 min-h-[36px] min-w-[36px]"
+                >
+                  <span>Détails</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

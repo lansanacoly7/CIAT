@@ -149,4 +149,20 @@ export interface ConstatsResponse {
   seuils: Record<string, number>;
 }
 
+export interface ProjetPortfolioItem {
+  id: number;
+  titre: string;
+  resume: string;
+  probleme?: string;
+  solution?: string;
+  domaine: number | null;
+  domaine_nom?: string;
+  cohorte: number | null;
+  cohorte_nom?: string;
+  porteur?: number | null;
+  porteur_nom?: string;
+  statut: string;
+  cree_le: string;
+}
+
 
