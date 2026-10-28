@@ -21,15 +21,15 @@ export const PIECES_OBLIGATOIRES: PieceType[] = [
 export const PIECE_LABELS: Record<PieceType, { label: string; description: string }> = {
   fiche_projet: {
     label: "Fiche descriptive du projet",
-    description: "Document détaillant les objectifs, la méthodologie et l'impact attendu (PDF)",
+    description: "Objectifs, méthodologie et impact attendu (PDF)",
   },
   presentation_equipe: {
     label: "Présentation de l'équipe",
-    description: "CV et descriptif des compétences clés des porteurs du projet (PDF)",
+    description: "CV et descriptif des compétences clés des porteurs (PDF)",
   },
   budget_previsionnel: {
     label: "Budget prévisionnel",
-    description: "Estimation financière et besoins matériels / prototypage (PDF ou document Word).",
+    description: "Besoins matériels et estimation financière (PDF ou Word)",
   },
   autre: {
     label: "Document complémentaire (optionnel)",
@@ -81,6 +81,9 @@ export interface Dossier {
   pieces: Piece[];
   pieces_manquantes: PieceType[];
   soumis_le: string | null;
+  motif?: string;
+  motif_refus?: string;
+  decision?: { decision: string; motif: string; cree_le?: string } | null;
 }
 
 /**
@@ -209,6 +212,14 @@ export async function deletePiece(dossierId: number, pieceId: number): Promise<D
     method: "DELETE",
   });
   return await getDossier(dossierId);
+}
+
+/**
+ * Supprime un projet (stade idée) ou retire une candidature déposée.
+ * Le serveur applique la règle selon le statut et refuse les autres cas.
+ */
+export async function supprimerProjet(projetId: number): Promise<void> {
+  await api(`/projets/${projetId}/`, { method: "DELETE" });
 }
 
 /**
@@ -413,6 +424,7 @@ export interface EvenementCalendrier {
   projet: string;
   statut: string;
   en_retard: boolean;
+  projet_id?: number;
 }
 
 export const getCalendrier = async (mois: string): Promise<EvenementCalendrier[]> =>

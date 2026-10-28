@@ -152,6 +152,8 @@ REST_FRAMEWORK = {
         "ai": os.getenv("THROTTLE_RATE_AI", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "20/min"),
         "auth": os.getenv("THROTTLE_RATE_AUTH", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "5/min"),
         "gallery_interet": os.getenv("THROTTLE_RATE_GALLERY_INTERET", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "15/min"),
+        "portal_lettre": os.getenv("THROTTLE_RATE_PORTAL_LETTRE", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "10/min"),
+        "portal_recherche": os.getenv("THROTTLE_RATE_PORTAL_RECHERCHE", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "60/min"),
     },
     "EXCEPTION_HANDLER": "apps.core.logging.custom_exception_handler",
 }

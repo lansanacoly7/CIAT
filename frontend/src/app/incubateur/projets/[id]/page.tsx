@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { ApiErrorBanner } from "@/components/ui";
@@ -22,7 +23,8 @@ import MentorBlock from "@/components/incubateur/suivi/MentorBlock";
 import ObjectifsBlock from "@/components/incubateur/suivi/ObjectifsBlock";
 import JalonsBlock from "@/components/incubateur/suivi/JalonsBlock";
 import BilansSuiviSection from "@/components/incubateur/suivi/BilansSuiviSection";
-import { Bot } from "lucide-react";
+import DeleteProjectModal, { peutSupprimerOuRetirer } from "@/components/incubateur/DeleteProjectModal";
+import { Bot, Trash2, Undo2 } from "lucide-react";
 
 interface ProjetSuivi {
   id: number;
@@ -43,6 +45,7 @@ const PROJET_STATUTS: Record<string, string> = {
   prototype: "Prototype",
   termine: "Incubation terminée",
   rejete: "Non retenu",
+  retire: "Candidature retirée",
 };
 
 function projetStatutLabel(statut: string) {
@@ -73,19 +76,11 @@ function getProjetEtapeIndex(statut: string): number {
   }
 }
 
-function getProjetDomainImage(domaineNom?: string): { src: string; alt: string; slogan?: string } {
-  const nom = (domaineNom || "").toLowerCase();
-  if (nom.includes("agri") || nom.includes("environnement") || nom.includes("transformation")) {
-    return {
-      src: "/images/ciat-projet-agri.jpg",
-      alt: "Système d'irrigation solaire intelligent en zone agricole sénégalaise",
-      slogan: "Innover pour une agriculture durable !",
-    };
-  }
+function getProjetBanner(): { src: string; alt: string; slogan: string } {
   return {
-    src: "/images/ciat-suivi-banner.jpg",
-    alt: "Laboratoire et atelier d'innovation technologique du CIAT",
-    slogan: "Bâtir les solutions technologiques de demain",
+    src: "/images/ciat-incubation-universelle.jpg",
+    alt: "Espace d'innovation technologique et d'incubation multisectoriel du CIAT",
+    slogan: "Incubateur CIAT · De l'idée à la concrétisation",
   };
 }
 
@@ -93,6 +88,8 @@ function Suivi() {
   const params = useParams<{ id: string }>();
   const projetId = Number(params.id);
   const { user } = useAuth();
+  const router = useRouter();
+  const [showDelete, setShowDelete] = useState(false);
   const [projet, setProjet] = useState<ProjetSuivi | null>(null);
   const [objectifs, setObjectifs] = useState<Objectif[]>([]);
   const [jalons, setJalons] = useState<Jalon[]>([]);
@@ -150,11 +147,9 @@ function Suivi() {
   const canWriteSuivi = isEquipe || isMentorAffecte;
 
   const etapeActuelle = projet ? getProjetEtapeIndex(projet.statut) : 0;
-  const domainImg = getProjetDomainImage(projet?.domaine_nom);
+  const domainImg = getProjetBanner();
   const resumeTexte =
-    projet?.resume && projet.resume.trim().length > 0
-      ? projet.resume
-      : "Ce projet est en cours de structuration au sein de l'incubateur du CIAT. Les informations détaillées et les livrables associés sont consultables ci-dessous.";
+    "Tableau de bord de suivi et de pilotage de votre projet d'incubation au CIAT.";
 
   return (
     <div className="w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
@@ -209,11 +204,28 @@ function Suivi() {
               </div>
             </div>
 
-            <div className="self-start sm:self-center">
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5D7C5] bg-[#F7EFE6] px-3.5 py-1 text-xs font-semibold text-[#522504] shadow-xs">
                 {projetStatutLabel(projet.statut)}
               </span>
+              {user?.role === "porteur" && peutSupprimerOuRetirer(projet.statut) && (
+                <button
+                  type="button"
+                  onClick={() => setShowDelete(true)}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#E5D7C5] bg-white px-3 py-1 text-xs font-semibold text-[#8C6D4F] transition-colors hover:border-[#FECACA] hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                >
+                  {projet.statut === "depose" ? <Undo2 className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  {projet.statut === "depose" ? "Retirer ma candidature" : "Supprimer ce projet"}
+                </button>
+              )}
             </div>
+            {showDelete && (
+              <DeleteProjectModal
+                projet={{ id: projet.id, titre: projet.titre, statut: projet.statut }}
+                onClose={() => setShowDelete(false)}
+                onDone={() => router.push("/incubateur/projets")}
+              />
+            )}
           </div>
         )}
       </div>
@@ -225,10 +237,12 @@ function Suivi() {
             {/* VERSION MOBILE (< md) : Photo nette en haut, texte et progression en dessous */}
             <div className="md:hidden">
               <div className="relative h-36 w-full overflow-hidden">
-                <img
+                <Image
                   src={domainImg.src}
                   alt={domainImg.alt}
-                  className="h-full w-full object-cover object-center"
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 768px) 100vw, 54vw"
                 />
                 {domainImg.slogan && (
                   <div className="absolute bottom-2.5 right-2.5 rounded-md bg-[#24140D]/75 backdrop-blur-xs px-2.5 py-1 text-[11px] font-medium text-white italic">
@@ -246,29 +260,38 @@ function Suivi() {
                   </p>
                 </div>
 
-                {/* Progression horizontale du projet (Mobile) */}
+                {/* Progression en chevrons du projet (Mobile) */}
                 <div className="pt-2 border-t border-[#EADBCE]">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A7261] mb-2.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D4F] mb-2">
                     Parcours du projet
                   </p>
-                  <div className="grid grid-cols-4 gap-1 text-center">
+                  <div className="flex rounded-xl overflow-hidden border border-[#D9C3AB] bg-[#D9C3AB] shadow-xs">
                     {ETAPES_PARCOURS.map((step, idx) => {
                       const isCompleted = idx < etapeActuelle;
                       const isCurrent = idx === etapeActuelle;
+
+                      const clipClass =
+                        idx === 0
+                          ? "[clip-path:polygon(0%_0%,calc(100%-10px)_0%,100%_50%,calc(100%-10px)_100%,0%_100%)] z-40"
+                          : idx === ETAPES_PARCOURS.length - 1
+                          ? "-ml-[8px] [clip-path:polygon(0%_0%,100%_0%,100%_100%,0%_100%,10px_50%)] z-10"
+                          : idx === 1
+                          ? "-ml-[8px] [clip-path:polygon(0%_0%,calc(100%-10px)_0%,100%_50%,calc(100%-10px)_100%,0%_100%,10px_50%)] z-30"
+                          : "-ml-[8px] [clip-path:polygon(0%_0%,calc(100%-10px)_0%,100%_50%,calc(100%-10px)_100%,0%_100%,10px_50%)] z-20";
+
+                      const colorClass = isCompleted
+                        ? "bg-[#24140D] text-white"
+                        : isCurrent
+                        ? "bg-[#C99A68] text-white"
+                        : "bg-white text-[#522504]";
+
                       return (
-                        <div key={step.id} className="flex flex-col items-center">
-                          <div
-                            className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
-                              isCurrent
-                                ? "bg-[#522504] text-white ring-2 ring-[#D9C3AB]"
-                                : isCompleted
-                                ? "bg-[#8A7261] text-white"
-                                : "border border-[#D9C3AB] bg-white text-[#8A7261]"
-                            }`}
-                          >
-                            {isCompleted ? "✓" : idx + 1}
-                          </div>
-                          <span className={`mt-1 text-[10px] ${isCurrent ? "font-bold text-[#3D1A04]" : "text-[#7C6353]"}`}>
+                        <div
+                          key={step.id}
+                          className={`relative flex-1 py-1.5 px-1.5 flex items-center justify-center text-center transition-all select-none ${clipClass} ${colorClass}`}
+                        >
+                          <span className="text-[10px] font-bold truncate">
+                            {isCompleted ? "✓ " : ""}
                             {step.label}
                           </span>
                         </div>
@@ -283,10 +306,12 @@ function Suivi() {
             <div className="hidden md:block relative min-h-[185px] lg:min-h-[200px]">
               {/* Photo à droite */}
               <div className="absolute inset-y-0 right-0 w-[54%] h-full">
-                <img
+                <Image
                   src={domainImg.src}
                   alt={domainImg.alt}
-                  className="h-full w-full object-cover object-center"
+                  fill
+                  className="object-cover object-center"
+                  sizes="54vw"
                 />
                 {domainImg.slogan && (
                   <div className="absolute top-3.5 right-4 rounded-lg bg-[#24140D]/75 backdrop-blur-xs px-3 py-1.5 text-xs font-medium text-white italic shadow-sm">
@@ -328,41 +353,39 @@ function Suivi() {
 
                 {/* Progression horizontale du projet (Desktop) */}
                 <div className="pt-2">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A7261] mb-2.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D4F] mb-2">
                     Parcours du projet
                   </p>
-                  <div className="relative flex items-center justify-between max-w-sm">
-                    {/* Ligne de connexion arrière-plan */}
-                    <div className="absolute left-3 right-3 top-3 h-0.5 bg-[#D9C3AB]" aria-hidden="true" />
-                    {/* Ligne d'avancement complétée */}
-                    <div
-                      className="absolute left-3 top-3 h-0.5 bg-[#522504] transition-all"
-                      style={{ width: `${(etapeActuelle / (ETAPES_PARCOURS.length - 1)) * 90}%` }}
-                      aria-hidden="true"
-                    />
-
+                  <div className="flex rounded-xl overflow-hidden border border-[#D9C3AB] bg-[#D9C3AB] shadow-xs max-w-md">
                     {ETAPES_PARCOURS.map((step, idx) => {
                       const isCompleted = idx < etapeActuelle;
                       const isCurrent = idx === etapeActuelle;
+
+                      const clipClass =
+                        idx === 0
+                          ? "[clip-path:polygon(0%_0%,calc(100%-12px)_0%,100%_50%,calc(100%-12px)_100%,0%_100%)] z-40"
+                          : idx === ETAPES_PARCOURS.length - 1
+                          ? "-ml-[10px] [clip-path:polygon(0%_0%,100%_0%,100%_100%,0%_100%,12px_50%)] z-10"
+                          : idx === 1
+                          ? "-ml-[10px] [clip-path:polygon(0%_0%,calc(100%-12px)_0%,100%_50%,calc(100%-12px)_100%,0%_100%,12px_50%)] z-30"
+                          : "-ml-[10px] [clip-path:polygon(0%_0%,calc(100%-12px)_0%,100%_50%,calc(100%-12px)_100%,0%_100%,12px_50%)] z-20";
+
+                      const colorClass = isCompleted
+                        ? "bg-[#24140D] text-white"
+                        : isCurrent
+                        ? "bg-[#C99A68] text-white"
+                        : "bg-white text-[#522504]";
+
+                      const padClass =
+                        idx === 0 ? "pl-3.5 pr-4" : idx === ETAPES_PARCOURS.length - 1 ? "pl-4 pr-3.5" : "pl-4 pr-4";
+
                       return (
-                        <div key={step.id} className="relative z-10 flex flex-col items-center">
-                          <div
-                            className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-transform ${
-                              isCurrent
-                                ? "bg-[#522504] text-white ring-4 ring-[#EADBCE] scale-110 shadow-xs"
-                                : isCompleted
-                                ? "bg-[#522504] text-white"
-                                : "border-2 border-[#D9C3AB] bg-white text-[#8A7261]"
-                            }`}
-                          >
-                            {isCompleted ? "✓" : isCurrent ? "" : ""}
-                            {isCurrent && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-                          </div>
-                          <span
-                            className={`mt-1.5 text-[11px] whitespace-nowrap ${
-                              isCurrent ? "font-bold text-[#3D1A04]" : isCompleted ? "font-semibold text-[#522504]" : "text-[#8A7261]"
-                            }`}
-                          >
+                        <div
+                          key={step.id}
+                          className={`relative flex-1 py-1.5 flex items-center justify-center text-center transition-all select-none ${clipClass} ${colorClass} ${padClass}`}
+                        >
+                          <span className="text-[11px] font-bold truncate">
+                            {isCompleted ? "✓ " : ""}
                             {step.label}
                           </span>
                         </div>
@@ -376,18 +399,26 @@ function Suivi() {
 
           {/* 3. GRILLE DES 3 CARTES PRINCIPALES (Mentor, Objectifs, Jalons) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
-            <MentorBlock projetId={projet.id} mentor={mentor} canAssign={isEquipe} onAssigned={setMentor} />
-            <ObjectifsBlock projetId={projet.id} objectifs={objectifs} canManage={canManage} onChange={load} />
-            <JalonsBlock projetId={projet.id} jalons={jalons} canManage={canManage} onChange={load} />
+            <div id="mentor" className="scroll-mt-8 flex flex-col h-full">
+              <MentorBlock projetId={projet.id} mentor={mentor} canAssign={isEquipe} onAssigned={setMentor} />
+            </div>
+            <div id="objectifs" className="scroll-mt-8 flex flex-col h-full">
+              <ObjectifsBlock projetId={projet.id} objectifs={objectifs} canManage={canManage} onChange={load} />
+            </div>
+            <div id="jalons" className="scroll-mt-8 flex flex-col h-full">
+              <JalonsBlock projetId={projet.id} jalons={jalons} canManage={canManage} onChange={load} />
+            </div>
           </div>
 
           {/* 4. SECTION PLEINE LARGEUR DES BILANS DE SUIVI PÉRIODIQUES */}
-          <BilansSuiviSection
-            projetId={projet.id}
-            suivis={suivis}
-            canWrite={canWriteSuivi}
-            onCreated={load}
-          />
+          <div id="bilans-suivi" className="scroll-mt-8">
+            <BilansSuiviSection
+              projetId={projet.id}
+              suivis={suivis}
+              canWrite={canWriteSuivi}
+              onCreated={load}
+            />
+          </div>
         </>
       )}
     </div>

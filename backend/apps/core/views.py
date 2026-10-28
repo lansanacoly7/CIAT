@@ -515,10 +515,37 @@ class ProjetViewSet(viewsets.ModelViewSet):
             return qs
         if role == Role.MENTOR:
             return qs.filter(affectation_mentor__mentor=user)
-        return qs.filter(porteur=user)
+        # Un projet retiré par son porteur n'apparaît plus dans son espace.
+        return qs.filter(porteur=user).exclude(statut=Projet.Statut.RETIRE)
 
     def perform_create(self, serializer):
         serializer.save(porteur=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        """Suppression encadrée.
+
+        - Porteur, projet au stade « idée » (brouillon) : suppression définitive.
+        - Porteur, dossier déposé : retrait (suppression douce, trace conservée pour le comité).
+        - Porteur, projet sélectionné / en incubation ou au-delà : refusé.
+        - Admin / coordonnateur : suppression définitive.
+        """
+        projet = self.get_object()
+        role = getattr(request.user, "role", None)
+
+        if role == Role.PORTEUR:
+            if projet.statut == Projet.Statut.IDEE:
+                return super().destroy(request, *args, **kwargs)
+            if projet.statut == Projet.Statut.DEPOSE:
+                projet.statut = Projet.Statut.RETIRE
+                projet.save(update_fields=["statut", "modifie_le"])
+                return Response({"statut": projet.statut}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Ce projet ne peut plus être supprimé depuis votre espace. "
+                           "Contactez l'équipe CIAT pour toute demande de clôture."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return super().destroy(request, *args, **kwargs)
 
 
 @extend_schema(

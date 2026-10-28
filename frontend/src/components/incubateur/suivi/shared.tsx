@@ -10,7 +10,6 @@ export const BTN_SMALL = "!min-h-11 !px-4";
 
 export function Block({
   title,
-  icon,
   action,
   children,
   className = "",
@@ -22,22 +21,15 @@ export function Block({
   className?: string;
 }) {
   return (
-    <section className={`flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-xs transition-shadow hover:shadow-sm ${className}`}>
-      <div>
-        <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#F2E8DC] pb-3.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {icon && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#522504] text-[#F7EFE6] shadow-xs">
-                {icon}
-              </div>
-            )}
-            <h2 className="truncate font-[family-name:var(--font-title)] text-base font-bold text-[#3D1A04] sm:text-lg">
-              {title}
-            </h2>
-          </div>
+    <section className={`h-full flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-xs transition-all hover:border-[#C99A68] hover:shadow-sm ${className}`}>
+      <div className="flex-1 flex flex-col">
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#F2E8DC] pb-3.5 min-h-[44px]">
+          <h2 className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10] sm:text-lg leading-snug">
+            {title}
+          </h2>
           {action}
         </div>
-        <div className="text-sm">{children}</div>
+        <div className="flex-1 flex flex-col justify-center text-sm">{children}</div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -8,12 +8,16 @@ import {
   Calculator,
   Clock,
   Database,
-  Filter,
   Info,
   Lightbulb,
   Search,
   ShieldAlert,
-  Sparkles,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  LayoutGrid,
+  List,
+  Sliders,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -259,6 +263,8 @@ export function MethodologieContent() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isFromApi, setIsFromApi] = useState<boolean>(false);
+  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
+  const [isGridLayout, setIsGridLayout] = useState<boolean>(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -275,7 +281,6 @@ export function MethodologieContent() {
           setIsFromApi(true);
         }
       } catch {
-        // Fallback transparent aux constantes
         if (isMounted) {
           setIsFromApi(false);
         }
@@ -291,252 +296,438 @@ export function MethodologieContent() {
     };
   }, []);
 
-  const filteredIndicateurs = useMemo(() => {
-    return indicateurs.filter((ind) => {
-      const matchesCat =
-        activeCategory === "Tous" ||
-        ind.categorie.toLowerCase() === activeCategory.toLowerCase();
-      if (!matchesCat) return false;
+  const toggleExpand = (code: string) => {
+    setExpandedCodes((prev) => ({ ...prev, [code]: !prev[code] }));
+  };
 
-      if (!searchTerm.trim()) return true;
-      const q = searchTerm.toLowerCase();
-      return (
-        ind.nom.toLowerCase().includes(q) ||
-        ind.code.toLowerCase().includes(q) ||
-        ind.definition.toLowerCase().includes(q) ||
-        ind.formule.toLowerCase().includes(q) ||
-        ind.source.toLowerCase().includes(q)
-      );
+  const expandAll = () => {
+    const next: Record<string, boolean> = {};
+    filteredIndicateurs.forEach((ind) => {
+      next[ind.code] = true;
     });
-  }, [indicateurs, activeCategory, searchTerm]);
+    setExpandedCodes(next);
+  };
+
+  const collapseAll = () => {
+    setExpandedCodes({});
+  };
+
+  const q = searchTerm.trim().toLowerCase();
+  const filteredIndicateurs = indicateurs.filter((ind) => {
+    const matchesCat =
+      activeCategory === "Tous" ||
+      ind.categorie.toLowerCase() === activeCategory.toLowerCase();
+    if (!matchesCat) return false;
+
+    if (!q) return true;
+    return (
+      ind.nom.toLowerCase().includes(q) ||
+      ind.code.toLowerCase().includes(q) ||
+      ind.definition.toLowerCase().includes(q) ||
+      ind.formule.toLowerCase().includes(q) ||
+      ind.source.toLowerCase().includes(q)
+    );
+  });
+
+  // Nombre d'indicateurs par catégorie pour les badges
+  const categoryCounts: Record<string, number> = { Tous: indicateurs.length };
+  indicateurs.forEach((ind) => {
+    categoryCounts[ind.categorie] = (categoryCounts[ind.categorie] || 0) + 1;
+  });
 
   return (
-    <div className="min-h-screen bg-zinc-50/70 pb-16">
-      {/* 1. Header supérieur */}
-      <header className="border-b border-zinc-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#9a3412]">
-                <BookOpen className="h-4 w-4" />
+    <div className="min-h-screen bg-[#FAF7F2]/60 pb-16">
+      {/* 1. Header supérieur compact */}
+      <header className="border-b border-[#EFE4D6] bg-white sticky top-0 z-30 shadow-2xs">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">
+                <BookOpen className="h-4 w-4 text-[#C99A68]" />
                 <span>Référentiel Décisionnel CIAT</span>
                 {isFromApi && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                    <Sparkles className="h-2.5 w-2.5" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
+                    <CheckCircle2 className="h-2.5 w-2.5" />
                     Source API active
                   </span>
                 )}
               </div>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+              <h1 className="text-xl font-black text-[#612D10] sm:text-2xl font-[family-name:var(--font-title)] tracking-tight">
                 Méthodologie & Dictionnaire des Indicateurs
               </h1>
-              <p className="mt-1 text-sm text-zinc-600">
-                Définition exacte, formule mathématique, source de données
-                vérifiée et limites méthodologiques pour chaque métrique du
-                tableau de bord.
+              <p className="text-xs text-[#6B5646]">
+                Formules exactes, sources vérifiées et limites d&apos;interprétation pour le pilotage stratégique.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+              <a
+                href="#constats"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-2 text-xs font-bold text-[#612D10] hover:bg-[#EFE4D6]/60 transition-colors"
+              >
+                <Sliders className="h-3.5 w-3.5 text-[#C99A68]" />
+                <span>Règles des constats</span>
+              </a>
+
               <Link
                 href="/tableau-de-bord"
-                className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#9a3412]"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#612D10] px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-[#3F1D0A]"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Retour au tableau de bord
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Tableau de bord</span>
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      {/* 2. Filtres et Recherche */}
-      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* 2. Filtres, Recherche et Contrôles d'affichage */}
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-4">
+        {/* Barre de contrôle compacte */}
+        <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-sm space-y-3.5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Barre de recherche */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C5E2D]/60" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Rechercher par nom, formule, code ou mot-clé..."
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#9a3412] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#9a3412]"
+                className="w-full rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 py-2 pl-9.5 pr-4 text-xs sm:text-sm text-[#24140D] placeholder:text-[#a08f80] outline-none transition focus:border-[#C99A68] focus:bg-white focus:ring-2 focus:ring-[#C99A68]/30"
               />
             </div>
 
-            {/* Compteur d'indicateurs */}
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
-              <Filter className="h-3.5 w-3.5 text-zinc-400" />
-              <span>
-                {filteredIndicateurs.length} indicateur
-                {filteredIndicateurs.length > 1 ? "s" : ""}{" "}
-                {activeCategory !== "Tous" ? `(${activeCategory})` : "référencé(s)"}
-              </span>
+            {/* Boutons d'actions et mode d'affichage */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={expandAll}
+                className="px-2.5 py-1.5 rounded-lg border border-[#EFE4D6] bg-white text-[11px] font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
+                title="Déplier tous les détails"
+              >
+                Tout déplier
+              </button>
+              <button
+                type="button"
+                onClick={collapseAll}
+                className="px-2.5 py-1.5 rounded-lg border border-[#EFE4D6] bg-white text-[11px] font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
+                title="Replier tous les détails"
+              >
+                Tout replier
+              </button>
+
+              <div className="h-5 w-px bg-[#EFE4D6] mx-1" />
+
+              <button
+                type="button"
+                onClick={() => setIsGridLayout(!isGridLayout)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] hover:bg-white transition-colors"
+                title={isGridLayout ? "Passer en vue liste 1 colonne" : "Passer en vue grille 2 colonnes"}
+              >
+                {isGridLayout ? (
+                  <>
+                    <List className="h-3.5 w-3.5 text-[#C99A68]" />
+                    <span className="hidden sm:inline">Vue liste</span>
+                  </>
+                ) : (
+                  <>
+                    <LayoutGrid className="h-3.5 w-3.5 text-[#C99A68]" />
+                    <span className="hidden sm:inline">Vue grille</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Onglets / Catégories */}
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
+          {/* Onglets Catégories avec badges de comptage */}
+          <div className="flex flex-wrap gap-1.5 border-t border-[#EFE4D6]/70 pt-3">
             {categories.map((cat) => {
               const isActive = activeCategory === cat;
+              const count = categoryCounts[cat] ?? 0;
               return (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all ${
                     isActive
-                      ? "bg-[#9a3412] text-white shadow-sm"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900"
+                      ? "bg-[#612D10] text-white shadow-2xs"
+                      : "bg-[#FAF7F2] text-[#612D10] border border-[#EFE4D6] hover:bg-white hover:border-[#C99A68]"
                   }`}
                 >
-                  {cat}
+                  <span>{cat}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                      isActive ? "bg-white/20 text-white" : "bg-[#EFE4D6] text-[#8C5E2D]"
+                    }`}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* 3. Liste des indicateurs */}
-        <div className="mt-8 space-y-6">
+        {/* 3. Liste des indicateurs (Grille compacte 2 colonnes ou 1 colonne) */}
+        <div>
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((n) => (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[1, 2, 3, 4].map((n) => (
                 <div
                   key={n}
-                  className="h-44 animate-pulse rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200/80"
+                  className="h-36 animate-pulse rounded-2xl bg-white p-5 border border-[#EFE4D6]"
                 />
               ))}
             </div>
           ) : filteredIndicateurs.length === 0 ? (
-            <div className="rounded-2xl border border-zinc-200 bg-white py-12 text-center shadow-sm">
-              <Info className="mx-auto h-8 w-8 text-zinc-400" />
-              <h3 className="mt-2 text-sm font-semibold text-zinc-900">
+            <div className="rounded-2xl border border-dashed border-[#EFE4D6] bg-white py-12 text-center shadow-xs">
+              <Info className="mx-auto h-8 w-8 text-[#C99A68]" />
+              <h3 className="mt-2 text-sm font-bold text-[#612D10]">
                 Aucun indicateur trouvé
               </h3>
-              <p className="mt-1 text-sm text-zinc-500">
-                Modifiez vos critères de recherche ou réinitialisez la
-                catégorie.
+              <p className="mt-1 text-xs text-[#8C5E2D]">
+                Modifiez vos termes de recherche ou réinitialisez la catégorie.
               </p>
             </div>
           ) : (
-            filteredIndicateurs.map((ind) => (
-              <div
-                key={ind.code}
-                id={ind.code}
-                className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md"
-              >
-                {/* En-tête de la carte */}
-                <div className="border-b border-zinc-100 bg-zinc-50/50 px-6 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100/80 text-[#9a3412]">
-                        <Calculator className="h-5 w-5" />
+            <div
+              className={`grid gap-4 ${
+                isGridLayout ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+              }`}
+            >
+              {filteredIndicateurs.map((ind) => {
+                const isExpanded = Boolean(expandedCodes[ind.code]);
+
+                return (
+                  <div
+                    key={ind.code}
+                    id={ind.code}
+                    className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white shadow-xs transition-all hover:border-[#C99A68] hover:shadow-sm flex flex-col justify-between"
+                  >
+                    {/* En-tête de la carte */}
+                    <div className="p-4 sm:p-5 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
+                            <Calculator className="h-4 w-4 text-[#8C5E2D]" />
+                          </div>
+                          <div className="min-w-0">
+                            <h2 className="font-[family-name:var(--font-title)] text-sm sm:text-base font-bold text-[#612D10] leading-snug">
+                              {ind.nom}
+                            </h2>
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-[#6B5646]">
+                              <code className="rounded bg-[#FAF7F2] border border-[#EFE4D6] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#612D10]">
+                                {ind.code}
+                              </code>
+                              <span>•</span>
+                              <span className="font-medium text-[#8C5E2D]">
+                                {ind.categorie}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <span className="shrink-0 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2 py-0.5 text-[10px] font-bold text-[#8C5E2D]">
+                          {ind.categorie.split(" ")[0]}
+                        </span>
                       </div>
-                      <div>
-                        <h2 className="text-base font-bold text-zinc-900 sm:text-lg">
-                          {ind.nom}
-                        </h2>
-                        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs text-zinc-500">
-                          <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] text-zinc-700">
-                            {ind.code}
-                          </code>
-                          <span>•</span>
-                          <span className="font-medium text-zinc-600">
-                            {ind.categorie}
+
+                      {/* Définition synthétique */}
+                      <p className="text-xs text-[#24140D] leading-relaxed line-clamp-3">
+                        {ind.definition}
+                      </p>
+
+                      {/* Formule directement visible et compacte (requis pour tests E2E) */}
+                      <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/80 p-2.5 flex items-start gap-2">
+                        <Calculator className="h-3.5 w-3.5 text-[#8C5E2D] shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                            Formule de calcul
+                          </span>
+                          <span className="font-mono text-xs font-bold text-[#612D10] break-words">
+                            {ind.formule}
                           </span>
                         </div>
                       </div>
+
+                      {/* Section dépliable pour les détails méthodologiques et limites */}
+                      {isExpanded && (
+                        <div className="pt-3 border-t border-[#EFE4D6] space-y-3 animate-in fade-in duration-150">
+                          {/* Grille Source & Période */}
+                          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs">
+                            <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5">
+                              <span className="flex items-center gap-1 text-[11px] font-bold text-[#612D10]">
+                                <Database className="h-3 w-3 text-[#C99A68]" />
+                                Source de données
+                              </span>
+                              <p className="mt-1 font-mono text-[11px] text-[#6B5646] break-words">
+                                {ind.source}
+                              </p>
+                            </div>
+
+                            <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5">
+                              <span className="flex items-center gap-1 text-[11px] font-bold text-[#612D10]">
+                                <Clock className="h-3 w-3 text-[#C99A68]" />
+                                Période & temporalité
+                              </span>
+                              <p className="mt-1 text-[11px] text-[#6B5646]">
+                                {ind.periode}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Limites méthodologiques (Encart sobre ambre) */}
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+                            <div className="flex items-start gap-2">
+                              <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
+                              <div>
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                                  Limites méthodologiques & nuances
+                                </h4>
+                                <p className="mt-0.5 text-xs text-amber-950 leading-relaxed">
+                                  {ind.limites}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Guide d'interprétation pour le comité */}
+                          <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/60 p-3">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8C5E2D]" />
+                              <div>
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+                                  Guide de pilotage & décision
+                                </h4>
+                                <p className="mt-0.5 text-xs text-[#24140D] leading-relaxed">
+                                  {ind.interpretation}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#9a3412] ring-1 ring-inset ring-orange-600/20">
-                      {ind.categorie}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Corps de la carte */}
-                <div className="p-6 space-y-5">
-                  {/* Définition */}
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                      Définition précise
-                    </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-zinc-700">
-                      {ind.definition}
-                    </p>
-                  </div>
-
-                  {/* Formule de calcul */}
-                  <div className="rounded-xl border border-zinc-200/90 bg-zinc-900 p-3 sm:p-3.5 text-white shadow-inner overflow-hidden">
-                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                      <span className="flex items-center gap-1.5">
-                        <Calculator className="h-3.5 w-3.5 text-amber-400" />
-                        Formule mathématique & logique
+                    {/* Pied de carte : bouton d'accordéon pour déplier/replier */}
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(ind.code)}
+                      className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2]/40 px-4 py-2 text-xs font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
+                    >
+                      <span>
+                        {isExpanded
+                          ? "Masquer les détails & limites"
+                          : "Voir source, limites & pilotage"}
                       </span>
-                    </div>
-                    <div className="mt-1.5 font-mono text-xs sm:text-sm font-medium text-amber-200 break-words overflow-x-auto leading-relaxed">
-                      {ind.formule}
-                    </div>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-[#8C5E2D]" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-[#8C5E2D]" />
+                      )}
+                    </button>
                   </div>
-
-                  {/* Grille Source & Période */}
-                  <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3 sm:p-3.5">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
-                        <Database className="h-3.5 w-3.5 text-[#9a3412]" />
-                        <span>Source des données</span>
-                      </div>
-                      <p className="mt-1 text-xs font-mono text-zinc-600 break-words">
-                        {ind.source}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3.5">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
-                        <Clock className="h-3.5 w-3.5 text-blue-600" />
-                        <span>Période & temporalité</span>
-                      </div>
-                      <p className="mt-1 text-xs text-zinc-600">
-                        {ind.periode}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Limites méthodologiques (Alerte mise en avant selon consignes) */}
-                  <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-                    <div className="flex items-start gap-3">
-                      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                          Limites méthodologiques & nuances
-                        </h4>
-                        <p className="mt-1 text-xs leading-relaxed text-amber-900">
-                          {ind.limites}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Interprétation et pilotage */}
-                  <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-                    <div className="flex items-start gap-3">
-                      <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900">
-                          Guide d&apos;interprétation pour le comité
-                        </h4>
-                        <p className="mt-1 text-xs leading-relaxed text-blue-900">
-                          {ind.interpretation}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
+        </div>
+
+        {/* 4. Section Règles des Constats et Recommandations Déterministes (Condensée en grille) */}
+        <div
+          id="constats"
+          className="mt-10 rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-sm scroll-mt-20 space-y-4"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
+                <Sliders className="h-4 w-4 text-[#8C5E2D]" />
+              </div>
+              <div>
+                <h2 className="font-[family-name:var(--font-title)] text-base sm:text-lg font-bold text-[#612D10]">
+                  Règles de Calcul des Constats Déterministes
+                </h2>
+                <p className="text-xs text-[#6B5646]">
+                  5 algorithmes vérifiables, calculés sans IA, avec seuils minimaux de significativité statistique.
+                </p>
+              </div>
+            </div>
+
+            <span className="self-start sm:self-center text-xs font-bold px-2.5 py-1 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
+              5 règles auditées
+            </span>
+          </div>
+
+          {/* Grille compacte des 5 règles de constats */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                1. Concentration sectorielle
+              </span>
+              <p className="text-xs text-[#24140D] leading-snug">
+                Identifie le secteur prédominant et mesure son poids relatif. Alerte si un domaine concentre plus de 35 % des dossiers.
+              </p>
+              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
+                Seuil : minimum 10 projets
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                2. Représentation féminine
+              </span>
+              <p className="text-xs text-[#24140D] leading-snug">
+                Proportion de femmes entrepreneures principales par rapport à l&apos;objectif charte CIAT (40 %).
+              </p>
+              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
+                Seuil : minimum 10 porteurs
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                3. Taux de sélection
+              </span>
+              <p className="text-xs text-[#24140D] leading-snug">
+                Ratio exact entre les projets admis et l&apos;ensemble des dossiers formellement soumis.
+              </p>
+              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
+                Seuil : minimum 10 dossiers soumis
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                4. Retard critique de jalons
+              </span>
+              <p className="text-xs text-[#24140D] leading-snug">
+                Dénombre les jalons non achevés dont l&apos;échéance est dépassée de plus de 30 jours calendaires.
+              </p>
+              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
+                Seuil : minimum 5 jalons suivis · retard &gt; 30j
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2 sm:col-span-2 lg:col-span-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
+                5. Décaissement effectif
+              </span>
+              <p className="text-xs text-[#24140D] leading-snug">
+                Ratio entre les montants financiers décaissés et les financements globaux engagés par les partenaires.
+              </p>
+              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
+                Seuil : minimum 5 financements enregistrés
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-start gap-2.5">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+            <div className="text-xs text-amber-950 leading-relaxed">
+              <strong className="font-bold">Garde-fou contre les petits échantillons :</strong> Si les filtres actifs restreignent les effectifs en dessous de ces seuils (ex : 2 projets sélectionnés), le moteur <strong>n&apos;affiche aucun constat ni pourcentage trompeur</strong> pour garantir la rigueur scientifique des conclusions.
+            </div>
+          </div>
         </div>
       </div>
     </div>

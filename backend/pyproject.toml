@@ -35,6 +35,7 @@ select = [
 # - E731 : Utilisation de lambdas concises (ex: helpers d'instanciation rapide dans les suites de tests).
 # - B008 : Appels de constructeurs par défaut DRF / Django.
 # - B904 : Élévation d'exceptions concises sans forcer le chaînage 'from err' redondant.
+# - UP038 : Règle dépréciée par Ruff car isinstance(x, (A, B)) est plus rapide que isinstance(x, A | B).
 ignore = [
     "E501",
     "W293",
@@ -42,6 +43,7 @@ ignore = [
     "E731",
     "B008",
     "B904",
+    "UP038",
 ]
 
 [tool.ruff.lint.isort]

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -5,6 +6,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api, API_URL, saveTokens } from "@/lib/api";
 import type {
   AnalyticsData,
+  ConstatCalcul,
+  ConstatsResponse,
   DashboardFilters,
   EvolutionItem,
   FinancementItem,
@@ -21,8 +24,8 @@ import { KpiGrid } from "./components/KpiGrid";
 import { EntonnoirCard } from "./components/EntonnoirCard";
 import { FinancesCard } from "./components/FinancesCard";
 import { ATraiterCard } from "./components/ATraiterCard";
+import { ConstatsCard } from "./components/ConstatsCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
-import dynamic from "next/dynamic";
 import {
   ChartCard,
   CohorteChart,
@@ -30,22 +33,12 @@ import {
   EvolutionChart,
   GenreChart,
 } from "./components/ChartCard";
+import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
+import { ProjetsPortfolioSection } from "./components/ProjetsPortfolioSection";
+import { AiDrawer } from "./components/AiDrawer";
+import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
-
-// Chargement asynchrone des composants lourds (recharts, tiroir IA, impression PDF)
-const DetailTable = dynamic(
-  () => import("./components/DetailTable").then((mod) => mod.DetailTable),
-  { ssr: false }
-);
-const AiDrawer = dynamic(
-  () => import("./components/AiDrawer").then((mod) => mod.AiDrawer),
-  { ssr: false }
-);
-const PrintSummaryModal = dynamic(
-  () => import("./components/PrintSummaryModal").then((mod) => mod.PrintSummaryModal),
-  { ssr: false }
-);
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -68,8 +61,8 @@ export function DashboardContent() {
   const [financementsData, setFinancementsData] = useState<FinancementItem[]>([]);
   const [financementsStats, setFinancementsStats] =
     useState<PartenariatsFinancementsStats | null>(null);
+  const [constatsData, setConstatsData] = useState<ConstatCalcul[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
   const [kpiViewMode, setKpiViewMode] = useState<"entonnoir" | "cartes">("entonnoir");
   // Synchronisation de l'onglet actif avec le paramètre d'URL ?vue=
   const validTabs: DashboardTab[] = ["vue-d-ensemble", "projets", "financements", "registre"];
@@ -90,7 +83,6 @@ export function DashboardContent() {
   };
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("en direct");
   const [hasNetworkError, setHasNetworkError] = useState(false);
   const [watchCounts, setWatchCounts] = useState<{
     retards: number;
@@ -116,10 +108,10 @@ export function DashboardContent() {
   const isFiltered = useMemo(() => {
     return Boolean(
       filters.debut ||
-        filters.fin ||
-        filters.cohorte ||
-        filters.domaine ||
-        filters.statut
+      filters.fin ||
+      filters.cohorte ||
+      filters.domaine ||
+      filters.statut
     );
   }, [filters]);
 
@@ -133,7 +125,6 @@ export function DashboardContent() {
       if (isExplicitDemo) {
         if (isSubscribed) {
           setData(getMockAnalyticsData(filters));
-          setIsLiveConnected(false);
           setIsLoading(false);
           setHasNetworkError(false);
         }
@@ -174,6 +165,7 @@ export function DashboardContent() {
           alertesList,
           conventionsList,
           dossiersList,
+          constatsRes,
         ] = await Promise.all([
           api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
           api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
@@ -193,6 +185,9 @@ export function DashboardContent() {
           api<Array<{ statut: string }>>("/incubator/dossiers/").catch(
             () => []
           ),
+          api<ConstatsResponse>(`/analytics/constats/${query}`).catch(
+            () => ({ constats: [], total_constats: 0, seuils: {} })
+          ),
         ]);
 
         if (isSubscribed) {
@@ -205,6 +200,7 @@ export function DashboardContent() {
           });
           setFinancementsData(financementsList || []);
           setFinancementsStats(partStats);
+          setConstatsData(constatsRes?.constats ?? []);
           const retardsCount = Array.isArray(alertesList) ? alertesList.length : 8;
           const convCount = Array.isArray(conventionsList) ? conventionsList.length : 2;
           const dosCount = Array.isArray(dossiersList)
@@ -215,28 +211,14 @@ export function DashboardContent() {
             conventions: convCount || 2,
             dossiers: dosCount || 5,
           });
-          setIsLiveConnected(true);
           setIsLoading(false);
           setHasNetworkError(false);
-          setLastUpdatedTime(
-            new Date().toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
         }
       } catch {
         if (isSubscribed) {
           setData(getMockAnalyticsData(filters));
-          setIsLiveConnected(false);
           setIsLoading(false);
           setHasNetworkError(true);
-          setLastUpdatedTime(
-            new Date().toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
         }
       }
     }
@@ -283,16 +265,8 @@ export function DashboardContent() {
       });
       setFinancementsData(financementsList || []);
       setFinancementsStats(partStats);
-      setIsLiveConnected(true);
-      setLastUpdatedTime(
-        new Date().toLocaleTimeString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
     } catch {
       setData(getMockAnalyticsData(filters));
-      setIsLiveConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -327,34 +301,37 @@ export function DashboardContent() {
   const hasNoData = Boolean(data && data.indicateurs.idees_recues === 0);
 
   // Sous-titres dynamiques calculés depuis les données réelles (pas de répétition statique du "62")
+  const evolutionData = data?.evolution;
   const peakMonthInsight = useMemo(() => {
-    if (!data?.evolution || data.evolution.length === 0) return undefined;
-    const peak = data.evolution.reduce(
+    if (!evolutionData || evolutionData.length === 0) return undefined;
+    const peak = evolutionData.reduce(
       (prev, curr) => (curr.total > prev.total ? curr : prev),
-      data.evolution[0]
+      evolutionData[0]
     );
     if (!peak || peak.total === 0) return undefined;
     try {
       const parts = peak.mois.split("-");
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
       const moisFr = new Intl.DateTimeFormat("fr-FR", {
-        month: "short",
+        month: "long",
         year: "numeric",
       }).format(d);
-      return `Pic en ${moisFr} : ${peak.total} projets`;
+      const moisCap = moisFr.charAt(0).toUpperCase() + moisFr.slice(1);
+      return `Record mensuel : ${peak.total} projets (${moisCap})`;
     } catch {
-      return `Pic : ${peak.total} projets`;
+      return `Record mensuel : ${peak.total} projets`;
     }
-  }, [data]);
+  }, [evolutionData]);
 
+  const parCohorteData = data?.parCohorte;
   const cohorteInsight = useMemo(() => {
-    if (!data?.parCohorte || data.parCohorte.length === 0) return undefined;
-    const top = data.parCohorte.reduce(
+    if (!parCohorteData || parCohorteData.length === 0) return undefined;
+    const top = parCohorteData.reduce(
       (prev, curr) => (curr.total > prev.total ? curr : prev),
-      data.parCohorte[0]
+      parCohorteData[0]
     );
-    return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
-  }, [data]);
+    return top ? `Promotion leader : ${top.cohorte} (${top.total} projets)` : undefined;
+  }, [parCohorteData]);
 
   return (
     <div
@@ -365,8 +342,6 @@ export function DashboardContent() {
           1. EN-TÊTE COMPACT (UNE LIGNE, 64 PX)
          ========================================================================= */}
       <CompactHeader
-        lastUpdated={lastUpdatedTime}
-        isLive={isLiveConnected === true}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         onOpenAiDrawer={() => setIsAiDrawerOpen(true)}
@@ -423,11 +398,10 @@ export function DashboardContent() {
                         type="button"
                         id="btn-mode-cartes"
                         onClick={() => setKpiViewMode("cartes")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
-                          kpiViewMode === "cartes"
-                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                            : "hover:text-[#21130D]"
-                        }`}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "cartes"
+                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                          : "hover:text-[#21130D]"
+                          }`}
                       >
                         8 Cartes KPI
                       </button>
@@ -435,11 +409,10 @@ export function DashboardContent() {
                         type="button"
                         id="btn-mode-entonnoir"
                         onClick={() => setKpiViewMode("entonnoir")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
-                          kpiViewMode === "entonnoir"
-                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                            : "hover:text-[#21130D]"
-                        }`}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "entonnoir"
+                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                          : "hover:text-[#21130D]"
+                          }`}
                       >
                         Entonnoir & Synthèse
                       </button>
@@ -495,6 +468,9 @@ export function DashboardContent() {
                     }}
                   />
 
+                  {/* CONSTATS CLÉS & RECOMMANDATIONS (T2 — Phase 10) */}
+                  <ConstatsCard constats={constatsData} chargement={isLoading} />
+
                   {/* 2 GRAPHIQUES : Évolution mensuelle et Comparaison promotions */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <ChartCard
@@ -545,52 +521,55 @@ export function DashboardContent() {
               )}
 
               {/* =========================================================================
-                  VUE 2 : PROJETS ("Projets par domaine" + "Mixité et parité". Rien d'autre.)
+                  VUE 2 : PORTEFEUILLE PROJETS (Graphiques d'analyse + Répertoire exhaustif)
                  ========================================================================= */}
               {activeTab === "projets" && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <ChartCard
-                      title="Projets par domaine prioritaire"
-                      description="Répartition des innovations par filière d'excellence"
-                      summaryValue={`${data.parDomaine.length} domaines`}
-                      tableData={data.parDomaine.map((d) => ({
-                        Domaine: d.domaine,
-                        Total: d.total,
-                      }))}
-                      tableColumns={[
-                        { key: "Domaine", label: "Domaine prioritaire" },
-                        { key: "Total", label: "Nombre de projets" },
-                      ]}
-                      isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
-                      emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
-                      isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <DomaineChart data={data.parDomaine} />
-                    </ChartCard>
+                <ProjetsPortfolioSection
+                  filters={filters}
+                  chartsSlot={
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <ChartCard
+                        title="Projets par domaine prioritaire"
+                        description="Répartition des innovations par filière d'excellence"
+                        summaryValue={`${data.parDomaine.length} filières actives`}
+                        tableData={data.parDomaine.map((d) => ({
+                          Domaine: d.domaine,
+                          Total: d.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Domaine", label: "Domaine prioritaire" },
+                          { key: "Total", label: "Nombre de projets" },
+                        ]}
+                        isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
+                        emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
+                        isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
+                        onRetry={handleRefresh}
+                      >
+                        <DomaineChart data={data.parDomaine} />
+                      </ChartCard>
 
-                    <ChartCard
-                      title="Mixité et parité des équipes"
-                      description="Représentativité et répartition par genre des porteurs"
-                      summaryValue={`${data.indicateurs.idees_recues} porteurs`}
-                      tableData={data.parGenre.map((g) => ({
-                        Genre: g.genre,
-                        Porteurs: g.total,
-                      }))}
-                      tableColumns={[
-                        { key: "Genre", label: "Catégorie" },
-                        { key: "Porteurs", label: "Effectif" },
-                      ]}
-                      isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
-                      emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
-                      isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <GenreChart data={data.parGenre} />
-                    </ChartCard>
-                  </div>
-                </div>
+                      <ChartCard
+                        title="Mixité et parité des équipes"
+                        description="Représentativité et répartition par genre des porteurs"
+                        summaryValue={`${data.indicateurs.idees_recues} porteurs recensés`}
+                        tableData={data.parGenre.map((g) => ({
+                          Genre: g.genre,
+                          Porteurs: g.total,
+                        }))}
+                        tableColumns={[
+                          { key: "Genre", label: "Catégorie" },
+                          { key: "Porteurs", label: "Effectif" },
+                        ]}
+                        isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
+                        emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
+                        isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
+                        onRetry={handleRefresh}
+                      >
+                        <GenreChart data={data.parGenre} />
+                      </ChartCard>
+                    </div>
+                  }
+                />
               )}
 
               {/* =========================================================================
@@ -610,28 +589,21 @@ export function DashboardContent() {
                  ========================================================================= */}
               {activeTab === "registre" && (
                 <section aria-labelledby="detail-table-heading" className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <h2
-                          id="detail-table-heading"
-                          className="text-lg font-bold text-[#21130D]"
-                        >
-                          Registre analytique des engagements & conventions
-                        </h2>
-                        <span className="rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-2 py-0.5 text-xs font-semibold text-[#8C5E2D]">
-                          Grand Livre CIAT
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-[#6B5646]">
-                        Consultation exhaustive et traçabilité des subventions, protocoles et décaissements de l&apos;incubateur
+                      <h2
+                        id="detail-table-heading"
+                        className="text-base font-semibold text-[#21130D]"
+                      >
+                        Registre analytique des financements et conventions
+                      </h2>
+                      <p className="text-xs text-[#5A4B42]">
+                        Consultation détaillée des engagements financiers, subventions et protocoles
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-1.5 text-xs font-bold text-[#21130D] tabular-nums">
-                        {financementsData.length} enregistrements
-                      </span>
-                    </div>
+                    <span className="text-xs font-medium text-[#5A4B42] tabular-nums">
+                      {financementsData.length} lignes
+                    </span>
                   </div>
 
                   <DetailTable data={financementsData} isLoading={isLoading} />
@@ -668,8 +640,7 @@ export function DashboardContent() {
             const headers = new Headers();
             if (token) headers.set("Authorization", `Bearer ${token}`);
             const res = await fetch(
-              `${API_URL}/analytics/export/?format=pdf${
-                query ? `&${query.slice(1)}` : ""
+              `${API_URL}/analytics/export/?format=pdf${query ? `&${query.slice(1)}` : ""
               }`,
               { headers }
             );

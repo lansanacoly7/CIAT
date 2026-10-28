@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  Sparkles,
+  MessageSquare,
   Send,
   X,
   Clock,
@@ -126,7 +126,7 @@ export function AiDrawer({ isOpen, onClose }: AiDrawerProps) {
         <div className="flex h-16 items-center justify-between border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] px-6">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#21130D] text-[#C99A68]">
-              <Sparkles className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-[#21130D]">

@@ -511,3 +511,417 @@ class PortalPhase3Tests(PortalBaseTestCase):
         proj_stats = next(p for p in data["projets"] if p["id"] == self.projet_incube.id)
         self.assertEqual(proj_stats["vues"], 1)
 
+
+
+# ==============================================================================
+# Phase 9 — T1, T2, T3 (Pathé)
+# ==============================================================================
+
+from datetime import timedelta
+from django.core import mail, signing
+from django.core.cache import cache
+from django.test import override_settings
+from apps.core.models import JournalAudit
+
+
+@override_settings(DISABLE_THROTTLING="1")
+class Phase9Tests(APITestCase):
+    """Suite de tests unifiée couvrant l'intégralité des exigences de la Phase 9."""
+
+    def setUp(self):
+        cache.clear()
+        mail.outbox = []
+
+        # Utilisateur administrateur pour l'audit et l'administration
+        self.admin = User.objects.create_user(
+            email="admin.phase9@ciat.sn",
+            password="StrongPassword123!",
+            role=Role.ADMIN,
+            is_staff=True,
+            first_name="Admin",
+            last_name="CIAT",
+        )
+
+        # Porteur de projet
+        self.porteur = User.objects.create_user(
+            email="porteur.phase9@ciat.sn",
+            password="StrongPassword123!",
+            role=Role.PORTEUR,
+            first_name="Modou",
+            last_name="Diop",
+        )
+
+        # Domaines et cohortes de base
+        self.domaine_agri = Domaine.objects.create(
+            nom="Agriculture et Agroalimentaire",
+            slug="agriculture-agroalimentaire",
+        )
+        self.domaine_energie = Domaine.objects.create(
+            nom="Énergies Propres et Renouvelables",
+            slug="energies-propres",
+        )
+        self.cohorte_2026 = Cohorte.objects.create(
+            nom="Cohorte 2026 Alpha",
+            annee=2026,
+            date_debut=timezone.now().date(),
+        )
+
+    def tearDown(self):
+        cache.clear()
+
+    # ==========================================================================
+    # T1 : Abonnement à la lettre d'information
+    # ==========================================================================
+
+    def test_t1_abonnement_double_optin_succes(self):
+        """Un visiteur s'abonne : état en attente et envoi de l'email double opt-in."""
+        from apps.portal.models import AbonnementLettre
+
+        url = "/api/portal/lettre/abonner/"
+        data = {"email": "visiteur@example.com"}
+
+        resp = self.client.post(url, data, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["statut"], "en_attente")
+
+        # Vérification en base
+        ab = AbonnementLettre.objects.get(email="visiteur@example.com")
+        self.assertEqual(ab.statut, AbonnementLettre.Statut.EN_ATTENTE)
+        self.assertTrue(bool(ab.jeton))
+        self.assertIsNone(ab.confirme_le)
+
+        # Vérification du courriel envoyé
+        self.assertEqual(len(mail.outbox), 1)
+        email_envoye = mail.outbox[0]
+        self.assertIn("visiteur@example.com", email_envoye.to)
+        self.assertIn("Confirmez votre abonnement", email_envoye.subject)
+        self.assertIn("jeton=", email_envoye.body)
+
+    def test_t1_abonnement_anti_enumeration(self):
+        """La réponse est strictement identique que l'email existe déjà ou non."""
+        from apps.portal.models import AbonnementLettre
+
+        url = "/api/portal/lettre/abonner/"
+
+        # 1. Création d'un abonné déjà confirmé
+        ab = AbonnementLettre.objects.create(
+            email="confirme@example.com",
+            statut=AbonnementLettre.Statut.CONFIRME,
+            jeton="ancien_jeton",
+            confirme_le=timezone.now(),
+        )
+
+        resp1 = self.client.post(url, {"email": "confirme@example.com"}, format="json")
+        resp2 = self.client.post(url, {"email": "nouveau@example.com"}, format="json")
+
+        self.assertEqual(resp1.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp1.data["detail"], resp2.data["detail"])
+        self.assertEqual(resp1.data["statut"], resp2.data["statut"])
+
+        # L'abonné confirmé n'a pas été altéré
+        ab.refresh_from_db()
+        self.assertEqual(ab.statut, AbonnementLettre.Statut.CONFIRME)
+
+    def test_t1_abonnement_anti_spam_throttle(self):
+        """La limitation de débit stricte bloque les rafales de requêtes (anti-spam)."""
+        from apps.portal.throttling import PortalLettreAnonRateThrottle
+        from rest_framework.test import APIRequestFactory
+        from django.contrib.auth.models import AnonymousUser
+
+        factory = APIRequestFactory()
+        throttle = PortalLettreAnonRateThrottle()
+        throttle.rate = "2/minute"
+        throttle.num_requests, throttle.duration = throttle.parse_rate(throttle.rate)
+        request = factory.post("/api/portal/lettre/abonner/", {"email": "spam@example.com"})
+        request.user = AnonymousUser()
+
+        with override_settings(DISABLE_THROTTLING="0"):
+            self.assertTrue(throttle.allow_request(request, None))
+            self.assertTrue(throttle.allow_request(request, None))
+            self.assertFalse(throttle.allow_request(request, None))
+
+    def test_t1_abonnement_validation_email(self):
+        """Un format d'email invalide déclenche un code 400 explicite."""
+        url = "/api/portal/lettre/abonner/"
+
+        resp = self.client.post(url, {"email": "invalide-sans-arobase"}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", resp.data)
+
+        resp_vide = self.client.post(url, {"email": ""}, format="json")
+        self.assertEqual(resp_vide.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_t1_confirmation_et_rejeu(self):
+        """Confirmation réussie puis blocage du rejeu avec code 400 clair."""
+        from apps.portal.models import AbonnementLettre
+        from apps.portal.emails import generer_jeton_signe
+
+        # Inscription
+        self.client.post("/api/portal/lettre/abonner/", {"email": "optin@example.com"}, format="json")
+        ab = AbonnementLettre.objects.get(email="optin@example.com")
+        jeton_signe = generer_jeton_signe(ab.id, ab.email, ab.jeton, "confirmer")
+
+        # Confirmation
+        url_confirm = "/api/portal/lettre/confirmer/"
+        resp = self.client.post(url_confirm, {"jeton": jeton_signe}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["statut"], "confirme")
+
+        ab.refresh_from_db()
+        self.assertEqual(ab.statut, AbonnementLettre.Statut.CONFIRME)
+        self.assertIsNotNone(ab.confirme_le)
+
+        # Un courriel de bienvenue avec lien de désabonnement est envoyé
+        self.assertTrue(len(mail.outbox) >= 2)
+        dernier_mail = mail.outbox[-1]
+        self.assertIn("désabonner", dernier_mail.body)
+
+        # Tentative de rejeu avec le même jeton
+        resp_rejeu = self.client.post(url_confirm, {"jeton": jeton_signe}, format="json")
+        self.assertEqual(resp_rejeu.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("utilisé", resp_rejeu.data["detail"].lower())
+
+    def test_t1_confirmation_jeton_invalide_ou_expire(self):
+        """Un jeton corrompu ou expiré renvoie 400."""
+        from apps.portal.models import AbonnementLettre
+
+        url_confirm = "/api/portal/lettre/confirmer/"
+
+        resp = self.client.post(url_confirm, {"jeton": "jeton_bidon_totalement_faux"}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Jeton expiré ou mauvais salt
+        ab = AbonnementLettre.objects.create(email="expire@example.com", jeton="xyz", statut=AbonnementLettre.Statut.EN_ATTENTE)
+        jeton_signe = signing.dumps({"sub_id": ab.id, "email": ab.email, "raw": "xyz", "action": "confirmer"}, salt="mauvais_salt")
+        resp_expire = self.client.post(url_confirm, {"jeton": jeton_signe}, format="json")
+        self.assertEqual(resp_expire.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_t1_desabonnement_et_rejeu(self):
+        """Désabonnement avec jeton valide puis interdiction de rejeu."""
+        from apps.portal.models import AbonnementLettre
+        from apps.portal.emails import generer_jeton_signe
+
+        ab = AbonnementLettre.objects.create(
+            email="desabo@example.com",
+            statut=AbonnementLettre.Statut.CONFIRME,
+            jeton="unsub_token_secret",
+            confirme_le=timezone.now(),
+        )
+        jeton_signe = generer_jeton_signe(ab.id, ab.email, ab.jeton, "desabonner")
+
+        url_desabo = "/api/portal/lettre/desabonner/"
+        resp = self.client.post(url_desabo, {"jeton": jeton_signe}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["statut"], "desabonne")
+
+        ab.refresh_from_db()
+        self.assertEqual(ab.statut, AbonnementLettre.Statut.DESABONNE)
+        self.assertIsNotNone(ab.desabonne_le)
+
+        # Rejeu interdit
+        resp_rejeu = self.client.post(url_desabo, {"jeton": jeton_signe}, format="json")
+        self.assertEqual(resp_rejeu.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_t1_admin_liste_et_export_csv_audite(self):
+        """L'administration peut lister, filtrer et exporter en CSV avec traçabilité dans l'audit."""
+        from apps.portal.models import AbonnementLettre
+
+        AbonnementLettre.objects.create(email="a1@ciat.sn", statut=AbonnementLettre.Statut.CONFIRME)
+        AbonnementLettre.objects.create(email="a2@ciat.sn", statut=AbonnementLettre.Statut.EN_ATTENTE)
+
+        # 1. Non authentifié : refus
+        resp = self.client.get("/api/portal/lettre/abonnements/")
+        self.assertIn(resp.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+
+        # 2. Authentifié admin : succès et filtre
+        self.client.force_authenticate(user=self.admin)
+        resp_admin = self.client.get("/api/portal/lettre/abonnements/?statut=confirme")
+        self.assertEqual(resp_admin.status_code, status.HTTP_200_OK)
+        results = resp_admin.data.get("results", resp_admin.data)
+        self.assertTrue(all(item["statut"] == "confirme" for item in results))
+
+        # 3. Action d'export CSV d'administration Django
+        from apps.portal.admin import exporter_abonnements_lettre_csv
+        class DummyRequest:
+            user = self.admin
+
+        qs = AbonnementLettre.objects.all()
+        csv_resp = exporter_abonnements_lettre_csv(None, DummyRequest(), qs)
+        self.assertEqual(csv_resp.status_code, 200)
+        self.assertEqual(csv_resp["Content-Type"], "text/csv; charset=utf-8-sig")
+
+        lignes = csv_resp.content.decode("utf-8-sig").splitlines()
+        self.assertEqual(lignes[0], "Email;Statut")
+        self.assertTrue(any("a1@ciat.sn;confirme" in l for l in lignes))
+
+        # Vérification dans le journal d'audit
+        audit = JournalAudit.objects.filter(action="export_csv_abonnements_lettre").first()
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit.acteur, self.admin)
+        self.assertEqual(audit.apres.get("total_exporte"), qs.count())
+
+    # ==========================================================================
+    # T2 : Recherche globale des contenus publics
+    # ==========================================================================
+
+    def test_t2_recherche_validation_longueur_q(self):
+        """Une recherche avec q absent ou de moins de 2 caractères renvoie 400."""
+        resp1 = self.client.get("/api/portal/recherche/?q=a")
+        self.assertEqual(resp1.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("2 caractères", resp1.data["detail"])
+
+        resp2 = self.client.get("/api/portal/recherche/")
+        self.assertEqual(resp2.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_t2_recherche_insensible_casse_et_accents(self):
+        """La recherche « eau » trouve « Eau » et « éau » (insensible casse et accents)."""
+        Actualite.objects.create(
+            titre="Système d'assainissement et Éau potable",
+            resume="Distribution moderne.",
+            contenu="Réseau d'adduction d'eau au Sénégal.",
+            publie=True,
+        )
+        Evenement.objects.create(
+            titre="Forum de l'Eau et de l'Environnement",
+            description="Colloque scientifique sur les nappes phréatiques.",
+            lieu="Amphi Diamniadio",
+            debut=timezone.now() + timedelta(days=2),
+        )
+
+        for terme in ["eau", "Eau", "éau", "ÉAU"]:
+            resp = self.client.get(f"/api/portal/recherche/?q={terme}")
+            self.assertEqual(resp.status_code, status.HTTP_200_OK, f"Échec pour terme={terme}")
+            self.assertTrue(resp.data["total"] >= 2, f"Total insuffisant pour {terme}: {resp.data['total']}")
+            self.assertTrue(len(resp.data["actualites"]) >= 1)
+            self.assertTrue(len(resp.data["evenements"]) >= 1)
+
+    def test_t2_recherche_filtre_strictement_contenus_publics(self):
+        """Ne renvoie JAMAIS de brouillons, de projets non incubés, ni de fiches refusées."""
+        from apps.gallery.models import FicheInnovation
+
+        # 1. Actualité non publiée
+        Actualite.objects.create(
+            titre="Actualité secrète non publiée",
+            resume="Brouillon confidentiel.",
+            contenu="Données confidentielles sur les capteurs solaires.",
+            publie=False,
+        )
+
+        # 2. Projets en statut brouillon / idée / rejeté
+        Projet.objects.create(
+            titre="Projet Idée Non Incubé Solaires",
+            resume="Simple idée déposée.",
+            domaine=self.domaine_energie,
+            cohorte=self.cohorte_2026,
+            porteur=self.porteur,
+            statut=Projet.Statut.IDEE,
+        )
+        Projet.objects.create(
+            titre="Projet Rejeté Solaires",
+            resume="Non retenu.",
+            domaine=self.domaine_energie,
+            cohorte=self.cohorte_2026,
+            porteur=self.porteur,
+            statut=Projet.Statut.REJETE,
+        )
+
+        # 3. Projet légitime incubé
+        projet_incube = Projet.objects.create(
+            titre="Projet Incubé Solaires Actif",
+            resume="Projet officiellement incubé.",
+            domaine=self.domaine_energie,
+            cohorte=self.cohorte_2026,
+            porteur=self.porteur,
+            statut=Projet.Statut.INCUBE,
+        )
+
+        # 4. Fiche d'innovation refusée et brouillon
+        FicheInnovation.objects.create(
+            projet=projet_incube,
+            titre="Fiche Refusée Solaires",
+            probleme="Problème",
+            solution="Solution",
+            equipe="Equipe",
+            avancement="Idée",
+            statut=FicheInnovation.Statut.REFUSE,
+        )
+        FicheInnovation.objects.create(
+            projet=projet_incube,
+            titre="Fiche Publiée Solaires",
+            probleme="Problème",
+            solution="Solution",
+            equipe="Equipe",
+            avancement="Prototype",
+            statut=FicheInnovation.Statut.PUBLIE,
+        )
+
+        resp = self.client.get("/api/portal/recherche/?q=Solaires")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        titres_trouves = [r["titre"] for r in resp.data["resultats"]]
+
+        # Vérification d'exclusion stricte
+        self.assertNotIn("Actualité secrète non publiée", titres_trouves)
+        self.assertNotIn("Projet Idée Non Incubé Solaires", titres_trouves)
+        self.assertNotIn("Projet Rejeté Solaires", titres_trouves)
+        self.assertNotIn("Fiche Refusée Solaires", titres_trouves)
+
+        # Vérification de présence des contenus publics validés
+        self.assertIn("Projet Incubé Solaires Actif", titres_trouves)
+        self.assertIn("Fiche Publiée Solaires", titres_trouves)
+
+        # Vérification de l'absence de donnée personnelle sensible
+        corps_reponse = resp.content.decode("utf-8")
+        self.assertNotIn(self.porteur.email, corps_reponse)
+
+    # ==========================================================================
+    # T3 : Chiffres clés réels calculés depuis la base
+    # ==========================================================================
+
+    def test_t3_chiffres_cles_recoupement_base_et_cache(self):
+        """Chaque chiffre clé correspond exactement aux enregistrements réels en base."""
+        # Préparation de données réelles
+        Projet.objects.create(
+            titre="P1 Incube",
+            domaine=self.domaine_agri,
+            cohorte=self.cohorte_2026,
+            porteur=self.porteur,
+            statut=Projet.Statut.INCUBE,
+        )
+        Projet.objects.create(
+            titre="P2 Prototype",
+            domaine=self.domaine_energie,
+            cohorte=self.cohorte_2026,
+            porteur=self.porteur,
+            statut=Projet.Statut.PROTOTYPE,
+        )
+        Partenaire.objects.create(nom="Partenaire Test", ordre=1)
+
+        resp = self.client.get("/api/portal/chiffres-cles/?nocache=1")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.data
+
+        # Recoupement direct
+        statuts_incubes = [Projet.Statut.INCUBE, Projet.Statut.PROTOTYPE, Projet.Statut.TERMINE]
+        expected_incubes = Projet.objects.filter(statut__in=statuts_incubes).count()
+        expected_prototypes = Projet.objects.filter(statut__in=[Projet.Statut.PROTOTYPE, Projet.Statut.TERMINE]).count()
+        expected_porteurs = User.objects.filter(projets_portes__statut__in=statuts_incubes).distinct().count()
+        expected_partenaires = Partenaire.objects.count()
+        expected_cohortes = Cohorte.objects.count()
+
+        self.assertEqual(data["projets_incubes"], expected_incubes)
+        self.assertEqual(data["prototypes"], expected_prototypes)
+        self.assertEqual(data["porteurs_accompagnes"], expected_porteurs)
+        self.assertEqual(data["partenaires"], expected_partenaires)
+        self.assertEqual(data["cohortes"], expected_cohortes)
+
+        # Domaines avec nombre de projets
+        self.assertTrue(len(data["domaines"]) >= 2)
+        dom_agri_data = next(d for d in data["domaines"] if d["id"] == self.domaine_agri.id)
+        self.assertEqual(dom_agri_data["nombre_projets"], self.domaine_agri.projets.count())
+
+        # Test de mise en cache courte
+        resp_cache = self.client.get("/api/portal/chiffres-cles/")
+        self.assertEqual(resp_cache.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp_cache.data["projets_incubes"], data["projets_incubes"])

@@ -11,9 +11,9 @@ interface StickyTabsProps {
 
 const TABS: Array<{ id: DashboardTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { id: "projets", label: "Projets", icon: FolderGit2 },
-  { id: "financements", label: "Financements", icon: Coins },
-  { id: "registre", label: "Registre", icon: TableProperties },
+  { id: "projets", label: "Portefeuille Projets", icon: FolderGit2 },
+  { id: "financements", label: "Financements & Partenariats", icon: Coins },
+  { id: "registre", label: "Registre Légal & Audit", icon: TableProperties },
 ];
 
 export function StickyTabs({ activeTab, onChange }: StickyTabsProps) {
