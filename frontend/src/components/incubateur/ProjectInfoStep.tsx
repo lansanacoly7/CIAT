@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
-import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, RotateCcw } from "lucide-react";
 
 export interface Domaine {
   id: number;
@@ -244,38 +244,44 @@ export default function ProjectInfoStep({
 
       {/* Ligne 4 : Résumé court (facultatif) */}
       <div>
+        <label htmlFor="resume" className="mb-1 block text-sm font-bold text-[#1F130B]">
+          Résumé court <span className="text-xs font-normal text-[#8C6D4F]">(facultatif)</span>
+        </label>
+        <p className="mb-1.5 text-xs text-[#6b5646]">
+          Deux ou trois phrases pour présenter le projet en un coup d&apos;œil.
+        </p>
         <textarea
           id="resume"
           rows={2}
           value={form.resume}
           onChange={set("resume")}
-          placeholder="Résumé court (facultatif)"
+          placeholder="Ex : Conception d'une solution d'irrigation intelligente basée sur des capteurs solaires..."
           className={`${CONTROL} min-h-16 resize-y text-sm`}
-          aria-label="Résumé court (facultatif)"
         />
       </div>
 
       {/* Pied de formulaire : Effacer les champs à gauche & Enregistrer et continuer à droite */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#EFE4D6]">
         <button
           type="button"
           onClick={() => {
             setForm(EMPTY_PROJECT_INFO);
             setErrors({});
           }}
-          className="text-sm font-medium text-[#7A3E1D] transition-colors hover:text-[#4A2411] hover:underline"
+          className="group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#D6C7B7] bg-white px-4 text-xs sm:text-sm font-semibold text-[#6B5646] shadow-2xs transition-all hover:border-[#581C1C] hover:bg-[#450A0A]/5 hover:text-[#581C1C] active:scale-[0.98] cursor-pointer"
         >
-          Effacer les champs
+          <RotateCcw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-rotate-90 text-[#8C6D4F] group-hover:text-[#581C1C]" aria-hidden="true" />
+          <span>Effacer les champs</span>
         </button>
 
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7A3E1D] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#5C2E15] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           <span>{saving ? "Enregistrement…" : "Enregistrer et continuer"}</span>
-          <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
+          <ArrowRight className="h-4 w-4 shrink-0 stroke-[2.2]" aria-hidden="true" />
         </button>
       </div>
     </form>

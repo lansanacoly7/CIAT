@@ -250,26 +250,22 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          {/* 4. Page d'accueil (uniquement pour le staff, le logo CIAT servant de retour pour le porteur) */}
-          {!isPorteur && (
-            <>
-              <div className="mx-4 my-3 border-t border-white/10" />
-              <div className="px-3">
-                <Link
-                  href="/"
-                  onClick={onItemClick}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                    isHomeActive
-                      ? "bg-[#523624] font-semibold text-white"
-                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
-                  <span>Page d&apos;accueil</span>
-                </Link>
-              </div>
-            </>
-          )}
+          {/* 4. Page d'accueil (visible pour tous les rôles) */}
+          <div className="mx-4 my-3 border-t border-white/10" />
+          <div className="px-3">
+            <Link
+              href="/"
+              onClick={onItemClick}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                isHomeActive
+                  ? "bg-[#523624] font-semibold text-white"
+                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
+              <span>Page d&apos;accueil</span>
+            </Link>
+          </div>
         </div>
 
         {/* Partie basse : Profil Utilisateur & Déconnexion au format compact uniforme */}

@@ -78,7 +78,7 @@ class DossierListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         qs = Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
         if user.role == Role.PORTEUR:
-            return qs.filter(projet__porteur=user)
+            return qs.filter(projet__porteur=user).exclude(projet__statut=Projet.Statut.RETIRE)
         if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR):
             return qs.all()
         return qs.none()
@@ -245,6 +245,8 @@ class DossierEvaluationListCreateView(APIView):
             dossier = get_object_or_404(
                 Dossier.objects.select_for_update().select_related("projet"), pk=pk
             )
+            if dossier.projet.statut == Projet.Statut.RETIRE:
+                raise ValidationError("Cette candidature a été retirée par le porteur et ne peut plus être évaluée.")
             serializer = EvaluationCreateSerializer(
                 data=request.data,
                 context={"request": request, "dossier": dossier},
@@ -264,6 +266,8 @@ class DossierDecisionView(APIView):
             dossier = get_object_or_404(
                 Dossier.objects.select_for_update().select_related("projet"), pk=pk
             )
+            if dossier.projet.statut == Projet.Statut.RETIRE:
+                raise ValidationError("Cette candidature a été retirée par le porteur : aucune décision n'est possible.")
             serializer = DecisionSerializer(
                 data=request.data,
                 context={"request": request, "dossier": dossier},

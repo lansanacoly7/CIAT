@@ -107,6 +107,7 @@ class Projet(models.Model):
         PROTOTYPE = "prototype", "Prototype"
         TERMINE = "termine", "Incubation terminée"
         REJETE = "rejete", "Non retenu"
+        RETIRE = "retire", "Candidature retirée"
 
     titre = models.CharField(max_length=200)
     resume = models.TextField(blank=True)

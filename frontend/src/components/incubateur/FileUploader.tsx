@@ -1,6 +1,9 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type DragEvent } from "react";
+import { createPortal } from "react-dom";
+
+const emptySubscribe = () => () => {};
 import {
   FileText,
   Users,
@@ -11,6 +14,7 @@ import {
   Eye,
   Trash2,
   AlertCircle,
+  X,
 } from "lucide-react";
 import {
   PIECES_OBLIGATOIRES,
@@ -78,7 +82,7 @@ function PieceCard({
   error,
   disabled,
   onFile,
-  onDelete,
+  onRequestDelete,
 }: {
   type: PieceType;
   pieces: Piece[];
@@ -88,7 +92,7 @@ function PieceCard({
   error: string | null;
   disabled: boolean;
   onFile: (type: PieceType, file: File) => void;
-  onDelete: (pieceId: number) => void;
+  onRequestDelete: (piece: Piece) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -111,7 +115,7 @@ function PieceCard({
 
   return (
     <div
-      className={`flex flex-col justify-between gap-3 rounded-xl border p-3.5 sm:p-4 shadow-2xs transition-all ${
+      className={`flex flex-col justify-between gap-2.5 rounded-xl border p-3 sm:p-3.5 shadow-2xs transition-all ${
         provided && required
           ? "border-[#2E7D32]/40 bg-white"
           : !required
@@ -120,7 +124,7 @@ function PieceCard({
       }`}
     >
       {/* Haut de la carte : Icône + Titre + Description + Badge */}
-      <div className="flex items-start justify-between gap-2.5">
+      <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2.5">
           <div
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
@@ -138,10 +142,10 @@ function PieceCard({
             )}
           </div>
           <div className="min-w-0">
-            <h4 className="font-[family-name:var(--font-title)] text-xs sm:text-sm font-bold text-[#24140D] leading-tight">
+            <h4 className="font-[family-name:var(--font-title)] text-xs sm:text-[13px] font-bold text-[#24140D] leading-tight">
               {PIECE_LABELS[type].label}
             </h4>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-[#6B5646]">
+            <p className="mt-0.5 text-[10.5px] leading-snug text-[#6B5646]">
               {PIECE_LABELS[type].description}
             </p>
           </div>
@@ -197,8 +201,9 @@ function PieceCard({
                   <button
                     type="button"
                     disabled={deletingId === p.id}
-                    onClick={() => onDelete(p.id)}
+                    onClick={() => onRequestDelete(p)}
                     aria-label={`Supprimer ${p.nom}`}
+                    title="Supprimer ce document"
                     className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-md text-[#DC2626] hover:bg-[#DC2626]/15 hover:scale-105 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {deletingId === p.id ? (
@@ -223,12 +228,12 @@ function PieceCard({
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={drop}
-          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-dashed px-3 py-2.5 transition-colors ${
+          className={`rounded-lg border border-dashed p-2.5 transition-colors ${
             dragging
               ? "border-[#612D10] bg-[#FAF7F2]"
               : !required
-              ? "border-[#D6C7B7] bg-white"
-              : "border-[#DCCBB9] bg-[#FAF7F2]"
+              ? "border-[#D6C7B7] bg-[#FCFAF7]"
+              : "border-[#DCCBB9] bg-[#FAF7F2]/60"
           }`}
         >
           <input
@@ -239,42 +244,40 @@ function PieceCard({
             className="hidden"
             disabled={disabled || busy}
           />
-          <div className="text-[10.5px] text-[#7A6655] leading-snug">
-            <span className="font-semibold text-[#24140D]">
-              {formatsLabel(type)}
-            </span>
-            {type === "budget_previsionnel" && (
-              <span className="text-[9.5px] text-[#A35926] ml-1">
-                (Excel non supporté par l&apos;API)
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-1 text-[10.5px]">
+              <span className="font-semibold text-[#24140D] truncate">
+                {formatsLabel(type)}
+                {type === "budget_previsionnel" && (
+                  <span className="text-[9.5px] font-normal text-[#A35926] ml-1">
+                    (pas d&apos;Excel)
+                  </span>
+                )}
               </span>
-            )}
-            <div className="text-[10px] text-[#8C6D4F]">
-              10 Mo max · Glisser-déposer disponible
+              <span className="shrink-0 text-[10px] text-[#8C6D4F]">
+                10 Mo max · Glisser-déposer
+              </span>
             </div>
-          </div>
 
-          <button
-            type="button"
-            disabled={disabled || busy}
-            onClick={() => inputRef.current?.click()}
-            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-bold text-white shadow-2xs transition-all active:scale-[0.98] hover:scale-[1.02] hover:shadow-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
-              !required
-                ? "bg-[#786555] hover:bg-[#5C4D41]"
-                : "bg-[#612D10] hover:bg-[#3F1D0A]"
-            }`}
-          >
-            {busy ? (
-              <>
-                <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                <span>Envoi…</span>
-              </>
-            ) : (
-              <>
-                <Upload className="h-3.5 w-3.5" />
-                <span>Choisir un fichier</span>
-              </>
-            )}
-          </button>
+            <button
+              type="button"
+              disabled={disabled || busy}
+              onClick={() => inputRef.current?.click()}
+              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-[#C99A68] px-3 text-xs font-bold text-[#1F130B] shadow-xs transition-all active:scale-[0.98] hover:bg-[#B88752] hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {busy ? (
+                <>
+                  <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#1F130B]/40 border-t-[#1F130B]" />
+                  <span>Envoi…</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5 text-[#1F130B]" />
+                  <span>Choisir un fichier</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
@@ -318,12 +321,17 @@ export function FileUploader({ dossier, onChange, disabled = false }: FileUpload
     }
   };
 
-  const handleDelete = async (pieceId: number) => {
-    const type = pieces.find((p) => p.id === pieceId)?.type ?? "autre";
+  const [piecePendingDelete, setPiecePendingDelete] = useState<Piece | null>(null);
+
+  const handleConfirmDelete = async () => {
+    if (!piecePendingDelete) return;
+    const pieceId = piecePendingDelete.id;
+    const type = piecePendingDelete.type ?? "autre";
     setError(type, null);
     setDeletingId(pieceId);
     try {
       onChange(await deletePiece(dossier.id, pieceId));
+      setPiecePendingDelete(null);
     } catch {
       setError(type, "Impossible de supprimer cette pièce. Veuillez réessayer.");
     } finally {
@@ -356,7 +364,7 @@ export function FileUploader({ dossier, onChange, disabled = false }: FileUpload
               error={errors[type] ?? null}
               disabled={disabled}
               onFile={handleFile}
-              onDelete={handleDelete}
+              onRequestDelete={setPiecePendingDelete}
             />
           ))}
         </div>
@@ -384,11 +392,135 @@ export function FileUploader({ dossier, onChange, disabled = false }: FileUpload
             error={errors["autre"] ?? null}
             disabled={disabled}
             onFile={handleFile}
-            onDelete={handleDelete}
+            onRequestDelete={setPiecePendingDelete}
           />
         </div>
       </div>
+
+      {/* Modale de confirmation de suppression d'une pièce */}
+      {piecePendingDelete && (
+        <DeletePieceModal
+          piece={piecePendingDelete}
+          isDeleting={Boolean(deletingId)}
+          onClose={() => setPiecePendingDelete(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
     </div>
+  );
+}
+
+interface DeletePieceModalProps {
+  piece: Piece;
+  isDeleting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+function DeletePieceModal({ piece, isDeleting, onClose, onConfirm }: DeletePieceModalProps) {
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isDeleting) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mounted, isDeleting, onClose]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-delete-piece-title"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+    >
+      <div
+        className="fixed inset-0 bg-[#24140D]/65 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        onClick={() => !isDeleting && onClose()}
+        aria-hidden="true"
+      />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 w-full max-w-lg rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-7 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+      >
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={onClose}
+          aria-label="Fermer la boîte de dialogue"
+          className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#8C6D4F] transition-colors hover:bg-[#FAF7F2] hover:text-[#24140D] disabled:opacity-50 cursor-pointer"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FECACA] bg-[#FEE2E2] text-[#DC2626]">
+            <Trash2 className="h-6 w-6 stroke-[2.2]" />
+          </div>
+          <div className="min-w-0 flex-1 pr-6">
+            <h3
+              id="modal-delete-piece-title"
+              className="font-[family-name:var(--font-title)] text-base sm:text-lg font-bold text-[#24140D]"
+            >
+              Supprimer cette pièce ?
+            </h3>
+            <p className="mt-1.5 text-xs sm:text-sm text-[#7A583A] leading-relaxed">
+              Êtes-vous certain de vouloir retirer le fichier{" "}
+              <span className="font-semibold text-[#24140D] break-all">
+                « {piece.nom} »
+              </span>{" "}
+              de votre dossier de candidature ?
+            </p>
+            <div className="mt-3.5 rounded-xl border border-[#F0E4D8] bg-[#FCFAF7] p-3 text-xs text-[#8C6D4F]">
+              Cette action est immédiate, mais vous pourrez déposer un nouveau document à tout moment avant la soumission finale.
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 sm:mt-7 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-[#F0E4D8]">
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onClose}
+            className="cursor-pointer inline-flex min-h-11 items-center justify-center rounded-xl border border-[#E5D8C9] bg-white px-4 py-2.5 text-xs font-semibold text-[#612D10] hover:bg-[#FAF7F2] hover:border-[#C99A68] transition-colors disabled:opacity-50"
+          >
+            Conserver le document
+          </button>
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={onConfirm}
+            className="cursor-pointer inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#DC2626] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#B91C1C] transition-all disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>Suppression...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4 stroke-[2.2]" />
+                <span>Confirmer la suppression</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
