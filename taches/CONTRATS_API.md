@@ -72,6 +72,12 @@ Lecture publique pour tous. Écriture réservée à l'administrateur et au coord
 | `GET /documents/` | `{ id, titre, categorie, fichier }` |
 | `POST /contact/` | `{ nom, email, sujet, message }` → `201`. Public. |
 | `GET /projets-incubes/` | Public. `{ id, titre, resume, domaine_nom, cohorte_nom, statut }`. Seulement les projets au statut `incube`, `prototype` ou `termine`. Filtres : `?domaine=&cohorte=&statut=&search=` |
+| `POST /lettre/abonner/` | `{ email }` → `{ detail, statut: "en_attente" }` (public, double opt-in, réponse identique anti-énumération, limitation de débit stricte) |
+| `POST /lettre/confirmer/` | `{ jeton }` → `{ detail, statut: "confirme" }` (public, validation jeton signé, usage unique, 400 si expiré/rejoué/invalide) |
+| `POST /lettre/desabonner/` | `{ jeton }` → `{ detail, statut: "desabonne" }` (public, jeton signé présent dans les courriels, usage unique) |
+| `GET /lettre/abonnements/` | `{ id, email, statut, statut_libelle, cree_le, confirme_le, desabonne_le }` (admin et coordonnateur, filtrable `?statut=`) |
+| `GET /recherche/` | Public. `?q=terme` (min 2 car.). `{ q, total, groupes: { actualite, evenement, appel, projet, fiche, document, partenaire }, resultats: [...] }`, insensible casse/accents, contenus publiés uniquement |
+| `GET /chiffres-cles/` | Public. `{ projets_incubes, prototypes, porteurs_accompagnes, partenaires, cohortes, domaines: [{ id, nom, slug, nombre_projets }] }`, comptages réels consolidés depuis la base, cache court 60s |
 
 ## P3 — Analyse (`/api/analytics/`)
 

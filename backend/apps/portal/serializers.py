@@ -181,3 +181,84 @@ class ProjetIncubeSerializer(serializers.ModelSerializer):
             "vues",
         ]
         read_only_fields = fields
+
+
+
+# ==============================================================================
+# Phase 9 — T1, T2, T3
+# ==============================================================================
+
+class AbonnementLettreDemandeSerializer(serializers.Serializer):
+    """Validation de la demande d'abonnement public avec limitation anti-spam."""
+
+    email = serializers.EmailField(
+        required=True,
+        error_messages={
+            "required": "L'adresse email est obligatoire.",
+            "invalid": "Veuillez fournir une adresse email valide.",
+            "blank": "L'adresse email ne peut pas être vide.",
+        },
+    )
+
+    def validate_email(self, value):
+        normalized = value.strip().lower()
+        if len(normalized) > 254:
+            raise serializers.ValidationError("L'adresse email est trop longue.")
+        return normalized
+
+
+class AbonnementLettreJetonSerializer(serializers.Serializer):
+    """Validation du jeton de confirmation ou de désabonnement."""
+
+    jeton = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        error_messages={
+            "required": "Le jeton est obligatoire.",
+            "blank": "Le jeton ne peut pas être vide.",
+        },
+    )
+
+
+class AbonnementLettreAdminSerializer(serializers.ModelSerializer):
+    """Sérialiseur d'administration pour la liste des abonnés."""
+
+    from .models import AbonnementLettre
+
+    statut_libelle = serializers.CharField(source="get_statut_display", read_only=True)
+
+    class Meta:
+        from .models import AbonnementLettre
+
+        model = AbonnementLettre
+        fields = [
+            "id",
+            "email",
+            "statut",
+            "statut_libelle",
+            "cree_le",
+            "confirme_le",
+            "desabonne_le",
+        ]
+        read_only_fields = fields
+
+
+class RechercheResultatItemSerializer(serializers.Serializer):
+    """Format d'un résultat de recherche globale : { type, titre, extrait, url_interne, score }"""
+
+    type = serializers.CharField()
+    titre = serializers.CharField()
+    extrait = serializers.CharField()
+    url_interne = serializers.CharField()
+    score = serializers.IntegerField()
+
+
+class ChiffresClesSerializer(serializers.Serializer):
+    """Format des chiffres clés publics réels calculés depuis la base."""
+
+    projets_incubes = serializers.IntegerField()
+    prototypes = serializers.IntegerField()
+    porteurs_accompagnes = serializers.IntegerField()
+    partenaires = serializers.IntegerField()
+    cohortes = serializers.IntegerField()
+    domaines = serializers.ListField(child=serializers.DictField())

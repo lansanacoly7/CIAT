@@ -92,3 +92,53 @@ class MessageContactAdmin(admin.ModelAdmin):
         )
     ]
 
+
+
+# ==============================================================================
+# Phase 9 — T1 : Lettre d'information
+# ==============================================================================
+
+import csv
+from django.http import HttpResponse
+from apps.core.services import enregistrer_audit
+from .models import AbonnementLettre
+
+
+def exporter_abonnements_lettre_csv(modeladmin, request, queryset):
+    """Exporte la liste des abonnés en CSV avec email et statut seulement.
+
+    Enregistre rigoureusement l'action dans le journal d'audit sans donnée sensible.
+    """
+    response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
+    response["Content-Disposition"] = f'attachment; filename="abonnes_lettre_{queryset.count()}.csv"'
+
+    writer = csv.writer(response, delimiter=";")
+    writer.writerow(["Email", "Statut"])
+
+    for ab in queryset:
+        writer.writerow([ab.email, ab.statut])
+
+    # Traçabilité dans le journal d'audit d'Ibrahima
+    enregistrer_audit(
+        acteur=request.user,
+        action="export_csv_abonnements_lettre",
+        objet=f"Export CSV de {queryset.count()} abonné(s) à la lettre d'information",
+        avant={},
+        apres={"total_exporte": queryset.count()},
+    )
+
+    return response
+
+
+exporter_abonnements_lettre_csv.short_description = "Exporter la sélection en CSV (email et statut seulement)"
+
+
+@admin.register(AbonnementLettre)
+class AbonnementLettreAdmin(admin.ModelAdmin):
+    list_display = ("email", "statut", "cree_le", "confirme_le", "desabonne_le")
+    list_filter = ("statut", "cree_le", "confirme_le")
+    search_fields = ("email",)
+    readonly_fields = ("cree_le", "confirme_le", "desabonne_le", "jeton")
+    date_hierarchy = "cree_le"
+    ordering = ("-cree_le",)
+    actions = [exporter_abonnements_lettre_csv]
