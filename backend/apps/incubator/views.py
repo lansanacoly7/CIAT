@@ -87,7 +87,7 @@ class DossierListCreateView(generics.ListCreateAPIView):
         - Équipe (Admin, Coordonnateur, Comité, Mentor) : vue consolidée sur l'ensemble des dossiers.
         """
         user = self.request.user
-        qs = Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
+        qs = Dossier.objects.select_related("projet", "projet__porteur", "projet__domaine").prefetch_related("pieces")
         if user.role == Role.PORTEUR:
             return qs.filter(projet__porteur=user)
         if user.role in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR):
@@ -110,7 +110,7 @@ class DossierDetailView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         """Définit le jeu de données optimisé avec pré-chargement des pièces et du porteur."""
-        return Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
+        return Dossier.objects.select_related("projet", "projet__porteur", "projet__domaine").prefetch_related("pieces")
 
     def get_object(self):
         """Vérifie les droits d'accès au niveau de l'objet (Object-level permission check)."""
