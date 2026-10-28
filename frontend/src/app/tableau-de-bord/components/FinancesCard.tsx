@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { formatNumber } from "@/lib/format";
+
+const emptySubscribe = () => () => {};
 
 interface FinancesCardProps {
   totalFinance?: number;
@@ -16,11 +18,7 @@ export function FinancesCard({
   partenariatsActifs = 33,
   onNavigateTab,
 }: FinancesCardProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const totalMillions = Math.round(totalFinance / 1000000);
   const decaisseMillions = Math.round(totalDecaisse / 1000000);

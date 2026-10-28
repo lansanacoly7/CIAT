@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { formatNumber } from "@/lib/format";
+
+const emptySubscribe = () => () => {};
 
 interface EntonnoirCardProps {
   indicateurs: {
@@ -24,11 +26,7 @@ interface StepData {
 }
 
 export function EntonnoirCard({ indicateurs, onFilterStatut }: EntonnoirCardProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const steps: StepData[] = [
     {

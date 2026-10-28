@@ -1,21 +1,29 @@
 import { test, expect, Page } from "@playwright/test";
 
-// Helper de connexion générique
+// Helper de connexion générique avec résilience d'hydratation
 async function loginAs(page: Page, email: string) {
   await page.goto("/connexion", { waitUntil: "domcontentloaded" });
-  const emailInput = page.locator('input[type="email"]');
-  await emailInput.waitFor({ state: "visible", timeout: 15000 });
+  // Attente que le champ email soit visible et prêt
+  const emailInput = page.locator("#email");
+  await emailInput.waitFor({ state: "visible", timeout: 20000 });
+  await emailInput.click();
   await emailInput.fill(email);
-  await page.fill('input[type="password"]', "Ciat2026!");
+
+  const passwordInput = page.locator("#password");
+  await passwordInput.click();
+  await passwordInput.fill("Ciat2026!");
+
+  const submitBtn = page.locator('button[type="submit"]');
+  await expect(submitBtn).toBeEnabled();
 
   const [tokenResponse] = await Promise.all([
-    page.waitForResponse((res) => res.url().includes("/auth/token/"), { timeout: 20000 }),
-    page.click('button[type="submit"]'),
+    page.waitForResponse((res) => res.url().includes("/auth/token/"), { timeout: 25000 }),
+    submitBtn.click(),
   ]);
   expect(tokenResponse.status()).toBe(200);
 
   // Attente de redirection post-connexion
-  await page.waitForURL(/.*(tableau-de-bord|incubateur|documents).*/, { timeout: 20000 });
+  await page.waitForURL(/.*(tableau-de-bord|incubateur|documents).*/, { timeout: 25000 });
 }
 
 test.describe("Tests de bout en bout (E2E) — Parcours Métiers Manquants", () => {
@@ -38,11 +46,21 @@ test.describe("Tests de bout en bout (E2E) — Parcours Métiers Manquants", () 
     const titreInput = page.locator("#titre");
     await titreInput.waitFor({ state: "visible", timeout: 20000 });
 
-    // Attente que la liste des domaines soit chargée
-    await page.locator("#domaine option:not([value=''])").first().waitFor({ state: "attached", timeout: 15000 });
+    // Attente et sélection du domaine d'activité (supporte CustomSelect et select natif)
+    const domaineTrigger = page.locator("#domaine");
+    await expect(domaineTrigger).toBeVisible({ timeout: 15000 });
+    const tagName = await domaineTrigger.evaluate((el) => el.tagName.toLowerCase());
+    if (tagName === "select") {
+      await page.locator("#domaine option:not([value=''])").first().waitFor({ state: "attached", timeout: 10000 });
+      await page.locator("#domaine").selectOption({ index: 1 });
+    } else {
+      await domaineTrigger.click();
+      const optionItem = page.locator("#domaine-options-list li button").first();
+      await expect(optionItem).toBeVisible({ timeout: 10000 });
+      await optionItem.click();
+    }
 
     await titreInput.fill("Sonde IoT Solaire pour Maraîchers des Niayes");
-    await page.locator("#domaine").selectOption({ index: 1 });
 
     const resumeInput = page.locator("#resume");
     await resumeInput.fill("Dispositif autonome d'irrigation intelligente et analyse d'humidité du sol.");
@@ -62,8 +80,17 @@ test.describe("Tests de bout en bout (E2E) — Parcours Métiers Manquants", () 
     const etapePieces = page.locator("h2:has-text('Déposez vos pièces justificatives')");
     await expect(etapePieces).toBeVisible({ timeout: 15000 });
 
-    const piecesGauge = page.locator("text=Complétude du dossier").first();
+    const piecesGauge = page.locator("text=Complétude").first();
     await expect(piecesGauge).toBeVisible({ timeout: 10000 });
+
+    // 6. Navigation vers l'étape finale de récapitulatif avant soumission
+    const toSummaryBtn = page.locator('button:has-text("Continuer vers le récapitulatif")');
+    await toSummaryBtn.scrollIntoViewIfNeeded();
+    await toSummaryBtn.click();
+
+    const summaryHeading = page.locator("h2:has-text('Vérifiez votre dossier')");
+    await expect(summaryHeading).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Informations du projet" })).toBeVisible({ timeout: 10000 });
 
     await context.close();
   });

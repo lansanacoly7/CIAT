@@ -34,7 +34,6 @@ import { PartenariatsFinancementsSection } from "./components/PartenariatsFinanc
 import { AiDrawer } from "./components/AiDrawer";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
-import { formatCurrencyCompact } from "@/lib/format";
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -334,7 +333,7 @@ export function DashboardContent() {
     } catch {
       return `Pic : ${peak.total} projets`;
     }
-  }, [data?.evolution]);
+  }, [data]);
 
   const cohorteInsight = useMemo(() => {
     if (!data?.parCohorte || data.parCohorte.length === 0) return undefined;
@@ -343,7 +342,7 @@ export function DashboardContent() {
       data.parCohorte[0]
     );
     return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
-  }, [data?.parCohorte]);
+  }, [data]);
 
   return (
     <div

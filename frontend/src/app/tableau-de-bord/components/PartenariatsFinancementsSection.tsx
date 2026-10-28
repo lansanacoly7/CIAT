@@ -5,11 +5,6 @@ import {
   Loader2,
   ShieldCheck,
   Award,
-  Coins,
-  ArrowUpRight,
-  Handshake,
-  Building2,
-  ChevronRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -155,11 +150,6 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
   if (!stats) return null;
 
   const totalFinanceMillions = Math.round(stats.total_finance / 1_000_000);
-  const decaisseMillions = Math.round(stats.financements_decaisses / 1_000_000);
-  const tauxDecaissement =
-    stats.total_finance > 0
-      ? Math.round((stats.financements_decaisses / stats.total_finance) * 100)
-      : 0;
 
   return (
     <div className="space-y-6">

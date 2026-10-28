@@ -133,6 +133,13 @@ class Projet(models.Model):
     def __str__(self):
         return self.titre
 
+    def save(self, *args, **kwargs):
+        if not self.cohorte_id:
+            derniere = Cohorte.objects.order_by("-annee").first()
+            if derniere:
+                self.cohorte = derniere
+        super().save(*args, **kwargs)
+
 
 class JournalAudit(models.Model):
     """Journal d'audit des actions sensibles pour la traçabilité des décisions."""
