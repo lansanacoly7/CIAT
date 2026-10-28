@@ -401,8 +401,75 @@ function ListeProjets() {
           </span>
         </div>
 
-        {/* Barre de chevrons imbriqués avec flèches connectées */}
-        <div className="overflow-x-auto pb-1">
+        {/* Affichage adaptatif du parcours : Cartes verticales en mobile (< sm), Chevrons continus en desktop (>= sm) */}
+        {/* 1. VUE MOBILE (< sm, 390px) : Sans défilement horizontal forcé */}
+        <div className="sm:hidden space-y-2">
+          {ETAPES_DISPOSITIF.map((etape) => {
+            const isValide = etape.index < etapeReelle;
+            const isEnCours = etape.index === etapeReelle;
+            const isSelected = selectedEtape === etape.index;
+
+            return (
+              <button
+                key={etape.index}
+                type="button"
+                onClick={() => setSelectedEtape(isSelected ? null : etape.index)}
+                className={`w-full rounded-xl border p-3 flex items-center justify-between text-left transition-all cursor-pointer active:scale-[0.99] ${
+                  isSelected
+                    ? "border-[#612D10] bg-[#FAF7F2] ring-2 ring-[#612D10]/20 shadow-xs"
+                    : isValide
+                    ? "border-[#24140D]/30 bg-white hover:bg-[#FAF7F2]"
+                    : isEnCours
+                    ? "border-[#C99A68] bg-[#FFF9F3] hover:bg-[#FAF4ED]"
+                    : "border-[#EFE4D6] bg-white hover:bg-[#FAF7F2]"
+                }`}
+                aria-label={`Étape ${etape.numero} : ${etape.titre}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                      isValide
+                        ? "bg-[#24140D] text-white"
+                        : isEnCours
+                        ? "bg-[#C99A68] text-white animate-pulse"
+                        : "bg-[#F3F4F6] text-[#6B7280]"
+                    }`}
+                  >
+                    {isValide ? "✓" : etape.numero}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-[family-name:var(--font-title)] text-xs font-bold text-[#24140D] truncate">
+                      {etape.numero}. {etape.titre}
+                    </p>
+                    <p className="text-[11px] text-[#8C6D4F]">
+                      {isValide ? "Étape validée" : isEnCours ? "En cours d'accompagnement" : "Étape à venir"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                  <span
+                    className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                      isValide
+                        ? "bg-[#24140D]/10 text-[#24140D]"
+                        : isEnCours
+                        ? "bg-[#C99A68]/20 text-[#8C5824]"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {isSelected ? "Détails ouverts" : "Consulter"}
+                  </span>
+                  <ChevronRight
+                    className={`h-4 w-4 text-[#8C6D4F] transition-transform ${isSelected ? "rotate-90" : ""}`}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 2. VUE DESKTOP (>= sm) : Barre de chevrons imbriqués polygonaux */}
+        <div className="hidden sm:block overflow-x-auto pb-1">
           <div className="flex min-w-[580px] sm:min-w-0 rounded-2xl overflow-hidden border border-[#EFE4D6] bg-white shadow-2xs">
             {ETAPES_DISPOSITIF.map((etape) => {
               const isValide = etape.index < etapeReelle;

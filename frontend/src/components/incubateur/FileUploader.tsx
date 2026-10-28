@@ -263,7 +263,7 @@ function PieceCard({
               type="button"
               disabled={disabled || busy}
               onClick={() => inputRef.current?.click()}
-              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-[#C99A68] px-3 text-xs font-bold text-[#1F130B] shadow-xs transition-all active:scale-[0.98] hover:bg-[#B88752] hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-[42px] sm:min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-[#C99A68] px-3 text-xs font-bold text-[#1F130B] shadow-xs transition-all active:scale-[0.98] hover:bg-[#B88752] hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? (
                 <>

@@ -90,10 +90,10 @@ export default function DeleteProjectModal({ projet, onClose, onDone }: Props) {
         aria-hidden="true"
       />
 
-      {/* Boîte de dialogue centrée sur le viewport actif */}
+      {/* Boîte de dialogue centrée sur le viewport actif avec défilement sécurisé pour mobile */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-lg rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-7 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-7 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Bouton de fermeture discret en haut à droite */}
         <button
@@ -161,7 +161,7 @@ export default function DeleteProjectModal({ projet, onClose, onDone }: Props) {
                   }}
                   disabled={busy}
                   placeholder="Recopiez le titre ici..."
-                  className="w-full rounded-lg border border-[#E5D8C9] bg-white px-3 py-2 text-xs text-[#24140D] placeholder:text-[#8C6D4F]/60 focus:border-[#C99A68] focus:outline-none focus:ring-2 focus:ring-[#C99A68]/25"
+                  className="w-full rounded-lg border border-[#E5D8C9] bg-white px-3 py-2.5 text-base sm:text-xs text-[#24140D] placeholder:text-[#8C6D4F]/60 focus:border-[#C99A68] focus:outline-none focus:ring-2 focus:ring-[#C99A68]/25"
                 />
               </div>
             )}
@@ -181,7 +181,7 @@ export default function DeleteProjectModal({ projet, onClose, onDone }: Props) {
             type="button"
             disabled={busy}
             onClick={onClose}
-            className="cursor-pointer inline-flex min-h-11 items-center justify-center rounded-xl border border-[#E5D8C9] bg-white px-4 py-2.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2] hover:border-[#C99A68] disabled:opacity-50"
+            className="cursor-pointer inline-flex min-h-12 sm:min-h-11 items-center justify-center rounded-xl border border-[#E5D8C9] bg-white px-4 py-2.5 text-xs font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2] hover:border-[#C99A68] disabled:opacity-50"
           >
             {retrait ? "Conserver ma candidature" : "Conserver le projet"}
           </button>
@@ -190,7 +190,7 @@ export default function DeleteProjectModal({ projet, onClose, onDone }: Props) {
             type="button"
             disabled={!canConfirm}
             onClick={confirmer}
-            className={`cursor-pointer inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`cursor-pointer inline-flex min-h-12 sm:min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
               retrait
                 ? "bg-[#A35926] hover:bg-[#8C4A1C]"
                 : "bg-[#DC2626] hover:bg-[#B91C1C]"

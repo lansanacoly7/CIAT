@@ -211,7 +211,7 @@ function DepotDossier() {
         {/* 1. HERO BANNER EN CARTE INTÉGRÉE (Harmonisée avec /incubateur/projets et /compte) */}
         <div className="relative overflow-hidden rounded-2xl border border-[#3d2315] bg-[#1F130B] shadow-sm">
           {/* Photo panoramique de fond — 100% nette et contrastée, sans voile blanc */}
-          <div className="relative h-48 w-full sm:h-56 lg:h-60">
+          <div className="relative min-h-[210px] w-full sm:min-h-0 sm:h-56 lg:h-60">
             <Image
               src="/images/ciat-header-panoramique.jpg"
               alt="Campus d'innovation CIAT · ISEP Diamniadio"
@@ -219,21 +219,21 @@ function DepotDossier() {
               priority
               className="object-cover object-center"
             />
-            {/* Dégradé sombre horizontal pour une lisibilité parfaite des textes à gauche */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1F130B]/95 via-[#1F130B]/80 to-[#1F130B]/30" />
+            {/* Dégradé sombre horizontal pour une lisibilité parfaite des textes */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1F130B]/95 via-[#1F130B]/85 to-[#1F130B]/40 sm:via-[#1F130B]/80 sm:to-[#1F130B]/30" />
 
             {/* Textes posés directement sur l'image */}
-            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-8 lg:px-10">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative z-10 flex min-h-[210px] sm:min-h-0 sm:absolute sm:inset-0 flex-col justify-center px-4 py-5 sm:px-8 lg:px-10">
+              <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="max-w-2xl space-y-1.5">
                   {/* Surtitre éditorial pur */}
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#E5B887]">
+                  <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#E5B887]">
                     <span>Incubateur CIAT · ISEP Diamniadio</span>
                     <span className="text-white/30">/</span>
                     <span className="text-white/80 font-medium">Cohorte 2026</span>
                   </div>
                   {/* Titre en dégradé doré vers marron noble CIAT */}
-                  <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl">
+                  <h1 className="font-[family-name:var(--font-title)] text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
                     <span className="bg-gradient-to-r from-[#FEE5C5] via-[#DDA76A] to-[#A35926] bg-clip-text text-transparent">
                       Dépôt de candidature
                     </span>
@@ -244,10 +244,10 @@ function DepotDossier() {
                 </div>
 
                 {/* Bouton Mes projets */}
-                <div className="flex items-center shrink-0">
+                <div className="flex items-center shrink-0 pt-1 sm:pt-0">
                   <Link
                     href="/incubateur/projets"
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10] active:scale-[0.98] cursor-pointer"
+                    className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-xl bg-white px-5 text-xs sm:text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10] active:scale-[0.98] cursor-pointer"
                   >
                     Mes projets
                   </Link>
@@ -328,7 +328,7 @@ function DepotDossier() {
                           <button
                             type="button"
                             onClick={() => goTo(0)}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#C99A68] bg-white px-5 text-xs sm:text-sm font-bold text-[#612D10] whitespace-nowrap shadow-2xs transition-all hover:bg-[#FAF7F2] hover:border-[#612D10] hover:text-[#3F1D0A] active:scale-[0.98] cursor-pointer"
+                            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#C99A68] bg-white px-5 text-xs sm:text-sm font-bold text-[#612D10] whitespace-nowrap shadow-2xs transition-all hover:bg-[#FAF7F2] hover:border-[#612D10] hover:text-[#3F1D0A] active:scale-[0.98] cursor-pointer"
                           >
                             <ArrowLeft className="h-4 w-4 shrink-0 stroke-[2.2]" aria-hidden="true" />
                             <span>Retour aux informations</span>
@@ -339,7 +339,7 @@ function DepotDossier() {
                               setMaxReached(2);
                               goTo(2);
                             }}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer"
+                            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer"
                           >
                             <span>Continuer vers le récapitulatif</span>
                             <ArrowRight className="h-4 w-4 shrink-0 stroke-[2.2]" aria-hidden="true" />

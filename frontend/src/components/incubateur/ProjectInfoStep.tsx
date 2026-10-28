@@ -19,7 +19,7 @@ export interface ProjectInfo {
 export const EMPTY_PROJECT_INFO: ProjectInfo = { titre: "", domaine: null, resume: "", probleme: "", solution: "" };
 
 const CONTROL =
-  "w-full rounded-xl border border-[#4A3B32]/35 bg-white px-4 py-2.5 text-[#1F130B] outline-none transition-all placeholder:text-[#5A4638]/70 focus:border-[#7A3E1D] focus:ring-2 focus:ring-[#7A3E1D]/20";
+  "w-full rounded-xl border border-[#4A3B32]/35 bg-white px-4 py-2.5 text-base sm:text-sm text-[#1F130B] outline-none transition-all placeholder:text-[#5A4638]/70 focus:border-[#7A3E1D] focus:ring-2 focus:ring-[#7A3E1D]/20";
 
 function CustomSelect({
   id,
@@ -270,7 +270,7 @@ export default function ProjectInfoStep({
             setForm(EMPTY_PROJECT_INFO);
             setErrors({});
           }}
-          className="group inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#D6C7B7] bg-white px-4 text-xs sm:text-sm font-semibold text-[#6B5646] shadow-2xs transition-all hover:border-[#581C1C] hover:bg-[#450A0A]/5 hover:text-[#581C1C] active:scale-[0.98] cursor-pointer"
+          className="group inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#D6C7B7] bg-white px-4 text-xs sm:text-sm font-semibold text-[#6B5646] shadow-2xs transition-all hover:border-[#581C1C] hover:bg-[#450A0A]/5 hover:text-[#581C1C] active:scale-[0.98] cursor-pointer"
         >
           <RotateCcw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-rotate-90 text-[#8C6D4F] group-hover:text-[#581C1C]" aria-hidden="true" />
           <span>Effacer les champs</span>
@@ -279,7 +279,7 @@ export default function ProjectInfoStep({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           <span>{saving ? "Enregistrement…" : "Enregistrer et continuer"}</span>
