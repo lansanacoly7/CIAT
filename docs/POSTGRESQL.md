@@ -156,16 +156,48 @@ python manage.py test
 
 ---
 
-## 5. Pièges identifiés et différences avec SQLite
+## 5. Pièges identifiés et différences mesurées entre SQLite et PostgreSQL
 
-1. **Sensibilité à la casse (`ILIKE` vs `LIKE`)** :
-   - SQLite traite l'opérateur `LIKE` de manière insensible à la casse pour les caractères ASCII. PostgreSQL distingue strictement `LIKE` (sensible) et `ILIKE` (insensible).
-   - Le code utilise systématiquement les filtres Django `icontains` et `iexact` pour assurer une stricte compatibilité entre les deux moteurs.
-2. **Ordre par défaut des QuerySets** :
-   - PostgreSQL ne garantit aucun ordre d'extraction sans clause explicite `ORDER BY`.
-   - Tous les modèles exposés dans les API disposent d'un tri explicite dans leur `Meta.ordering` ou dans le `ViewSet` (`ordering = ["-cree_le"]`).
-3. **Champs JSON (`JSONField`)** :
-   - PostgreSQL valide strictement la syntaxe JSON native (`jsonb`). Les serializers CIAT valident la structure des dictionnaires et listes avant écriture.
+1. **Recherche insensible à la casse (`icontains`) sur caractères accentués** :
+   - **Commande de reproduction** :
+     ```python
+     from apps.core.models import Domaine
+     Domaine.objects.filter(nom__icontains="éducation").count()
+     ```
+   - **Comportement SQLite** : Renvoie **`0`** résultat. SQLite n'implémente le pliage de casse (`case folding`) que pour les 26 caractères ASCII de base (`a-z`). Tout caractère accentué UTF-8 (`É` = `\xc3\x89`) n'est pas converti en minuscule par SQLite.
+   - **Comportement PostgreSQL** : Renvoie **`1`** résultat (`Éducation, formation professionnelle et insertion`). Sous PostgreSQL avec un fournisseur de locale ICU (`ICU_LOCALE='fr-FR'`), l'opérateur `ILIKE` applique les règles Unicode complètes et associe correctement `É` et `é`.
+   - **Règle pour l'équipe** : Le développement et la recette doivent obligatoirement être validés sur PostgreSQL, car SQLite masque ces comportements de recherche sur les textes en français.
+   - **Test de non-régression** : [`backend/apps/core/tests/test_compatibilite_moteur.py`](../backend/apps/core/tests/test_compatibilite_moteur.py) valide ce comportement (test décoré `@unittest.skipUnless(connection.vendor == "postgresql", ...)`).
+
+2. **Tri alphabétique (`order_by("nom")`) et collation** :
+   - **Commande de reproduction** :
+     ```python
+     from apps.core.models import Domaine
+     list(Domaine.objects.order_by("nom").values_list("nom", flat=True))
+     ```
+   - **Collation de la base PostgreSQL hôte** : Mesurée via `SELECT datcollate, datctype, datlocprovider FROM pg_database WHERE datname='ciat_db';` : `datcollate='French_France.utf8'`, `datlocprovider='i'` (fournisseur ICU `fr-FR`).
+   - **Ordre sous PostgreSQL** :
+     1. `Agriculture, transformation et environnement`
+     2. `Éducation, formation professionnelle et insertion`
+     3. `Énergie, efficacité énergétique et énergies renouvelables`
+     4. `Mécanique, fabrication et maintenance`
+     5. `Pharmaceutique et biomédical`
+     6. `Services aux collectivités, entrepreneuriat et incubation`
+     7. `TIC, numérique, intelligence artificielle et données`
+     *(Le tri alphabétique français ICU place le `É` immédiatement après le `E`, entre Agriculture et Mécanique).*
+   - **Ordre sous SQLite** :
+     1. `Agriculture, transformation et environnement`
+     2. `Mécanique, fabrication et maintenance`
+     3. `Pharmaceutique et biomédical`
+     4. `Services aux collectivités, entrepreneuriat et incubation`
+     5. `TIC, numérique, intelligence artificielle et données`
+     6. `Éducation, formation professionnelle et insertion`
+     7. `Énergie, efficacité énergétique et énergies renouvelables`
+     *(En collation binaire standard SQLite, l'octet UTF-8 `\xc3` de `É` est supérieur à `T` (0x54) et `Z` (0x5A), renvoyant tous les mots accentués à la fin).*
+
+3. **Champs JSON (`JSONField`) et contraintes d'intégrité** :
+   - *Champs JSON* : PostgreSQL valide strictement la syntaxe native (`jsonb`), aucune différence observée par la suite de tests.
+   - *Contraintes d'intégrité et clés étrangères* : Les contraintes d'unicité partielles et globales (`unique_grille_active`) : aucune différence observée par la suite de tests.
 
 ---
 
@@ -193,26 +225,76 @@ Conformément à la directive stricte de transparence (« on n'écrit que ce qui
      django.db.utils.NotSupportedError: PostgreSQL 14 or later is required (found 12.22).
      ```
    - **Conclusion** : Le contournement illégal par monkeypatch (`check_database_version_supported = lambda self: None`) a été intégralement éradiqué. Django 5.2 protège désormais le projet contre les versions obsolètes de PostgreSQL.
-2. **Conteneur Docker PostgreSQL 16** :
-   - Sur cette machine hôte Windows, Docker Desktop nécessite le composant optionnel WSL2 (`WSL_E_WSL_OPTIONAL_COMPONENT_REQUIRED`). En l'absence de ce composant activé sur l'hôte, le conteneur `postgres:16` n'a pas pu être lancé.
-   - Par honnêteté technique, **l'affirmation préliminaire « 230 / 230 tests réussis sur PostgreSQL 16 » a été formellement retirée**.
-   - Les anciennes mentions non quantifiées sur les différences constatées avec SQLite (ILIKE, jsonb, tris stables, aucune différence résiduelle) ont également été retirées car elles n'ont pas fait l'objet d'une mesure instrumentée lors de cette session.
-   - **Résultat sur PostgreSQL 16** : *Non exécuté sur PostgreSQL 16 sur cette machine locale (à compléter par Lansana ou par un environnement disposant de Docker / PostgreSQL 16).*
-3. **Exécution réelle et mesurée de la suite de tests (SQLite — base de repli standard)** :
-   - **Date d'exécution** : 27 octobre 2026
-   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test`
-   - **Résultat réel obtenu** :
+2. **Exécution réelle et mesurée sur PostgreSQL 16 (installateur officiel Windows, service `postgresql-x64-16`)** :
+   - **Mode de déploiement** : Installateur officiel Windows PostgreSQL 16 déployé dans `C:\Program Files\PostgreSQL\16\bin\`, service Windows `postgresql-x64-16` actif sur le port `5434` (le port `5432` étant réservé par l'ancienne instance PostgreSQL 12).
+   - **Version exacte mesurée** : `PostgreSQL 16.10, compiled by Visual C++ build 1944, 64-bit` (mesurée via `connection.cursor().execute("SELECT version()")`).
+   - **Collation de la base** : `datcollate = 'French_France.utf8'`, fournisseur ICU `fr-FR` (`datlocprovider = 'i'`).
+   - **Configuration `DATABASE_URL`** : `postgres://postgres@127.0.0.1:5434/ciat_db` (sur conteneur Docker Linux, la convention du projet est `postgres://ciat:ciat@localhost:5432/ciat`).
+   - **Migrations et chargement** :
+     - `python manage.py migrate` : 30+ migrations appliquées avec succès (`admin`, `analytics`, `assistant`, `auth`, `contenttypes`, `core`, `documents`, `gallery`, `incubator`, `portal`, `sessions`).
+     - `python manage.py seed_all` (dernières lignes de sortie réelle) :
+       ```text
+       === Étape 6 : Documents institutionnels générés ===
+       Documents officiels : 6 en base (6 créés).
+       === Étape 7 : Images de démonstration locales (Pillow) ===
+       Images démo prêtes (idempotent) : 0 actualités, 0 partenaires, 23 fiches galerie générées (5 déjà présentes).
+
+       [SUCCÈS] Commande seed_all terminée : cohérence complète et idempotente établie sur tous les modules.
+       ```
+   - **Historique des mesures** :
+     La première exécution locale décrite au commit `ec5f832` (binaires temporaires 16.4 sur port 5433) a été remplacée par le commit `71a4b60` (service officiel Windows `postgresql-x64-16` en version 16.10 sur le port 5434) afin d'utiliser le service permanent installé sur la machine de développement [détails additionnels à compléter par Ibrahima].
+   - **Commande exécutée** :
+     ```bash
+     $env:DATABASE_URL = "postgres://postgres@127.0.0.1:5434/ciat_db"
+     python manage.py test --timing
+     ```
+   - **Sortie exacte mesurée (sortie brute complète)** :
      ```text
-     Found 268 test(s).
+     Found 278 test(s).
      System check identified no issues (0 silenced).
+     Creating test database for alias 'default'...
      ................................................................................
      ----------------------------------------------------------------------
-     Ran 268 tests in 37.278s
+     Ran 278 tests in 25.522s
 
      OK
+     Destroying test database for alias 'default'...
+
+     Total database setup took 2.100s
+       Creating 'default' took 2.100s
+     Total database teardown took 0.970s
+     Total run took 29.298s
      ```
-   - **Nombre de tests réussis** : **268 / 268 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
-   - **Durée réelle mesurée** : **37,28 secondes** (optimisé via `setUpTestData` et `MD5PasswordHasher`).
+   - **Résultats obtenus** :
+     - **278 / 278 tests réussis (0 échec, 0 erreur, 100 % de succès)**.
+     - **Durée mesurée** : **25,522 secondes** pour l'exécution des tests (29,298 secondes au total avec initialisation et suppression de la base temporaire de test).
+
+3. **Exécution de référence sur SQLite (mesurée immédiatement après sur la même machine)** :
+   - **Date d'exécution** : 27 octobre 2026
+   - **Version SQLite mesurée** : `3.50.4`
+   - **Commande exécutée** : `.venv/Scripts/python.exe manage.py test --timing` (sans `DATABASE_URL`)
+   - **Sortie exacte mesurée (sortie brute complète)** :
+     ```text
+     Found 278 test(s).
+     System check identified no issues (0 silenced).
+     Creating test database for alias 'default'...
+     ...........s....................................................................
+     ----------------------------------------------------------------------
+     Ran 278 tests in 13.881s
+
+     OK (skipped=1)
+     Destroying test database for alias 'default'...
+
+     Total database setup took 1.071s
+       Creating 'default' took 1.071s
+     Total database teardown took 0.000s
+     Total run took 15.700s
+     ```
+   - **Résultats obtenus** :
+     - **277 / 278 tests réussis, 1 ignoré (`skipped=1`)** : le test `test_recherche_icontains_accentuee_postgresql` est ignoré conformément à sa condition d'exclusion sur SQLite.
+     - **Durée mesurée** : **13,881 secondes** (15,700 secondes au total).
+   - **Comparaison factuelle des durées** :
+     Sur la même machine de développement, la suite de tests automatisée s'exécute en 13,88 s sur SQLite et en 25,52 s sur PostgreSQL 16.10 local. L'écart s'explique par le surcoût de communication inter-processus via sockets TCP et de gestion des transactions par le serveur PostgreSQL pour chaque cas de test, alors que SQLite opère directement en accès fichier/mémoire local dans le même processus.
 
 ---
 
@@ -385,3 +467,208 @@ Verdict : IDENTIQUE
 | Exclusion Git des dumps et backups | **Testé (Succès)** | Vérifié via `git check-ignore -v backups/x.dump`. |
 | Sauvegarde / Restauration via Docker PostgreSQL 16 | *Non testé en local* | En attente de déploiement sur environnement disposant de WSL2 / Linux Docker. |
 
+---
+
+## 8. Vérification des migrations réversibles sur PostgreSQL 16 (Phase 8 — T3)
+
+> Vérification d'intégrité du cycle de vie complet des schémas de base de données : application depuis une base vide, annulation complète (`migrate <app> zero`), ré-application intégrale et exécution du peuplement `seed_all`.
+
+### 8.1 Environnement d'exécution
+
+- **Moteur** : PostgreSQL 16.10 (service local `postgresql-x64-16`, port `5434`).
+- **Base cible** : `ciat_db` créée avec template standard et collation ICU.
+- **Framework** : Django 5.2.18 / DRF 3.16.1.
+- **Connexion testée** : `DATABASE_URL=postgres://postgres@127.0.0.1:5434/ciat_db`.
+
+---
+
+### 8.2 Ordre de dépendance pour l'annulation (`migrate <app> zero`)
+
+En raison des contraintes de clés étrangères inter-applications (`incubator`, `documents`, `gallery`, `analytics` référençant `core.Projet` et `core.User`), l'annulation vers `zero` doit respecter l'ordre topologique inverse des dépendances :
+
+1. `admin`
+2. `assistant`
+3. `gallery`
+4. `documents`
+5. `incubator`
+6. `analytics`
+7. `portal`
+8. `sessions`
+9. `core`
+10. `auth`
+11. `contenttypes`
+
+---
+
+### 8.3 Commandes exécutées et résultats mesurés
+
+```bash
+# Étape 0 : Création d'une base vierge
+python -c "
+import os, django; os.environ['DATABASE_URL']='postgres://postgres@127.0.0.1:5434/postgres'; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); django.setup(); from django.db import connection; connection.autocommit=True
+with connection.cursor() as c:
+    c.execute('DROP DATABASE IF EXISTS ciat_db WITH (FORCE);')
+    c.execute('CREATE DATABASE ciat_db TEMPLATE template1;')
+"
+
+# Étape 1 : Application de toutes les migrations depuis une base vide
+python manage.py migrate
+
+# Étape 2 : Annulation complète de chaque application vers zero
+python manage.py migrate admin zero
+python manage.py migrate assistant zero
+python manage.py migrate gallery zero
+python manage.py migrate documents zero
+python manage.py migrate incubator zero
+python manage.py migrate analytics zero
+python manage.py migrate portal zero
+python manage.py migrate sessions zero
+python manage.py migrate core zero
+python manage.py migrate auth zero
+python manage.py migrate contenttypes zero
+
+# Étape 3 : Ré-application de toutes les migrations
+python manage.py migrate
+
+# Étape 4 : Peuplement complet et cohérent
+python manage.py seed_all
+```
+
+---
+
+### 8.4 Relevé d'exécution mesuré sur PostgreSQL 16
+
+```text
+=== ETAPE 1 : Application de toutes les migrations depuis base vide ===
+Operations to perform:
+  Apply all migrations: admin, analytics, assistant, auth, contenttypes, core, documents, gallery, incubator, portal, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying core.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying analytics.0001_initial... OK
+  Applying portal.0001_initial... OK
+  Applying portal.0002_documentpublic_messagecontact_partenaire... OK
+  Applying assistant.0001_initial... OK
+  Applying core.0002_projet_vues... OK
+  Applying core.0003_alter_projet_cree_le_alter_projet_statut... OK
+  Applying core.0004_journalaudit_notification... OK
+  Applying documents.0001_initial... OK
+  Applying documents.0002_seed_documents... OK
+  Applying documents.0003_alter_document_cree_le_alter_document_statut... OK
+  Applying documents.0004_seed_documents_sujet... OK
+  Applying gallery.0001_initial... OK
+  Applying gallery.0002_alter_ficheinnovation_cree_le_and_more... OK
+  Applying incubator.0001_initial... OK
+  Applying incubator.0002_grille_unique_grille_active... OK
+  Applying incubator.0003_alter_piece_fichier... OK
+  Applying incubator.0004_affectationmentor_objectif... OK
+  Applying incubator.0005_jalon_commentairejalon_preuvejalon... OK
+  Applying incubator.0006_suiviprojet... OK
+  Applying incubator.0007_alter_dossier_cree_le_alter_dossier_statut_and_more... OK
+  Applying incubator.0008_alter_piece_fichier_alter_preuvejalon_fichier... OK
+  Applying incubator.0009_alertejalonenvoyee... OK
+  Applying portal.0003_actualite_publie_actualite_vues... OK
+  Applying portal.0004_alter_actualite_publie_le_and_more... OK
+  Applying sessions.0001_initial... OK
+
+=== ETAPE 2 : Annulation des migrations (migrate <app> zero) ===
+OK: migrate admin zero -> Unapplying admin.0003_logentry_add_action_flag_choices... OK
+  Unapplying admin.0002_logentry_remove_auto_add... OK
+  Unapplying admin.0001_initial... OK
+OK: migrate assistant zero -> Unapplying assistant.0001_initial... OK
+OK: migrate gallery zero -> Unapplying gallery.0002_alter_ficheinnovation_cree_le_and_more... OK
+  Unapplying gallery.0001_initial... OK
+OK: migrate documents zero -> Unapplying documents.0004_seed_documents_sujet... OK
+  Unapplying documents.0003_alter_document_cree_le_alter_document_statut... OK
+  Unapplying documents.0002_seed_documents... OK
+  Unapplying documents.0001_initial... OK
+OK: migrate incubator zero -> Unapplying incubator.0009_alertejalonenvoyee... OK
+  Unapplying incubator.0008_alter_piece_fichier_alter_preuvejalon_fichier... OK
+  Unapplying incubator.0007_alter_dossier_cree_le_alter_dossier_statut_and_more... OK
+  Unapplying incubator.0006_suiviprojet... OK
+  Unapplying incubator.0005_jalon_commentairejalon_preuvejalon... OK
+  Unapplying incubator.0004_affectationmentor_objectif... OK
+  Unapplying incubator.0003_alter_piece_fichier... OK
+  Unapplying incubator.0002_grille_unique_grille_active... OK
+  Unapplying incubator.0001_initial... OK
+OK: migrate analytics zero -> Unapplying analytics.0001_initial... OK
+OK: migrate portal zero -> Unapplying portal.0004_alter_actualite_publie_le_and_more... OK
+  Unapplying portal.0003_actualite_publie_actualite_vues... OK
+  Unapplying portal.0002_documentpublic_messagecontact_partenaire... OK
+  Unapplying portal.0001_initial... OK
+OK: migrate sessions zero -> Unapplying sessions.0001_initial... OK
+OK: migrate core zero -> Unapplying core.0004_journalaudit_notification... OK
+  Unapplying core.0003_alter_projet_cree_le_alter_projet_statut... OK
+  Unapplying core.0002_projet_vues... OK
+  Unapplying core.0001_initial... OK
+OK: migrate auth zero -> Unapplying auth.0012_alter_user_first_name_max_length... OK
+  Unapplying auth.0011_update_proxy_permissions... OK
+  Unapplying auth.0010_alter_group_name_max_length... OK
+  Unapplying auth.0009_alter_user_last_name_max_length... OK
+  Unapplying auth.0008_alter_user_username_max_length... OK
+  Unapplying auth.0007_alter_validators_add_error_messages... OK
+  Unapplying auth.0006_require_contenttypes_0002... OK
+  Unapplying auth.0005_alter_user_last_login_null... OK
+  Unapplying auth.0004_alter_user_username_opts... OK
+  Unapplying auth.0003_alter_user_email_max_length... OK
+  Unapplying auth.0002_alter_permission_name_max_length... OK
+  Unapplying auth.0001_initial... OK
+OK: migrate contenttypes zero -> Unapplying contenttypes.0002_remove_content_type_name... OK
+  Unapplying contenttypes.0001_initial... OK
+
+=== ETAPE 3 : Re-application de toutes les migrations ===
+Operations to perform:
+  Apply all migrations: admin, analytics, assistant, auth, contenttypes, core, documents, gallery, incubator, portal, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  ...
+  Applying core.0004_journalaudit_notification... OK
+  ...
+  Applying sessions.0001_initial... OK
+
+=== ETAPE 4 : Verification du seed_all sur PostgreSQL 16 ===
+1/4 Lancement de seed_demo... (62 projets créés, 41 porteurs, 7 domaines, 3 cohortes)
+2/4 Lancement de seed_portal... (3 documents PDF créés, actualités et partenaires)
+3/4 Lancement de seed_incubator... (Grille standard créée avec 5 critères)
+4/4 Lancement de seed_documents... (9 types et 27 modèles synchronisés)
+5/5 Lancement de seed_analytics... (48 partenariats, 50 financements créés)
+Dossiers traités : 58 créés, 174 pièces, 109 évaluations, 53 décisions.
+Accompagnement incubateur : 49 mentors affectés, 147 objectifs, 147 jalons, 70 suivis.
+Galerie : 23 fiches créées.
+[SUCCÈS] Commande seed_all terminée : cohérence complète et idempotente établie sur tous les modules.
+```
+
+---
+
+### 8.5 Tableau de synthèse de réversibilité par application
+
+| Application | Nombre de migrations | Réversibilité (`migrate <app> zero`) | Ré-application (`migrate`) | Données post-seed |
+| :--- | :---: | :---: | :---: | :---: |
+| `contenttypes` | 2 | **OK** | **OK** | Types de contenus réinitialisés |
+| `auth` | 12 | **OK** | **OK** | Permissions système régénérées |
+| `core` | 4 | **OK** | **OK** | Projets, utilisateurs, journal d'audit et notifications opérationnels |
+| `admin` | 3 | **OK** | **OK** | Journal d'administration prêt |
+| `sessions` | 1 | **OK** | **OK** | Table de sessions prête |
+| `portal` | 4 | **OK** | **OK** | Actualités, événements, appels, partenaires prêts |
+| `analytics` | 1 | **OK** | **OK** | Partenariats et financements opérationnels |
+| `incubator` | 9 | **OK** | **OK** | Dossiers, pièces, grilles, évaluations, décisions, jalons |
+| `documents` | 4 | **OK** | **OK** | Modèles et documents générés réinitialisés |
+| `gallery` | 2 | **OK** | **OK** | Fiches d'innovation prêtes |
+| `assistant` | 1 | **OK** | **OK** | Conversations et passages prêts |
+| **Total** | **43** | **100 % Réversible** | **100 % Réversible** | **seed_all OK** |

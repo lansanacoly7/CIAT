@@ -76,7 +76,7 @@ export default function DocumentsPage() {
         <header className="rounded-2xl border border-bordure bg-white p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-beige mb-1">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#5A4B42] mb-1">
                 <span>Centre CIAT · ISEP Diamniadio</span>
                 <span>•</span>
                 <span>Module P5</span>

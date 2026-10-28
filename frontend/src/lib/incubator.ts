@@ -404,6 +404,22 @@ export const telechargerCompteRendu = (projetId: number, format: "xlsx" | "pdf" 
 export const telechargerAccuseReception = (dossierId: number) =>
   apiBlob(`/incubator/dossiers/${dossierId}/accuse/`);
 
+export interface EvenementCalendrier {
+  date: string; // YYYY-MM-DD
+  type: "jalon" | "objectif";
+  titre: string;
+  projet: string;
+  statut: string;
+  en_retard: boolean;
+}
+
+export const getCalendrier = async (mois: string): Promise<EvenementCalendrier[]> =>
+  unwrap(
+    await api<EvenementCalendrier[] | { results: EvenementCalendrier[] }>(
+      `/incubator/calendrier/?mois=${encodeURIComponent(mois)}`,
+    ),
+  );
+
 /** Message français lisible pour une erreur d'API (jamais de données de secours). */
 export function suiviErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) {

@@ -461,8 +461,8 @@ class QuestionView(APIView):
         except Exception as exc:
             logger.exception("Erreur inattendue dans QuestionView : %s", exc)
             return Response(
-                {"detail": "Une erreur inattendue est survenue lors de l'analyse de votre question."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"detail": "Le service d'analyse IA est momentanément indisponible."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
 

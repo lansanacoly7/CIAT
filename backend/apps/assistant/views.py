@@ -126,6 +126,14 @@ class MessageListCreateView(APIView):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+        except Exception as exc:
+            return Response(
+                {
+                    "detail": "Une erreur inattendue est survenue lors du traitement du message par le service IA.",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
 
 @extend_schema(

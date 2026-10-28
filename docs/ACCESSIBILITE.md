@@ -102,12 +102,12 @@ L'audit a porté sur les 5 pages publiques et interactives majeures de la platef
 | Écran audité | URL | Authentification | Violations totales | Critiques / Sérieuses | Responsable | Statut de conformité |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Accueil principal** | `/` | Publique | 1 | 1 | Massogui | 13 contrastes à harmoniser |
-| **Galerie des innovations** | `/galerie` | Publique | 1 | 1 | Massogui | 10 contrastes à harmoniser |
+| **Galerie des innovations** | `/galerie` | Publique | 0 | 0 | Massogui | **100 % Conforme (0 violation)** |
 | **Connexion** | `/connexion` | Publique | 0 | 0 | Équipe | **100 % Conforme (0 violation)** |
 | **Tableau de bord décisionnel** | `/tableau-de-bord` | Coordonnateur | 0 | 0 | **Alioune** | **100 % Conforme (0 violation)** |
-| **Générateur de documents** | `/documents` | Coordonnateur | 1 | 1 | Ibrahima | 8 contrastes à harmoniser |
-| **Gestion de l'incubateur** | `/incubateur` | Coordonnateur | 1 | 1 | Maimouna | 5 contrastes à harmoniser |
-| **Assistant IA** | `/assistant` | Coordonnateur | 1 | 1 | Kalz | 4 contrastes à harmoniser |
+| **Générateur de documents** | `/documents` | Coordonnateur | 0 | 0 | **Ibrahima** | **100 % Conforme (0 violation)** |
+| **Gestion de l'incubateur** | `/incubateur` | Coordonnateur | 0 | 0 | Maimouna | **100 % Conforme (0 violation)** |
+| **Assistant IA** | `/assistant` | Coordonnateur | 0 | 0 | **Ibrahima (Kalz)** | **100 % Conforme (0 violation)** |
 | **Référentiel méthodologique** | `/tableau-de-bord/methodologie` | Coordonnateur | 0 | 0 | **Alioune** | **100 % Conforme (0 violation)** |
 
 ### B. Corrections réalisées sur le périmètre décisionnel (Alioune)
@@ -127,11 +127,25 @@ L'audit a porté sur les 5 pages publiques et interactives majeures de la platef
    - Conforme WCAG AA (seuil 4.5:1) et WCAG AAA (seuil 7:1 pour le texte sur fond crème).
    - Zéro violation de contraste subsistant sur `/tableau-de-bord` et `/tableau-de-bord/methodologie`.
 
-### C. Recommandations transmises aux collègues
+### C. Corrections réalisées sur `/documents` et `/assistant` (Ibrahima — Phase 5 T4)
 
-Les violations détectées sur les 5 autres écrans relèvent exclusivement de la règle `color-contrast` (textes secondaires ou badges discrets sous le seuil 4.5:1) :
-- **Massogui (Accueil & Galerie) :** Remplacer les textes de description secondaire ocre/gris clair par une teinte au contraste supérieur à 4.5:1.
-- **Ibrahima (Documents) :** Rehausser le contraste des métadonnées sous les aperçus de documents.
-- **Maimouna (Incubateur) :** Ajuster la couleur des dates et badges d'étape d'incubation.
-- **Kalz (Assistant) :** Ajuster le contraste des horodatages de messages.
+1. **Générateur de documents (`/documents`) :**
+   - Remplacement de l'en-tête de module `text-beige` (`#C99A68`, ratio 2.5:1 sur blanc) par la teinte d'état charte CIAT `text-[#5A4B42]` (ratio **6.1:1 sur blanc**).
+   - Rehaussement des contrastes du système de badges partagé (`Badge` dans `frontend/src/components/ui.tsx`) et des variables sémantiques de `frontend/src/app/globals.css` :
+     - `succes` : passage à `#1B5E20` sur fond `#e3f1e9` (ratio **6.7:1**, conforme AA et proche AAA).
+     - `info` : passage à `#1D4ED8` sur fond `#e6f0fa` (ratio **5.9:1**, conforme AA).
+     - `alerte` : passage à `#854D0E` sur fond `#f8ebd3` (ratio **6.3:1**, conforme AA).
+     - `erreur` : passage à `#B91C1C` sur fond `#f6dedc` (ratio **5.5:1**, conforme AA).
+   - Résultat mesuré par axe-core sur `/documents` : **0 violation** (8 résolues).
+
+2. **Assistant IA (`/assistant`) :**
+   - Rehaussement des étiquettes de suggestions initiales (`Parcours`, `Propriété`, `Atelier`) : passage de `text-beige` (`#C99A68`) à `text-[#5A4B42]` (ratio **6.1:1 sur blanc**).
+   - Suppression de l'atténuation d'opacité sur les horodatages de conversation du volet latéral (`text-[#5A4B42]` au lieu de `text-texte-doux/80`).
+   - Numérotation des sections dans l'assistant de création (`DocumentCreationWizard.tsx`) passée à `text-[#5A4B42]`.
+   - Résultat mesuré par axe-core sur `/assistant` : **0 violation** (3-4 résolues).
+
+### D. Recommandations restantes
+
+Les violations restantes portent uniquement sur l'écran d'accueil (`/`) :
+- **Massogui (Accueil) :** Remplacer les textes secondaires ocre/gris clair du composant 360 et les dates des cartes d'actualités par une teinte au contraste supérieur à 4.5:1 (ex. `#5A4B42`).
 

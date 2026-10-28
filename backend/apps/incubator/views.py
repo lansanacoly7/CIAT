@@ -1,6 +1,8 @@
 """Vues DRF pour le module P2 - Gestion de l'incubateur."""
+import calendar
 import datetime
 import io
+import re
 from django.db import IntegrityError, transaction
 from django.db.models import Avg
 from django.http import HttpResponse
@@ -18,6 +20,7 @@ from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role, User
 from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.core.services import tracer_affectation_mentor, tracer_decision_dossier
 from .emails import (
     envoyer_email_confirmation_soumission,
     envoyer_email_decision_dossier,
@@ -37,6 +40,7 @@ from .models import (
     PreuveJalon,
     StatutDossier,
     StatutJalon,
+    StatutObjectif,
     SuiviProjet,
 )
 from .serializers import (
@@ -48,6 +52,7 @@ from .serializers import (
     EvaluationCreateSerializer,
     EvaluationSerializer,
     GrilleSerializer,
+    IncubateurCalendrierItemSerializer,
     JalonSerializer,
     MentorUserSerializer,
     ObjectifSerializer,
@@ -272,6 +277,7 @@ class DossierDecisionView(APIView):
             decision = serializer.save()
 
         envoyer_email_decision_dossier(decision)
+        tracer_decision_dossier(request.user, decision)
         return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
 
 
@@ -309,12 +315,14 @@ class ProjetMentorView(APIView):
 
     def post(self, request, pk):
         projet = get_object_or_404(Projet, pk=pk)
+        mentor_precedent = getattr(getattr(projet, "affectation_mentor", None), "mentor", None)
         serializer = AffectationMentorSerializer(
             data=request.data,
             context={"request": request, "projet": projet},
         )
         serializer.is_valid(raise_exception=True)
         affectation = serializer.save()
+        tracer_affectation_mentor(request.user, affectation, mentor_precedent)
         return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
 
@@ -928,5 +936,111 @@ class ProjetCompteRenduExportView(APIView):
         return response
 
 
+class IncubateurCalendrierView(APIView):
+    """Calendrier mensuel des jalons et objectifs d'accompagnement de l'incubateur."""
 
+    permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        summary="Calendrier des jalons et objectifs du mois",
+        description=(
+            "Renvoie pour l'utilisateur connecté les jalons et objectifs du mois spécifié "
+            "sous la forme [{ date, type, titre, projet, statut, en_retard }], triés par date. "
+            "Les porteurs voient leurs projets, les mentors ceux qui leur sont affectés, "
+            "et l'équipe CIAT voit l'ensemble des projets de l'incubateur."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="mois",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Mois d'échéance au format AAAA-MM (ex: 2026-10)",
+            ),
+        ],
+        responses={
+            200: IncubateurCalendrierItemSerializer(many=True),
+            400: OpenApiResponse(description="Paramètre mois manquant ou format invalide"),
+            401: OpenApiResponse(description="Authentification requise"),
+        },
+    )
+    def get(self, request):
+        user = request.user
+        mois = request.query_params.get("mois")
+
+        if not mois:
+            return Response(
+                {"detail": "Le paramètre 'mois' est obligatoire (format AAAA-MM)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not re.match(r"^\d{4}-(?:0[1-9]|1[0-2])$", mois):
+            return Response(
+                {
+                    "detail": "Le paramètre 'mois' est invalide. Format attendu : AAAA-MM (ex: 2026-10)."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        year, month = map(int, mois.split("-"))
+        _, last_day = calendar.monthrange(year, month)
+        date_debut = datetime.date(year, month, 1)
+        date_fin = datetime.date(year, month, last_day)
+        today = timezone.now().date()
+
+        # Périmètre selon les droits de l'utilisateur
+        if user.is_equipe or user.is_staff or user.is_superuser:
+            jalons_base = Jalon.objects.all()
+            objectifs_base = Objectif.objects.all()
+        elif user.role == Role.MENTOR:
+            jalons_base = Jalon.objects.filter(projet__affectation_mentor__mentor=user)
+            objectifs_base = Objectif.objects.filter(projet__affectation_mentor__mentor=user)
+        elif user.role == Role.PORTEUR:
+            jalons_base = Jalon.objects.filter(projet__porteur=user)
+            objectifs_base = Objectif.objects.filter(projet__porteur=user)
+        else:
+            return Response([], status=status.HTTP_200_OK)
+
+        jalons = (
+            jalons_base.filter(echeance__range=(date_debut, date_fin))
+            .select_related("projet")
+            .order_by("echeance", "cree_le")
+        )
+        objectifs = (
+            objectifs_base.filter(echeance__range=(date_debut, date_fin))
+            .select_related("projet")
+            .order_by("echeance", "cree_le")
+        )
+
+        evenements = []
+        for j in jalons:
+            evenements.append(
+                {
+                    "date": j.echeance.isoformat(),
+                    "type": "jalon",
+                    "titre": j.titre,
+                    "projet": j.projet.titre,
+                    "statut": j.statut,
+                    "en_retard": j.en_retard,
+                }
+            )
+
+        for obj in objectifs:
+            en_retard_obj = bool(
+                obj.statut != StatutObjectif.ATTEINT and obj.echeance < today
+            )
+            evenements.append(
+                {
+                    "date": obj.echeance.isoformat(),
+                    "type": "objectif",
+                    "titre": obj.libelle,
+                    "projet": obj.projet.titre,
+                    "statut": obj.statut,
+                    "en_retard": en_retard_obj,
+                }
+            )
+
+        # Tri chronologique par date
+        evenements.sort(key=lambda x: (x["date"], x["type"], x["titre"]))
+
+        return Response(evenements, status=status.HTTP_200_OK)

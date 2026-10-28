@@ -80,4 +80,119 @@ Ce registre consigne l'ensemble des défauts réels identifiés lors des revues 
 - **Contrôles généraux de qualité :**
   - `python manage.py check` : 0 anomalie signalée.
   - `python manage.py makemigrations --check` : 0 migration en attente.
-  - Suite de tests complète (`python manage.py test apps`) : **256 tests passants** à 100 % (0 échec, 0 erreur) en ~30 à 40 secondes.
+  - Suite de tests complète (`python manage.py test apps`) : **269 tests passants** à 100 % (0 échec, 0 erreur) en ~30 à 40 secondes.
+
+---
+
+## 5. Mesure de Couverture de Tests (Phase 5 — T2)
+
+La couverture de code a été mesurée avec `coverage.py` sur l'ensemble de la suite de tests automatisée du back-end (**278 tests** passants).
+- **Date de mesure** : 27 octobre 2026.
+- **Moteur de base de données** : SQLite (base de repli standard de test `db.sqlite3`).
+- **Prérequis** : `pip install coverage` (outil de mesure hors `requirements.txt`).
+- **Règle de la colonne « code métier »** : Isole les fichiers applicatifs réels en excluant systématiquement les dossiers de tests (`apps/*/tests/*`) et les migrations de schéma Django (`apps/*/migrations/*`).
+
+### Commande de reproduction exacte
+
+Depuis le répertoire `backend/` :
+
+```bash
+coverage run --source=apps manage.py test
+coverage report --include="apps/*" -m
+```
+
+### Résultats mesurés par application
+
+| Application | Lignes déclarées (Stmts) | Lignes non couvertes (Miss) | Couverture globale | Couverture code métier (hors tests & migrations) |
+|---|:---:|:---:|:---:|:---:|
+| **`apps.portal`** | 759 | 22 | **97,1 %** | **97,0 %** (715 / 737) |
+| **`apps.incubator`** | 2 727 | 99 | **96,4 %** | **96,3 %** (2 572 / 2 671) |
+| **`apps.core`** | 1 898 | 74 | **96,1 %** | **92,1 %** (791 / 859) |
+| **`apps.documents`** | 968 | 40 | **95,9 %** | **93,9 %** (519 / 553) |
+| **`apps.gallery`** | 755 | 50 | **93,4 %** | **89,9 %** (444 / 494) |
+| **`apps.analytics`** | 1 613 | 169 | **89,5 %** | **89,5 %** (1 438 / 1 607) |
+| **`apps.assistant`** | 711 | 77 | **89,2 %** | **82,1 %** (353 / 430) |
+| **TOTAL GÉNÉRAL** | **9 431** | **531** | **94,4 %** | **92,8 %** (6 832 / 7 351) |
+
+---
+
+### Zones et fichiers les moins couverts (constats mesurés)
+
+#### A. Les 3 zones les moins couvertes par application
+1. **`apps.assistant` (82,1 % sur le code métier — 77 lignes non couvertes) :**
+   - Composant principal : [`apps/assistant/services.py`](../backend/apps/assistant/services.py) (73,2 % de couverture, 74 lignes non couvertes : 75, 90, 100-102, 110-114, 122-160, 166, 172-174, 177, 182-184, 187-189, 194-197, 207, 212, 324, 404, 412, 465-470, 475, 484, 488, 491).
+   - Constat dans le code : Branches de basculement multi-fournisseurs (repli de Groq vers Gemini lors des erreurs d'authentification ou d'épuisement de quota) et gestionnaires d'erreurs de parsing de structures JSON non conformes renvoyées par le modèle distant.
+2. **`apps.analytics` (89,5 % sur le code métier — 169 lignes non couvertes) :**
+   - Composants : [`apps/analytics/management/commands/controle_qualite_donnees.py`](../backend/apps/analytics/management/commands/controle_qualite_donnees.py) (62,0 % de couverture, 70 lignes non couvertes) et [`apps/analytics/services.py`](../backend/apps/analytics/services.py) (71,9 % de couverture, 32 lignes non couvertes).
+   - Constat dans le code : Détection et affichage CLI des cas d'incohérence de données rares (dossiers sans cohorte ou projets sans porteur), et filtres de requêtes conditionnelles sur financements non activés dans les scénarios de test.
+3. **`apps.gallery` (89,9 % sur le code métier — 50 lignes non couvertes) :**
+   - Composant : [`apps/gallery/management/commands/seed_gallery.py`](../backend/apps/gallery/management/commands/seed_gallery.py) (0 % de couverture, 30 lignes non couvertes : lignes 6-262).
+   - Constat dans le code : Commande de seed non appelée par la suite de tests ni par `seed_all` (constat vérifié par grep).
+
+#### B. Fichiers de code les moins couverts (hors tests et migrations)
+
+| Fichier | Instructions | Non couvertes | Couverture | Lignes non couvertes (`coverage report -m`) | Constat dans le code |
+|---|:---:|:---:|:---:|---|---|
+| [`apps/gallery/management/commands/seed_gallery.py`](../backend/apps/gallery/management/commands/seed_gallery.py) | 30 | 30 | **0,0 %** | 6-262 | Commande de seed non appelée par la suite de tests ni par `seed_all` (constat vérifié par grep). |
+| [`apps/core/ai.py`](../backend/apps/core/ai.py) | 36 | 22 | **38,9 %** | 35-37, 41, 45-72, 76 | Appels HTTP réels sortants vers les API distantes (Groq et Gemini), systématiquement interceptés par des mocks lors des tests. |
+| [`apps/analytics/management/commands/controle_qualite_donnees.py`](../backend/apps/analytics/management/commands/controle_qualite_donnees.py) | 184 | 70 | **62,0 %** | 74, 95, 105, 115, 136, 191-192, 216-218, 228-231, 254-257, 270-272, 283-284, 294-296, 328, 350, 371-380, 390-401, 438, 474, 478-543 | Formatage console des rapports d'anomalies de données orphelines. |
+| [`apps/analytics/services.py`](../backend/apps/analytics/services.py) | 114 | 32 | **71,9 %** | 74-78, 82-86, 96, 100-104, 178-180, 218-245, 269-282, 291, 303-305, 334, 355-358 | Calculs croisés avec filtres optionnels de financements et dates. |
+| [`apps/assistant/services.py`](../backend/apps/assistant/services.py) | 276 | 74 | **73,2 %** | 75, 90, 100-102, 110-114, 122-160, 166, 172-174, 177, 182-184, 187-189, 194-197, 207, 212, 324, 404, 412, 465-470, 475, 484, 488, 491 | Mécanismes de repli Groq/Gemini en cas de timeout et parsing de retours incomplets. |
+| [`apps/incubator/management/commands/envoyer_alertes_retard.py`](../backend/apps/incubator/management/commands/envoyer_alertes_retard.py) | 20 | 5 | **75,0 %** | 32-36 | Gestion de l'option `--force` en ligne de commande. |
+| [`apps/incubator/emails.py`](../backend/apps/incubator/emails.py) | 57 | 13 | **77,2 %** | 32, 37-41, 77-83, 100, 105, 109-113, 170-176 | Gabarits d'e-mails pour statuts rejetés et notifications alternatives. |
+| [`apps/documents/services.py`](../backend/apps/documents/services.py) | 88 | 19 | **78,4 %** | 33, 42-53, 159-164 | Gestion des erreurs de gabarit manquant et exceptions d'export. |
+
+---
+
+## 6. Audit de Robustesse de l'API (Phase 7 — T1 : Aucune Erreur 500)
+
+- **Date d'exécution :** 27 octobre 2026
+- **Auteur :** Pathé (Back-end)
+- **Suite de test automatisée dédiée :** `backend/apps/core/tests/test_robustesse_500.py` (`RobustesseApiAucuneErreur500Tests`)
+- **Exécution :** `python backend/manage.py test apps.core.tests.test_robustesse_500` (7 tests exécutés en ~10 s, optimisé avec `MD5PasswordHasher`).
+- **Objectif :** Parcourir systématiquement l'ensemble des routes d'écriture et de lecture de l'API avec des entrées anormales et vérifier que le code retour est **toujours** dans `{400, 401, 403, 404, 409, 429}`, **jamais 500 (Internal Server Error)**.
+
+### Périmètre des 7 Catégories Testées
+
+1. **Identifiants négatifs ou inexistants (`test_01_identifiants_negatifs_ou_inexistants`) :**
+   - Requêtes sur toutes les routes de détail (`GET`, `PUT`, `PATCH`, `DELETE`) avec `/api/.../-1/`, `/api/.../-99999/` et `/api/.../999999/`.
+   - Contrôle : Retour HTTP 404 Not Found (ou 401/403 si droit d'accès requis), aucun crash ORM `DoesNotExist`.
+2. **Chaînes très longues / Buffer overflow test (`test_02_chaines_tres_longues_10000_caracteres`) :**
+   - Envois de payloads avec des champs textes saturés à 10 000 caractères (`"A" * 10000`) sur l'ensemble des routes `POST` / `PATCH` (auth, portal, incubator, documents, analytics, assistant, gallery).
+   - Contrôle : Validation DRF propre (HTTP 400 Bad Request avec message d'erreur explicite), aucun crash mémoire ni erreur SQL de troncature non gérée.
+3. **Types invalides (`test_03_types_faux_nombre_au_lieu_de_texte_et_inversement`) :**
+   - Envoi de nombres entiers ou flottants là où une chaîne ou un email est attendu (`{"email": 12345, "nom": 9999}`), et chaînes là où un entier/décimal/booléen est requis.
+   - Contrôle : Rejet par les sérialiseurs avec HTTP 400 Bad Request (`expected a string`, `valid number is required`).
+4. **Champs obligatoires absents (`test_04_champs_absents_et_payloads_vides`) :**
+   - Envoi de corps vides `{}` sur toutes les routes de création ou modification.
+   - Contrôle : HTTP 400 Bad Request (`This field is required`), pas de `KeyError` non rattrapée.
+5. **JSON syntaxiquement malformé (`test_05_json_invalide_et_corrompu`) :**
+   - Envoi de corps bruts non conformes (`{bad_json:`, `{"unclosed": "string`, `{"key": undefined}`) avec l'en-tête `Content-Type: application/json`.
+   - Contrôle : Pris en charge par le parser DRF avec HTTP 400 Bad Request (`JSON parse error`), aucune erreur 500 non interceptée.
+6. **Fichiers vides ou de mauvais type / exécutables (`test_06_fichiers_vides_et_mauvais_type`) :**
+   - Envoi de fichiers de taille 0 octet (`SimpleUploadedFile("empty.pdf", b"")`) et de scripts malveillants (`SimpleUploadedFile("script.sh", b"#!/bin/bash\necho 1", content_type="application/x-sh")`, `.exe`, `.bat`).
+   - Contrôle : HTTP 400 Bad Request systématique rejetant les fichiers vides et les extensions exécutables.
+7. **Doubles envois / Concurrence d'unicité (`test_07_doubles_envois_et_collisions_unicite`) :**
+   - Soumission répétée d'enregistrements avec contrainte d'unicité (création de compte avec email identique, création de fiche galerie pour le même projet).
+   - Contrôle : HTTP 400 Bad Request ou HTTP 409 Conflict, jamais d'erreur 500 `IntegrityError`.
+
+### Inventaire des 5 Cas Corrigés
+
+Au cours de cet audit, 5 cas susceptibles de provoquer une erreur 500 ou un défaut de validation en amont ont été découverts et corrigés :
+
+| Réf. | Composant / Fichier | Comportement avant correction | Correction appliquée | Statut HTTP garanti |
+|---|---|---|---|:---:|
+| **ROB-01** | `apps/analytics/views.py` (`QuestionView`) | La clause `except Exception` levait explicitement `status=status.HTTP_500_INTERNAL_SERVER_ERROR` en cas d'indisponibilité du service IA. | Remplacement par `status.HTTP_503_SERVICE_UNAVAILABLE` avec message d'indisponibilité propre. | `503` |
+| **ROB-02** | `apps/documents/views.py` (`GenererDocumentView`) | Les exceptions inattendues du générateur de document n'étaient pas protégées au niveau de la vue et pouvaient remonter en 500 Django standard. | Ajout d'une capture `except Exception as exc` retournant un statut `503 Service Unavailable` documenté. | `503` |
+| **ROB-03** | `apps/assistant/views.py` (`MessageListCreateView`) | Les exceptions du moteur RAG en création de message pouvaient faire crasher la requête en 500. | Ajout d'une capture `except Exception as exc` retournant `HTTP_503_SERVICE_UNAVAILABLE` pour service IA dégradé. | `503` |
+| **ROB-04** | `apps/incubator/serializers.py` (`PreuveJalonSerializer`) | Le validateur `validate_fichier` n'appelait pas explicitement les vérifications de taille (0 octet et >10 Mo) ni de signature de contenu avant la persistance. | Intégration de `validate_file_size(value)` et `validate_file_content(value)` rejetant immédiatement les fichiers vides ou interdits avec `ValidationError`. | `400` |
+| **ROB-05** | `apps/portal/serializers.py` (`DocumentPublicSerializer`, `PartenaireSerializer`, `ActualiteSerializer`) | L'upload de fichiers dans le portail public n'interdisait pas les fichiers vides (0 octet) ni les scripts exécutables (`.exe`, `.sh`, `.bat`, etc.). | Ajout des validateurs `validate_fichier`, `validate_logo` et `validate_image` rejetant les fichiers de 0 octet, les fichiers > 10 Mo/5 Mo et les extensions de scripts exécutables. | `400` |
+
+### Test de Mutation (Vérification de la sensibilité du test)
+
+Conformément à l'exigence de la tâche T1 (*« il casse si on retire une validation »*), un test de mutation a été réalisé :
+1. Désactivation temporaire de `validate_fichier` dans `apps/portal/serializers.py` (`DocumentPublicSerializer`).
+2. Exécution de `test_06_fichiers_vides_et_mauvais_type`.
+3. Résultat : Le test a échoué immédiatement avec `AssertionError: 201 != 400` (le serveur créait l'entité avec un fichier vide au lieu de rejeter avec 400).
+4. Restauration de la validation : La suite complète repasse au vert (`Ran 7 tests in 10.092s — OK`).
+

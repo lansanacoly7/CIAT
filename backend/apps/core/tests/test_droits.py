@@ -628,6 +628,9 @@ class MatriceDroitsAPITests(TestCase):
             "/api/analytics",
             "/api/assistant",
             "/api/gallery",
+            "/api/audit",
+            "/api/notifications",
+            "/api/users",
         )
 
         for route in registered_routes:

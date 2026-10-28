@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from apps.core.models import Role
 from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.core.services import tracer_publication_document, tracer_validation_document
 from apps.documents.exports import generer_export_docx, generer_export_pdf
 from apps.documents.models import Document, ModeleDocument, TypeDocument, VersionDocument
 from apps.documents.serializers import (
@@ -114,6 +115,15 @@ class GenererDocumentView(APIView):
             return Response(
                 {
                     "detail": "Le service IA est temporairement indisponible. Veuillez réessayer plus tard.",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        except Exception as exc:
+            return Response(
+                {
+                    "detail": "Une erreur inattendue est survenue lors de la génération du document.",
                     "erreur": str(exc),
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -298,6 +308,7 @@ class DocumentValiderView(APIView):
 
         doc.statut = Document.Statut.VALIDE
         doc.save(update_fields=["statut", "modifie_le"])
+        tracer_validation_document(request.user, doc)
         return Response(DocumentDetailSerializer(doc).data, status=status.HTTP_200_OK)
 
 
@@ -326,6 +337,7 @@ class DocumentPublierView(APIView):
 
         doc.statut = Document.Statut.PUBLIE
         doc.save(update_fields=["statut", "modifie_le"])
+        tracer_publication_document(request.user, doc)
         return Response(DocumentDetailSerializer(doc).data, status=status.HTTP_200_OK)
 
 

@@ -203,3 +203,35 @@ class PerformanceListesTests(TestCase):
 
         self.assertEqual(version_brute, version_prefetched)
 
+    def test_dossier_pieces_manquantes_et_completude_a_jour_apres_ajout_piece(self):
+        """Vérifie que l'ajout d'une pièce met à jour pieces_manquantes et completude sur la même instance.
+
+        Ce test reproduit le scénario D : avec un cache d'instance (_cached_pieces_manquantes),
+        la même instance conservait la liste périmée même après l'ajout en base d'une pièce.
+        """
+        dossier = self.projets[0].dossier
+        dossier.pieces.all().delete()
+
+        # Première évaluation
+        manquantes_initiales = list(dossier.pieces_manquantes)
+        completude_initiale = dossier.completude
+        self.assertEqual(len(manquantes_initiales), 3)
+        self.assertEqual(completude_initiale, 0)
+
+        # Ajout d'une pièce
+        f = SimpleUploadedFile("fiche.pdf", b"%PDF-1.4 test", content_type="application/pdf")
+        Piece.objects.create(
+            dossier=dossier,
+            type=TypePiece.FICHE_PROJET,
+            fichier=f,
+            nom="fiche.pdf",
+        )
+
+        # Vérification sur la même instance python de dossier
+        manquantes_apres = list(dossier.pieces_manquantes)
+        completude_apres = dossier.completude
+
+        self.assertNotIn(TypePiece.FICHE_PROJET.value, manquantes_apres)
+        self.assertEqual(len(manquantes_apres), 2)
+        self.assertEqual(completude_apres, 33)
+

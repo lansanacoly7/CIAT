@@ -15,5 +15,10 @@ urlpatterns = [
     path("auth/token/", views.CiatTokenObtainPairView.as_view(), name="token"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("auth/me/", views.MeView.as_view(), name="me"),
+    path("audit/", views.JournalAuditListView.as_view(), name="audit-list"),
+    path("notifications/", views.NotificationListView.as_view(), name="notification-list"),
+    path("notifications/<int:pk>/lue/", views.NotificationMarquerLueView.as_view(), name="notification-marquer-lue"),
+    path("notifications/tout-lire/", views.NotificationToutLireView.as_view(), name="notification-tout-lire"),
+    path("users/<int:pk>/role/", views.UserRoleUpdateView.as_view(), name="user-role-update"),
     path("", include(router.urls)),
 ]

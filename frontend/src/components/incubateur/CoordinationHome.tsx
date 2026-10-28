@@ -125,6 +125,12 @@ export default function CoordinationHome() {
           Suivi des projets
         </Link>
         <Link
+          href="/incubateur/calendrier"
+          className={`${LINK_BTN} border-[1.5px] border-brun bg-white text-brun hover:bg-ivoire`}
+        >
+          Calendrier des jalons
+        </Link>
+        <Link
           href="/incubateur/alertes"
           className={`${LINK_BTN} border-[1.5px] border-brun bg-white text-brun hover:bg-ivoire`}
         >
