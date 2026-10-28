@@ -14,7 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ApiErrorBanner, Badge, Button, EmptyState } from "@/components/ui";
+import { ApiErrorBanner, Badge, Button } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import {
   formatDateFr,
@@ -300,15 +300,6 @@ function CalendrierVue() {
     if (!evenements) return [];
     return [...evenements].slice(0, 4);
   }, [evenements]);
-
-  // Liste triée par date pour la vue mobile (390px)
-  const mobileDaysList = useMemo(() => {
-    const dates = Array.from(eventsByDate.keys()).sort();
-    return dates.map((dateStr) => ({
-      dateStr,
-      items: eventsByDate.get(dateStr) || [],
-    }));
-  }, [eventsByDate]);
 
   const isCurrentMonthView = useMemo(() => {
     const now = new Date();
@@ -789,111 +780,144 @@ function CalendrierVue() {
             </div>
 
             {/* =========================================================================
-                B. VUE MOBILE (Liste par jour ordonnée pour écrans < md, 390px)
+                B. VUE MOBILE (Grille mensuelle tactile compacte + Fiche du jour pour 390px)
                ========================================================================= */}
-            <div className="block md:hidden space-y-3.5">
-              <div className="flex items-center justify-between px-1 text-xs text-[#8C6D58]">
-                <span>Affichage compact par date</span>
-                <span>{mobileDaysList.length} jour(s) avec échéances</span>
+            <div className="block md:hidden space-y-4">
+              {/* 1. Grille mensuelle tactile compacte (7 colonnes, 100% visible sur 390px) */}
+              <div className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white shadow-xs">
+                {/* En-tête des jours : Lun, Mar, Mer, Jeu, Ven, Sam, Dim */}
+                <div className="grid grid-cols-7 border-b border-[#EFE4D6] bg-[#FAF7F2] text-center text-[11px] font-bold text-[#612D10] py-2">
+                  {JOURS_SEMAINE_COURTS.map((jour) => (
+                    <div key={jour}>{jour}</div>
+                  ))}
+                </div>
+
+                {/* Cellules du calendrier mobile (7 colonnes adaptées au doigt) */}
+                <div className="grid grid-cols-7 gap-px bg-[#EFE4D6] p-px">
+                  {calendarCells.map((cell) => {
+                    const cellEvents = eventsByDate.get(cell.dateStr) || [];
+                    const hasOverdue = cellEvents.some((e) => e.en_retard);
+                    const hasJalon = cellEvents.some((e) => e.type === "jalon");
+                    const hasObjectif = cellEvents.some((e) => e.type === "objectif");
+                    const isSelected = cell.dateStr === selectedDateStr;
+
+                    return (
+                      <button
+                        key={cell.dateStr}
+                        type="button"
+                        onClick={() => setSelectedDateStr(cell.dateStr)}
+                        className={`min-h-[46px] p-1 flex flex-col items-center justify-between text-center transition-all cursor-pointer relative ${
+                          isSelected
+                            ? "bg-[#FAF7F2] ring-2 ring-inset ring-[#612D10] z-10 font-bold"
+                            : !cell.isCurrentMonth
+                            ? "bg-[#FAF7F2]/40 text-[#B8A89A]"
+                            : cell.isToday
+                            ? "bg-[#FAF4ED] text-[#612D10]"
+                            : "bg-white text-[#24140D] hover:bg-[#FAF7F2]"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs transition-transform ${
+                            isSelected
+                              ? "bg-[#612D10] text-white shadow-xs"
+                              : cell.isToday
+                              ? "bg-[#C99A68] text-[#1F130B] font-bold"
+                              : !cell.isCurrentMonth
+                              ? "text-[#B8A89A]"
+                              : "text-[#24140D]"
+                          }`}
+                        >
+                          {cell.dayNum}
+                        </span>
+
+                        {/* Pastilles d'échéances colorées */}
+                        <div className="flex items-center gap-0.5 h-2">
+                          {hasOverdue && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#B91C1C]" />
+                          )}
+                          {hasJalon && !hasOverdue && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#A35926]" />
+                          )}
+                          {hasObjectif && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {mobileDaysList.length === 0 ? (
-                <EmptyState
-                  title="Aucune échéance ce mois-ci"
-                  description={`Il n'y a aucun jalon ou objectif planifié pour ${moisNom}. Utilisez les flèches pour parcourir les autres mois.`}
-                  icon={<CalendarIcon className="h-6 w-6 text-[#A35926]" />}
-                />
-              ) : (
-                mobileDaysList.map(({ dateStr, items }) => {
-                  const dateObj = new Date(`${dateStr}T00:00:00`);
-                  const dateFormatee = dateObj.toLocaleDateString("fr-FR", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                  });
+              {/* 2. Fiche du jour sélectionné sous la grille */}
+              <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-[#EFE4D6] pb-2.5">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C6D58]">
+                      Date sélectionnée
+                    </span>
+                    <h3 className="font-[family-name:var(--font-title)] text-sm font-bold text-[#24140D]">
+                      {selectedDateFormatted}
+                    </h3>
+                  </div>
+                  <span className="rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2.5 py-0.5 text-xs font-bold text-[#612D10]">
+                    {selectedDayEvents.length} échéance{selectedDayEvents.length > 1 ? "s" : ""}
+                  </span>
+                </div>
 
-                  return (
-                    <div
-                      key={dateStr}
-                      className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white shadow-2xs"
-                    >
-                      {/* En-tête de la journée */}
-                      <div className="flex items-center justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] px-3.5 py-2">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="h-3.5 w-3.5 text-[#A35926]" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
-                            {dateFormatee}
-                          </span>
-                        </div>
-                        <span className="rounded-full bg-white px-2 py-0.2 text-[10px] font-bold text-[#8C6D58] border border-[#EFE4D6]">
-                          {items.length}
-                        </span>
-                      </div>
+                {selectedDayEvents.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedDayEvents.map((ev, idx) => {
+                      const isOverdue = ev.en_retard;
+                      const isJalon = ev.type === "jalon";
 
-                      {/* Liste des cartes d'événements de ce jour */}
-                      <div className="divide-y divide-[#EFE4D6] p-2 space-y-1.5">
-                        {items.map((ev, idx) => {
-                          const isOverdue = ev.en_retard;
-                          const isJalon = ev.type === "jalon";
-
-                          return (
-                            <div
-                              key={`${ev.date}-${ev.type}-${idx}`}
-                              onClick={() => setSelectedEvent(ev)}
-                              className={`rounded-xl p-2.5 border transition-all cursor-pointer ${
+                      return (
+                        <div
+                          key={`mobile-${ev.date}-${ev.type}-${idx}`}
+                          onClick={() => setSelectedEvent(ev)}
+                          className={`rounded-xl p-3 border transition-all cursor-pointer ${
+                            isOverdue
+                              ? "bg-red-50/80 border-red-200"
+                              : "bg-[#FAF7F2]/70 border-[#EFE4D6] hover:bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span
+                              className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
                                 isOverdue
-                                  ? "bg-red-50/70 border-red-200"
-                                  : "bg-white border-[#EFE4D6] hover:bg-[#FAF7F2]"
+                                  ? "bg-red-100 text-red-800 border border-red-300"
+                                  : isJalon
+                                  ? "bg-[#FFF9F3] text-[#78350F] border border-[#F2DAC1]"
+                                  : "bg-[#F0F7FF] text-[#1E40AF] border border-[#BFDBFE]"
                               }`}
                             >
-                              <div className="flex items-start justify-between gap-2 mb-1">
-                                <div className="flex items-center gap-1">
-                                  {isJalon ? (
-                                    <span className="rounded-md bg-[#FFF9F3] border border-[#F2DAC1] px-1.5 py-0.5 text-[10px] font-bold text-[#78350F]">
-                                      Jalon
-                                    </span>
-                                  ) : (
-                                    <span className="rounded-md bg-[#F0F7FF] border border-[#BFDBFE] px-1.5 py-0.5 text-[10px] font-bold text-[#1E40AF]">
-                                      Objectif
-                                    </span>
-                                  )}
-
-                                  {isOverdue && (
-                                    <span className="rounded-md bg-red-100 border border-red-300 px-1.5 py-0.5 text-[10px] font-bold text-red-800">
-                                      En retard
-                                    </span>
-                                  )}
-                                </div>
-
-                                <span className="text-[10px] font-medium text-[#8C6D58]">
-                                  {ev.statut}
-                                </span>
-                              </div>
-
-                              <h4
-                                className={`text-xs font-bold ${
-                                  isOverdue ? "text-red-900" : "text-[#4A2810]"
-                                }`}
-                              >
-                                {ev.titre}
-                              </h4>
-
-                              <div className="mt-1 flex items-center justify-between text-[11px] text-[#7D6B5D]">
-                                <span className="truncate font-medium text-[#612D10]">
-                                  {ev.projet}
-                                </span>
-                                <span className="text-[#A8988B]">
-                                  {formatDateFr(ev.date)}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+                              {isOverdue ? "En retard" : isJalon ? "Jalon clé" : "Objectif"}
+                            </span>
+                            <span className="text-[10px] font-semibold text-[#8C6D58] capitalize">
+                              {ev.statut.replace("_", " ")}
+                            </span>
+                          </div>
+                          <h4 className="text-xs font-bold text-[#24140D] leading-snug">
+                            {ev.titre}
+                          </h4>
+                          <p className="text-[11px] text-[#8C6D58] mt-1 truncate">
+                            Projet : <span className="font-semibold text-[#612D10]">{ev.projet}</span>
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center">
+                    <CalendarIcon className="mx-auto h-6 w-6 text-[#C99A68] mb-1.5" />
+                    <p className="text-xs font-bold text-[#4A2810]">
+                      Aucune échéance à cette date
+                    </p>
+                    <p className="text-[11px] text-[#8C6D58] mt-0.5">
+                      Touchez un autre jour dans la grille ci-dessus pour consulter ses échéances.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}

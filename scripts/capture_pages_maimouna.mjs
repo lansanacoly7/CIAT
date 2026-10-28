@@ -106,7 +106,7 @@ const PAGES_MAIMOUNA = [
     id: "07_calendrier",
     title: "Calendrier des jalons & objectifs (Incubateur)",
     route: "/incubateur/calendrier",
-    fullPage: false,
+    fullPage: true,
   },
 ];
 

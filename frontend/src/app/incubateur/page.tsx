@@ -324,14 +324,15 @@ function DepotDossier() {
 
                         <FileUploader dossier={dossier} onChange={setDossier} />
 
-                        <div className="flex flex-col-reverse gap-3 border-t border-[#EFE4D6] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center justify-between gap-2 sm:gap-3 border-t border-[#EFE4D6] pt-4">
                           <button
                             type="button"
                             onClick={() => goTo(0)}
-                            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#C99A68] bg-white px-5 text-xs sm:text-sm font-bold text-[#612D10] whitespace-nowrap shadow-2xs transition-all hover:bg-[#FAF7F2] hover:border-[#612D10] hover:text-[#3F1D0A] active:scale-[0.98] cursor-pointer"
+                            className="inline-flex min-h-11 flex-1 sm:flex-initial items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-[#C99A68] bg-white px-3 sm:px-5 text-xs sm:text-sm font-bold text-[#612D10] whitespace-nowrap shadow-2xs transition-all hover:bg-[#FAF7F2] hover:border-[#612D10] hover:text-[#3F1D0A] active:scale-[0.98] cursor-pointer"
                           >
                             <ArrowLeft className="h-4 w-4 shrink-0 stroke-[2.2]" aria-hidden="true" />
-                            <span>Retour aux informations</span>
+                            <span>Retour</span>
+                            <span className="hidden sm:inline">aux informations</span>
                           </button>
                           <button
                             type="button"
@@ -339,9 +340,10 @@ function DepotDossier() {
                               setMaxReached(2);
                               goTo(2);
                             }}
-                            className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer"
+                            className="inline-flex min-h-11 flex-1 sm:flex-initial items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#612D10] px-3 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer"
                           >
-                            <span>Continuer vers le récapitulatif</span>
+                            <span>Continuer</span>
+                            <span className="hidden sm:inline">vers le récapitulatif</span>
                             <ArrowRight className="h-4 w-4 shrink-0 stroke-[2.2]" aria-hidden="true" />
                           </button>
                         </div>

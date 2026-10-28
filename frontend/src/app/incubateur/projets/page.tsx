@@ -160,17 +160,17 @@ function ListeProjets() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Link
               href="/incubateur/calendrier"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
+              className="inline-flex min-h-10 flex-1 sm:flex-initial items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
             >
               <Calendar className="h-4 w-4 text-[#A35926]" />
               <span>Calendrier</span>
             </Link>
             <Link
               href="/assistant"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
+              className="inline-flex min-h-10 flex-1 sm:flex-initial items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
             >
               <Bot className="h-4 w-4 text-[#A35926]" />
               <span>Assistant IA</span>
@@ -178,14 +178,14 @@ function ListeProjets() {
             {canEvaluate && (
               <Link
                 href="/incubateur/evaluation"
-                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#6b5646] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
+                className="hidden sm:inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#6b5646] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
               >
                 Évaluations comité
               </Link>
             )}
             <Link
               href="/incubateur/alertes"
-              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-xs cursor-pointer"
+              className="inline-flex min-h-10 items-center justify-center px-3 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-2xs cursor-pointer shrink-0"
               aria-label="Alertes de retard"
               title="Consulter les alertes de retard"
             >

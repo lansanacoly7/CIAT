@@ -262,24 +262,25 @@ export default function ProjectInfoStep({
         />
       </div>
 
-      {/* Pied de formulaire : Effacer les champs à gauche & Enregistrer et continuer à droite */}
-      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#EFE4D6]">
+      {/* Pied de formulaire : Effacer les champs à gauche & Enregistrer et continuer à droite sur la même ligne */}
+      <div className="flex items-center justify-between gap-2 sm:gap-3 pt-3 border-t border-[#EFE4D6]">
         <button
           type="button"
           onClick={() => {
             setForm(EMPTY_PROJECT_INFO);
             setErrors({});
           }}
-          className="group inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#D6C7B7] bg-white px-4 text-xs sm:text-sm font-semibold text-[#6B5646] shadow-2xs transition-all hover:border-[#581C1C] hover:bg-[#450A0A]/5 hover:text-[#581C1C] active:scale-[0.98] cursor-pointer"
+          className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#D6C7B7] bg-white px-3 sm:px-4 text-xs font-semibold text-[#6B5646] shadow-2xs transition-all hover:border-[#581C1C] hover:bg-[#450A0A]/5 hover:text-[#581C1C] active:scale-[0.98] cursor-pointer"
         >
           <RotateCcw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-rotate-90 text-[#8C6D4F] group-hover:text-[#581C1C]" aria-hidden="true" />
-          <span>Effacer les champs</span>
+          <span>Effacer</span>
+          <span className="hidden sm:inline">les champs</span>
         </button>
 
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#612D10] px-5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl bg-[#612D10] px-3.5 sm:px-6 text-xs sm:text-sm font-bold text-white whitespace-nowrap shadow-xs transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           <span>{saving ? "Enregistrement…" : "Enregistrer et continuer"}</span>
