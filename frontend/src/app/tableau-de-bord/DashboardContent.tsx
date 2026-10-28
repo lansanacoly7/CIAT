@@ -38,7 +38,6 @@ import { PartenariatsFinancementsSection } from "./components/PartenariatsFinanc
 import { AiDrawer } from "./components/AiDrawer";
 import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
-import { formatCurrencyCompact } from "@/lib/format";
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -326,11 +325,12 @@ export function DashboardContent() {
   const hasNoData = Boolean(data && data.indicateurs.idees_recues === 0);
 
   // Sous-titres dynamiques calculés depuis les données réelles (pas de répétition statique du "62")
+  const evolutionData = data?.evolution;
   const peakMonthInsight = useMemo(() => {
-    if (!data?.evolution || data.evolution.length === 0) return undefined;
-    const peak = data.evolution.reduce(
+    if (!evolutionData || evolutionData.length === 0) return undefined;
+    const peak = evolutionData.reduce(
       (prev, curr) => (curr.total > prev.total ? curr : prev),
-      data.evolution[0]
+      evolutionData[0]
     );
     if (!peak || peak.total === 0) return undefined;
     try {
@@ -344,16 +344,17 @@ export function DashboardContent() {
     } catch {
       return `Pic : ${peak.total} projets`;
     }
-  }, [data?.evolution]);
+  }, [evolutionData]);
 
+  const parCohorteData = data?.parCohorte;
   const cohorteInsight = useMemo(() => {
-    if (!data?.parCohorte || data.parCohorte.length === 0) return undefined;
-    const top = data.parCohorte.reduce(
+    if (!parCohorteData || parCohorteData.length === 0) return undefined;
+    const top = parCohorteData.reduce(
       (prev, curr) => (curr.total > prev.total ? curr : prev),
-      data.parCohorte[0]
+      parCohorteData[0]
     );
     return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
-  }, [data?.parCohorte]);
+  }, [parCohorteData]);
 
   return (
     <div
