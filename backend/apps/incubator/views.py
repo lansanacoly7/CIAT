@@ -535,7 +535,7 @@ class AlerteJalonListView(APIView):
         """Retourne la liste des jalons dépassés filtrés selon le périmètre d'habilitation."""
         user = request.user
         today = timezone.now().date()
-        base_qs = Jalon.objects.filter(echeance__lt=today).exclude(statut=StatutJalon.FAIT).select_related("projet")
+        base_qs = Jalon.objects.filter(echeance__lt=today).exclude(statut=StatutJalon.FAIT).select_related("projet__porteur", "projet__affectation_mentor__mentor")
 
         if user.is_equipe:
             qs = base_qs
