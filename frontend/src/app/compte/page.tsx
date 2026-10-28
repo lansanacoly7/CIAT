@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   Bell,
+  Camera,
   Check,
   ChevronRight,
   Download,
@@ -12,13 +13,20 @@ import {
   KeyRound,
   Lock,
   Mail,
+  Pencil,
   Save,
   ShieldCheck,
+  Trash2,
+  Undo2,
   User as UserIcon,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth, type Role, type User } from "@/context/AuthContext";
 import { ApiErrorBanner, Badge } from "@/components/ui";
+import DeleteProjectModal, {
+  peutSupprimerOuRetirer,
+  type ProjetASupprimer,
+} from "@/components/incubateur/DeleteProjectModal";
 import { api, ApiError } from "@/lib/api";
 import { fetchAll } from "@/lib/paginate";
 import { STATUT_LABELS, suiviErrorMessage, telechargerAccuseReception, type Dossier } from "@/lib/incubator";
@@ -67,6 +75,7 @@ const PROJET_STATUTS: Record<string, string> = {
   prototype: "Prototype",
   termine: "Incubation terminée",
   rejete: "Non retenu",
+  retire: "Candidature retirée",
 };
 
 const DOSSIER_TONES = {
@@ -138,6 +147,64 @@ function ProfilSection({ user }: { user: User }) {
     }
   }
 
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem(`ciat_avatar_${user.id}`);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [avatarNotice, setAvatarNotice] = useState<string | null>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Veuillez sélectionner une image valide (JPG, PNG, WebP).");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      setAvatarError("L'image ne doit pas dépasser 4 Mo.");
+      return;
+    }
+
+    setAvatarError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setAvatarUrl(result);
+      try {
+        localStorage.setItem(`ciat_avatar_${user.id}`, result);
+        setAvatarNotice("Photo de profil mise à jour.");
+        setTimeout(() => setAvatarNotice(null), 3500);
+      } catch {
+        // storage disabled or quota exceeded
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAvatarUrl(null);
+    setAvatarError(null);
+    try {
+      localStorage.removeItem(`ciat_avatar_${user.id}`);
+      setAvatarNotice("Photo supprimée (initiales restaurées).");
+      setTimeout(() => setAvatarNotice(null), 3500);
+    } catch {
+      // ignore
+    }
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
+
   const userDisplayName = user.first_name
     ? `${user.first_name} ${user.last_name || ""}`.trim()
     : user.email.split("@")[0];
@@ -164,10 +231,64 @@ function ProfilSection({ user }: { user: User }) {
       <div className="relative overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white p-6 sm:p-7 shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            {/* Avatar initiales rond */}
-            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#8A5028] text-white flex items-center justify-center font-[family-name:var(--font-title)] font-bold text-2xl sm:text-3xl shadow-sm shrink-0">
-              {userInitials}
+            {/* Avatar initiales rond ou photo téléversée avec bouton crayon */}
+            <div className="relative shrink-0">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={handleAvatarChange}
+                className="hidden"
+                aria-label="Téléverser une photo de profil"
+              />
+
+              <div
+                onClick={() => avatarInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    avatarInputRef.current?.click();
+                  }
+                }}
+                title="Cliquez pour changer votre photo de profil"
+                className="group relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden cursor-pointer shadow-sm border border-[#EFE4D6] focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 transition-transform active:scale-95"
+              >
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={avatarUrl}
+                    alt={userDisplayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-[#8A5028] text-white flex items-center justify-center font-[family-name:var(--font-title)] font-bold text-2xl sm:text-3xl">
+                    {userInitials}
+                  </div>
+                )}
+
+                {/* Overlay semi-transparent au survol */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-0.5">
+                  <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider">
+                    Modifier
+                  </span>
+                </div>
+              </div>
+
+              {/* Bouton Crayon distinct en bas à droite du cercle */}
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                aria-label="Changer la photo de profil"
+                title="Changer la photo de profil"
+                className="absolute -bottom-1 -right-1 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#612D10] text-white border-2 border-white shadow-md hover:bg-[#8A5028] transition-all hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+              </button>
             </div>
+
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h2 className="font-[family-name:var(--font-title)] text-xl sm:text-2xl font-bold text-[#24140D]">
@@ -181,6 +302,30 @@ function ProfilSection({ user }: { user: User }) {
                 <Mail className="h-3.5 w-3.5 text-[#A35926]" aria-hidden="true" />
                 <span>{user.email}</span>
               </p>
+
+              {/* Actions & notifications pour l'avatar */}
+              <div className="mt-1 flex items-center gap-3">
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={handleAvatarRemove}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#DC2626] hover:underline cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    <span>Supprimer la photo</span>
+                  </button>
+                )}
+                {avatarNotice && (
+                  <span className="text-[11px] font-medium text-[#15803D]">
+                    ✓ {avatarNotice}
+                  </span>
+                )}
+                {avatarError && (
+                  <span className="text-[11px] font-medium text-[#DC2626]">
+                    ⚠ {avatarError}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -457,6 +602,7 @@ function MesProjets() {
   const [tick, setTick] = useState(0);
   const [downloadingAccuseId, setDownloadingAccuseId] = useState<number | null>(null);
   const [accuseError, setAccuseError] = useState<{ id: number; message: string } | null>(null);
+  const [aSupprimer, setASupprimer] = useState<ProjetASupprimer | null>(null);
 
   async function handleTelechargerAccuse(dossierId: number) {
     setDownloadingAccuseId(dossierId);
@@ -558,7 +704,19 @@ function MesProjets() {
                     {p.domaine_nom ? `${p.domaine_nom} · ` : ""}Créé le {dateFr(p.cree_le)}
                   </p>
                 </div>
-                <div className="pt-2 border-t border-[#EFE4D6]/60 flex justify-end">
+                <div className="pt-2 border-t border-[#EFE4D6]/60 flex items-center justify-between gap-2">
+                  {peutSupprimerOuRetirer(p.statut) ? (
+                    <button
+                      type="button"
+                      onClick={() => setASupprimer({ id: p.id, titre: p.titre, statut: p.statut })}
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-[#8C6D4F] transition-colors hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                    >
+                      {p.statut === "depose" ? <Undo2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                      <span>{p.statut === "depose" ? "Retirer ma candidature" : "Supprimer"}</span>
+                    </button>
+                  ) : (
+                    <span />
+                  )}
                   <Link
                     href={`/incubateur/projets/${p.id}`}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[#612D10] hover:text-[#A35926] transition-colors"
@@ -645,6 +803,18 @@ function MesProjets() {
           </div>
         )}
       </div>
+
+      {aSupprimer && (
+        <DeleteProjectModal
+          projet={aSupprimer}
+          onClose={() => setASupprimer(null)}
+          onDone={() => {
+            setASupprimer(null);
+            setData(null);
+            setTick((t) => t + 1);
+          }}
+        />
+      )}
 
     </div>
   );

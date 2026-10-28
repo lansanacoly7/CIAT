@@ -129,6 +129,7 @@ class StatutProjet(models.TextChoices):
     PROTOTYPE = "prototype", "Prototype"
     TERMINE = "termine", "Incubation terminée"
     REJETE = "rejete", "Non retenu"
+    RETIRE = "retire", "Candidature retirée"
 
 
 class Projet(models.Model):

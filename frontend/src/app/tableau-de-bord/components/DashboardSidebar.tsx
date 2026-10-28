@@ -264,26 +264,22 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          {/* 4. Page d'accueil (uniquement pour le staff, le logo CIAT servant de retour pour le porteur) */}
-          {!isPorteur && (
-            <>
-              <div className="mx-4 my-3 border-t border-white/10" />
-              <div className="px-3">
-                <Link
-                  href="/"
-                  onClick={onItemClick}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                    isHomeActive
-                      ? "bg-[#523624] font-semibold text-white"
-                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
-                  <span>Page d&apos;accueil</span>
-                </Link>
-              </div>
-            </>
-          )}
+          {/* 4. Page d'accueil (visible pour tous les rôles) */}
+          <div className="mx-4 my-3 border-t border-white/10" />
+          <div className="px-3">
+            <Link
+              href="/"
+              onClick={onItemClick}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                isHomeActive
+                  ? "bg-[#523624] font-semibold text-white"
+                  : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
+              <span>Page d&apos;accueil</span>
+            </Link>
+          </div>
         </div>
 
         {/* Partie basse : Profil Utilisateur & Déconnexion au format compact uniforme */}
@@ -370,18 +366,43 @@ export function DashboardSidebar() {
         {renderSidebarContent()}
       </aside>
 
-      {/* 2. BOUTON MOBILE / TIROIR LATÉRAL */}
-      <div className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b border-[#e6d8c6] bg-white/95 px-4 backdrop-blur-xs">
+      {/* 2. BOUTON MOBILE / TIROIR LATÉRAL & HEADER MOBILE OFFICIEL CIAT */}
+      <div className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b border-[#e6d8c6] bg-white/95 px-3.5 backdrop-blur-xs shadow-2xs">
+        {/* Gauche : Bouton menu tiroir tactile */}
         <button
           type="button"
           onClick={() => setIsMobileOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white p-2 text-zinc-700 hover:bg-zinc-100"
-          aria-label="Ouvrir le menu de gestion"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] shadow-2xs hover:bg-[#FAF7F2] hover:border-[#C99A68] active:scale-95 transition-all cursor-pointer"
+          aria-label="Ouvrir le menu de navigation"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5 stroke-[2.2]" />
         </button>
-        <span className="text-xs font-bold text-[#602d10]">CIAT — Espace de Gestion</span>
-        <div className="w-8" />
+
+        {/* Centre : Texte contextuel approprié */}
+        <div className="flex flex-col items-center justify-center text-center min-w-0 px-2">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-[#612D10] truncate">
+            {isPorteur ? "Espace Porteur" : "Espace Incubateur"}
+          </span>
+          <span className="text-[10px] font-semibold text-[#8C6D4F] -mt-0.5 truncate">
+            CIAT · ISEP Diamniadio
+          </span>
+        </div>
+
+        {/* Droite : Logo officiel CIAT à taille appropriée */}
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center shrink-0 focus:outline-none"
+          aria-label="Accueil CIAT"
+        >
+          <Image
+            src="/images/brand/logo_principal.png"
+            alt="Logo officiel CIAT"
+            width={110}
+            height={36}
+            priority
+            className="h-7 w-auto object-contain"
+          />
+        </Link>
       </div>
 
       {/* Drawer mobile */}

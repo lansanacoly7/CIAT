@@ -55,7 +55,8 @@ class SeedDemoCommandTestCase(TestCase):
         self.assertEqual(nb_projets, 62, "Exactement 62 projets doivent être générés.")
 
         # Vérification de la représentation de tous les statuts
-        tous_les_statuts = {choice[0] for choice in Projet.Statut.choices}
+        # « retire » = suppression douce par le porteur : état transitoire, absent des données de démonstration
+        tous_les_statuts = {choice[0] for choice in Projet.Statut.choices} - {Projet.Statut.RETIRE}
         statuts_presents = set(Projet.objects.values_list("statut", flat=True).distinct())
         self.assertEqual(
             statuts_presents,
