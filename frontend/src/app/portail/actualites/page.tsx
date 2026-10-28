@@ -18,7 +18,7 @@ function formatDate(dateStr: string) {
   }
 }
 
-function ActuCardImage({ src, alt }: { src?: string; alt: string }) {
+function ActuCardImage({ src, alt }: { src?: string | null; alt: string }) {
   const [loadError, setLoadError] = useState(false);
 
   if (!src || loadError) {

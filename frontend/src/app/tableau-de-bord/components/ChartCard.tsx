@@ -12,8 +12,10 @@ import {
   LabelList,
   ReferenceLine,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts";
-import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw } from "lucide-react";
+import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw, Users, Sparkles, CheckCircle2 } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
@@ -354,67 +356,122 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
   );
 }
 
-// 2. Projets par domaine : Liste classée compacte (libellé, valeur, % en texte, barre fine de 6 px)
+const DOMAINE_COLORS: Record<string, string> = {
+  agriculture: "#2E7D32", // Vert émeraude
+  mecanique: "#612D10",   // Chocolat CIAT
+  pharmacie: "#8C5E2D",   // Cuivre CIAT
+  services: "#4A6B82",    // Bleu ardoise
+  tic: "#A35926",         // Terracotta
+  energies: "#C99A68",    // Ambre doré
+  education: "#B85D43",   // Brique cuite
+};
+
+function getDomaineColor(domaine: string, index: number): string {
+  const norm = domaine.toLowerCase();
+  for (const [key, color] of Object.entries(DOMAINE_COLORS)) {
+    if (norm.includes(key)) return color;
+  }
+  const fallbackColors = ["#8C5E2D", "#612D10", "#2E7D32", "#4A6B82", "#A35926", "#C99A68", "#B85D43"];
+  return fallbackColors[index % fallbackColors.length];
+}
+
+// 2. Projets par domaine : Liste aérée et hiérarchisée (barres généreuses de 12 px, badges, accents de filière)
 export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
   const sortedData = useMemo(() => {
     const totalGlobal = data.reduce((acc, d) => acc + d.total, 0);
     const maxVal = Math.max(...data.map((d) => d.total), 1);
     return [...data]
       .sort((a, b) => b.total - a.total)
-      .map((d) => {
+      .map((d, idx) => {
         const shortName = getDomaineShortLabel(d.domaine);
         const fullName = getDomaineFullName(d.domaine);
         const percent =
           totalGlobal > 0 ? Math.round((d.total / totalGlobal) * 100) : 0;
         const barRatio = Math.round((d.total / maxVal) * 100);
+        const color = getDomaineColor(d.domaine, idx);
         return {
           ...d,
           shortDomaine: shortName,
           fullDomaine: fullName,
           percent,
           barRatio,
+          color,
         };
       });
   }, [data]);
 
   return (
-    <div className="w-full space-y-2.5 py-1">
-      {sortedData.map((item) => (
-        <div key={item.domaine} className="space-y-1">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span
-              title={item.fullDomaine}
-              className="truncate font-medium text-[#21130D]"
-            >
-              {item.shortDomaine}
-            </span>
-            <div className="shrink-0 flex items-baseline gap-1 text-[12px] tabular-nums font-sans">
-              <span className="font-semibold text-[#21130D]">
-                {formatNumber(item.total)}
-              </span>
-              <span className="text-[#5A4B42]">
-                ({item.percent} %)
-              </span>
+    <div className="w-full space-y-4 py-2">
+      <div className="space-y-3.5">
+        {sortedData.map((item, idx) => (
+          <div
+            key={item.domaine}
+            className="group rounded-xl p-2 transition-all hover:bg-[#FAF7F2] hover:shadow-2xs"
+          >
+            {/* Ligne En-tête : Rang, Nom et Effectif */}
+            <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2.5 truncate">
+                <span
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white shadow-2xs"
+                  style={{ backgroundColor: item.color }}
+                >
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
+                <span
+                  title={item.fullDomaine}
+                  className="truncate text-[13px] font-semibold text-[#21130D] group-hover:text-[#612D10]"
+                >
+                  {item.shortDomaine}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 text-[12px] tabular-nums font-sans">
+                <span className="font-bold text-[#21130D]">
+                  {formatNumber(item.total)}{" "}
+                  <span className="text-[11px] font-normal text-[#6B5646]">projets</span>
+                </span>
+                <span className="rounded-md border border-[#EFE4D6] bg-white px-1.5 py-0.5 text-[11px] font-semibold text-[#612D10] shadow-2xs">
+                  {item.percent} %
+                </span>
+              </div>
+            </div>
+
+            {/* Barre généreuse de 12 px avec transition fluide */}
+            <div className="h-3 w-full overflow-hidden rounded-full bg-[rgba(60,35,20,0.06)] p-[1px]">
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
+                style={{
+                  width: `${item.barRatio}%`,
+                  backgroundColor: item.color,
+                }}
+              />
             </div>
           </div>
+        ))}
+      </div>
 
-          {/* Barre fine de 6 px */}
-          <div className="h-1.5 w-full rounded-full bg-[rgba(60,35,20,0.06)] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-[#8C5E2D] transition-all duration-600 ease-out"
-              style={{ width: `${item.barRatio}%` }}
-            />
-          </div>
+      {/* Bandeau de synthèse filière dominante */}
+      {sortedData.length > 0 && (
+        <div className="mt-2 flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-4 py-3 text-xs text-[#612D10]">
+          <span className="flex items-center gap-2 font-medium">
+            <Sparkles className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
+            <span>
+              Filière dominante : <strong className="font-bold text-[#21130D]">{sortedData[0]?.shortDomaine}</strong>
+            </span>
+          </span>
+          <span className="font-bold tabular-nums text-[#A35926]">
+            {sortedData[0]?.total} projets ({sortedData[0]?.percent} %)
+          </span>
         </div>
-      ))}
+      )}
     </div>
   );
 }
 
-// 3. Mixité et parité des équipes :
-// Hauteur adaptée au contenu (<= 200 px), chiffre en couleur foncée neutre (pas d'ocre pâle), un seul affichage (pas de doublon)
+// 3. Mixité et parité des équipes : Graphique en ANNEAU (Donut) avec animations, KPI central et cartes d'effectif
 export function GenreChart({ data }: { data: ParGenreItem[] }) {
-  const { total, femmes, hommes, autre, pctFemmes, pctHommes } = useMemo(() => {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const { total, femmes, hommes, autre, pctFemmes, pctHommes, pieData } = useMemo(() => {
     let f = 0;
     let h = 0;
     let a = 0;
@@ -429,6 +486,33 @@ export function GenreChart({ data }: { data: ParGenreItem[] }) {
     const pF = tot > 0 ? Math.round((f / tot) * 100) : 0;
     const pH = tot > 0 ? Math.round((h / tot) * 100) : 0;
 
+    const slices = [
+      {
+        name: "Femmes",
+        value: f,
+        percent: pF,
+        color: "#8C5E2D", // Cuivre CIAT
+        sub: "Porteuses d'innovation",
+      },
+      {
+        name: "Hommes",
+        value: h,
+        percent: pH,
+        color: "#21130D", // Brun profond CIAT
+        sub: "Porteurs d'innovation",
+      },
+    ];
+
+    if (a > 0) {
+      slices.push({
+        name: "Non précisé",
+        value: a,
+        percent: 100 - pF - pH,
+        color: "#C99A68",
+        sub: "Profils non renseignés",
+      });
+    }
+
     return {
       total: tot,
       femmes: f,
@@ -436,58 +520,128 @@ export function GenreChart({ data }: { data: ParGenreItem[] }) {
       autre: a,
       pctFemmes: pF,
       pctHommes: pH,
+      pieData: slices,
     };
   }, [data]);
 
   return (
-    <div className="flex max-h-[200px] flex-col justify-center py-2 space-y-4">
-      {/* Chiffres côte à côte (couleurs foncées avec contraste élevé) */}
-      <div className="grid grid-cols-2 gap-4 border-b border-[rgba(60,35,20,0.06)] pb-3 text-center">
-        <div>
-          <div className="font-sans text-[26px] font-semibold tracking-[-0.02em] text-[#8C5E2D] tabular-nums">
-            {formatNumber(femmes)}
-          </div>
-          <div className="text-[13px] font-medium text-[#21130D]">
-            Femmes · {pctFemmes} %
-          </div>
-        </div>
+    <div className="flex flex-col justify-between py-2 space-y-5">
+      {/* Anneau animé avec KPI centré */}
+      <div className="relative mx-auto flex h-[230px] w-full max-w-[320px] items-center justify-center">
+        <ResponsiveContainer width="100%" height={230}>
+          <PieChart>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const d = payload[0].payload;
+                  return (
+                    <div className="rounded-xl border border-[rgba(60,35,20,0.12)] bg-white p-3 text-xs shadow-md">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: d.color }}
+                        />
+                        <span className="font-bold text-[#21130D]">{d.name}</span>
+                      </div>
+                      <div className="mt-1 text-[#6B5646]">
+                        {formatNumber(d.value)} porteurs ({d.percent} %)
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Pie
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={70}
+              outerRadius={98}
+              paddingAngle={4}
+              cornerRadius={6}
+              isAnimationActive={true}
+              animationDuration={1100}
+              animationEasing="ease-out"
+              onMouseEnter={(_, idx) => setActiveIndex(idx)}
+              onMouseLeave={() => setActiveIndex(null)}
+            >
+              {pieData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                  stroke={activeIndex === index ? "#FAF7F2" : "transparent"}
+                  strokeWidth={3}
+                  className="transition-all duration-300 cursor-pointer hover:opacity-90"
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
 
-        <div>
-          <div className="font-sans text-[26px] font-semibold tracking-[-0.02em] text-[#21130D] tabular-nums">
-            {formatNumber(hommes)}
-          </div>
-          <div className="text-[13px] font-medium text-[#21130D]">
-            Hommes · {pctHommes} %
-          </div>
+        {/* Badge KPI au centre de l'anneau */}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#8C6D4F]">
+            {activeIndex !== null ? pieData[activeIndex]?.name : "Parité CIAT"}
+          </span>
+          <span className="font-sans text-3xl font-black text-[#612D10] tabular-nums tracking-tight">
+            {activeIndex !== null
+              ? `${pieData[activeIndex]?.percent} %`
+              : `${pctFemmes} %`}
+          </span>
+          <span className="text-[11px] font-semibold text-[#8C5E2D]">
+            {activeIndex !== null
+              ? `${pieData[activeIndex]?.value} porteurs`
+              : "Femmes"}
+          </span>
         </div>
       </div>
 
-      {/* Barre empilée horizontale 100% (hauteur 10px, bouts arrondis) */}
-      <div className="space-y-1.5">
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-[rgba(60,35,20,0.08)] flex">
+      {/* Cartes métriques Féminin / Masculin côte à côte */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        {pieData.slice(0, 2).map((item) => (
           <div
-            className="h-full bg-[#8C5E2D] transition-all duration-600"
-            style={{ width: `${pctFemmes}%` }}
-            title={`Femmes : ${femmes} (${pctFemmes} %)`}
-          />
-          <div
-            className="h-full bg-[#21130D] transition-all duration-600"
-            style={{ width: `${pctHommes}%` }}
-            title={`Hommes : ${hommes} (${pctHommes} %)`}
-          />
-          {autre > 0 && (
-            <div
-              className="h-full bg-[#5A7D65] transition-all duration-600"
-              style={{ width: `${100 - pctFemmes - pctHommes}%` }}
-              title={`Autre / non précisé : ${autre}`}
-            />
-          )}
-        </div>
+            key={item.name}
+            className="flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-3.5 transition-all hover:bg-white hover:border-[#C99A68] hover:shadow-2xs"
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="text-xs font-bold text-[#21130D]">{item.name}</span>
+              </span>
+              <span className="rounded-md border border-[#EFE4D6] bg-white px-2 py-0.5 text-xs font-bold tabular-nums text-[#612D10]">
+                {item.percent} %
+              </span>
+            </div>
+            <div className="mt-2.5 flex items-baseline justify-between">
+              <div className="font-sans text-2xl font-black text-[#21130D] tabular-nums">
+                {formatNumber(item.value)}
+              </div>
+              <span className="text-[11px] text-[#6B5646]">sur {formatNumber(total)}</span>
+            </div>
+            <div className="mt-1 text-[11px] text-[#8C6D4F] truncate">
+              {item.sub}
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="flex items-center justify-between text-[11px] text-[#5A4B42]">
-          <span>Répartition globale par genre</span>
-          <span className="tabular-nums font-medium">Effectif total : {formatNumber(total)} porteurs</span>
+      {/* Badge de réussite de parité */}
+      <div className="flex items-center justify-between rounded-xl border border-[#2E7D32]/30 bg-[#2E7D32]/5 px-3.5 py-2.5 text-xs text-[#2E7D32]">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2E7D32]" aria-hidden="true" />
+          <span className="font-medium text-[#1E5222]">
+            Objectif mixité ISEP atteint : <strong className="font-bold">{pctFemmes}% femmes</strong> (cible 40%)
+          </span>
         </div>
+        <span className="shrink-0 rounded-md bg-white border border-[#2E7D32]/20 px-2 py-0.5 text-[11px] font-bold text-[#2E7D32]">
+          Conforme
+        </span>
       </div>
     </div>
   );
