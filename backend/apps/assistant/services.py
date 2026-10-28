@@ -28,42 +28,6 @@ AVERTISSEMENT_IA_STANDARD = (
     "Réponse générée par l'intelligence artificielle du CIAT à titre informatif."
 )
 
-_SALUTATIONS = ("salut", "bonjour", "bonsoir", "hello", "hey", "coucou", "slt", "bjr", "yo", "salam", "salutations")
-_REMERCIEMENTS = ("merci", "thanks", "thank you")
-_AU_REVOIR = ("au revoir", "a bientot", "bye", "ciao", "a plus")
-_AIDE = ("aide", "aidez moi", "qui es tu", "qui etes vous", "que peux tu faire", "que sais tu faire", "tu fais quoi", "ca va", "comment vas tu", "comment ca va")
-
-SUGGESTIONS_ASSISTANT = (
-    "Je réponds à partir des documents officiels du CIAT. Vous pouvez par exemple me demander : "
-    "« Comment déposer un dossier de candidature ? », « Quelles pièces sont demandées pour être incubé ? » "
-    "ou « Comment se passe l'évaluation du dossier ? »."
-)
-
-
-def reponse_conversationnelle(texte: str) -> str | None:
-    """Répond aux formules de politesse (salutations, remerciements, aide) sans consulter les documents.
-
-    Une salutation n'est pas une question documentaire : la traiter comme telle produisait un faux
-    refus (« votre message ne contient pas de question »). Réponse déterministe, sans appel au
-    modèle, donc sans risque d'invention ; aucune source n'est renvoyée.
-    """
-    import re
-    import unicodedata
-
-    norm = unicodedata.normalize("NFD", texte or "").encode("ascii", "ignore").decode().lower()
-    norm = re.sub(r"[^a-z0-9 ]+", " ", norm)
-    norm = " ".join(norm.split())
-    if not norm or len(norm.split()) > 6:
-        return None
-    mots = norm.split()
-    if any(norm == k or norm.startswith(k + " ") for k in _REMERCIEMENTS):
-        return "Avec plaisir ! N'hésitez pas si vous avez une autre question sur le CIAT. " + SUGGESTIONS_ASSISTANT
-    if any(k in norm for k in _AU_REVOIR):
-        return "À bientôt ! Je reste disponible pour toute question sur le CIAT."
-    if mots[0] in _SALUTATIONS or any(norm == k or k in norm for k in _AIDE):
-        return "Bonjour ! Je suis l'assistant du CIAT, le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Trawaré. " + SUGGESTIONS_ASSISTANT
-    return None
-
 MESSAGE_REFUS_DOCUMENTS = (
     "Désolé, les documents officiels du CIAT ne contiennent pas d'information "
     "permettant de répondre à cette question.\n\n"
@@ -505,8 +469,8 @@ def traiter_message_assistant(
     if mode == MessageAssistant.Mode.ATELIER:
         # Mode atelier : assistance à la rédaction (pitch, SWOT, fiche projet)
         system_prompt = (
-            "Tu es l'assistant atelier du CIAT (Centre d'Innovation et d'Accélération "
-            "Technologique) de l'ISEP Amadou Trawaré de Diamniadio.\n"
+            "Tu es l'assistant atelier du CIAT (Centre d'Innovation, d'Application "
+            "et de Transfert) de l'ISEP Amadou Trawaré de Diamniadio.\n"
             "Tu es un expert méthodologique bienveillant qui accompagne les porteurs de projet et les équipes dans "
             "la rédaction et la structuration de leurs livrables d'incubation : fiches de projet, pitchs d'impact, "
             "matrices SWOT, propositions de valeur ou plans d'action.\n\n"
@@ -534,161 +498,152 @@ def traiter_message_assistant(
         if not PassageDocument.objects.exists() and DocumentPublic.objects.exists():
             indexer_documents_publics()
 
-        reponse_accueil = reponse_conversationnelle(contenu_utilisateur)
-        passages = [] if reponse_accueil else rechercher_passages(contenu_utilisateur)
+        passages = rechercher_passages(contenu_utilisateur)
 
-        # Politesse : réponse directe, sans source et sans faux refus
-        if reponse_accueil:
-            reponse_texte = reponse_accueil
-            sources = []
-        # Le refus immédiat sans appel au modèle ne reste que si aucun passage n'existe du tout
-        elif not passages:
-            reponse_texte = MESSAGE_REFUS_DOCUMENTS
-            sources = []
-        else:
-            # Numérotation explicite des passages transmis [Passage 1], [Passage 2], ...
-            extraits_contexte = "\n\n".join(
-                f"[Passage {idx}] (Document #{p.document_id} — {p.document.titre})\n{p.texte}"
-                for idx, p in enumerate(passages, start=1)
-            )
+        # Le modèle répond toujours : conversation libre ; les documents officiels servent aux questions CIAT
+        # Numérotation explicite des passages transmis [Passage 1], [Passage 2], ...
+        extraits_contexte = "\n\n".join(
+            f"[Passage {idx}] (Document #{p.document_id} — {p.document.titre})\n{p.texte}"
+            for idx, p in enumerate(passages, start=1)
+        ) or "(Aucun extrait des documents officiels n'a été trouvé pour ce message.)"
 
-            system_prompt = (
-                "Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation et d'Accélération "
-                "Technologique) de l'ISEP Amadou Trawaré de Diamniadio.\n"
-                "RÔLE ET CAPACITÉ CONVERSATIONNELLE :\n"
-                "1. Tu es capable de tenir une vraie discussion courtoise et professionnelle avec l'utilisateur.\n"
-                "2. Si l'utilisateur te salue (ex: 'Bonjour', 'Salut', 'Qui es-tu ?', 'Comment vas-tu ?'), accueille-le chaleureusement, "
-                "présente-toi comme l'assistant IA du CIAT et présente brièvement nos 7 pôles d'excellence et l'incubateur "
-                "pour l'inviter à poser ses questions. Dans ce cas, renvoie passages_utilises: [].\n"
-                "3. Pour les questions d'information, réponds en t'appuyant rigoureusement sur les extraits de documents officiels fournis ci-dessous. "
-                "Indique dans passages_utilises les numéros entiers des passages réellement exploités (ex: [1] ou [1, 2]).\n"
-                "4. PÉRIMÈTRE DU CIAT STRICT : Tu restes impérativement dans le périmètre du CIAT, de l'ISEP Diamniadio, "
-                "de l'incubation, de la recherche appliquée et de l'innovation technologique au Sénégal. Si une question est totalement hors-sujet "
-                "(recettes de cuisine, astrologie, divertissement sans rapport), refuse courtoisement en rappelant ta mission au CIAT et propose d'explorer nos domaines.\n"
-                "5. RÈGLE STRICTE SUR LES INFORMATIONS MANQUANTES OU NON MENTIONNÉES :\n"
-                "Si la réponse à une question précise ne figure pas expressément dans les extraits officiels fournis ci-dessous "
-                "(par exemple : durée globale de l'incubation, identité ou nom du directeur, budget non spécifié, délai ou date absent du dépôt) :\n"
-                "- Interdiction formelle d'inventer, d'extrapoler ou d'affirmer un fait absent des documents.\n"
-                "- Refuse poliment en expliquant clairement que les documents officiels du CIAT ne contiennent pas cette information.\n"
-                "- Au lieu de formules vagues comme 'consultez le site officiel', propose l'action concrète dans la plateforme : "
-                "indique que « Pour déposer un dossier, rendez-vous dans Mon espace → Dépôt de candidature » (lien : /incubateur), "
-                "et mentionne les coordonnées de contact du CIAT (courriel : contact@ciat.sn, page : /portail/contact).\n"
-                "- En cas de refus ou d'absence d'information, tu DOIS impérativement renvoyer passages_utilises: [].\n"
-                "6. FORMATAGE PROPRE : N'utilise AUCUNE balise HTML brute (pas de <div>, <p>, <br>, <span>). Formate avec des paragraphes aérés et des listes lisibles.\n"
-                "Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :\n"
-                "- \"reponse\" : ta réponse rédigée en français.\n"
-                "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont les extraits ont réellement servi à répondre, ou [] si aucun passage n'a servi.\n"
-                "Exemple : {\"reponse\": \"Bonjour ! Je suis l'assistant officiel du CIAT...\", \"passages_utilises\": []}"
-            )
+        system_prompt = (
+            "Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation, d'Application "
+            "et de Transfert) de l'ISEP Amadou Trawaré de Diamniadio.\n"
+            "RÔLE ET CAPACITÉ CONVERSATIONNELLE :\n"
+            "1. Tu es capable de tenir une vraie discussion courtoise et professionnelle avec l'utilisateur.\n"
+            "2. Si l'utilisateur te salue (ex: 'Bonjour', 'Salut', 'Qui es-tu ?', 'Comment vas-tu ?'), accueille-le chaleureusement, "
+            "présente-toi comme l'assistant IA du CIAT et présente brièvement l'incubateur et les 7 domaines du CIAT (TIC, numérique, IA et données ; mécanique, fabrication et maintenance ; agriculture, transformation et environnement ; énergie et énergies renouvelables ; pharmaceutique et biomédical ; éducation, formation professionnelle et insertion ; services aux collectivités, entrepreneuriat et incubation) "
+            "pour l'inviter à poser ses questions. Dans ce cas, renvoie passages_utilises: [].\n"
+            "3. Pour les questions d'information, réponds en t'appuyant rigoureusement sur les extraits de documents officiels fournis ci-dessous. "
+            "Indique dans passages_utilises les numéros entiers des passages réellement exploités (ex: [1] ou [1, 2]).\n"
+            "4. CONVERSATION LIBRE : tu peux discuter naturellement de tout sujet courant (salutations, échanges de politesse, questions générales), avec un ton chaleureux, comme une personne. "
+            "La rigueur documentaire ne s'applique qu'aux informations OFFICIELLES sur le CIAT ou l'ISEP (procédures, pièces, dates, personnes, chiffres, règlements) : celles-là doivent venir uniquement des extraits fournis. "
+            "Tu n'inventes jamais un fait sur le CIAT.\n"
+            "5. RÈGLE STRICTE SUR LES INFORMATIONS MANQUANTES OU NON MENTIONNÉES :\n"
+            "Si la réponse à une question précise ne figure pas expressément dans les extraits officiels fournis ci-dessous "
+            "(par exemple : durée globale de l'incubation, identité ou nom du directeur, budget non spécifié, délai ou date absent du dépôt) :\n"
+            "- Interdiction formelle d'inventer, d'extrapoler ou d'affirmer un fait absent des documents.\n"
+            "- Refuse poliment en expliquant clairement que les documents officiels du CIAT ne contiennent pas cette information.\n"
+            "- Au lieu de formules vagues comme 'consultez le site officiel', propose l'action concrète dans la plateforme : "
+            "indique que « Pour déposer un dossier, rendez-vous dans Mon espace → Dépôt de candidature » (lien : /incubateur), "
+            "et oriente vers la page de contact du site (/portail/contact) sans inventer de coordonnées.\n"
+            "- En cas de refus ou d'absence d'information, tu DOIS impérativement renvoyer passages_utilises: [].\n"
+            "6. FORMATAGE PROPRE : N'utilise AUCUNE balise HTML brute (pas de <div>, <p>, <br>, <span>). Formate avec des paragraphes aérés et des listes lisibles.\n"
+            "Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :\n"
+            "- \"reponse\" : ta réponse rédigée en français.\n"
+            "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont les extraits ont réellement servi à répondre, ou [] si aucun passage n'a servi.\n"
+            "Exemple : {\"reponse\": \"Bonjour ! Je suis l'assistant officiel du CIAT...\", \"passages_utilises\": []}"
+        )
 
-            prompt_utilisateur = (
-                f"Extraits des documents officiels du CIAT :\n\n{extraits_contexte}\n\n"
-                f"Question de l'utilisateur : {contenu_utilisateur}"
-            )
+        prompt_utilisateur = (
+            f"Extraits des documents officiels du CIAT :\n\n{extraits_contexte}\n\n"
+            f"Question de l'utilisateur : {contenu_utilisateur}"
+        )
 
-            messages_payload = list(historique_messages[:-1]) + [
-                {"role": "user", "content": prompt_utilisateur}
-            ]
+        messages_payload = list(historique_messages[:-1]) + [
+            {"role": "user", "content": prompt_utilisateur}
+        ]
 
-            reponse_texte = ""
-            numeros_utilises = []
-            derniere_erreur = None
+        reponse_texte = ""
+        numeros_utilises = []
+        derniere_erreur = None
 
-            # Maximum 2 tentatives en cas de JSON invalide ou inexploitable
-            for tentative in range(2):
-                try:
-                    raw_response = ai.chat(
-                        messages_payload,
-                        system=system_prompt,
-                        json_mode=True,
-                        temperature=0.2,
-                    )
-                except AINotConfigured as exc:
-                    raise ServiceIANonConfigure(str(exc)) from exc
-                except AIError as exc:
-                    raise ServiceIAIndisponible(str(exc)) from exc
-                except Exception as exc:
-                    raise ServiceIAIndisponible(f"Erreur inattendue du service IA : {exc}") from exc
+        # Maximum 2 tentatives en cas de JSON invalide ou inexploitable
+        for tentative in range(2):
+            try:
+                raw_response = ai.chat(
+                    messages_payload,
+                    system=system_prompt,
+                    json_mode=True,
+                    temperature=0.2,
+                )
+            except AINotConfigured as exc:
+                raise ServiceIANonConfigure(str(exc)) from exc
+            except AIError as exc:
+                raise ServiceIAIndisponible(str(exc)) from exc
+            except Exception as exc:
+                raise ServiceIAIndisponible(f"Erreur inattendue du service IA : {exc}") from exc
 
-                try:
-                    data = json.loads(raw_response)
-                    if not isinstance(data, dict):
-                        raise ValueError("La réponse racine doit être un objet JSON.")
+            try:
+                data = json.loads(raw_response)
+                if not isinstance(data, dict):
+                    raise ValueError("La réponse racine doit être un objet JSON.")
 
-                    rep = data.get("reponse") or data.get("response") or data.get("contenu") or data.get("message")
-                    if isinstance(rep, str):
-                        # Certains modèles échappent deux fois les caractères Unicode : on décode ces séquences.
-                        rep = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m_: chr(int(m_.group(1), 16)), rep)
-                        # ... et parfois une barre oblique inutile devant l'apostrophe ou les guillemets.
-                        rep = rep.replace("\\'", "'").replace('\\"', '"')
-                    if not rep or not isinstance(rep, str) or not rep.strip():
-                        raise ValueError("Le champ 'reponse' est manquant ou vide dans le JSON.")
+                rep = data.get("reponse") or data.get("response") or data.get("contenu") or data.get("message")
+                if isinstance(rep, str):
+                    # Certains modèles échappent deux fois les caractères Unicode : on décode ces séquences.
+                    rep = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m_: chr(int(m_.group(1), 16)), rep)
+                    # ... et parfois une barre oblique inutile devant l'apostrophe ou les guillemets.
+                    rep = rep.replace("\\'", "'").replace('\\"', '"')
+                if not rep or not isinstance(rep, str) or not rep.strip():
+                    raise ValueError("Le champ 'reponse' est manquant ou vide dans le JSON.")
 
-                    raw_nums = data.get("passages_utilises")
-                    if raw_nums is None:
-                        raw_nums = data.get("sources") or data.get("passages") or []
+                raw_nums = data.get("passages_utilises")
+                if raw_nums is None:
+                    raw_nums = data.get("sources") or data.get("passages") or []
 
-                    if not isinstance(raw_nums, list):
-                        raise ValueError("Le champ 'passages_utilises' doit être une liste.")
+                if not isinstance(raw_nums, list):
+                    raise ValueError("Le champ 'passages_utilises' doit être une liste.")
 
-                    reponse_texte = rep.strip()
-                    numeros_utilises = raw_nums
-                    break  # Succès du parsing JSON
-                except (json.JSONDecodeError, ValueError, TypeError) as exc:
-                    derniere_erreur = str(exc)
-                    logger.warning(
-                        "Tentative %d : JSON invalide renvoyé par l'IA de l'assistant (%s)",
-                        tentative + 1,
-                        exc,
-                    )
-
-            if not reponse_texte:
-                raise ReponseIAInvalide(
-                    f"Le modèle IA a renvoyé une réponse invalide après nouvelle tentative ({derniere_erreur})."
+                reponse_texte = rep.strip()
+                numeros_utilises = raw_nums
+                break  # Succès du parsing JSON
+            except (json.JSONDecodeError, ValueError, TypeError) as exc:
+                derniere_erreur = str(exc)
+                logger.warning(
+                    "Tentative %d : JSON invalide renvoyé par l'IA de l'assistant (%s)",
+                    tentative + 1,
+                    exc,
                 )
 
-            # Validation stricte côté serveur : seuls les numéros existant parmi les passages transmis sont retenus
-            sources = []
-            vus_doc_ids = set()
-            passages_map = {idx: p for idx, p in enumerate(passages, start=1)}
-            doc_ids_map = {p.document_id: p for p in passages}
+        if not reponse_texte:
+            raise ReponseIAInvalide(
+                f"Le modèle IA a renvoyé une réponse invalide après nouvelle tentative ({derniere_erreur})."
+            )
 
-            # Un refus garde sources vide : détection robuste
-            texte_norm_rep = normaliser_chaine(reponse_texte[:250])
-            refus_motifs = [
-                "ne contiennent pas d information",
-                "ne contient pas d information",
-                "ne contiennent aucune information",
-                "ne contient aucune information",
-                "ne precisent pas",
-                "ne precise pas",
-                "ne mentionnent pas",
-                "ne mentionne pas",
-                "ne figure pas",
-                "aucun extrait ne",
-                "les documents officiels du ciat ne",
-                "desole, les documents",
-                "desole mais les documents",
-            ]
-            est_refus = not numeros_utilises or any(m in texte_norm_rep for m in refus_motifs)
+        # Validation stricte côté serveur : seuls les numéros existant parmi les passages transmis sont retenus
+        sources = []
+        vus_doc_ids = set()
+        passages_map = {idx: p for idx, p in enumerate(passages, start=1)}
+        doc_ids_map = {p.document_id: p for p in passages}
 
-            if not est_refus:
-                for item in numeros_utilises:
-                    try:
-                        num = int(item)
-                    except (ValueError, TypeError):
-                        continue  # Numéro non entier ignoré
+        # Un refus garde sources vide : détection robuste
+        texte_norm_rep = normaliser_chaine(reponse_texte[:250])
+        refus_motifs = [
+            "ne contiennent pas d information",
+            "ne contient pas d information",
+            "ne contiennent aucune information",
+            "ne contient aucune information",
+            "ne precisent pas",
+            "ne precise pas",
+            "ne mentionnent pas",
+            "ne mentionne pas",
+            "ne figure pas",
+            "aucun extrait ne",
+            "les documents officiels du ciat ne",
+            "desole, les documents",
+            "desole mais les documents",
+        ]
+        est_refus = not numeros_utilises or any(m in texte_norm_rep for m in refus_motifs)
 
-                    # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
-                    p = passages_map.get(num) or doc_ids_map.get(num)
-                    # Un numéro inconnu est ignoré
-                    if p and p.document_id not in vus_doc_ids:
-                        sources.append({
-                            "document_id": p.document_id,
-                            "titre": p.document.titre,
-                            "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-                        })
-                        vus_doc_ids.add(p.document_id)
+        if not est_refus:
+            for item in numeros_utilises:
+                try:
+                    num = int(item)
+                except (ValueError, TypeError):
+                    continue  # Numéro non entier ignoré
+
+                # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
+                p = passages_map.get(num) or doc_ids_map.get(num)
+                # Un numéro inconnu est ignoré
+                if p and p.document_id not in vus_doc_ids:
+                    sources.append({
+                        "document_id": p.document_id,
+                        "titre": p.document.titre,
+                        "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+                    })
+                    vus_doc_ids.add(p.document_id)
 
     # Persistance de la réponse de l'assistant (avec nettoyage strict des balises HTML et sauts)
     return MessageAssistant.objects.create(

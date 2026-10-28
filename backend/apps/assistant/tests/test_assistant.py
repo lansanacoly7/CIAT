@@ -268,10 +268,11 @@ class AssistantAPITestCase(TestCase):
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")
-    def test_question_sans_aucun_passage_donne_refus_sans_appel_modele(self, mock_chat, mock_configured):
-        """Une question posée quand aucun passage n'existe du tout en base donne un refus
-        immédiat sans faire appel au modèle distant."""
+    def test_message_sans_aucun_passage_est_confie_au_modele_sans_source(self, mock_chat, mock_configured):
+        """Sans passage en base, le modèle répond librement (conversation normale) : aucune réponse
+        n'est codée en dur, aucune source n'est renvoyée."""
         mock_configured.return_value = True
+        mock_chat.return_value = '{"reponse": "Bonjour ! Comment puis-je vous aider ?", "passages_utilises": []}'
         PassageDocument.objects.all().delete()
         DocumentPublic.objects.all().delete()
 
@@ -286,12 +287,12 @@ class AssistantAPITestCase(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(resp.data["role"], "assistant")
-        self.assertEqual(resp.data["contenu"], MESSAGE_REFUS_DOCUMENTS)
+        self.assertEqual(resp.data["contenu"], "Bonjour ! Comment puis-je vous aider ?")
         self.assertEqual(resp.data["sources"], [])
         self.assertTrue(len(resp.data["avertissement_ia"]) > 0)
 
-        # Le modèle distant n'a pas été appelé inutilement
-        mock_chat.assert_not_called()
+        # Le modèle est bien appelé : la réponse vient de lui, pas d'un texte écrit à l'avance
+        mock_chat.assert_called_once()
 
     @patch("apps.core.ai.AIService.configured", new_callable=PropertyMock)
     @patch("apps.core.ai.AIService.chat")
