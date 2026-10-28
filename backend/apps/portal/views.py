@@ -240,6 +240,23 @@ class DocumentPublicViewSet(viewsets.ModelViewSet):
     search_fields = ["titre", "categorie"]
     ordering = ["categorie", "titre"]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        categorie = self.request.query_params.get("categorie")
+        if categorie and categorie != "tous":
+            cat_lower = categorie.lower()
+            if "candidature" in cat_lower or "formulaire" in cat_lower:
+                qs = qs.filter(models.Q(categorie__icontains="candidature") | models.Q(categorie__icontains="formulaire"))
+            elif "reglement" in cat_lower or "règlement" in cat_lower or "charte" in cat_lower:
+                qs = qs.filter(models.Q(categorie__icontains="règlement") | models.Q(categorie__icontains="reglement") | models.Q(categorie__icontains="charte"))
+            elif "guide" in cat_lower or "méthodologique" in cat_lower or "methodologique" in cat_lower:
+                qs = qs.filter(models.Q(categorie__icontains="guide") | models.Q(categorie__icontains="méthodologique") | models.Q(categorie__icontains="methodologique"))
+            elif "rapport" in cat_lower or "activité" in cat_lower or "activite" in cat_lower:
+                qs = qs.filter(models.Q(categorie__icontains="rapport") | models.Q(categorie__icontains="activité") | models.Q(categorie__icontains="activite"))
+            else:
+                qs = qs.filter(categorie__icontains=categorie)
+        return qs
+
 
 class ContactAnonRateThrottle(AnonRateThrottle):
     """Protection anti-spam pour le formulaire de contact public."""

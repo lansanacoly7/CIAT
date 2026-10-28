@@ -30,16 +30,15 @@
 
 /* Le composant démarre directement sur le contenu */
 .pageRoot .candidate-page {
-  width: min(100%, var(--content-width));
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   background: var(--ciat-white);
   overflow: hidden;
-  box-shadow: 0 18px 70px rgba(36, 20, 13, .12);
 }
 
 .pageRoot .eyebrow {
-  margin: 0 0 16px;
-  color: var(--ciat-ochre);
+  margin: 0 0 14px;
+  color: #e2a669;
   font-family: var(--display);
   font-size: 11px;
   font-weight: 800;
@@ -51,7 +50,7 @@
 .pageRoot .hero {
   position: relative;
   width: 100%;
-  min-height: 440px;
+  min-height: 460px;
   isolation: isolate;
   background: var(--ciat-night);
   color: var(--ciat-white);
@@ -92,36 +91,11 @@
   z-index: 3;
   width: min(100%, 1280px);
   margin: 0 auto;
-  padding: 58px clamp(24px, 5vw, 64px);
+  padding: 64px clamp(24px, 5vw, 64px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-}
-
-.pageRoot .eyebrowBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background: rgba(201, 154, 104, 0.2);
-  border: 1px solid rgba(201, 154, 104, 0.4);
-  color: #e2a669;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 18px;
-  backdrop-filter: blur(6px);
-}
-
-.pageRoot .badgeDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #e2a669;
-  box-shadow: 0 0 10px #e2a669;
 }
 
 .pageRoot .hero h1 {
@@ -191,27 +165,6 @@
 
 .pageRoot .text-link:hover {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.pageRoot .heroPills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.pageRoot .heroPillItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 11px;
-  font-weight: 600;
-  backdrop-filter: blur(4px);
 }
 
 .pageRoot .why {

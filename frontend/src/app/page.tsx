@@ -34,7 +34,7 @@ const modules = [
     icon: ChartNoAxesColumnIncreasing,
     title: "Tableau Décisionnel",
     description: "Indicateurs d'impact, taux de maturité et pilotage stratégique.",
-    href: "/incubateur",
+    href: "/tableau-de-bord",
   },
   {
     icon: BrainCircuit,

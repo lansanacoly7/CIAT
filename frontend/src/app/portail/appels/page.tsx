@@ -29,10 +29,7 @@ export default function AppelACandidaturePage() {
           </div>
           <div className={styles["hero__overlay"]} />
           <div className={styles["hero__copy"]}>
-            <div className={styles.eyebrowBadge}>
-              <span className={styles.badgeDot} />
-              <span>Appel à candidature officiel • Cohorte 2026</span>
-            </div>
+            <p className={styles.eyebrow}>Appel à candidature</p>
             <h1 id="hero-title">
               Transformez vos idées en <span>projets à fort impact</span>
             </h1>
@@ -48,11 +45,6 @@ export default function AppelACandidaturePage() {
               <a className={styles["text-link"]} href="#parcours">
                 En savoir plus ↓
               </a>
-            </div>
-            <div className={styles.heroPills}>
-              <span className={styles.heroPillItem}>✓ Prototypage et ateliers ISEP</span>
-              <span className={styles.heroPillItem}>✓ Accompagnement technique 360°</span>
-              <span className={styles.heroPillItem}>✓ Financement & Partenaires</span>
             </div>
           </div>
         </section>

@@ -207,10 +207,11 @@ export default function GalerieProjets() {
         <section className={styles.heroCinematic}>
           <div className={styles.heroImageBg}>
             <Image
-              src="/images/ciat_hero_gallery.jpg"
-              alt="Espace d'exposition des innovations et prototypes du CIAT"
+              src="/images/ciat_galerie_hero_elec.jpg"
+              alt="Atelier de prototypage et d'ingénierie technologique du CIAT"
               fill
               priority
+              unoptimized
               sizes="100vw"
             />
           </div>
@@ -218,11 +219,9 @@ export default function GalerieProjets() {
           <div className={styles.heroOverlay} />
 
           <div className={styles.heroContainer}>
-            <div className={styles.heroContent}>
-              <div className={styles.heroBadge}>
-                <span className={styles.heroBadgeDot} />
-                <span>Vitrine technologique & Innovation CIAT</span>
-              </div>
+              <p className={styles.heroEyebrow}>
+                Galerie des innovations
+              </p>
 
               <h1 className={styles.heroTitle}>
                 Nos projets,
@@ -236,19 +235,6 @@ export default function GalerieProjets() {
                 d&apos;excellence et de savoir-faire au service de l&apos;industrialisation
                 et du territoire.
               </p>
-
-              <div className={styles.heroPills}>
-                <span className={styles.heroPillItem}>
-                  ✓ 6 Innovations phares
-                </span>
-                <span className={styles.heroPillItem}>
-                  ✓ 5 Domaines d&apos;ingénierie
-                </span>
-                <span className={styles.heroPillItem}>
-                  ✓ Cohorte 2026 • ISEP Diamniadio
-                </span>
-              </div>
-            </div>
           </div>
         </section>
 

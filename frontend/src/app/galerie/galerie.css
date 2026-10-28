@@ -75,7 +75,7 @@
 
 .heroImageBg img {
   object-fit: cover;
-  object-position: center 38%;
+  object-position: center 40%;
 }
 
 .heroOverlay {
@@ -83,11 +83,11 @@
   inset: 0;
   z-index: 2;
   background: linear-gradient(
-    95deg,
-    rgba(24, 12, 7, 0.94) 0%,
-    rgba(36, 20, 13, 0.85) 45%,
-    rgba(36, 20, 13, 0.5) 75%,
-    rgba(36, 20, 13, 0.25) 100%
+    90deg,
+    rgba(20, 10, 6, 0.75) 0%,
+    rgba(20, 10, 6, 0.48) 45%,
+    rgba(20, 10, 6, 0.15) 75%,
+    transparent 100%
   );
   pointer-events: none;
 }
@@ -100,33 +100,14 @@
   padding: 58px 24px;
 }
 
-.heroContent {
-  max-width: 720px;
-}
-
-.heroBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background: rgba(201, 154, 104, 0.2);
-  border: 1px solid rgba(201, 154, 104, 0.4);
-  color: var(--ciat-ochre-light);
+.heroEyebrow {
+  margin: 0 0 14px;
+  color: #f3ca9c;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  margin-bottom: 18px;
-  backdrop-filter: blur(6px);
-}
-
-.heroBadgeDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ciat-ochre-light);
-  box-shadow: 0 0 10px var(--ciat-ochre-light);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .heroTitle {

@@ -448,10 +448,6 @@ export default function CiatPresentationPage() {
                           <h4 className="text-base font-bold text-[#24140D] tracking-tight group-hover:text-[#612D10] transition-colors">
                             {piece.titre}
                           </h4>
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 border border-emerald-200/80">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                            Requis
-                          </span>
                         </div>
                         <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#6B5646]">
                           {piece.detail}

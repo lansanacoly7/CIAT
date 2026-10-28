@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiErrorBanner, Badge, Button, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
 import { getDocumentsPublics, type DocumentPublic } from "@/lib/portal-api";
 
@@ -29,18 +29,16 @@ export default function DocumentsPortailPage() {
   const [items, setItems] = useState<DocumentPublic[]>([]);
   const [selectedCat, setSelectedCat] = useState("tous");
   const [loading, setLoading] = useState(true);
-  const [fromApi, setFromApi] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
-  const fetchDocs = (cat = selectedCat) => {
+  const fetchDocs = () => {
     setLoading(true);
     setError(null);
-    getDocumentsPublics(cat)
+    getDocumentsPublics("tous")
       .then((res) => {
         setItems(res.items);
-        setFromApi(res.fromApi);
         setIsDemo(Boolean(res.isDemo));
         setError(res.error);
         setLoading(false);
@@ -55,11 +53,10 @@ export default function DocumentsPortailPage() {
 
   useEffect(() => {
     let ignore = false;
-    getDocumentsPublics(selectedCat)
+    getDocumentsPublics("tous")
       .then((res) => {
         if (!ignore) {
           setItems(res.items);
-          setFromApi(res.fromApi);
           setIsDemo(Boolean(res.isDemo));
           setError(res.error);
           setLoading(false);
@@ -77,23 +74,49 @@ export default function DocumentsPortailPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedCat]);
+  }, []);
+
+  const normalizeCat = (cat: string) => {
+    const c = (cat || "").toLowerCase();
+    if (c.includes("candidature") || c.includes("formulaire")) return "candidature";
+    if (c.includes("reglement") || c.includes("règlement") || c.includes("charte")) return "reglement";
+    if (c.includes("guide") || c.includes("méthodologique") || c.includes("methodologique")) return "guide";
+    if (c.includes("rapport") || c.includes("activité") || c.includes("activite")) return "rapport";
+    return c;
+  };
+
+  const visibleItems = useMemo(() => {
+    if (selectedCat === "tous") return items;
+    return items.filter((d) => normalizeCat(d.categorie) === selectedCat);
+  }, [items, selectedCat]);
 
   const handleDownload = (doc: DocumentPublic) => {
-    if (doc.fichier_url && doc.fichier_url !== "#") {
-      const url = doc.fichier_url.startsWith("http")
-        ? doc.fichier_url
-        : doc.fichier_url.startsWith("/")
-        ? doc.fichier_url
-        : `/${doc.fichier_url}`;
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${doc.titre.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    let url = doc.fichier_url;
+    if (!url || url === "#") {
+      const lower = doc.titre.toLowerCase();
+      if (lower.includes("charte") || lower.includes("intellectuelle")) {
+        url = "/media/documents_publics/charte_propriete_intellectuelle_ciat.pdf";
+      } else if (lower.includes("règlement") || lower.includes("reglement")) {
+        url = "/media/documents_publics/reglement_interieur_incubateur_ciat.pdf";
+      } else {
+        url = "/media/documents_publics/dossier_candidature_incubation_2026.pdf";
+      }
     }
+
+    const finalUrl = url.startsWith("http")
+      ? url
+      : url.startsWith("/")
+      ? url
+      : `/${url}`;
+
+    const a = document.createElement("a");
+    a.href = finalUrl;
+    a.download = `${doc.titre.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
     setDownloadSuccess(`Le téléchargement de "${doc.titre}" a démarré.`);
     setTimeout(() => {
       setDownloadSuccess(null);
@@ -134,15 +157,15 @@ export default function DocumentsPortailPage() {
         />
       )}
 
-      {/* Source des données */}
+      {/* Compteur de documents (badge supprimé à la demande) */}
       {!error && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-xs text-texte-doux">
-            {items.length} {items.length > 1 ? "documents disponibles" : "document disponible"}
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-xs text-texte-doux font-semibold">
+            {visibleItems.length}{" "}
+            {visibleItems.length > 1
+              ? "documents disponibles"
+              : "document disponible"}
           </p>
-          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
-            {fromApi ? "Connecté à l'API" : isDemo ? "Mode démo" : "CIAT"}
-          </Badge>
         </div>
       )}
 
@@ -186,7 +209,7 @@ export default function DocumentsPortailPage() {
             </div>
           ))}
         </div>
-      ) : error && items.length === 0 ? null : items.length === 0 ? (
+      ) : error && items.length === 0 ? null : visibleItems.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
           <p className="text-base font-bold text-brun">Aucun document dans cette catégorie.</p>
           <div className="mt-4">
@@ -197,7 +220,7 @@ export default function DocumentsPortailPage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {items.map((doc) => {
+          {visibleItems.map((doc) => {
             const formatBadge = getFormatBadge(doc.format);
             return (
               <Card key={doc.id} className="flex h-full flex-col justify-between">
