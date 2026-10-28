@@ -17,7 +17,7 @@ import type { DashboardFilters } from "../types";
 
 interface CompactHeaderProps {
   lastUpdated?: string;
-  isLive: boolean;
+  isLive?: boolean;
   isLoading: boolean;
   onRefresh: () => void;
   onOpenAiDrawer: () => void;
@@ -27,8 +27,6 @@ interface CompactHeaderProps {
 }
 
 export function CompactHeader({
-  lastUpdated = "en direct",
-  isLive,
   isLoading,
   onRefresh,
   onOpenAiDrawer,
@@ -210,29 +208,6 @@ export function CompactHeader({
 
       {/* Actions et contrôles à droite */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Badge Données en direct avec point vert pulsant */}
-        <div
-          className="flex items-center gap-2 rounded-full border border-[rgba(60,35,20,0.08)] bg-white px-3 py-1 text-xs text-[#3D2314] shadow-[0_1px_2px_rgba(60,35,20,0.04)]"
-          title={`Données connectées (${lastUpdated})`}
-        >
-          <span className="relative flex h-2 w-2">
-            {isLive && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            )}
-            <span
-              className={`relative inline-flex h-2 w-2 rounded-full ${
-                isLive ? "bg-emerald-500" : "bg-amber-500"
-              }`}
-            />
-          </span>
-          <span className="hidden sm:inline font-medium">
-            {isLive ? "Données en direct" : "Données simulées"}
-          </span>
-          <span className="text-[11px] text-[#5A4B42] hidden lg:inline">
-            · {lastUpdated}
-          </span>
-        </div>
-
         {/* Bouton Actualiser */}
         <button
           type="button"

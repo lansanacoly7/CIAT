@@ -63,7 +63,6 @@ export function DashboardContent() {
     useState<PartenariatsFinancementsStats | null>(null);
   const [constatsData, setConstatsData] = useState<ConstatCalcul[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
   const [kpiViewMode, setKpiViewMode] = useState<"entonnoir" | "cartes">("entonnoir");
   // Synchronisation de l'onglet actif avec le paramètre d'URL ?vue=
   const validTabs: DashboardTab[] = ["vue-d-ensemble", "projets", "financements", "registre"];
@@ -84,7 +83,6 @@ export function DashboardContent() {
   };
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("en direct");
   const [hasNetworkError, setHasNetworkError] = useState(false);
   const [watchCounts, setWatchCounts] = useState<{
     retards: number;
@@ -127,7 +125,6 @@ export function DashboardContent() {
       if (isExplicitDemo) {
         if (isSubscribed) {
           setData(getMockAnalyticsData(filters));
-          setIsLiveConnected(false);
           setIsLoading(false);
           setHasNetworkError(false);
         }
@@ -214,28 +211,14 @@ export function DashboardContent() {
             conventions: convCount || 2,
             dossiers: dosCount || 5,
           });
-          setIsLiveConnected(true);
           setIsLoading(false);
           setHasNetworkError(false);
-          setLastUpdatedTime(
-            new Date().toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
         }
       } catch {
         if (isSubscribed) {
           setData(getMockAnalyticsData(filters));
-          setIsLiveConnected(false);
           setIsLoading(false);
           setHasNetworkError(true);
-          setLastUpdatedTime(
-            new Date().toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
         }
       }
     }
@@ -282,16 +265,8 @@ export function DashboardContent() {
       });
       setFinancementsData(financementsList || []);
       setFinancementsStats(partStats);
-      setIsLiveConnected(true);
-      setLastUpdatedTime(
-        new Date().toLocaleTimeString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
     } catch {
       setData(getMockAnalyticsData(filters));
-      setIsLiveConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -367,8 +342,6 @@ export function DashboardContent() {
           1. EN-TÊTE COMPACT (UNE LIGNE, 64 PX)
          ========================================================================= */}
       <CompactHeader
-        lastUpdated={lastUpdatedTime}
-        isLive={isLiveConnected === true}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         onOpenAiDrawer={() => setIsAiDrawerOpen(true)}
