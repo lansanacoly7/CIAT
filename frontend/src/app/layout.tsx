@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 import { Fraunces, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./home-design.css";
 
 import AppShell from "@/components/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
