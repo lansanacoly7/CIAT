@@ -18,6 +18,7 @@ Critères de validation :
 """
 from datetime import timedelta
 from decimal import Decimal
+
 from django.core import mail
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -31,15 +32,12 @@ from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.incubator.models import (
     AffectationMentor,
     Critere,
-    Decision,
     Dossier,
     Grille,
     Jalon,
     Objectif,
-    Piece,
     StatutDossier,
     StatutJalon,
-    TypePiece,
 )
 from apps.incubator.notifications import AlerteJalonEnvoyee
 

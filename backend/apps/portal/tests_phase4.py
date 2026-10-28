@@ -8,6 +8,7 @@ Vérifie :
 - Gestion des caractères spéciaux et sauts de ligne (échappement)
 """
 from datetime import timedelta
+
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone

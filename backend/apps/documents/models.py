@@ -55,13 +55,16 @@ class ModeleDocument(models.Model):
         return f"{self.type.nom} — {self.nom}"
 
 
+class StatutDocument(models.TextChoices):
+    BROUILLON = "brouillon", "Brouillon"
+    VALIDE = "valide", "Validé"
+    PUBLIE = "publie", "Publié"
+
+
 class Document(models.Model):
     """Document rédigé ou généré par la plateforme."""
 
-    class Statut(models.TextChoices):
-        BROUILLON = "brouillon", "Brouillon"
-        VALIDE = "valide", "Validé"
-        PUBLIE = "publie", "Publié"
+    Statut = StatutDocument
 
     modele = models.ForeignKey(
         ModeleDocument, on_delete=models.PROTECT, related_name="documents"
@@ -90,6 +93,12 @@ class Document(models.Model):
         ordering = ["-cree_le"]
         verbose_name = "Document"
         verbose_name_plural = "Documents"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutDocument.choices]),
+                name="check_document_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return self.titre

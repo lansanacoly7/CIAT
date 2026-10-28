@@ -4,9 +4,9 @@ Usage :
     python manage.py seed_gallery
 """
 from django.core.management.base import BaseCommand
+
 from apps.core.models import Projet
 from apps.gallery.models import FicheInnovation
-
 
 FICHES_DATA = [
     {

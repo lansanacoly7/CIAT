@@ -7,6 +7,7 @@ Couvre l'intégralité des critères d'acceptation :
 """
 import io
 from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
@@ -29,7 +30,7 @@ from apps.incubator.models import (
     SuiviProjet,
     TypePiece,
 )
-from apps.incubator.notifications import AlerteJalonEnvoyee, envoyer_alertes_jalons_en_retard
+from apps.incubator.notifications import AlerteJalonEnvoyee
 
 User = get_user_model()
 

@@ -12,9 +12,10 @@ Règles de cohérence strictes :
 """
 from datetime import timedelta
 from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from apps.core.models import Projet
+
 from apps.analytics.models import (
     Financement,
     Partenariat,
@@ -22,6 +23,7 @@ from apps.analytics.models import (
     StatutPartenariat,
     TypePartenariat,
 )
+from apps.core.models import Projet
 
 # Acteurs crédibles du tissu économique et institutionnel sénégalais
 PARTENAIRES_DATA = [

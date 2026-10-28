@@ -28,13 +28,12 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
 
-from apps.core.models import Cohorte, Domaine, Projet, Role, User
+from apps.core.models import Projet, Role, User
 from apps.documents.models import Document, ModeleDocument, VersionDocument
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
     AffectationMentor,
     CommentaireJalon,
-    Critere,
     Decision,
     DecisionType,
     Dossier,

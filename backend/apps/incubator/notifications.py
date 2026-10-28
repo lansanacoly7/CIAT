@@ -5,6 +5,7 @@ Gère :
 - La traçabilité en base pour garantir l'idempotence journalière (pas de double envoi le même jour)
 """
 import logging
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models

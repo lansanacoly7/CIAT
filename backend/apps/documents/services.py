@@ -1,7 +1,7 @@
 """Moteur de génération de documents administratifs assistée par IA pour le CIAT."""
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from apps.core.ai import AIError, AINotConfigured, ai
 from apps.documents.models import Document, ModeleDocument, VersionDocument
@@ -25,7 +25,7 @@ class ReponseIAInvalide(DocumentsAIException):
     """Le modèle IA a renvoyé un format JSON invalide ou des sections manquantes."""
 
 
-def _extraire_sections_dict(data: Any, codes_attendus: List[str]) -> Dict[str, str]:
+def _extraire_sections_dict(data: Any, codes_attendus: list[str]) -> dict[str, str]:
     """Normalise la structure JSON renvoyée par le modèle pour extraire {code: contenu}.
 
     Règle de résilience :
@@ -64,8 +64,8 @@ def _extraire_sections_dict(data: Any, codes_attendus: List[str]) -> Dict[str, s
 def _construire_prompts(
     modele: ModeleDocument,
     sujet: str,
-    infos: Optional[Dict[str, Any]] = None,
-    projet: Optional[Any] = None,
+    infos: dict[str, Any] | None = None,
+    projet: Any | None = None,
 ) -> tuple[str, str]:
     """Construit le prompt système et le prompt utilisateur pour le modèle de langage.
 
@@ -148,9 +148,9 @@ def generer_document(
     modele: ModeleDocument,
     sujet: str,
     auteur: Any,
-    infos: Optional[Dict[str, Any]] = None,
-    projet: Optional[Any] = None,
-) -> Dict[str, Any]:
+    infos: dict[str, Any] | None = None,
+    projet: Any | None = None,
+) -> dict[str, Any]:
     """Orchestre la génération assistée par IA d'un document administratif officiel.
 
     Règles de traçabilité et conformité juridique :

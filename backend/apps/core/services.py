@@ -1,8 +1,9 @@
 """Services d'audit des actions sensibles et de notification interne (Phase 8 T1 & T2)."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from django.contrib.auth import get_user_model
+
 from apps.core.models import JournalAudit, Notification
 
 logger = logging.getLogger(__name__)
@@ -40,11 +41,11 @@ def nettoyer_donnees_sensibles(data: Any) -> Any:
 
 def enregistrer_audit(
     *,
-    acteur: Optional[Any],
+    acteur: Any | None,
     action: str,
     objet: str,
-    avant: Optional[Dict[str, Any]] = None,
-    apres: Optional[Dict[str, Any]] = None,
+    avant: dict[str, Any] | None = None,
+    apres: dict[str, Any] | None = None,
 ) -> JournalAudit:
     """Enregistre une entrée dans le journal d'audit."""
     user_acteur = acteur if isinstance(acteur, User) and acteur.is_authenticated else None
@@ -68,7 +69,7 @@ def creer_notification(
     type: str,
     message: str,
     lien: str = "",
-) -> Optional[Notification]:
+) -> Notification | None:
     """Crée une notification interne dans la plateforme."""
     if not isinstance(destinataire, User):
         return None
@@ -115,7 +116,7 @@ def tracer_decision_dossier(acteur: Any, decision: Any) -> JournalAudit:
 def tracer_affectation_mentor(
     acteur: Any,
     affectation: Any,
-    mentor_precedent: Optional[Any] = None,
+    mentor_precedent: Any | None = None,
 ) -> JournalAudit:
     """Trace l'affectation d'un mentor et notifie le porteur et le mentor."""
     projet = affectation.projet
@@ -266,7 +267,7 @@ def tracer_changement_role(
     return journal
 
 
-def notifier_jalon_retard(jalon: Any, destinataire: Any) -> Optional[Notification]:
+def notifier_jalon_retard(jalon: Any, destinataire: Any) -> Notification | None:
     """Crée une notification de retard de jalon pour un porteur ou un mentor."""
     return creer_notification(
         destinataire=destinataire,

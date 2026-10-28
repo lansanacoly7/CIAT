@@ -17,7 +17,6 @@ Couvre :
 import datetime
 from unittest.mock import patch
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail, signing
@@ -165,7 +164,7 @@ class MotDePasseOublieAPITests(TestCase):
     def test_07_reinitialisation_jeton_expire_400(self):
         """Un jeton généré il y a plus de 3600 secondes est rejeté pour expiration."""
         # Simulation d'un timestamp de 2 heures dans le passé
-        temps_passe = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
+        temps_passe = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=2)
         inner = default_token_generator.make_token(self.user_actif)
 
         with patch("django.utils.timezone.now", return_value=temps_passe):

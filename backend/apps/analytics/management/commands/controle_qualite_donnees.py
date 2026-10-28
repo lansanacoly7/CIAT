@@ -12,15 +12,16 @@ Supporte la sortie texte formattée et l'option `--json`.
 """
 import json
 import sys
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from django.core.management.base import BaseCommand
-from django.db.models import Count, Q
 
-from apps.core.models import Cohorte, Domaine, Projet, Role, User
+from django.core.management.base import BaseCommand
+from django.db.models import Q
+
+from apps.analytics.models import Financement, Partenariat, StatutFinancement, StatutPartenariat
+from apps.core.models import Cohorte, Projet, Role, User
+from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
-    AffectationMentor,
-    Critere,
     Decision,
     Dossier,
     Evaluation,
@@ -28,8 +29,6 @@ from apps.incubator.models import (
     Note,
     StatutDossier,
 )
-from apps.gallery.models import FicheInnovation
-from apps.analytics.models import Financement, Partenariat, StatutFinancement, StatutPartenariat
 
 
 def executer_audit_qualite():

@@ -11,6 +11,7 @@ Vérifie l'ensemble des exigences fonctionnelles et non-fonctionnelles :
 - Absence de requêtes N+1 (select_related) et test de performance
 """
 import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse

@@ -12,7 +12,7 @@ Endpoints :
 - T3 :
   - /api/portal/projets-incubes/ (public, statut incube|prototype|termine, filtres et recherche)
 """
-from django.db.models import F, Q, Sum
+from django.db.models import F, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
@@ -43,7 +43,6 @@ from .serializers import (
     PartenaireSerializer,
     ProjetIncubeSerializer,
 )
-
 
 # ==============================================================================
 # T1 — Contenus institutionnels

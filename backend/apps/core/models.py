@@ -60,6 +60,16 @@ class User(AbstractUser):
         ordering = ["last_name", "first_name"]
         verbose_name = "Utilisateur"
         verbose_name_plural = "Utilisateurs"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(role__in=[c[0] for c in Role.choices]),
+                name="check_user_role_valide",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(genre__in=["", "F", "H", "A"]),
+                name="check_user_genre_valide",
+            ),
+        ]
 
     def __str__(self):
         return self.get_full_name() or self.email
@@ -98,22 +108,33 @@ class Cohorte(models.Model):
         ordering = ["-annee", "nom"]
         verbose_name = "Cohorte d'incubation"
         verbose_name_plural = "Cohortes d'incubation"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(date_debut__isnull=True)
+                | models.Q(date_fin__isnull=True)
+                | models.Q(date_debut__lte=models.F("date_fin")),
+                name="check_cohorte_dates_coherentes",
+            ),
+        ]
 
     def __str__(self):
         return self.nom
 
 
+class StatutProjet(models.TextChoices):
+    IDEE = "idee", "Idée"
+    DEPOSE = "depose", "Dossier déposé"
+    SELECTIONNE = "selectionne", "Sélectionné"
+    INCUBE = "incube", "En incubation"
+    PROTOTYPE = "prototype", "Prototype"
+    TERMINE = "termine", "Incubation terminée"
+    REJETE = "rejete", "Non retenu"
+
+
 class Projet(models.Model):
     """Projet porté par un porteur. Les modules incubateur, galerie, analyse et documents s'y rattachent."""
 
-    class Statut(models.TextChoices):
-        IDEE = "idee", "Idée"
-        DEPOSE = "depose", "Dossier déposé"
-        SELECTIONNE = "selectionne", "Sélectionné"
-        INCUBE = "incube", "En incubation"
-        PROTOTYPE = "prototype", "Prototype"
-        TERMINE = "termine", "Incubation terminée"
-        REJETE = "rejete", "Non retenu"
+    Statut = StatutProjet
 
     titre = models.CharField(max_length=200, verbose_name="Titre du projet")
     resume = models.TextField(blank=True, verbose_name="Résumé")
@@ -152,6 +173,16 @@ class Projet(models.Model):
         ordering = ["-cree_le"]
         verbose_name = "Projet"
         verbose_name_plural = "Projets"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutProjet.choices]),
+                name="check_projet_statut_valide",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["domaine", "statut"], name="idx_projet_domaine_statut"),
+            models.Index(fields=["cohorte", "statut"], name="idx_projet_cohorte_statut"),
+        ]
 
 
     def __str__(self):

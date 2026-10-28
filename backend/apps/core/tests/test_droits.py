@@ -10,24 +10,23 @@ Couvre :
 7. Prévention des régressions via introspection automatique des routes enregistrées.
 """
 import datetime
-import io
 import re
-from unittest.mock import patch
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
-from django.urls import get_resolver, reverse
+from django.urls import get_resolver
 from django.urls.resolvers import URLPattern, URLResolver
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken
 
-from apps.core.models import Cohorte, Domaine, JournalAudit, Notification, Projet, Role, User
-from apps.gallery.models import FicheInnovation, ManifestationInteret
+from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.core.services import creer_notification, enregistrer_audit
+from apps.gallery.models import FicheInnovation, ManifestationInteret
 from apps.incubator.models import (
     ALLOWED_PIECE_EXTENSIONS,
     AffectationMentor,
@@ -38,7 +37,6 @@ from apps.incubator.models import (
     Evaluation,
     Grille,
     Jalon,
-    Note,
     Objectif,
     Piece,
     StatutDossier,
@@ -49,7 +47,6 @@ from apps.incubator.models import (
     validate_file_content,
     validate_file_size,
 )
-from rest_framework_simplejwt.tokens import AccessToken
 from apps.portal.models import Actualite, AppelProjet, DocumentPublic, Evenement, Partenaire
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
