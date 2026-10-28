@@ -14,7 +14,9 @@
   --display: "Plus Jakarta Sans", Arial, sans-serif;
   --body: "Inter", Arial, sans-serif;
   margin: 0;
-  background: #e9dfd3;
+  padding: 0;
+  width: 100%;
+  background: var(--ciat-white);
   color: var(--ciat-text);
   font-family: var(--body);
   font-size: 15px;
@@ -28,12 +30,14 @@
 .pageRoot a { color: inherit; }
 .pageRoot img { display: block; max-width: 100%; }
 
-/* Le composant démarre directement sur le contenu */
+/* Le composant démarre directement en pleine largeur sans aucune marge ni bordure */
 .pageRoot .candidate-page {
   width: 100%;
   margin: 0;
+  padding: 0;
   background: var(--ciat-white);
   overflow: hidden;
+  box-shadow: none;
 }
 
 .pageRoot .eyebrow {
@@ -307,12 +311,7 @@
 .pageRoot .dossier__list li { padding: 10px 0; border-top: 1px solid var(--ciat-line); font-size: 12px; font-weight: 600; line-height: 1.5; }
 .pageRoot .dossier__note { margin: 17px 0 0; color: var(--ciat-muted); font-size: 11px; }
 
-@media (min-width: 1241px) {
-  .pageRoot .candidate-page { margin: 24px auto; }
-}
 @media (max-width: 900px) {
-  .pageRoot .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .8fr); min-height: 370px; }
-  .pageRoot .hero__visual { min-height: 370px; }
   .pageRoot .hero__copy { padding: 42px 28px; }
   .pageRoot .why { grid-template-columns: 1fr; gap: 36px; }
   .pageRoot .sectors { grid-template-columns: .7fr 1.3fr; }
@@ -320,16 +319,10 @@
   .pageRoot .dossier { gap: 28px; }
 }
 @media (max-width: 640px) {
-  .pageRoot { background: var(--ciat-white); font-size: 14px; }
-  .pageRoot .candidate-page { width: 100%; box-shadow: none; }
-  .pageRoot .hero { grid-template-columns: 1fr; }
-  .pageRoot .hero__copy { padding: 43px 24px 34px; }
-  .pageRoot .hero h1 { max-width: 480px; font-size: clamp(36px, 11vw, 50px); }
-  .pageRoot .hero__description { font-size: 13px; }
-  .pageRoot .hero__visual { min-height: 310px; }
-  .pageRoot .hero__visual img { object-position: center 32%; }
-  .pageRoot .hero__visual::before { background: linear-gradient(0deg, rgba(36,20,13,.4), transparent 60%); }
-  .pageRoot .hero::before { top: 260px; right: -80px; width: 250px; height: 280px; }
+  .pageRoot { font-size: 14px; }
+  .pageRoot .hero__copy { padding: 48px 20px 36px; }
+  .pageRoot .hero h1 { max-width: 480px; font-size: clamp(32px, 9vw, 44px); }
+  .pageRoot .hero__description { font-size: 13.5px; }
   .pageRoot .why { padding: 42px 24px; gap: 34px; }
   .pageRoot .process__heading { display: block; }
   .pageRoot .process__heading p { max-width: 100%; margin-top: 10px; }
