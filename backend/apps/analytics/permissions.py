@@ -3,6 +3,7 @@
 Accès restreint au coordonnateur, à l'administrateur et aux membres du comité de sélection.
 """
 from rest_framework.permissions import BasePermission
+
 from apps.core.models import Role
 
 

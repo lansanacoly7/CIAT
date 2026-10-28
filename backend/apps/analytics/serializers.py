@@ -1,5 +1,6 @@
 """Sérialiseurs pour les modèles Partenariat et Financement (apps.analytics - T3)."""
 from rest_framework import serializers
+
 from .models import Financement, Partenariat
 
 

@@ -9,10 +9,11 @@ Sécurité stricte :
 import json
 import logging
 from datetime import datetime
+
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
 
-from apps.core.ai import ai, AIError, AINotConfigured
+from apps.core.ai import ai
 from apps.core.models import Projet
 
 logger = logging.getLogger(__name__)

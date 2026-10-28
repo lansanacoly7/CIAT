@@ -25,20 +25,11 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
-from apps.documents.models import Document, ModeleDocument, TypeDocument, VersionDocument
+from apps.documents.models import Document, ModeleDocument
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
-    AffectationMentor,
-    CommentaireJalon,
-    Critere,
-    Decision,
     Dossier,
-    Evaluation,
     Grille,
-    Jalon,
-    Note,
-    Objectif,
-    Piece,
     StatutDossier,
     StatutJalon,
 )

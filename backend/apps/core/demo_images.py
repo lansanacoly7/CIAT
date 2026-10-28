@@ -10,11 +10,10 @@ Règles strictes :
 - Strictement idempotent : ne régénère pas une image déjà présente.
 - Léger : toutes les images restent largement sous 150 Ko.
 """
-from datetime import datetime
 import functools
 import io
 import logging
-from pathlib import Path
+from datetime import datetime
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -81,7 +80,7 @@ def generer_image_actualite(actualite, force: bool = False) -> bool:
     Renvoie True si une nouvelle image a été générée, False si déjà existante.
     """
     filename = f"actualites/{actualite.slug}.jpg"
-    
+
     # Contrôle d'idempotence : ne pas écraser si l'image est déjà enregistrée et présente
     if not force and actualite.image and actualite.image.name:
         try:
@@ -349,8 +348,8 @@ def generer_photo_galerie(fiche, force: bool = False) -> bool:
 
 def generer_toutes_images_demo(stdout=None, force: bool = False) -> dict:
     """Génère l'ensemble des images de démonstration pour le portail et la galerie."""
-    from apps.portal.models import Actualite, Partenaire
     from apps.gallery.models import FicheInnovation
+    from apps.portal.models import Actualite, Partenaire
 
     def write(msg):
         if stdout:

@@ -2,6 +2,7 @@
 from django.contrib import admin
 
 from apps.core.admin_actions import creer_action_export_csv
+
 from .models import (
     Actualite,
     AppelProjet,
@@ -10,7 +11,6 @@ from .models import (
     MessageContact,
     Partenaire,
 )
-
 
 # ==============================================================================
 # T1

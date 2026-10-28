@@ -8,14 +8,17 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class StatutFiche(models.TextChoices):
+    BROUILLON = "brouillon", "Brouillon"
+    EN_VALIDATION = "en_validation", "En validation"
+    PUBLIE = "publie", "Publié"
+    REFUSE = "refuse", "Refusé"
+
+
 class FicheInnovation(models.Model):
     """Fiche d'innovation publique ou en cours de validation liée à un projet."""
 
-    class Statut(models.TextChoices):
-        BROUILLON = "brouillon", "Brouillon"
-        EN_VALIDATION = "en_validation", "En validation"
-        PUBLIE = "publie", "Publié"
-        REFUSE = "refuse", "Refusé"
+    Statut = StatutFiche
 
     projet = models.ForeignKey(
         "core.Projet",
@@ -59,6 +62,12 @@ class FicheInnovation(models.Model):
         ordering = ["-cree_le"]
         verbose_name = "Fiche d'innovation"
         verbose_name_plural = "Fiches d'innovation"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutFiche.choices]),
+                name="check_fiche_statut_valide",
+            ),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:

@@ -1,4 +1,5 @@
 import json
+
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
@@ -14,17 +15,21 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Cohorte, Domaine, JournalAudit, Notification, Projet, Role, User
 from .permissions import HasRole, IsEquipeCIAT, ReadOnlyOrRole
-
 from .serializers import (
-    CohorteSerializer, DomaineSerializer, JournalAuditSerializer,
-    MotDePasseOublieSerializer, MotDePasseReinitialiserSerializer,
-    NotificationSerializer, ProjetSerializer, RegisterSerializer,
-    UserRoleUpdateSerializer, UserSerializer,
+    CohorteSerializer,
+    DomaineSerializer,
+    JournalAuditSerializer,
+    MotDePasseOublieSerializer,
+    MotDePasseReinitialiserSerializer,
+    NotificationSerializer,
+    ProjetSerializer,
+    RegisterSerializer,
+    UserRoleUpdateSerializer,
+    UserSerializer,
 )
 from .services import enregistrer_audit, tracer_changement_role
 from .throttling import AuthRateThrottle

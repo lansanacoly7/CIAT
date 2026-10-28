@@ -20,7 +20,7 @@ class ApiContractConformanceTests(SimpleTestCase):
         # Charger le schéma OpenAPI depuis docs/openapi.yaml ou via SchemaGenerator
         yaml_path = settings.BASE_DIR.parent / "docs" / "openapi.yaml"
         if yaml_path.exists():
-            with open(yaml_path, "r", encoding="utf-8") as f:
+            with open(yaml_path, encoding="utf-8") as f:
                 cls.spec = yaml.safe_load(f)
         else:
             generator = SchemaGenerator()
@@ -38,7 +38,7 @@ class ApiContractConformanceTests(SimpleTestCase):
     @staticmethod
     def _parse_contrats_api(filepath: Path):
         """Extrait toutes les routes et méthodes documentées dans taches/CONTRATS_API.md."""
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             lines = f.readlines()
 
         section_prefixes = {

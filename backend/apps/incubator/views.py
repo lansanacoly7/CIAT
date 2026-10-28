@@ -3,15 +3,15 @@ import calendar
 import datetime
 import io
 import re
+
+import openpyxl
 from django.db import IntegrityError, transaction
-from django.db.models import Avg
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-import openpyxl
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import generics, permissions, renderers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -19,25 +19,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role, User
-from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.core.permissions import HasRole
 from apps.core.services import tracer_affectation_mentor, tracer_decision_dossier
+
 from .emails import (
     envoyer_email_confirmation_soumission,
     envoyer_email_decision_dossier,
 )
 from .models import (
     AffectationMentor,
-    CommentaireJalon,
-    Critere,
-    Decision,
     Dossier,
-    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
     Objectif,
     Piece,
-    PreuveJalon,
     StatutDossier,
     StatutJalon,
     StatutObjectif,

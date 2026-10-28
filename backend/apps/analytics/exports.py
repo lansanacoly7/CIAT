@@ -7,15 +7,13 @@ Conforme à la charte graphique du CIAT :
 - En-tête institutionnel ISEP / CIAT
 - Numérotation des pages dynamique (Page X sur Y)
 """
-from datetime import datetime
 import io
 
+import openpyxl
 from django.db.models import Count, Q
 from django.utils import timezone
-import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -31,7 +29,6 @@ from reportlab.platypus import (
 
 from apps.analytics.views import apply_filters
 from apps.core.models import Projet
-
 
 # ==============================================================================
 # Collecte des indicateurs et répartitions

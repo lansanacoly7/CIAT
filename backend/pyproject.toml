@@ -1,0 +1,63 @@
+[tool.ruff]
+# Configuration du linter Ruff pour le backend CIAT (Phase 11 — T1)
+target-version = "py312"
+line-length = 120
+
+# Répertoires et artefacts exclus
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    "media",
+    "*/migrations/*",
+]
+
+[tool.ruff.lint]
+# Règles d'analyse retenues :
+# E/W : syntaxe et style pycodestyle
+# F : détections pyflakes (imports inutilisés, syntaxe, erreurs de portée)
+# I : organisation rigoureuse et tri standardisé des blocs d'imports (isort)
+# UP : modernisations de syntaxe Python 3.12+ (pyupgrade)
+# B : détection de pièges d'exécution et bugs potentiels (flake8-bugbear)
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "UP",
+    "B",
+]
+
+# Règles ignorées avec justifications techniques :
+# - E501 : La longueur de ligne est gérée avec souplesse (chaînes d'invite IA, URLs et descriptions).
+# - W293 : Espaces résiduels dans les lignes vides de docstrings multilignes, sans impact d'exécution.
+# - E402 : Dans config/settings.py et apps/documents/exports.py, le chargement préalable de l'environnement (.env) et des polices ReportLab doit impérativement précéder certains imports.
+# - E731 : Utilisation de lambdas concises (ex: helpers d'instanciation rapide dans les suites de tests).
+# - B008 : Appels de constructeurs par défaut DRF / Django.
+# - B904 : Élévation d'exceptions concises sans forcer le chaînage 'from err' redondant.
+ignore = [
+    "E501",
+    "W293",
+    "E402",
+    "E731",
+    "B008",
+    "B904",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+# Dans les bancs de tests : autoriser les créations d'instances sans affectation réutilisée (F841)
+"*/tests/*" = ["F841", "B018"]
+"*tests*" = ["F841", "B018"]
+# Fichiers de génération graphique / exports : variables de styles de secours et coordonnées
+"apps/core/demo_images.py" = ["F841", "E741"]
+"apps/gallery/exports_pdf.py" = ["F841"]
+"apps/analytics/exports.py" = ["F841"]
+"apps/portal/portal_documents_pdf.py" = ["F841"]
+"apps/incubator/tests_e2e_parcours.py" = ["F841"]
+"apps/analytics/management/commands/controle_qualite_donnees.py" = ["B007"]
+"apps/core/tests/test_admin_interface.py" = ["B007"]
+"manage.py" = ["F401"]

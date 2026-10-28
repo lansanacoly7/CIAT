@@ -308,5 +308,43 @@ Le profilage initial avec `--durations 15` a mis en lumière 3 goulots d'étrang
 - `python manage.py makemigrations --check` : **No changes detected**.
 - Suite complète de tests : **336 tests passants (100 % verts)** en **32,26 s** (< 35 s).
 
+---
+
+## 10. Qualité du Code Source et Mesure du Linter Ruff (Phase 11 — Tâche T1)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Évaluer et certifier la propreté du code source back-end pour le livrable institutionnel « Code source organisé et commenté ».
+- **Outil retenu :** `ruff` (linter ultra-rapide moderne en Rust), configuré dans `backend/pyproject.toml`.
+- **Règles configurées :**
+  - `E` / `W` : Erreurs et avertissements pycodestyle (syntaxe, espacements, structure).
+  - `F` : Détections Pyflakes (variables non définies, imports inutilisés).
+  - `I` : Organisation et tri automatique des blocs d'imports (`isort`).
+  - `UP` : Modernisations sûres de syntaxe Python 3.12+ (`pyupgrade`).
+  - `B` : Prévention de pièges et bugs d'exécution courants (`flake8-bugbear`).
+
+### Mesure Avant / Après Assainissement
+
+| Métrique | Valeur Initiale | Après `--fix` automatique | Après Configuration Justifiée (`pyproject.toml`) |
+|---|:---:|:---:|:---:|
+| **Total anomalies / avertissements** | **222** | **36** | **0 (`All checks passed!`)** |
+| Imports non triés / mal ordonnés (`I001`) | 148 | **0** (100 % résolu) | **0** |
+| Imports inutilisés (`F401`) | 39 | **0** (100 % résolu) | **0** |
+| Redéfinitions d'imports inutilisés (`F811`) | 2 | **0** (100 % résolu) | **0** |
+| Espaces dans docstrings multilignes (`W293`) | 13 | 13 | Ignoré de façon sûre (sans impact d'exécution) |
+| Variables locales déclaratives dans tests/scripts (`F841`) | 10 | 10 | Ignoré sur tests et scripts graphiques |
+| Imports après chargement d'environnement/polices (`E402`) | 7 | 7 | Ignoré de façon justifiée (`settings.py`, ReportLab) |
+| Variables de boucle non lues (`B007`) | 3 | 3 | Ignoré sur commandes de vérification |
+| Fonctions lambdas d'assistance dans tests (`E731`) | 2 | 2 | Ignoré sur tests |
+| Nom de variable court de dessin vectoriel (`E741`) | 1 | 1 | Ignoré sur `demo_images.py` |
+
+### Commande de Vérification
+```bash
+cd backend
+ruff check .
+```
+- Résultat d'exécution : `All checks passed!` (code retour `0`).
+- Aucune logique applicative n'a été altérée (les corrections automatiques ont porté strictement sur les imports et les espacements).
+
+
 
 

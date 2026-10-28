@@ -13,8 +13,10 @@ Comprend :
 
 À utiliser en développement uniquement : les mots de passe de démonstration sont connus de tous.
 """
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+
 from django.core.management.base import BaseCommand
+
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 
 DOMAINES = [
@@ -621,7 +623,7 @@ class Command(BaseCommand):
             porteurs_map[p["email"]] = user
 
         # 5. Projets de démonstration
-        date_reference = datetime(2026, 10, 20, 10, 0, tzinfo=timezone.utc)
+        date_reference = datetime(2026, 10, 20, 10, 0, tzinfo=UTC)
         nb_boucle_crees = 0
 
         for p_data in PROJETS_DE_DEMO:
@@ -661,7 +663,7 @@ class Command(BaseCommand):
         pourcentage_femmes = (femmes / total_porteurs * 100) if total_porteurs else 0
 
         self.stdout.write(self.style.SUCCESS(
-            f"Données de démonstration prêtes (idempotent)."
+            "Données de démonstration prêtes (idempotent)."
         ))
         self.stdout.write(
             f"- Projets : {total_projets} projets en base ({nb_projets_crees} créés lors de ce passage)\n"

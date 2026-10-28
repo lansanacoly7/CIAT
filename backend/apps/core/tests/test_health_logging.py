@@ -1,6 +1,6 @@
 import io
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.db import OperationalError
 from django.test import SimpleTestCase, TestCase, override_settings

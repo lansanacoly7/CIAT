@@ -4,13 +4,13 @@ Usage :
     python manage.py seed_portal
 """
 from datetime import timedelta
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.portal.models import (
     Actualite,
     AppelProjet,
-    DocumentPublic,
     Evenement,
     Partenaire,
 )
