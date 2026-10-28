@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, DemoBanner } from "@/components/ui";
 import {
@@ -15,12 +15,11 @@ import {
   type MessageAssistant,
 } from "@/lib/assistant-api";
 import {
-  ArrowRight,
+  ArrowLeft,
   BookOpen,
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  FileText,
   Info,
   Loader2,
   MessageSquare,
@@ -380,14 +379,6 @@ function AssistantApp() {
             })}
         </div>
       </div>
-
-      {/* Pied Volet Historique */}
-      <div className="border-t border-[#EFE4D6] bg-[#FAF7F2] p-3 text-center">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#7A583A]">
-          <span className="h-2 w-2 rounded-full bg-[#166534]" />
-          Corpus conforme Charte CIAT
-        </span>
-      </div>
     </div>
   );
 
@@ -397,14 +388,24 @@ function AssistantApp() {
       <main className="flex flex-1 flex-col overflow-hidden bg-[#FAF7F2]">
         {/* Barre Supérieure du Chat */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#EFE4D6] bg-white px-4 sm:px-6">
-          {/* Titre sans aucun bouton à gauche */}
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-[#24140D] truncate">
-              Assistant IA du CIAT
-            </h1>
-            <p className="text-[11px] text-[#7A583A] truncate">
-              Des réponses sourcées ou un accompagnement pour structurer votre projet.
-            </p>
+          {/* Titre avec bouton retour vers le suivi des projets */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/incubateur/projets"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] text-[#612D10] hover:bg-[#F5EDE4] hover:border-[#C99A68] transition-colors shadow-2xs"
+              title="Retour à mes projets"
+              aria-label="Retour à mes projets"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-bold text-[#24140D] truncate">
+                Assistant IA du CIAT
+              </h1>
+              <p className="text-[11px] text-[#7A583A] truncate">
+                Des réponses sourcées ou un accompagnement pour structurer votre projet.
+              </p>
+            </div>
           </div>
 
           {/* Contrôles à droite : Modes & Bouton Historique */}
@@ -479,91 +480,35 @@ function AssistantApp() {
             />
           )}
 
-          {/* ÉTAT D'ACCUEIL ILLUSTRÉ (quand aucun message dans la conversation) */}
+          {/* ÉTAT D'ACCUEIL : SUGGESTIONS COMPACTES (quand aucun message dans la conversation) */}
           {!loadingMessages && messages.length === 0 && (
-            <div className="mx-auto max-w-5xl space-y-6 pt-2 pb-6">
-              {/* Carte Hero d'accueil */}
-              <div className="relative overflow-hidden rounded-3xl border border-[#EFE4D6] bg-gradient-to-br from-[#FAF7F2] via-[#F6F0E7] to-[#ECE1D3] p-6 sm:p-8 shadow-xs">
-                <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
-                  {/* Texte & Message */}
-                  <div className="lg:col-span-7 space-y-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EFE4D6] px-3 py-1 text-xs font-semibold tracking-wide text-[#7A583A]">
-                      Votre assistant IA
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#24140D]">
-                      Comment puis-je vous aider ?
-                    </h2>
-                    <p className="text-xs sm:text-sm leading-relaxed text-[#5C3D2E] max-w-xl">
-                      {mode === "documents"
-                        ? "Interrogez les documents officiels du CIAT (règlements, chartes, critères d'éligibilité) pour obtenir des réponses exactes et sourcées."
-                        : "Bénéficiez d'un accompagnement méthodique pour structurer votre pitch, formuler votre problème usager et préparer vos fiches de projet."}
-                    </p>
-                  </div>
-
-                  {/* Illustration vectorielle locale sobre */}
-                  <div className="lg:col-span-5 flex justify-center lg:justify-end">
-                    <div className="relative w-full max-w-[340px] overflow-hidden rounded-2xl border border-[#EFE4D6]/80 bg-white/40 shadow-xs">
-                      <Image
-                        src="/images/ciat-assistant-illustration.jpg"
-                        alt="Illustration Assistant IA CIAT"
-                        width={680}
-                        height={380}
-                        priority
-                        className="h-auto w-full object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
+            <div className="mx-auto max-w-4xl space-y-3 pt-6 pb-6">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#7A3E1D]">
+                  Suggestions rapides
+                </span>
+                <span className="text-xs text-[#8C6D4F]">
+                  {mode === "documents" ? "Mode Documents CIAT" : "Mode Atelier Rédaction"}
+                </span>
               </div>
 
-              {/* 3 Cartes de suggestions fonctionnelles */}
-              <div>
-                <div className="mb-3 flex items-center justify-between px-1">
-                  <span className="text-xs font-bold text-[#24140D]">
-                    Suggestions d&apos;actions immédiates
-                  </span>
-                  <span className="text-[11px] text-[#7A583A]">
-                    Mode {mode === "documents" ? "Documents CIAT" : "Atelier Rédaction"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {currentSuggestions.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSuggestionClick(item.prompt)}
-                      className="group flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-white p-5 text-left shadow-xs transition-all hover:border-[#C99A68] hover:shadow-md active:scale-[0.99]"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#A35926]">
-                            {item.tag}
-                          </span>
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2E1605] text-white">
-                            {mode === "documents" ? (
-                              <FileText className="h-3.5 w-3.5" />
-                            ) : (
-                              <PenTool className="h-3.5 w-3.5" />
-                            )}
-                          </div>
-                        </div>
-                        <h3 className="mt-3 text-sm font-bold text-[#24140D] group-hover:text-[#A35926] transition-colors">
-                          {item.titre}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-[#5C3D2E] leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-end">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-[#24140D] transition-transform group-hover:translate-x-1 group-hover:bg-[#F5EFE6]">
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              {/* Cartes compactes sur 1 ou 2 lignes sans flèches */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {currentSuggestions.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSuggestionClick(item.prompt)}
+                    className="group block rounded-xl border border-[#EFE4D6] bg-white px-4 py-3 text-left shadow-2xs transition-all hover:border-[#7A3E1D] hover:bg-[#FAF7F2] hover:shadow-xs active:scale-[0.99]"
+                  >
+                    <p className="truncate text-xs font-bold text-[#1F130B] group-hover:text-[#7A3E1D]">
+                      {item.titre}
+                    </p>
+                    <p className="truncate text-[11px] text-[#8C6D4F] mt-0.5">
+                      {item.description}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
           )}

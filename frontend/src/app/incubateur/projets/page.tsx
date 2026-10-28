@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bell,
+  Bot,
   Calendar,
   ChevronRight,
   FileText,
@@ -68,7 +69,18 @@ function ListeProjets() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-        
+        {/* Fil d'Ariane / Repère Espace Candidat */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+          <Link
+            href="/incubateur"
+            className="hover:text-[#612D10] hover:underline transition-colors"
+          >
+            Espace Candidat
+          </Link>
+          <span className="text-[#C99A68]/60">/</span>
+          <span className="text-[#612D10] font-bold">Suivi de mes projets</span>
+        </div>
+
         {/* 1. EN-TÊTE ÉPURÉ ET HARMONISÉ (Standard CIAT de l'espace porteur) */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -80,19 +92,34 @@ function ListeProjets() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Link
+              href="/incubateur/calendrier"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
+            >
+              <Calendar className="h-4 w-4 text-[#A35926]" />
+              <span>Calendrier</span>
+            </Link>
+            <Link
+              href="/assistant"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#612D10] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
+            >
+              <Bot className="h-4 w-4 text-[#A35926]" />
+              <span>Assistant IA</span>
+            </Link>
             {canEvaluate && (
               <Link
                 href="/incubateur/evaluation"
-                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-semibold text-[#6b5646] shadow-2xs transition-all hover:border-[#C99A68] hover:text-[#612D10]"
+                className="inline-flex min-h-10 items-center whitespace-nowrap rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs font-bold text-[#6b5646] shadow-2xs transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
               >
                 Évaluations comité
               </Link>
             )}
             <Link
               href="/incubateur/alertes"
-              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:bg-[#FAF7F2] transition-colors relative shadow-xs"
+              className="p-2.5 rounded-xl border border-[#EFE4D6] bg-white text-[#612D10] hover:border-[#A35926] hover:bg-[#F2E5D5] hover:shadow-xs transition-all active:scale-[0.98] relative shadow-xs cursor-pointer"
               aria-label="Alertes de retard"
+              title="Consulter les alertes de retard"
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
               <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#A35926]" />
@@ -102,30 +129,31 @@ function ListeProjets() {
 
         {error && <ApiErrorBanner message={error} onRetry={load} />}
 
-        {/* 2. BANNIÈRE SUIVI DE PROJETS RESPONSIVE (Stack propre en mobile, double vague SVG en desktop) */}
-        <div className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-[#F7EFE6] shadow-sm">
-          {/* VERSION MOBILE (< md) : Photo en haut, texte en dessous -> Lisibilité 100% garantie */}
+        {/* 2. BANNIÈRE SUIVI DE PROJETS COMPACTE & ÉQUILIBRÉE */}
+        <div className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-[#F7EFE6] shadow-2xs">
+          {/* VERSION MOBILE (< md) : Photo compacte en haut, texte en dessous */}
           <div className="md:hidden">
-            <div className="relative h-48 w-full overflow-hidden">
+            <div className="relative h-20 w-full overflow-hidden">
               <img
                 src="/images/ciat-suivi-banner.jpg"
                 alt="Ingénieur CIAT en laboratoire d'innovation technologique"
                 className="h-full w-full object-cover object-center"
               />
             </div>
-            <div className="p-6 space-y-3 bg-[#F7EFE6]">
-              <div className="h-1 w-9 rounded-full bg-[#A35926]" />
-              <h2 className="font-[family-name:var(--font-title)] text-xl font-extrabold text-[#24140D] tracking-tight leading-snug">
-                Votre parcours de projet, étape par étape
+            <div className="p-3.5 space-y-1.5 bg-[#F7EFE6]">
+              <div className="h-0.5 w-6 rounded-full bg-[#A35926]" />
+              <h2 className="font-[family-name:var(--font-title)] text-sm sm:text-base font-bold text-[#24140D] tracking-tight leading-snug">
+                <span className="whitespace-nowrap">Votre parcours de projet,</span>{" "}
+                <span className="whitespace-nowrap">étape par étape</span>
               </h2>
-              <p className="text-xs text-[#6b5646] leading-relaxed">
+              <p className="text-[11px] text-[#6b5646] leading-relaxed">
                 Du dépôt de votre candidature jusqu’à la décision finale, le CIAT vous accompagne à chaque étape de votre projet innovant.
               </p>
               {canSubmit && (
-                <div className="pt-2">
+                <div className="pt-1">
                   <Link
                     href="/incubateur"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-5 py-3 text-xs font-bold text-white shadow-sm transition-all"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-4.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all"
                   >
                     <span>Déposer une candidature</span>
                     <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
@@ -135,14 +163,14 @@ function ListeProjets() {
             </div>
           </div>
 
-          {/* VERSION DESKTOP (>= md) : Split horizontal avec courbe SVG organique plein format */}
-          <div className="hidden md:block relative min-h-[300px] lg:min-h-[330px]">
+          {/* VERSION DESKTOP (>= md) : Format compact et affiné avec courbe SVG et texte aéré */}
+          <div className="hidden md:block relative min-h-[140px] lg:min-h-[150px]">
             {/* Motifs de fond décoratifs organiques doux */}
-            <div className="pointer-events-none absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[#EFE4D6]/50 blur-2xl" />
-            <div className="pointer-events-none absolute bottom-0 left-1/3 h-48 w-48 rounded-full bg-[#E8D9C9]/50 blur-xl" />
+            <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[#EFE4D6]/50 blur-2xl" />
+            <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-[#E8D9C9]/50 blur-xl" />
 
             {/* Photo Atelier Robotique à droite (100% nette) */}
-            <div className="absolute inset-y-0 right-0 w-[58%] lg:w-[55%] h-full">
+            <div className="absolute inset-y-0 right-0 w-[46%] lg:w-[44%] h-full">
               <img
                 src="/images/ciat-suivi-banner.jpg"
                 alt="Ingénieur CIAT en laboratoire d'innovation technologique"
@@ -159,31 +187,32 @@ function ListeProjets() {
                 aria-hidden="true"
               >
                 <path
-                  d="M 0,0 L 565,0 C 565,80 660,120 660,200 C 660,280 555,320 555,400 L 0,400 Z"
+                  d="M 0,0 L 680,0 C 680,80 770,120 770,200 C 770,280 670,320 670,400 L 0,400 Z"
                   fill="#EADBCE"
                   fillOpacity="0.85"
                 />
                 <path
-                  d="M 0,0 L 530,0 C 530,80 625,120 625,200 C 625,280 520,320 520,400 L 0,400 Z"
+                  d="M 0,0 L 650,0 C 650,80 740,120 740,200 C 740,280 640,320 640,400 L 0,400 Z"
                   fill="#F7EFE6"
                 />
               </svg>
             </div>
 
-            {/* Contenu Texte à gauche */}
-            <div className="relative z-20 w-[48%] lg:w-[45%] p-8 lg:p-11 flex flex-col justify-center space-y-4">
-              <div className="h-1 w-9 rounded-full bg-[#A35926]" />
-              <h2 className="font-[family-name:var(--font-title)] text-2xl lg:text-[30px] font-extrabold text-[#24140D] tracking-tight leading-tight">
-                Votre parcours de projet,<br /> étape par étape
+            {/* Contenu Texte compact à gauche */}
+            <div className="relative z-20 w-[58%] lg:w-[55%] py-3.5 px-5 lg:py-4 lg:px-6 flex flex-col justify-center space-y-2">
+              <div className="h-0.5 w-6 rounded-full bg-[#A35926]" />
+              <h2 className="font-[family-name:var(--font-title)] text-base lg:text-lg font-bold text-[#24140D] tracking-tight leading-snug">
+                <span className="whitespace-nowrap">Votre parcours de projet,</span>{" "}
+                <span className="whitespace-nowrap">étape par étape</span>
               </h2>
-              <p className="text-xs sm:text-sm text-[#6b5646] leading-relaxed max-w-md">
+              <p className="text-[11.5px] lg:text-xs text-[#6b5646] leading-relaxed max-w-lg line-clamp-2">
                 Du dépôt de votre candidature jusqu’à la décision finale, le CIAT vous accompagne à chaque étape de votre projet innovant.
               </p>
               {canSubmit && (
-                <div className="pt-2">
+                <div className="pt-1">
                   <Link
                     href="/incubateur"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.01]"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all hover:scale-[1.01]"
                   >
                     <span>Déposer une candidature</span>
                     <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
@@ -309,7 +338,7 @@ function ListeProjets() {
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/incubateur"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.01]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer"
                 >
                   <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Déposer une candidature</span>
@@ -317,7 +346,7 @@ function ListeProjets() {
                 </Link>
                 <Link
                   href="/incubateur"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A35926] hover:text-[#612D10] underline underline-offset-4 py-2"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A35926] hover:text-[#612D10] underline underline-offset-4 py-2 transition-colors cursor-pointer"
                 >
                   <span>Comprendre les étapes du suivi</span>
                 </Link>
@@ -337,7 +366,7 @@ function ListeProjets() {
               <li key={p.id}>
                 <Link
                   href={`/incubateur/projets/${p.id}`}
-                  className="block rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-sm transition-all hover:border-[#C99A68] hover:shadow-md"
+                  className="block rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-sm transition-all hover:border-[#A35926] hover:bg-[#FAF7F2] hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">
