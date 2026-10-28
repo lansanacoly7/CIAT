@@ -12,8 +12,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   MessageSquare,
-  Sparkles,
   ShieldCheck,
+  FolderKanban,
 } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import { PIECE_LABELS } from "@/lib/incubator";
@@ -89,7 +89,7 @@ export default function DossierDetailCard({
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">
-                <Sparkles className="h-3 w-3 text-[#C99A68]" />
+                <FolderKanban className="h-3 w-3 text-[#C99A68]" />
                 Candidature #{dossier.id}
               </span>
               <StatutBadge statut={dossier.statut} />

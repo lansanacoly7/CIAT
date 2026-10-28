@@ -9,7 +9,6 @@ import {
   Download,
   Loader2,
   Printer,
-  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -544,7 +543,7 @@ export function PrintSummaryModal({
               </table>
 
               <div className="mt-3 p-2 bg-ciat-sand/15 rounded-md text-[11px] text-ciat-dark/80 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-ciat-terracotta shrink-0" />
+                <Award className="w-3.5 h-3.5 text-ciat-terracotta shrink-0" />
                 <span>
                   Objectif charte CIAT : au moins 40% de projets portés ou
                   co-portés par des femmes.

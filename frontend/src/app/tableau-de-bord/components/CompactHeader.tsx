@@ -8,7 +8,7 @@ import {
   Image as ImageIcon,
   Printer,
   RefreshCw,
-  Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { DashboardFilters } from "../types";
@@ -253,7 +253,7 @@ export function CompactHeader({
           className="inline-flex items-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-white px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-[#21130D] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:border-[#C99A68] active:scale-95"
           title="Poser une question en langage naturel"
         >
-          <Sparkles className="h-3.5 w-3.5 text-[#C99A68]" />
+          <MessageSquare className="h-3.5 w-3.5 text-[#C99A68]" />
           <span className="hidden sm:inline">Poser une question</span>
         </button>
 

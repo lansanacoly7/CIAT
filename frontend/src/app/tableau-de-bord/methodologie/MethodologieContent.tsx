@@ -13,7 +13,7 @@ import {
   Lightbulb,
   Search,
   ShieldAlert,
-  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -322,7 +322,7 @@ export function MethodologieContent() {
                 <span>Référentiel Décisionnel CIAT</span>
                 {isFromApi && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                    <Sparkles className="h-2.5 w-2.5" />
+                    <CheckCircle2 className="h-2.5 w-2.5" />
                     Source API active
                   </span>
                 )}

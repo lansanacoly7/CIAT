@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, AlertCircle, X, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, X, ShieldCheck } from "lucide-react";
 import { submitDecision } from "@/lib/evaluation";
 import type { Dossier } from "@/lib/incubator";
 
@@ -60,7 +60,7 @@ export function DecisionModal({
         <div className="flex items-start justify-between border-b border-[#EFE4D6] pb-4">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-[#C99A68]" />
+              <ShieldCheck className="h-3 w-3 text-[#C99A68]" />
               Espace Coordonnateur CIAT
             </span>
             <h3

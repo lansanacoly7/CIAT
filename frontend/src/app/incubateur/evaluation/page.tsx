@@ -5,7 +5,8 @@ import Link from "next/link";
 import {
   FolderKanban,
   Clock,
-  Sparkles,
+  Building2,
+  Users,
   CheckCircle2,
   XCircle,
   Award,
@@ -179,7 +180,7 @@ function EvaluationBoard() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">
-              <Sparkles className="h-3 w-3 text-[#C99A68]" />
+              <Building2 className="h-3 w-3 text-[#C99A68]" />
               Incubateur CIAT • Comité de Sélection 2026
             </span>
             {user?.role && (
@@ -310,7 +311,7 @@ function EvaluationBoard() {
             <span className={`font-bold uppercase tracking-wider text-[11px] ${activeFilter === "en_evaluation" ? "text-blue-100" : "text-blue-700"}`}>
               En jury
             </span>
-            <Sparkles className={`h-4 w-4 ${activeFilter === "en_evaluation" ? "text-white" : "text-blue-600"}`} />
+            <Users className={`h-4 w-4 ${activeFilter === "en_evaluation" ? "text-white" : "text-blue-600"}`} />
           </div>
           <span className="mt-2 text-2xl font-black font-[family-name:var(--font-title)]">
             {stats.enEvaluation}

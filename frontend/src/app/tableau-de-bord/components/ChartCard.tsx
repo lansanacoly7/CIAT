@@ -15,7 +15,7 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { BarChart3, Table2, AlertCircle, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { BarChart3, Table2, AlertCircle, RotateCcw, Award, CheckCircle2 } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
@@ -503,7 +503,7 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
       {sortedData.length > 0 && (
         <div className="mt-2 flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3.5 py-2.5 text-xs text-[#21130D]">
           <span className="flex items-center gap-2 font-medium text-[#612D10]">
-            <Sparkles className="h-3.5 w-3.5 text-[#8C5E2D]" aria-hidden="true" />
+            <Award className="h-3.5 w-3.5 text-[#8C5E2D]" aria-hidden="true" />
             <span>
               Filière dominante : <strong className="font-semibold text-[#21130D]">{sortedData[0]?.shortDomaine}</strong>
             </span>

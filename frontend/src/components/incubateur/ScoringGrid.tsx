@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Sliders,
-  Sparkles,
+  Users,
   MessageSquare,
 } from "lucide-react";
 import {
@@ -124,7 +124,7 @@ export function ScoringGrid({
           </div>
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-[#C99A68]" />
+              <Users className="h-3 w-3 text-[#C99A68]" />
               Comité d&apos;évaluation
             </span>
             <h3 className="font-[family-name:var(--font-title)] text-lg font-bold text-[#612D10]">

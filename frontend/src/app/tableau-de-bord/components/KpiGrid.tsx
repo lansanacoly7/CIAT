@@ -6,7 +6,7 @@ import {
   FileText,
   CheckCircle2,
   Rocket,
-  Sparkles,
+  Award,
   TrendingUp,
   Coins,
   Handshake,
@@ -146,7 +146,7 @@ export function KpiGrid({
         label: "Prototypes validés",
         value: formatNumber(indicateurs.prototypes),
         subtext: "Maturation technique certifiée",
-        icon: Sparkles,
+        icon: Award,
         delta: calcDelta(
           indicateurs.prototypes,
           previousIndicateurs?.prototypes,
