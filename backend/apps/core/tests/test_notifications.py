@@ -22,19 +22,21 @@ FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 class NotificationEndpointsTests(TestCase):
     """Vérification des routes API des notifications et de l'isolation par utilisateur."""
 
-    def setUp(self):
-        self.client = APIClient()
-        self.user1 = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create_user(
             email="user1.notif@ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
         )
-        self.user2 = User.objects.create_user(
+        cls.user2 = User.objects.create_user(
             email="user2.notif@ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
         )
 
+    def setUp(self):
+        self.client = APIClient()
         self.notif1 = creer_notification(
             destinataire=self.user1,
             type=Notification.Type.DECISION_DOSSIER,
@@ -123,38 +125,41 @@ class NotificationEndpointsTests(TestCase):
 class NotificationEvenementsTracesTests(TestCase):
     """Vérifie que chaque événement requis génère la notification appropriée pour le bon destinataire."""
 
-    def setUp(self):
-        self.client = APIClient()
-        self.admin = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user(
             email="admin.notifev@ciat.sn",
             password="Password123!",
             role=Role.ADMIN,
         )
-        self.coordo = User.objects.create_user(
+        cls.coordo = User.objects.create_user(
             email="coordo.notifev@ciat.sn",
             password="Password123!",
             role=Role.COORDONNATEUR,
         )
-        self.porteur = User.objects.create_user(
+        cls.porteur = User.objects.create_user(
             email="porteur.notifev@ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
             first_name="Amadou",
             last_name="Ba",
         )
-        self.mentor = User.objects.create_user(
+        cls.mentor = User.objects.create_user(
             email="mentor.notifev@ciat.sn",
             password="Password123!",
             role=Role.MENTOR,
             first_name="Fatou",
             last_name="Diop",
         )
-        self.domaine = Domaine.objects.create(nom="Biotech Notif")
-        self.projet = Projet.objects.create(
+        cls.domaine = Domaine.objects.create(nom="Biotech Notif")
+        cls.projet = Projet.objects.create(
             titre="Vaccin Avicole Innovant",
-            domaine=self.domaine,
-            porteur=self.porteur,
+            domaine=cls.domaine,
+            porteur=cls.porteur,
         )
+
+    def setUp(self):
+        self.client = APIClient()
 
     def test_01_evenement_decision_dossier_cree_notification(self):
         from apps.incubator.models import StatutDossier

@@ -26,7 +26,13 @@ class ReponseIAInvalide(DocumentsAIException):
 
 
 def _extraire_sections_dict(data: Any, codes_attendus: List[str]) -> Dict[str, str]:
-    """Normalise la structure JSON renvoyée par le modèle pour extraire {code: contenu}."""
+    """Normalise la structure JSON renvoyée par le modèle pour extraire {code: contenu}.
+
+    Règle de résilience :
+    - Tolère les variations de formats selon les fournisseurs (dictionnaire plat de sections
+      ou tableau d'objets `sections`), évitant les échecs de génération lorsque le modèle
+      adopte une variante syntaxique valide.
+    """
     resultat = {}
 
     if not isinstance(data, dict):
@@ -61,7 +67,17 @@ def _construire_prompts(
     infos: Optional[Dict[str, Any]] = None,
     projet: Optional[Any] = None,
 ) -> tuple[str, str]:
-    """Construit le prompt système et le prompt utilisateur pour le LLM."""
+    """Construit le prompt système et le prompt utilisateur pour le modèle de langage.
+
+    Règles métier et sécurité éditoriale :
+    - Priorité absolue des « infos » saisies : prévaut systématiquement sur les données
+      statiques du projet en cas de divergence (dates, montants, noms d'experts).
+    - Principe de précaution anti-invention : interdiction formelle d'extrapoler des clauses
+      juridiques, des dates ou des montants non fournis ; insertion obligatoire de
+      l'étiquette standard « [À COMPLÉTER : ...] ».
+    - Structuration par modèle : injecte les directives de la charte CIAT et l'exemple
+      de référence définis pour le gabarit officiel sélectionné.
+    """
     system_prompt = (
         "Tu es le rédacteur officiel de documents institutionnels pour le CIAT "
         "(Centre d'Innovation, d'Application et de Transfert de l'ISEP Diamniadio).\n"
@@ -135,7 +151,16 @@ def generer_document(
     infos: Optional[Dict[str, Any]] = None,
     projet: Optional[Any] = None,
 ) -> Dict[str, Any]:
-    """Génère un document à partir d'un modèle et des informations contextuelles."""
+    """Orchestre la génération assistée par IA d'un document administratif officiel.
+
+    Règles de traçabilité et conformité juridique :
+    - Déterminisme : utilise une température basse (0.2) pour maximiser la conformité
+      aux consignes et aux gabarits officiels de l'ISEP/CIAT.
+    - Résilience : gère un protocole de 2 tentatives avec diagnostic des sections manquantes
+      avant de lever ReponseIAInvalide.
+    - Versionnement strict : initialise immédiatement le document avec le statut 'brouillon'
+      et crée la Version 1 (historique immuable consultable par les auditeurs).
+    """
     if not ai.configured:
         raise ServiceIANonConfigure("Aucune clé d'API IA n'est définie dans le fichier .env.")
 
