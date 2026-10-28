@@ -8,6 +8,7 @@ Sécurité stricte :
 """
 import json
 import logging
+import re
 from datetime import datetime
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
@@ -28,6 +29,24 @@ ENDPOINTS_AUTORISES = {
 FILTRES_AUTORISES = {"cohorte", "domaine", "statut", "debut", "fin"}
 
 REPONSE_HORS_SUJET = "Je ne peux pas répondre à cette question avec les données disponibles."
+
+PATTERNS_SENSIBLES = [
+    re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"),  # emails
+    re.compile(r"(?i)\b(drop\s+table|insert\s+into|delete\s+from|update\s+\w+\s+set)\b"),  # SQL brut
+    re.compile(r"(?i)\b(django_secret_key|secret_key|password_hash|auth_token)\b"),  # secrets / credentials
+    re.compile(r"(?i)(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z-_]{35})"),  # clés API tierces
+]
+
+
+def sanitize_reponse_ia(texte: str) -> str:
+    """Garantit l'absence de fuite de données sensibles ou d'injections dans la réponse textuelle."""
+    if not texte:
+        return texte
+    for pattern in PATTERNS_SENSIBLES:
+        if pattern.search(texte):
+            logger.warning("Motif sensible intercepté dans la réponse IA : %s", pattern.pattern)
+            return REPONSE_HORS_SUJET
+    return texte
 
 SYSTEM_ROUTER_PROMPT = """Tu es l'analyseur d'intentions du tableau de bord décisionnel du CIAT (Centre d'Innovation, d'Application et de Transfert - ISEP Diamniadio).
 Ta mission est d'associer une question en langage naturel de l'utilisateur à l'un des endpoints d'analyse existants et d'en extraire les filtres pertinents.
@@ -377,7 +396,7 @@ def traiter_question_analytics(question: str) -> dict:
         reponse_texte = f"Voici les données issues de l'analyse : {json.dumps(donnees, ensure_ascii=False)}"
 
     return {
-        "reponse": reponse_texte.strip(),
+        "reponse": sanitize_reponse_ia(reponse_texte.strip()),
         "donnees": donnees,
         "filtres_utilises": filtres_valides,
     }

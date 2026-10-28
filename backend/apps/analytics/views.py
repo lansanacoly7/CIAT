@@ -30,6 +30,7 @@ from rest_framework.views import APIView
 
 from apps.core.ai import AIError, AINotConfigured
 from apps.core.models import Projet
+from .constats import SEUILS_CONSTATS, calculer_constats
 from .definitions import CATEGORIES_INDICATEURS, INDICATEURS_DEFINITIONS
 from .models import (
     Financement,
@@ -98,6 +99,29 @@ def apply_filters(queryset, request):
         queryset = queryset.filter(statut__iexact=statut)
 
     return queryset
+
+
+class ConstatsView(APIView):
+    """GET /api/analytics/constats/
+
+    Renvoie 3 à 5 constats calculés par des règles transparentes et déterministes.
+    Chaque constat contient { id, titre, texte, chiffres, regle, limite }.
+    Les constats sont omis si l'échantillon ne satisfait pas les seuils de significativité.
+    """
+
+    permission_classes = [IsAnalyticsAuthorized]
+
+    def get(self, request):
+        qs = apply_filters(Projet.objects.all(), request)
+        constats = calculer_constats(qs)
+        return Response(
+            {
+                "constats": constats,
+                "total_constats": len(constats),
+                "seuils": SEUILS_CONSTATS,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class IndicateursView(APIView):

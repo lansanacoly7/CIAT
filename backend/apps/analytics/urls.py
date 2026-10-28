@@ -15,6 +15,7 @@ Points d'entrée de l'API /api/analytics/ :
 from django.urls import path
 from .views import (
     AnalyticsExportView,
+    ConstatsView,
     EvolutionView,
     FinancementsListView,
     IndicateursDefinitionsView,
@@ -34,6 +35,7 @@ urlpatterns = [
         name="analytics-indicateurs-definitions",
     ),
     path("indicateurs/", IndicateursView.as_view(), name="analytics-indicateurs"),
+    path("constats/", ConstatsView.as_view(), name="analytics-constats"),
     path("par-domaine/", ParDomaineView.as_view(), name="analytics-par-domaine"),
     path("par-cohorte/", ParCohorteView.as_view(), name="analytics-par-cohorte"),
     path("par-genre/", ParGenreView.as_view(), name="analytics-par-genre"),

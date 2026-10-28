@@ -5,6 +5,20 @@ info:
   description: API unique de la plateforme du Centre d'Innovation, d'Application et
     de Transfert.
 paths:
+  /api/analytics/constats/:
+    get:
+      operationId: analytics_constats_retrieve
+      description: |-
+        Renvoie 3 à 5 constats calculés par des règles transparentes et déterministes.
+        Chaque constat contient { id, titre, texte, chiffres, regle, limite }.
+        Un constat est omis si l'échantillon ne satisfait pas le seuil minimum de significativité.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Liste des constats calculés et seuils
   /api/analytics/evolution/:
     get:
       operationId: analytics_evolution_retrieve

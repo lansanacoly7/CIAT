@@ -173,14 +173,14 @@ PROJETS_DE_DEMO = [
         "resume": "Machine mécanique mobile tractée par moto, allégeant la pénibilité de la récolte pour les groupements féminins.",
         "probleme": "Le battage traditionnel au pilon provoque une pénibilité extrême et des pertes de grains atteignant 20 %.",
         "solution": "Batteuse ergonomique équipée d'un tamis réglable entraîné par un moteur thermique économe ou électrique.",
-        "domaine": 1, "cohorte": "Cohorte 2024", "porteur": "porteur28@demo.ciat.sn", "statut": Projet.Statut.PROTOTYPE, "mois_offset": 15
+        "domaine": 2, "cohorte": "Cohorte 2024", "porteur": "porteur28@demo.ciat.sn", "statut": Projet.Statut.PROTOTYPE, "mois_offset": 15
     },
     {
         "titre": "Presse Compacte à Huile d'Arachide et Sésame",
         "resume": "Presse à vis mécanique semi-industrielle pour l'extraction à froid de l'huile par les coopératives rurales du bassin arachidier.",
         "probleme": "L'arachide brute est vendue à bas prix faute d'équipements de première transformation sur place.",
         "solution": "Presse mécanique en acier alimentaire inoxydable réparable avec des pièces standards du marché sénégalais.",
-        "domaine": 1, "cohorte": "Cohorte 2025", "porteur": "porteur21@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 10
+        "domaine": 2, "cohorte": "Cohorte 2025", "porteur": "porteur21@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 10
     },
     {
         "titre": "Maintenance Connectée Niayes — Diagnostic vibratoire des pompes agricoles",
@@ -447,7 +447,7 @@ PROJETS_DE_DEMO = [
         "resume": "Valise de composants électroniques et servomoteurs programmables en blocs graphiques pour initier les lycéens à l'automatisme.",
         "probleme": "Les kits robotiques éducatifs importés coûtent cher et ne disposent pas de pièces de rechange disponibles localement.",
         "solution": "Composants standards robustes avec cartes microcontrôleurs assemblées au FabLab CIAT et tutoriels en français/wolof.",
-        "domaine": 5, "cohorte": "Cohorte 2025", "porteur": "porteur04@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 9
+        "domaine": 0, "cohorte": "Cohorte 2025", "porteur": "porteur04@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 9
     },
     {
         "titre": "Banc d'Apprentissage Électromécanique Didactique",
@@ -468,14 +468,14 @@ PROJETS_DE_DEMO = [
         "resume": "Modélisation 3D interactive des machines-outils de Diamniadio pour permettre aux étudiants de réviser à distance.",
         "probleme": "Saturation des créneaux en atelier physique limitant le temps de manipulation machine par élève.",
         "solution": "Visite virtuelle navigable avec procédures de sécurité pas-à-pas et questionnaires d'auto-évaluation.",
-        "domaine": 5, "cohorte": "Cohorte 2025", "porteur": "porteur29@demo.ciat.sn", "statut": Projet.Statut.PROTOTYPE, "mois_offset": 5
+        "domaine": 0, "cohorte": "Cohorte 2025", "porteur": "porteur29@demo.ciat.sn", "statut": Projet.Statut.PROTOTYPE, "mois_offset": 5
     },
     {
         "titre": "Tutorat IA pour Concours d'Entrée aux Écoles d'Ingénieurs",
         "resume": "Application d'entraînement adaptatif générant des exercices corrigés en mathématiques et physique conformes aux programmes sénégalais.",
         "probleme": "Inégalité d'accès aux cours particuliers et prépas privées entre Dakar et les régions intérieures.",
         "solution": "Génération d'explications détaillées et suivi personnalisé des lacunes sans abonnement payant prohibitif.",
-        "domaine": 5, "cohorte": "Cohorte 2026", "porteur": "porteur04@demo.ciat.sn", "statut": Projet.Statut.DEPOSE, "mois_offset": 2
+        "domaine": 0, "cohorte": "Cohorte 2026", "porteur": "porteur04@demo.ciat.sn", "statut": Projet.Statut.DEPOSE, "mois_offset": 2
     },
 
     # --- DOMAINE 7 : SERVICES AUX COLLECTIVITÉS, ENTREPRENEURIAT ET INCUBATION ---
@@ -505,7 +505,7 @@ PROJETS_DE_DEMO = [
         "resume": "Centrale d'achat numérique permettant aux groupements de femmes transformatrices de négocier emballages et matières premières au prix de gros.",
         "probleme": "Marges réduites des petites productrices achetant leurs bocaux et cartons au détail à des prix exorbitants.",
         "solution": "Regroupement des commandes à l'échelle départementale avec livraison mutualisée aux sièges des coopératives.",
-        "domaine": 6, "cohorte": "Cohorte 2025", "porteur": "porteur11@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 10
+        "domaine": 2, "cohorte": "Cohorte 2025", "porteur": "porteur11@demo.ciat.sn", "statut": Projet.Statut.INCUBE, "mois_offset": 10
     },
     {
         "titre": "Assainissement Autonome — Vidange hygiénique planifiée par application",
@@ -540,7 +540,7 @@ PROJETS_DE_DEMO = [
         "resume": "Kiosque tactile autonome en énergie délivrant formulaires administratifs et informations locales sans agent d'accueil.",
         "probleme": "Fermeture des guichets communaux l'après-midi pénalisant les actifs travaillant aux champs ou en atelier.",
         "solution": "Borne antivandalisme avec lecteur de carte d'identité biométrique CEDEAO et impression de formulaires.",
-        "domaine": 6, "cohorte": "Cohorte 2026", "porteur": "porteur11@demo.ciat.sn", "statut": Projet.Statut.IDEE, "mois_offset": 1
+        "domaine": 3, "cohorte": "Cohorte 2026", "porteur": "porteur11@demo.ciat.sn", "statut": Projet.Statut.IDEE, "mois_offset": 1
     },
 ]
 
@@ -644,6 +644,10 @@ class Command(BaseCommand):
                     "statut": p_data["statut"],
                 },
             )
+
+            if not created and projet.domaine_id != domaine.id:
+                projet.domaine = domaine
+                projet.save(update_fields=["domaine"])
 
             # Renseigner explicitement cree_le et modifie_le en base
             Projet.objects.filter(id=projet.id).update(

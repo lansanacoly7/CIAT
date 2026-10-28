@@ -538,6 +538,90 @@ export function MethodologieContent() {
             ))
           )}
         </div>
+
+        {/* Section Règles des Constats et Recommandations Déterministes (Phase 10 — T2) */}
+        <div id="constats" className="mt-12 rounded-2xl border border-[#EFE4D6] bg-white p-6 sm:p-8 shadow-sm scroll-mt-6">
+          <div className="flex items-center gap-3 border-b border-[#F5EBE0] pb-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F5EBE0] text-[#612D10]">
+              <Calculator className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-[family-name:var(--font-title)] text-xl font-bold text-[#1F130B]">
+                Règles de Calcul des Constats et Recommandations
+              </h2>
+              <p className="text-xs text-[#8C6D58]">
+                Formulation déterministe sans IA et garde-fous de significativité statistique.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-6 text-sm text-[#1F130B]">
+            <p className="leading-relaxed">
+              Pour répondre aux exigences de pilotage décisionnel sans risque d&apos;hallucination, les constats affichés dans le tableau de bord sont <strong>calculés exclusivement par des règles déterministes transparentes</strong> sur l&apos;ORM Django (`/api/analytics/constats/`).
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#EFE4D6] bg-[#F5EBE0]/30 p-4 space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">1. Concentration sectorielle</span>
+                <p className="text-xs text-zinc-700">
+                  Identifie le domaine majoritaire et calcule son poids relatif en pourcentage des projets enregistrés.
+                </p>
+                <div className="text-[11px] font-semibold text-[#612D10] bg-white/80 rounded px-2.5 py-1 border border-[#EFE4D6]">
+                  Seuil de significativité : minimum 10 projets déposés
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#EFE4D6] bg-[#F5EBE0]/30 p-4 space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">2. Représentation féminine</span>
+                <p className="text-xs text-zinc-700">
+                  Calcule la proportion de porteurs principaux s&apos;étant déclarés de genre féminin sur le périmètre filtré.
+                </p>
+                <div className="text-[11px] font-semibold text-[#612D10] bg-white/80 rounded px-2.5 py-1 border border-[#EFE4D6]">
+                  Seuil de significativité : minimum 10 porteurs enregistrés
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#EFE4D6] bg-[#F5EBE0]/30 p-4 space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">3. Taux de sélection</span>
+                <p className="text-xs text-zinc-700">
+                  Ratio exact entre les projets admis (sélectionnés, incubés, prototypes) et l&apos;ensemble des dossiers formellement soumis.
+                </p>
+                <div className="text-[11px] font-semibold text-[#612D10] bg-white/80 rounded px-2.5 py-1 border border-[#EFE4D6]">
+                  Seuil de significativité : minimum 10 dossiers soumis
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#EFE4D6] bg-[#F5EBE0]/30 p-4 space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">4. Jalons en retard critique</span>
+                <p className="text-xs text-zinc-700">
+                  Dénombre les jalons non achevés dont la date d&apos;échéance est dépassée de plus de 30 jours calendaires.
+                </p>
+                <div className="text-[11px] font-semibold text-[#612D10] bg-white/80 rounded px-2.5 py-1 border border-[#EFE4D6]">
+                  Seuil de significativité : minimum 5 jalons suivis · retard &gt; 30 jours
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#EFE4D6] bg-[#F5EBE0]/30 p-4 space-y-2 sm:col-span-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">5. Taux de décaissement effectif</span>
+                <p className="text-xs text-zinc-700">
+                  Ratio entre les montants financiers décaissés et les financements globaux engagés par les partenaires.
+                </p>
+                <div className="text-[11px] font-semibold text-[#612D10] bg-white/80 rounded px-2.5 py-1 border border-[#EFE4D6]">
+                  Seuil de significativité : minimum 5 financements enregistrés
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                <div className="text-xs text-amber-900 leading-relaxed">
+                  <strong className="font-bold">Garde-fou contre les petits échantillons :</strong> Si les filtres actifs restreignent les effectifs en dessous de ces seuils (ex : 2 projets sélectionnés), le moteur <strong>n&apos;affiche aucun constat ni pourcentage trompeur</strong> et indique explicitement que l&apos;échantillon est insuffisant pour tirer une conclusion statistique.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

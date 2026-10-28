@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -5,6 +6,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api, API_URL, saveTokens } from "@/lib/api";
 import type {
   AnalyticsData,
+  ConstatCalcul,
+  ConstatsResponse,
   DashboardFilters,
   EvolutionItem,
   FinancementItem,
@@ -21,8 +24,8 @@ import { KpiGrid } from "./components/KpiGrid";
 import { EntonnoirCard } from "./components/EntonnoirCard";
 import { FinancesCard } from "./components/FinancesCard";
 import { ATraiterCard } from "./components/ATraiterCard";
+import { ConstatsCard } from "./components/ConstatsCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
-import dynamic from "next/dynamic";
 import {
   ChartCard,
   CohorteChart,
@@ -30,22 +33,12 @@ import {
   EvolutionChart,
   GenreChart,
 } from "./components/ChartCard";
+import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
+import { AiDrawer } from "./components/AiDrawer";
+import { PrintSummaryModal } from "./components/PrintSummaryModal";
 import { ChartSkeleton, EmptyState, KpiSkeletonGrid } from "./components/PageState";
-
-// Chargement asynchrone des composants lourds (recharts, tiroir IA, impression PDF)
-const DetailTable = dynamic(
-  () => import("./components/DetailTable").then((mod) => mod.DetailTable),
-  { ssr: false }
-);
-const AiDrawer = dynamic(
-  () => import("./components/AiDrawer").then((mod) => mod.AiDrawer),
-  { ssr: false }
-);
-const PrintSummaryModal = dynamic(
-  () => import("./components/PrintSummaryModal").then((mod) => mod.PrintSummaryModal),
-  { ssr: false }
-);
+import { formatCurrencyCompact } from "@/lib/format";
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
@@ -68,6 +61,7 @@ export function DashboardContent() {
   const [financementsData, setFinancementsData] = useState<FinancementItem[]>([]);
   const [financementsStats, setFinancementsStats] =
     useState<PartenariatsFinancementsStats | null>(null);
+  const [constatsData, setConstatsData] = useState<ConstatCalcul[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
   const [kpiViewMode, setKpiViewMode] = useState<"entonnoir" | "cartes">("entonnoir");
@@ -116,10 +110,10 @@ export function DashboardContent() {
   const isFiltered = useMemo(() => {
     return Boolean(
       filters.debut ||
-        filters.fin ||
-        filters.cohorte ||
-        filters.domaine ||
-        filters.statut
+      filters.fin ||
+      filters.cohorte ||
+      filters.domaine ||
+      filters.statut
     );
   }, [filters]);
 
@@ -174,6 +168,7 @@ export function DashboardContent() {
           alertesList,
           conventionsList,
           dossiersList,
+          constatsRes,
         ] = await Promise.all([
           api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
           api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
@@ -193,6 +188,9 @@ export function DashboardContent() {
           api<Array<{ statut: string }>>("/incubator/dossiers/").catch(
             () => []
           ),
+          api<ConstatsResponse>(`/analytics/constats/${query}`).catch(
+            () => ({ constats: [], total_constats: 0, seuils: {} })
+          ),
         ]);
 
         if (isSubscribed) {
@@ -205,6 +203,7 @@ export function DashboardContent() {
           });
           setFinancementsData(financementsList || []);
           setFinancementsStats(partStats);
+          setConstatsData(constatsRes?.constats ?? []);
           const retardsCount = Array.isArray(alertesList) ? alertesList.length : 8;
           const convCount = Array.isArray(conventionsList) ? conventionsList.length : 2;
           const dosCount = Array.isArray(dossiersList)
@@ -345,7 +344,7 @@ export function DashboardContent() {
     } catch {
       return `Pic : ${peak.total} projets`;
     }
-  }, [data]);
+  }, [data?.evolution]);
 
   const cohorteInsight = useMemo(() => {
     if (!data?.parCohorte || data.parCohorte.length === 0) return undefined;
@@ -354,7 +353,7 @@ export function DashboardContent() {
       data.parCohorte[0]
     );
     return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
-  }, [data]);
+  }, [data?.parCohorte]);
 
   return (
     <div
@@ -423,11 +422,10 @@ export function DashboardContent() {
                         type="button"
                         id="btn-mode-cartes"
                         onClick={() => setKpiViewMode("cartes")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
-                          kpiViewMode === "cartes"
-                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                            : "hover:text-[#21130D]"
-                        }`}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "cartes"
+                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                          : "hover:text-[#21130D]"
+                          }`}
                       >
                         8 Cartes KPI
                       </button>
@@ -435,11 +433,10 @@ export function DashboardContent() {
                         type="button"
                         id="btn-mode-entonnoir"
                         onClick={() => setKpiViewMode("entonnoir")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
-                          kpiViewMode === "entonnoir"
-                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                            : "hover:text-[#21130D]"
-                        }`}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "entonnoir"
+                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                          : "hover:text-[#21130D]"
+                          }`}
                       >
                         Entonnoir & Synthèse
                       </button>
@@ -494,6 +491,9 @@ export function DashboardContent() {
                       handleTabChange(tab);
                     }}
                   />
+
+                  {/* CONSTATS CLÉS & RECOMMANDATIONS (T2 — Phase 10) */}
+                  <ConstatsCard constats={constatsData} chargement={isLoading} />
 
                   {/* 2 GRAPHIQUES : Évolution mensuelle et Comparaison promotions */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -610,28 +610,21 @@ export function DashboardContent() {
                  ========================================================================= */}
               {activeTab === "registre" && (
                 <section aria-labelledby="detail-table-heading" className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <h2
-                          id="detail-table-heading"
-                          className="text-lg font-bold text-[#21130D]"
-                        >
-                          Registre analytique des engagements & conventions
-                        </h2>
-                        <span className="rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-2 py-0.5 text-xs font-semibold text-[#8C5E2D]">
-                          Grand Livre CIAT
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-[#6B5646]">
-                        Consultation exhaustive et traçabilité des subventions, protocoles et décaissements de l&apos;incubateur
+                      <h2
+                        id="detail-table-heading"
+                        className="text-base font-semibold text-[#21130D]"
+                      >
+                        Registre analytique des financements et conventions
+                      </h2>
+                      <p className="text-xs text-[#5A4B42]">
+                        Consultation détaillée des engagements financiers, subventions et protocoles
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-1.5 text-xs font-bold text-[#21130D] tabular-nums">
-                        {financementsData.length} enregistrements
-                      </span>
-                    </div>
+                    <span className="text-xs font-medium text-[#5A4B42] tabular-nums">
+                      {financementsData.length} lignes
+                    </span>
                   </div>
 
                   <DetailTable data={financementsData} isLoading={isLoading} />
@@ -668,8 +661,7 @@ export function DashboardContent() {
             const headers = new Headers();
             if (token) headers.set("Authorization", `Bearer ${token}`);
             const res = await fetch(
-              `${API_URL}/analytics/export/?format=pdf${
-                query ? `&${query.slice(1)}` : ""
+              `${API_URL}/analytics/export/?format=pdf${query ? `&${query.slice(1)}` : ""
               }`,
               { headers }
             );

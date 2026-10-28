@@ -134,3 +134,19 @@ export interface FinancementItem {
   cree_le: string;
 }
 
+export interface ConstatCalcul {
+  id: string;
+  titre: string;
+  texte: string;
+  chiffres: Record<string, unknown>;
+  regle: string;
+  limite: string;
+}
+
+export interface ConstatsResponse {
+  constats: ConstatCalcul[];
+  total_constats: number;
+  seuils: Record<string, number>;
+}
+
+
