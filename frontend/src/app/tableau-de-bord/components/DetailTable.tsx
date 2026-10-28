@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -48,6 +49,12 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // État de montage client (pour le portail du document)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // État de la modale d'historique des fonds
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<HistoryFilterType>("all");
@@ -61,6 +68,17 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isHistoryModalOpen]);
+
+  // Verrouillage du scroll du corps lorsque la modale est active
+  useEffect(() => {
+    if (isHistoryModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [isHistoryModalOpen]);
 
   // Statistiques synthétiques au sommet du Registre
@@ -826,346 +844,365 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         </div>
       </div>
 
-      {/* 3. MODALE D'HISTORIQUE — SPLIT LAYOUT : Graphiques | Historique */}
-      {isHistoryModalOpen && (
+      {/* 3. MODALE D'HISTORIQUE — SPLIT LAYOUT VIA REACT PORTAL (100% centrée au viewport) */}
+      {mounted && isHistoryModalOpen && typeof document !== "undefined" && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="history-modal-title"
-          className="fixed inset-0 z-[9999] overflow-hidden"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 md:p-6"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 99999,
+          }}
         >
-          {/* Backdrop overlay */}
+          {/* Backdrop sombre flouté plein écran */}
           <div
-            className="absolute inset-0 bg-[#21130D]/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#21130D]/70 backdrop-blur-sm transition-opacity"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
             onClick={() => setIsHistoryModalOpen(false)}
             aria-hidden="true"
           />
 
-          {/* Conteneur centré */}
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div
-              className="relative z-10 flex max-h-[88vh] w-full max-w-7xl flex-col rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
-              style={{ animation: "fadeIn 200ms ease-out" }}
-            >
-              {/* En-tête de la modale */}
-              <div className="flex items-start justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] px-5 py-4 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#8C5E2D] shadow-xs">
-                    <History className="h-5 w-5" aria-hidden="true" />
+          {/* Carte modale centrée */}
+          <div
+            className="relative z-10 flex flex-col w-full max-w-6xl max-h-[88vh] rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
+            style={{
+              margin: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* En-tête de la modale */}
+            <div className="flex items-start justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] px-5 py-3.5 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#8C5E2D] shadow-xs">
+                  <History className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3
+                    id="history-modal-title"
+                    className="text-base font-bold text-[#21130D] tracking-tight"
+                  >
+                    Historique chronologique des fonds
+                  </h3>
+                  <p className="mt-0.5 text-[11px] text-[#6B5646]">
+                    Grand livre des versements, décaissements et protocoles financiers
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D] transition-colors cursor-pointer"
+                aria-label="Fermer la modale"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Corps split en 2 colonnes */}
+            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+
+              {/* ═══════ PANNEAU GAUCHE : Filtres + Graphiques ═══════ */}
+              <div className="w-full lg:w-[410px] shrink-0 border-b lg:border-b-0 lg:border-r border-[#EFE4D6] bg-[#FAF7F2]/40 flex flex-col overflow-y-auto">
+
+                {/* Filtres */}
+                <div className="p-4 space-y-3 border-b border-[#EFE4D6]">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { key: "all", label: "Toutes", count: data.length },
+                      { key: "decaisse", label: "Décaissés", count: statusCounts.decaisse },
+                      { key: "accorde", label: "Accordés", count: statusCounts.accorde },
+                      { key: "instruction", label: "Instruction", count: statusCounts.instruction },
+                    ].map((tab) => {
+                      const isActive = historyFilter === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setHistoryFilter(tab.key as HistoryFilterType)}
+                          className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-[#21130D] text-white shadow-xs font-semibold"
+                              : "border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D]"
+                          }`}
+                        >
+                          <span>{tab.label}</span>
+                          <span
+                            className={`rounded-full px-1.5 text-[9px] tabular-nums font-bold ${
+                              isActive
+                                ? "bg-white/20 text-white"
+                                : "bg-[#FAF7F2] text-[#8C5E2D]"
+                            }`}
+                          >
+                            {tab.count}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <h3
-                      id="history-modal-title"
-                      className="text-base font-bold text-[#21130D] tracking-tight"
-                    >
-                      Historique chronologique des fonds
-                    </h3>
-                    <p className="mt-0.5 text-[11px] text-[#6B5646]">
-                      Grand livre des versements, décaissements et protocoles financiers
-                    </p>
+
+                  {/* Sous-total */}
+                  <div className="rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-2.5">
+                    <span className="text-[10px] text-[#6B5646] uppercase tracking-wider font-semibold block">
+                      Sous-total sélectionné
+                    </span>
+                    <span className="font-sans text-lg font-black text-[#612D10] tabular-nums">
+                      {formatNumber(historyTotalAmount)}{" "}
+                      <span className="text-xs font-normal text-[#8C5E2D]">FCFA</span>
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsHistoryModalOpen(false)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D] transition-colors"
-                  aria-label="Fermer la modale"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Corps split en 2 colonnes */}
-              <div className="flex flex-1 overflow-hidden min-h-0">
-
-                {/* ═══════ PANNEAU GAUCHE : Filtres + Graphiques ═══════ */}
-                <div className="w-[420px] shrink-0 border-r border-[#EFE4D6] bg-[#FAF7F2]/40 flex flex-col overflow-y-auto">
-
-                  {/* Filtres */}
-                  <div className="p-4 space-y-3 border-b border-[#EFE4D6]">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {[
-                        { key: "all", label: "Toutes", count: data.length },
-                        { key: "decaisse", label: "Décaissés", count: statusCounts.decaisse },
-                        { key: "accorde", label: "Accordés", count: statusCounts.accorde },
-                        { key: "instruction", label: "Instruction", count: statusCounts.instruction },
-                      ].map((tab) => {
-                        const isActive = historyFilter === tab.key;
-                        return (
-                          <button
-                            key={tab.key}
-                            type="button"
-                            onClick={() => setHistoryFilter(tab.key as HistoryFilterType)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] transition-all ${
-                              isActive
-                                ? "bg-[#21130D] text-white shadow-xs font-semibold"
-                                : "border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D]"
-                            }`}
-                          >
-                            <span>{tab.label}</span>
-                            <span
-                              className={`rounded-full px-1.5 text-[9px] tabular-nums font-bold ${
-                                isActive
-                                  ? "bg-white/20 text-white"
-                                  : "bg-[#FAF7F2] text-[#8C5E2D]"
-                              }`}
-                            >
-                              {tab.count}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Sous-total */}
-                    <div className="rounded-xl border border-[#EFE4D6] bg-white px-3.5 py-2.5">
-                      <span className="text-[10px] text-[#6B5646] uppercase tracking-wider font-semibold block">
-                        Sous-total sélectionné
-                      </span>
-                      <span className="font-sans text-lg font-black text-[#612D10] tabular-nums">
-                        {formatNumber(historyTotalAmount)}{" "}
-                        <span className="text-xs font-normal text-[#8C5E2D]">FCFA</span>
-                      </span>
-                    </div>
+                {/* Diagramme en barres — Flux par mois */}
+                <div className="p-4 border-b border-[#EFE4D6]">
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    <TrendingUp className="h-3.5 w-3.5 text-[#8C5E2D]" />
+                    <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
+                      Flux par mois (diagramme en barres)
+                    </span>
                   </div>
-
-                  {/* Diagramme en barres — Flux par mois */}
-                  <div className="p-4 border-b border-[#EFE4D6]">
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <TrendingUp className="h-3.5 w-3.5 text-[#8C5E2D]" />
-                      <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
-                        Flux par mois
-                      </span>
+                  {barChartData.length >= 1 ? (
+                    <div style={{ width: "100%", height: 170, minHeight: 170 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                          <XAxis
+                            dataKey="mois"
+                            tick={{ fontSize: 9, fill: "#8C6D4F" }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={38}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 8, fill: "#A08B7A" }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(v: number) => {
+                              if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}G`;
+                              if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
+                              if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
+                              return String(v);
+                            }}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              background: "#21130D",
+                              border: "none",
+                              borderRadius: 10,
+                              padding: "8px 12px",
+                              fontSize: 11,
+                              color: "#FAF7F2",
+                              boxShadow: "0 4px 20px rgba(33,19,13,0.3)",
+                            }}
+                            formatter={(value: number) => [
+                              `${formatNumber(value)} FCFA`,
+                              "Montant",
+                            ]}
+                            labelStyle={{ color: "#C99A68", fontWeight: 600, fontSize: 10 }}
+                            cursor={{ fill: "#8C5E2D", opacity: 0.08 }}
+                          />
+                          <Bar
+                            dataKey="montant"
+                            fill="#8C5E2D"
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={28}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                    {barChartData.length >= 1 ? (
-                      <div style={{ width: "100%", height: 180 }}>
+                  ) : (
+                    <div className="py-6 text-center text-[11px] text-[#8C6D4F]">
+                      Aucune donnée disponible
+                    </div>
+                  )}
+                </div>
+
+                {/* Diagramme anneau — Répartition par statut */}
+                <div className="p-4 flex-1">
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#8C5E2D]" />
+                    <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
+                      Répartition par statut (anneau)
+                    </span>
+                  </div>
+                  {donutData.length > 0 ? (
+                    <div className="flex items-center gap-3">
+                      <div style={{ width: 130, height: 130, minHeight: 130 }} className="shrink-0">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={barChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                            <XAxis
-                              dataKey="mois"
-                              tick={{ fontSize: 9, fill: "#8C6D4F" }}
-                              axisLine={false}
-                              tickLine={false}
-                              interval={0}
-                              angle={-45}
-                              textAnchor="end"
-                              height={40}
-                            />
-                            <YAxis
-                              tick={{ fontSize: 8, fill: "#A08B7A" }}
-                              axisLine={false}
-                              tickLine={false}
-                              tickFormatter={(v: number) => {
-                                if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}G`;
-                                if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
-                                if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
-                                return String(v);
-                              }}
-                            />
+                          <PieChart>
+                            <Pie
+                              data={donutData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={34}
+                              outerRadius={56}
+                              paddingAngle={3}
+                              dataKey="value"
+                              strokeWidth={0}
+                            >
+                              {donutData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.color}
+                                  style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}
+                                />
+                              ))}
+                            </Pie>
                             <RechartsTooltip
                               contentStyle={{
                                 background: "#21130D",
                                 border: "none",
                                 borderRadius: 10,
-                                padding: "8px 12px",
+                                padding: "6px 10px",
                                 fontSize: 11,
                                 color: "#FAF7F2",
                                 boxShadow: "0 4px 20px rgba(33,19,13,0.3)",
                               }}
                               formatter={(value: number) => [
                                 `${formatNumber(value)} FCFA`,
-                                "Montant",
                               ]}
-                              labelStyle={{ color: "#C99A68", fontWeight: 600, fontSize: 10 }}
-                              cursor={{ fill: "#8C5E2D", opacity: 0.08 }}
                             />
-                            <Bar
-                              dataKey="montant"
-                              fill="#8C5E2D"
-                              radius={[4, 4, 0, 0]}
-                              maxBarSize={28}
-                            />
-                          </BarChart>
+                          </PieChart>
                         </ResponsiveContainer>
                       </div>
-                    ) : (
-                      <div className="py-8 text-center text-[11px] text-[#8C6D4F]">
-                        Aucune donnée disponible
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Diagramme anneau — Répartition par statut */}
-                  <div className="p-4 flex-1">
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-[#8C5E2D]" />
-                      <span className="text-[10px] font-bold text-[#612D10] uppercase tracking-wider">
-                        Répartition par statut
-                      </span>
-                    </div>
-                    {donutData.length > 0 ? (
-                      <div className="flex items-center gap-3">
-                        <div style={{ width: 140, height: 140 }} className="shrink-0">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={donutData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={38}
-                                outerRadius={62}
-                                paddingAngle={3}
-                                dataKey="value"
-                                strokeWidth={0}
-                              >
-                                {donutData.map((entry, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={entry.color}
-                                    style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}
-                                  />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip
-                                contentStyle={{
-                                  background: "#21130D",
-                                  border: "none",
-                                  borderRadius: 10,
-                                  padding: "6px 10px",
-                                  fontSize: 11,
-                                  color: "#FAF7F2",
-                                  boxShadow: "0 4px 20px rgba(33,19,13,0.3)",
-                                }}
-                                formatter={(value: number) => [
-                                  `${formatNumber(value)} FCFA`,
-                                ]}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                        {/* Légende */}
-                        <div className="flex flex-col gap-2 flex-1 min-w-0">
-                          {donutData.map((entry) => (
-                            <div key={entry.name} className="flex items-center gap-2">
-                              <span
-                                className="h-2.5 w-2.5 rounded-full shrink-0"
-                                style={{ backgroundColor: entry.color }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[11px] font-medium text-[#21130D] block truncate">
-                                  {entry.name}
-                                </span>
-                                <span className="text-[10px] text-[#8C6D4F] tabular-nums">
-                                  {formatNumber(entry.value)} FCFA
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-8 text-center text-[11px] text-[#8C6D4F]">
-                        Aucune donnée disponible
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* ═══════ PANNEAU DROIT : Historique chronologique ═══════ */}
-                <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-                  {/* En-tête du panneau historique */}
-                  <div className="shrink-0 px-5 py-3 border-b border-[#EFE4D6] bg-white">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
-                        Chronologie des opérations
-                      </span>
-                      <span className="text-[11px] text-[#8C6D4F] tabular-nums">
-                        {historyTimelineData.length} opérations
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Liste scrollable */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
-                    {historyTimelineData.length === 0 ? (
-                      <div className="py-16 text-center text-xs text-[#6B5646]">
-                        <Clock className="h-8 w-8 text-[#8C5E2D]/40 mx-auto mb-2" />
-                        <p className="font-semibold text-[#21130D]">
-                          Aucun flux financier enregistré pour ce statut.
-                        </p>
-                      </div>
-                    ) : (
-                      historyTimelineData.map((op, idx) => {
-                        const s = (op.statut || "").toLowerCase();
-                        const isDecaisse = s.includes("decaisse") || s.includes("paye");
-                        const isAccorde = s.includes("accorde") || s.includes("valide");
-
-                        return (
-                          <div
-                            key={op.id || idx}
-                            className="group flex items-start justify-between gap-3 rounded-xl border border-[#EFE4D6] bg-white p-3 transition-all hover:border-[#8C5E2D]/40 hover:bg-[#FAF7F2]/40 hover:shadow-2xs"
-                          >
-                            {/* Bloc gauche : Infos */}
-                            <div className="space-y-1 flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="inline-flex items-center gap-1 rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#612D10]">
-                                  <Calendar className="h-2.5 w-2.5 text-[#8C5E2D]" />
-                                  {formatDate(op.date)}
-                                </span>
-                                {getStatusBadge(op.statut, op.statut_display)}
-                              </div>
-
-                              <div className="font-semibold text-[13px] text-[#21130D] group-hover:text-[#8C5E2D] transition-colors leading-snug truncate">
-                                {op.projet_titre}
-                              </div>
-
-                              <div className="flex items-center gap-1.5 text-[11px] text-[#6B5646] truncate">
-                                <span className="truncate">{op.porteur_nom || "Non renseigné"}</span>
-                                <span className="text-[#C99A68]">·</span>
-                                <span className="truncate font-medium text-[#612D10]">{op.source || "Fonds CIAT"}</span>
-                              </div>
-                            </div>
-
-                            {/* Bloc droite : Montant */}
-                            <div className="text-right shrink-0 pl-2">
-                              <span className="text-[10px] text-[#8C6D4F] block">
-                                {isDecaisse ? "Décaissé" : isAccorde ? "Accordé" : "Sollicité"}
+                      {/* Légende */}
+                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                        {donutData.map((entry) => (
+                          <div key={entry.name} className="flex items-center gap-2">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: entry.color }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[11px] font-medium text-[#21130D] block truncate">
+                                {entry.name}
                               </span>
-                              <div
-                                className={`font-sans text-sm font-black tabular-nums ${
-                                  isDecaisse ? "text-[#1E5222]" : "text-[#21130D]"
-                                }`}
-                              >
-                                {formatNumber(Number(op.montant) || 0)}
-                              </div>
-                              <span className="text-[9px] font-medium text-[#8C5E2D]">FCFA</span>
+                              <span className="text-[10px] text-[#8C6D4F] tabular-nums">
+                                {formatNumber(entry.value)} FCFA
+                              </span>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center text-[11px] text-[#8C6D4F]">
+                      Aucune donnée disponible
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Pied de la modale */}
-              <div className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2] px-5 py-3 text-xs text-[#6B5646] shrink-0">
-                <span>
-                  Total : <strong className="text-[#21130D]">{historyTimelineData.length} opérations</strong> répertoriées au grand livre
-                </span>
+              {/* ═══════ PANNEAU DROIT : Historique chronologique ═══════ */}
+              <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-white">
+                {/* En-tête du panneau historique */}
+                <div className="shrink-0 px-5 py-3 border-b border-[#EFE4D6] bg-white">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
+                      Chronologie des opérations
+                    </span>
+                    <span className="text-[11px] text-[#8C6D4F] tabular-nums">
+                      {historyTimelineData.length} opérations
+                    </span>
+                  </div>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsHistoryModalOpen(false)}
-                  className="rounded-lg bg-[#21130D] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3D2314] active:scale-95 transition-all"
-                >
-                  Fermer l&apos;historique
-                </button>
+                {/* Liste scrollable */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+                  {historyTimelineData.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-[#6B5646]">
+                      <Clock className="h-8 w-8 text-[#8C5E2D]/40 mx-auto mb-2" />
+                      <p className="font-semibold text-[#21130D]">
+                        Aucun flux financier enregistré pour ce statut.
+                      </p>
+                    </div>
+                  ) : (
+                    historyTimelineData.map((op, idx) => {
+                      const s = (op.statut || "").toLowerCase();
+                      const isDecaisse = s.includes("decaisse") || s.includes("paye");
+                      const isAccorde = s.includes("accorde") || s.includes("valide");
+
+                      return (
+                        <div
+                          key={op.id || idx}
+                          className="group flex items-start justify-between gap-3 rounded-xl border border-[#EFE4D6] bg-white p-3 transition-all hover:border-[#8C5E2D]/40 hover:bg-[#FAF7F2]/40 hover:shadow-2xs"
+                        >
+                          {/* Bloc gauche : Infos */}
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#612D10]">
+                                <Calendar className="h-2.5 w-2.5 text-[#8C5E2D]" />
+                                {formatDate(op.date)}
+                              </span>
+                              {getStatusBadge(op.statut, op.statut_display)}
+                            </div>
+
+                            <div className="font-semibold text-[13px] text-[#21130D] group-hover:text-[#8C5E2D] transition-colors leading-snug truncate">
+                              {op.projet_titre}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-[11px] text-[#6B5646] truncate">
+                              <span className="truncate">{op.porteur_nom || "Non renseigné"}</span>
+                              <span className="text-[#C99A68]">·</span>
+                              <span className="truncate font-medium text-[#612D10]">{op.source || "Fonds CIAT"}</span>
+                            </div>
+                          </div>
+
+                          {/* Bloc droite : Montant */}
+                          <div className="text-right shrink-0 pl-2">
+                            <span className="text-[10px] text-[#8C6D4F] block">
+                              {isDecaisse ? "Décaissé" : isAccorde ? "Accordé" : "Sollicité"}
+                            </span>
+                            <div
+                              className={`font-sans text-sm font-black tabular-nums ${
+                                isDecaisse ? "text-[#1E5222]" : "text-[#21130D]"
+                              }`}
+                            >
+                              {formatNumber(Number(op.montant) || 0)}
+                            </div>
+                            <span className="text-[9px] font-medium text-[#8C5E2D]">FCFA</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Pied de la modale */}
+            <div className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2] px-5 py-3 text-xs text-[#6B5646] shrink-0">
+              <span>
+                Total : <strong className="text-[#21130D]">{historyTimelineData.length} opérations</strong> répertoriées au grand livre
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="rounded-lg bg-[#21130D] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3D2314] active:scale-95 transition-all cursor-pointer"
+              >
+                Fermer l&apos;historique
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
