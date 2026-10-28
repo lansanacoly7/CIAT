@@ -65,8 +65,11 @@ def reponse_conversationnelle(texte: str) -> str | None:
     return None
 
 MESSAGE_REFUS_DOCUMENTS = (
-    "Désolé, les documents publics du CIAT ne contiennent pas d'information "
-    "permettant de répondre à cette question."
+    "Désolé, les documents officiels du CIAT ne contiennent pas d'information "
+    "permettant de répondre à cette question.\n\n"
+    "Pour déposer un dossier, rendez-vous dans Mon espace → Dépôt de candidature "
+    "(/incubateur). Vous pouvez également contacter l'équipe du CIAT à l'adresse "
+    "contact@ciat.sn ou via la page de contact (/portail/contact)."
 )
 
 STOP_WORDS_FR = {
@@ -91,6 +94,29 @@ SYNONYMES_COURANTS = {
     "financement": ["subvention", "aide", "montant", "budget", "fonds", "cout"],
     "qui": ["porteur", "candidat", "equipe", "critere", "eligible", "fondateur"],
 }
+
+
+def nettoyer_format_reponse(texte: str) -> str:
+    """Nettoie le texte produit par l'IA en supprimant les balises HTML indésirables,
+    les échappements excessifs et en harmonisant les sauts de ligne."""
+    if not texte or not isinstance(texte, str):
+        return ""
+    # Remplacer les balises de saut de ligne HTML
+    res = re.sub(r"<br\s*/?>", "\n", texte, flags=re.IGNORECASE)
+    # Remplacer les blocs HTML courants par des sauts de ligne
+    res = re.sub(r"</?(div|p|section|article|header|footer)[^>]*>", "\n", res, flags=re.IGNORECASE)
+    # Convertir le gras/italique HTML en markdown standard
+    res = re.sub(r"<strong[^>]*>(.*?)</strong>", r"**\1**", res, flags=re.IGNORECASE | re.DOTALL)
+    res = re.sub(r"<b[^>]*>(.*?)</b>", r"**\1**", res, flags=re.IGNORECASE | re.DOTALL)
+    res = re.sub(r"<em[^>]*>(.*?)</em>", r"*\1*", res, flags=re.IGNORECASE | re.DOTALL)
+    res = re.sub(r"<i[^>]*>(.*?)</i>", r"*\1*", res, flags=re.IGNORECASE | re.DOTALL)
+    # Éliminer toute autre balise HTML résiduelle
+    res = re.sub(r"<[^>]+>", "", res)
+    # Nettoyer les entités HTML fréquentes
+    res = res.replace("&nbsp;", " ").replace("&amp;", "&").replace("&quot;", '"').replace("&lt;", "<").replace("&gt;", ">")
+    # Normaliser les sauts de ligne consécutifs (max 2)
+    res = re.sub(r"\n{3,}", "\n\n", res)
+    return res.strip()
 
 
 class ServiceIANonConfigure(Exception):
@@ -146,14 +172,11 @@ def extraire_texte_docx(donnees: bytes) -> str:
 
 
 def extraire_texte_pdf(donnees: bytes) -> str:
-    """Extrait le texte d'un document PDF de façon souveraine et locale.
+    """Extrait le texte d'un PDF via pypdf ou décodage standard des flux textuels."""
+    if not donnees:
+        return ""
 
-    Règle de sécurité et résilience :
-    - Tolérance aux pannes : combine pypdf et un parseur de flux compressés zlib
-      afin d'extraire le texte même lorsque le fichier est généré par des moteurs
-      PDF variés (ReportLab, LaTeX, scanners OCR pré-traités).
-    - Souveraineté : aucun appel d'API OCR externe payant ou non souverain.
-    """
+    # 1. Utilisation prioritaire de pypdf
     try:
         import pypdf  # type: ignore
 
@@ -162,9 +185,10 @@ def extraire_texte_pdf(donnees: bytes) -> str:
         resultat = "\n".join(t for t in textes if t).strip()
         if resultat:
             return resultat
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("pypdf n'a pas pu extraire le texte : %s", exc)
 
+    # 2. Cas particulier : fichier texte brut qui aurait été nommé .pdf
     try:
         texte_brut = donnees.decode("utf-8")
         if not texte_brut.startswith("%PDF") and any(c.isalnum() for c in texte_brut):
@@ -172,18 +196,37 @@ def extraire_texte_pdf(donnees: bytes) -> str:
     except Exception:
         pass
 
+    # 3. Décodage manuel des flux de streams (avec support ASCII85 + FlateDecode)
+    import base64
+
     textes = []
     stream_pattern = re.compile(rb"stream[\r\n]+(.*?)[\r\n]+endstream", re.DOTALL)
     for match in stream_pattern.finditer(donnees):
-        flux = match.group(1)
+        flux = match.group(1).strip()
         decompresse = None
-        try:
-            decompresse = zlib.decompress(flux)
-        except Exception:
+
+        flux_a85 = flux
+        if b"~>" in flux_a85:
+            idx = flux_a85.find(b"~>")
+            flux_a85 = flux_a85[: idx + 2]
             try:
-                decompresse = zlib.decompress(flux, -zlib.MAX_WBITS)
+                flux_a85 = base64.a85decode(flux_a85, adobe=True)
             except Exception:
-                decompresse = flux
+                pass
+
+        for source in (flux_a85, flux):
+            try:
+                decompresse = zlib.decompress(source)
+                break
+            except Exception:
+                try:
+                    decompresse = zlib.decompress(source, -zlib.MAX_WBITS)
+                    break
+                except Exception:
+                    pass
+
+        if not decompresse:
+            decompresse = flux
 
         if decompresse:
             tj_matches = re.findall(rb"\(([^)]+)\)\s*(?:Tj|'|\")", decompresse)
@@ -204,10 +247,8 @@ def extraire_texte_pdf(donnees: bytes) -> str:
     if textes:
         return " ".join(textes).strip()
 
-    try:
-        return donnees.decode("utf-8", errors="ignore").strip()
-    except Exception:
-        return ""
+    # Si rien de textuel n'a pu être extrait, ne JAMAIS renvoyer le bytecode brut %PDF
+    return ""
 
 
 def extraire_texte_fichier(fichier) -> str:
@@ -465,22 +506,23 @@ def traiter_message_assistant(
         # Mode atelier : assistance à la rédaction (pitch, SWOT, fiche projet)
         system_prompt = (
             "Tu es l'assistant atelier du CIAT (Centre d'Innovation et d'Accélération "
-            "Technologique). Tu accompagnes les porteurs de projet et les équipes dans "
-            "la rédaction de leurs documents de travail : fiches de projet, pitchs, "
-            "analyses SWOT, argumentaires ou plans d'action.\n\n"
+            "Technologique) de l'ISEP Amadou Trawaré de Diamniadio.\n"
+            "Tu es un expert méthodologique bienveillant qui accompagne les porteurs de projet et les équipes dans "
+            "la rédaction et la structuration de leurs livrables d'incubation : fiches de projet, pitchs d'impact, "
+            "matrices SWOT, propositions de valeur ou plans d'action.\n\n"
             "CONSIGNES STRICTES :\n"
-            "1. Il est strictement interdit d'inventer des chiffres, performances, dates, "
-            "noms, partenaires ou résultats concernant le projet de l'utilisateur.\n"
-            "2. Toute donnée manquante ou nécessaire doit obligatoirement être écrite sous "
-            "la forme « [À COMPLÉTER : ...] » au lieu d'être inventée.\n"
-            "3. Le pitch et l'ensemble de la rédaction doivent se limiter strictement aux "
-            "informations fournies par l'utilisateur dans sa demande.\n"
-            "4. Tu ne dois jamais inventer de règles, financements, clauses ou faits "
-            "inexistants sur le CIAT.\n"
-            "Reste constructif, méthodologique et structuré."
+            "1. Tiens une discussion fluide, constructive, courtoise et structurée avec l'utilisateur.\n"
+            "2. Reste rigoureusement dans le périmètre du CIAT, de l'innovation et de l'entrepreneuriat technologique.\n"
+            "3. Il est strictement interdit d'inventer des chiffres, performances, dates, "
+            "noms ou partenaires imaginaires. Toute donnée manquante doit être obligatoirement signalée sous la forme « [À COMPLÉTER : ...] ».\n"
+            "4. Le pitch et l'ensemble de la rédaction doivent se limiter strictement aux informations fournies par l'utilisateur.\n"
+            "5. Tu ne dois jamais inventer de règles, financements, clauses ou faits inexistants sur le CIAT.\n"
+            "6. FORMATAGE PROPRE : N'inclus JAMAIS de balises HTML brutes (comme <div>, <p>, <br>, <span>). Utilise des paragraphes aérés, des titres clairs et des listes à puces soignées.\n"
+            "Reste constructif, méthodologique et professionnel."
         )
         try:
-            reponse_texte = ai.chat(historique_messages, system=system_prompt)
+            reponse_brute = ai.chat(historique_messages, system=system_prompt)
+            reponse_texte = nettoyer_format_reponse(reponse_brute)
         except AINotConfigured as exc:
             raise ServiceIANonConfigure(str(exc)) from exc
         except AIError as exc:
@@ -512,18 +554,31 @@ def traiter_message_assistant(
 
             system_prompt = (
                 "Tu es l'assistant virtuel officiel du CIAT (Centre d'Innovation et d'Accélération "
-                "Technologique). Tu réponds aux questions des utilisateurs en te basant "
-                "STRICTEMENT et UNIQUEMENT sur les extraits de documents officiels fournis "
-                "ci-dessous. Tu ne dois rien inventer ni extrapoler.\n"
-                "Consigne essentielle : si la réponse n'y est pas ou ne s'y trouve pas clairement, "
-                "dis-le poliment et refuse d'inventer.\n"
+                "Technologique) de l'ISEP Amadou Trawaré de Diamniadio.\n"
+                "RÔLE ET CAPACITÉ CONVERSATIONNELLE :\n"
+                "1. Tu es capable de tenir une vraie discussion courtoise et professionnelle avec l'utilisateur.\n"
+                "2. Si l'utilisateur te salue (ex: 'Bonjour', 'Salut', 'Qui es-tu ?', 'Comment vas-tu ?'), accueille-le chaleureusement, "
+                "présente-toi comme l'assistant IA du CIAT et présente brièvement nos 7 pôles d'excellence et l'incubateur "
+                "pour l'inviter à poser ses questions. Dans ce cas, renvoie passages_utilises: [].\n"
+                "3. Pour les questions d'information, réponds en t'appuyant rigoureusement sur les extraits de documents officiels fournis ci-dessous. "
+                "Indique dans passages_utilises les numéros entiers des passages réellement exploités (ex: [1] ou [1, 2]).\n"
+                "4. PÉRIMÈTRE DU CIAT STRICT : Tu restes impérativement dans le périmètre du CIAT, de l'ISEP Diamniadio, "
+                "de l'incubation, de la recherche appliquée et de l'innovation technologique au Sénégal. Si une question est totalement hors-sujet "
+                "(recettes de cuisine, astrologie, divertissement sans rapport), refuse courtoisement en rappelant ta mission au CIAT et propose d'explorer nos domaines.\n"
+                "5. RÈGLE STRICTE SUR LES INFORMATIONS MANQUANTES OU NON MENTIONNÉES :\n"
+                "Si la réponse à une question précise ne figure pas expressément dans les extraits officiels fournis ci-dessous "
+                "(par exemple : durée globale de l'incubation, identité ou nom du directeur, budget non spécifié, délai ou date absent du dépôt) :\n"
+                "- Interdiction formelle d'inventer, d'extrapoler ou d'affirmer un fait absent des documents.\n"
+                "- Refuse poliment en expliquant clairement que les documents officiels du CIAT ne contiennent pas cette information.\n"
+                "- Au lieu de formules vagues comme 'consultez le site officiel', propose l'action concrète dans la plateforme : "
+                "indique que « Pour déposer un dossier, rendez-vous dans Mon espace → Dépôt de candidature » (lien : /incubateur), "
+                "et mentionne les coordonnées de contact du CIAT (courriel : contact@ciat.sn, page : /portail/contact).\n"
+                "- En cas de refus ou d'absence d'information, tu DOIS impérativement renvoyer passages_utilises: [].\n"
+                "6. FORMATAGE PROPRE : N'utilise AUCUNE balise HTML brute (pas de <div>, <p>, <br>, <span>). Formate avec des paragraphes aérés et des listes lisibles.\n"
                 "Tu dois obligatoirement répondre au format JSON strict avec les deux clés suivantes :\n"
-                "- \"reponse\" : ta réponse rédigée en français (chaîne de caractères). Si les informations "
-                "ne permettent pas de répondre, dis-le clairement ici.\n"
-                "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont "
-                "les extraits ont réellement été utilisés pour formuler ta réponse. Si aucun extrait ne contient "
-                "la réponse ou n'a été utilisé, renvoie obligatoirement une liste vide [].\n"
-                "Exemple : {\"reponse\": \"Le programme dure 6 mois renouvelable.\", \"passages_utilises\": [1]}"
+                "- \"reponse\" : ta réponse rédigée en français.\n"
+                "- \"passages_utilises\" : la liste des numéros entiers des passages (ex: [1] ou [1, 2]) dont les extraits ont réellement servi à répondre, ou [] si aucun passage n'a servi.\n"
+                "Exemple : {\"reponse\": \"Bonjour ! Je suis l'assistant officiel du CIAT...\", \"passages_utilises\": []}"
             )
 
             prompt_utilisateur = (
@@ -598,28 +653,48 @@ def traiter_message_assistant(
             passages_map = {idx: p for idx, p in enumerate(passages, start=1)}
             doc_ids_map = {p.document_id: p for p in passages}
 
-            for item in numeros_utilises:
-                try:
-                    num = int(item)
-                except (ValueError, TypeError):
-                    continue  # Numéro non entier ignoré
+            # Un refus garde sources vide : détection robuste
+            texte_norm_rep = normaliser_chaine(reponse_texte[:250])
+            refus_motifs = [
+                "ne contiennent pas d information",
+                "ne contient pas d information",
+                "ne contiennent aucune information",
+                "ne contient aucune information",
+                "ne precisent pas",
+                "ne precise pas",
+                "ne mentionnent pas",
+                "ne mentionne pas",
+                "ne figure pas",
+                "aucun extrait ne",
+                "les documents officiels du ciat ne",
+                "desole, les documents",
+                "desole mais les documents",
+            ]
+            est_refus = not numeros_utilises or any(m in texte_norm_rep for m in refus_motifs)
 
-                # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
-                p = passages_map.get(num) or doc_ids_map.get(num)
-                # Un numéro inconnu est ignoré
-                if p and p.document_id not in vus_doc_ids:
-                    sources.append({
-                        "document_id": p.document_id,
-                        "titre": p.document.titre,
-                        "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
-                    })
-                    vus_doc_ids.add(p.document_id)
+            if not est_refus:
+                for item in numeros_utilises:
+                    try:
+                        num = int(item)
+                    except (ValueError, TypeError):
+                        continue  # Numéro non entier ignoré
 
-    # Persistance de la réponse de l'assistant
+                    # Résolution par numéro séquentiel [Passage X], ou subsidiairement par document_id
+                    p = passages_map.get(num) or doc_ids_map.get(num)
+                    # Un numéro inconnu est ignoré
+                    if p and p.document_id not in vus_doc_ids:
+                        sources.append({
+                            "document_id": p.document_id,
+                            "titre": p.document.titre,
+                            "extrait": (p.texte[:200].strip() + ("..." if len(p.texte) > 200 else "")),
+                        })
+                        vus_doc_ids.add(p.document_id)
+
+    # Persistance de la réponse de l'assistant (avec nettoyage strict des balises HTML et sauts)
     return MessageAssistant.objects.create(
         conversation=conversation,
         role=MessageAssistant.Role.ASSISTANT,
-        contenu=reponse_texte,
+        contenu=nettoyer_format_reponse(reponse_texte),
         sources=sources,
         avertissement_ia=AVERTISSEMENT_IA_STANDARD,
         mode=mode,

@@ -18,6 +18,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Badge, Button } from "@/components/ui";
+import { DocumentCanvaView } from "./DocumentCanvaView";
 
 interface DocumentEditorProps {
   documentId: number;
@@ -38,6 +39,7 @@ export default function DocumentEditor({
   const [selectedVersionNum, setSelectedVersionNum] = useState<number | null>(null);
   const [versionConsultation, setVersionConsultation] = useState<VersionDocumentItem | null>(null);
 
+  const [viewMode, setViewMode] = useState<"canva" | "edition">("canva");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -307,6 +309,40 @@ export default function DocumentEditor({
         </div>
       )}
 
+      {/* Sélecteur de mode : Rendu Canva Fidèle vs Édition des textes */}
+      <div className="flex items-center justify-between gap-4 bg-white p-3 rounded-xl border border-bordure shadow-2xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode("canva")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+              viewMode === "canva"
+                ? "bg-brun text-white shadow-xs"
+                : "bg-ivoire/50 text-brun hover:bg-ivoire border border-bordure"
+            }`}
+          >
+            <span>👁️ Rendu Canva Fidèle (A4)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("edition")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+              viewMode === "edition"
+                ? "bg-brun text-white shadow-xs"
+                : "bg-ivoire/50 text-brun hover:bg-ivoire border border-bordure"
+            }`}
+          >
+            <span>✏️ Édition des Sections</span>
+          </button>
+        </div>
+
+        <p className="hidden sm:block text-[11px] text-texte-doux italic">
+          {viewMode === "canva"
+            ? "Mise en page officielle conforme à l'export PDF (sceaux, bordures, cartouche)."
+            : "Modifiez le contenu textuel de chaque section puis enregistrez une nouvelle version."}
+        </p>
+      </div>
+
       {/* Barre de workflow & consultation des versions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne latérale : Workflow et Historique des versions */}
@@ -416,7 +452,7 @@ export default function DocumentEditor({
           </div>
         </div>
 
-        {/* Colonne centrale & droite : Éditeur des sections */}
+        {/* Colonne centrale & droite : Rendu Canva ou Éditeur des sections */}
         <div className="lg:col-span-2 space-y-6">
           {versionConsultation && (
             <div className="rounded-lg border border-info/40 bg-[#e6f0fa] p-4 text-xs text-brun-fonce flex items-center justify-between">
@@ -438,91 +474,112 @@ export default function DocumentEditor({
             </div>
           )}
 
-          <form onSubmit={handleSaveSections} className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-brun">
-                Sections du document ({sectionsAffichees.length})
-              </h2>
-              {!isLectureSeule && (
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={saving}
-                  className="text-xs"
-                >
-                  {saving ? "Enregistrement..." : "Enregistrer nouvelle version"}
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              {sectionsAffichees.map((sec, idx) => {
-                const editIndex = sectionsEdit.findIndex((s) => s.code === sec.code);
-                const currentContenu =
-                  !isLectureSeule && editIndex !== -1
-                    ? sectionsEdit[editIndex].contenu
-                    : sec.contenu;
-
-                return (
-                  <div
-                    key={sec.code || idx}
-                    className="rounded-xl border border-bordure bg-white p-5 shadow-xs space-y-2"
+          {viewMode === "canva" ? (
+            <DocumentCanvaView
+              document={doc}
+              sections={sectionsAffichees}
+              versionNum={selectedVersionNum || doc.version_courante}
+              onSwitchToEdit={() => setViewMode("edition")}
+              onDownloadPdf={() => handleExport("pdf")}
+              onDownloadDocx={() => handleExport("docx")}
+              isDownloading={actionLoading === "export_pdf" || actionLoading === "export_docx"}
+            />
+          ) : (
+            <form onSubmit={handleSaveSections} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-bold text-brun">
+                    Sections du document ({sectionsAffichees.length})
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("canva")}
+                    className="text-xs font-semibold text-brun underline hover:text-brun-fonce flex items-center gap-1"
                   >
-                    <div className="flex items-center justify-between border-b border-bordure/40 pb-2">
-                      <label
-                        htmlFor={`sec-${sec.code}`}
-                        className="font-bold text-brun text-sm"
-                      >
-                        {idx + 1}. {sec.titre || sec.code}
-                      </label>
-                      <span className="text-[11px] font-mono text-texte-doux">
-                        [{sec.code}]
-                      </span>
-                    </div>
-
-                    {isLectureSeule ? (
-                      <div className="text-xs leading-relaxed text-texte whitespace-pre-wrap p-3 rounded-lg bg-ivoire/30 border border-bordure/60">
-                        {sec.contenu || "(Section vide)"}
-                      </div>
-                    ) : (
-                      <textarea
-                        id={`sec-${sec.code}`}
-                        rows={6}
-                        value={currentContenu}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSectionsEdit((prev) => {
-                            const copy = [...prev];
-                            const i = copy.findIndex((s) => s.code === sec.code);
-                            if (i !== -1) {
-                              copy[i] = { ...copy[i], contenu: val };
-                            } else {
-                              copy.push({ code: sec.code, contenu: val });
-                            }
-                            return copy;
-                          });
-                        }}
-                        className="w-full rounded-lg border border-bordure p-3 text-xs leading-relaxed text-brun-fonce focus:border-beige focus:ring-1 focus:ring-beige"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {!isLectureSeule && (
-              <div className="pt-2 flex justify-end">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={saving}
-                  className="px-6 py-2.5 text-xs shadow-sm"
-                >
-                  {saving ? "Enregistrement en cours..." : "Enregistrer nouvelle version"}
-                </Button>
+                    👁️ Revoir l&apos;Aperçu Canva
+                  </button>
+                </div>
+                {!isLectureSeule && (
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={saving}
+                    className="text-xs"
+                  >
+                    {saving ? "Enregistrement..." : "Enregistrer nouvelle version"}
+                  </Button>
+                )}
               </div>
-            )}
-          </form>
+
+              <div className="space-y-4">
+                {sectionsAffichees.map((sec, idx) => {
+                  const editIndex = sectionsEdit.findIndex((s) => s.code === sec.code);
+                  const currentContenu =
+                    !isLectureSeule && editIndex !== -1
+                      ? sectionsEdit[editIndex].contenu
+                      : sec.contenu;
+
+                  return (
+                    <div
+                      key={sec.code || idx}
+                      className="rounded-xl border border-bordure bg-white p-5 shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between border-b border-bordure/40 pb-2">
+                        <label
+                          htmlFor={`sec-${sec.code}`}
+                          className="font-bold text-brun text-sm"
+                        >
+                          {idx + 1}. {sec.titre || sec.code}
+                        </label>
+                        <span className="text-[11px] font-mono text-texte-doux">
+                          [{sec.code}]
+                        </span>
+                      </div>
+
+                      {isLectureSeule ? (
+                        <div className="text-xs leading-relaxed text-texte whitespace-pre-wrap p-3 rounded-lg bg-ivoire/30 border border-bordure/60">
+                          {sec.contenu || "(Section vide)"}
+                        </div>
+                      ) : (
+                        <textarea
+                          id={`sec-${sec.code}`}
+                          rows={6}
+                          value={currentContenu}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSectionsEdit((prev) => {
+                              const copy = [...prev];
+                              const i = copy.findIndex((s) => s.code === sec.code);
+                              if (i !== -1) {
+                                copy[i] = { ...copy[i], contenu: val };
+                              } else {
+                                copy.push({ code: sec.code, contenu: val });
+                              }
+                              return copy;
+                            });
+                          }}
+                          className="w-full rounded-lg border border-bordure p-3 text-xs leading-relaxed text-brun-fonce focus:border-beige focus:ring-1 focus:ring-beige"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {!isLectureSeule && (
+                <div className="pt-2 flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={saving}
+                    className="px-6 py-2.5 text-xs shadow-sm"
+                  >
+                    {saving ? "Enregistrement en cours..." : "Enregistrer nouvelle version"}
+                  </Button>
+                </div>
+              )}
+            </form>
+          )}
         </div>
       </div>
     </div>

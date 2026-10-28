@@ -756,4 +756,12 @@ class Command(BaseCommand):
         from apps.core.demo_images import generer_toutes_images_demo
         generer_toutes_images_demo(stdout=self.stdout)
 
+        self.stdout.write(self.style.MIGRATE_HEADING("=== Étape 8 : Indexation documentaire pour l'assistant IA ==="))
+        from apps.assistant.services import indexer_documents_publics
+        stats_index = indexer_documents_publics()
+        self.stdout.write(
+            f"Indexation terminée : {stats_index['documents_indexes']} documents indexés, "
+            f"{stats_index['passages_crees']} passages créés."
+        )
+
         self.stdout.write(self.style.SUCCESS("\n[SUCCÈS] Commande seed_all terminée : cohérence complète et idempotente établie sur tous les modules."))

@@ -33,11 +33,23 @@ class ModeleDocumentSerializer(serializers.ModelSerializer):
     """Sérialiseur pour la liste des gabarits / modèles de documents."""
 
     type = serializers.PrimaryKeyRelatedField(read_only=True)
+    type_nom = serializers.CharField(source="type.nom", read_only=True)
+    type_code = serializers.CharField(source="type.code", read_only=True)
     sections = serializers.ListField(child=serializers.DictField())
 
     class Meta:
         model = ModeleDocument
-        fields = ["id", "type", "nom", "apercu", "sections"]
+        fields = [
+            "id",
+            "type",
+            "type_nom",
+            "type_code",
+            "nom",
+            "apercu",
+            "sections",
+            "regles_charte",
+            "exemple_redaction",
+        ]
 
 
 class GenererDocumentInputSerializer(serializers.Serializer):

@@ -546,3 +546,32 @@ class AssistantAPITestCase(TestCase):
         contenu = b"Texte simule pour un fichier PDF de test."
         texte_extrait = extraire_texte_pdf(contenu)
         self.assertEqual(texte_extrait, "Texte simule pour un fichier PDF de test.")
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class SeedAllIndexationTestCase(TestCase):
+    """Vérifie l'indexation automatique et la disponibilité de l'assistant après seed_all."""
+
+    def test_indexation_apres_seed_all(self):
+        """Vérifie qu'après seed_all, PassageDocument contient au moins N passages (N>=10)
+        et que la recherche 'pièces à déposer' renvoie des passages pertinents."""
+        from io import StringIO
+        from django.core.management import call_command
+
+        out = StringIO()
+        call_command("seed_all", stdout=out)
+
+        total_passages = PassageDocument.objects.count()
+        self.assertGreaterEqual(
+            total_passages,
+            10,
+            f"PassageDocument doit contenir au moins 10 passages après seed_all (actuel: {total_passages})",
+        )
+
+        passages_pieces = rechercher_passages("pièces à déposer", top_k=3)
+        self.assertTrue(len(passages_pieces) > 0, "La recherche 'pièces à déposer' doit renvoyer des passages.")
+        textes_recherche = " ".join([p.texte.lower() for p in passages_pieces])
+        self.assertTrue(
+            "fiche de projet" in textes_recherche or "piece" in textes_recherche or "pieces" in textes_recherche,
+            "Les passages renvoyés pour 'pièces à déposer' doivent mentionner les pièces de candidature.",
+        )

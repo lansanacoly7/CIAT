@@ -21,9 +21,13 @@ export interface SectionModele {
 export interface ModeleDocument {
   id: number;
   type: number;
+  type_nom?: string;
+  type_code?: string;
   nom: string;
   apercu?: string;
   sections: SectionModele[];
+  regles_charte?: string;
+  exemple_redaction?: string;
 }
 
 export interface SectionDocument {

@@ -557,18 +557,17 @@ def build_dossier_candidature_pdf(buf: io.BytesIO) -> int:
     ))
     story.append(Paragraph("• <b>Ateliers sollicités :</b> [ ] Impression 3D / Prototypage rapide &nbsp; [ ] Usinage CNC &nbsp; [ ] Banc IoT / Électronique &nbsp; [ ] Chimie / Agroalimentaire", s["bullet"]))
     story.append(Paragraph("• <b>Accompagnement expert :</b> [ ] Mentorat technique &nbsp; [ ] Propriété intellectuelle &nbsp; [ ] Modèle économique &nbsp; [ ] Préparation aux comités", s["bullet"]))
-    story.append(Paragraph("• <b>Durée prévisionnelle d'incubation souhaitée :</b> 12 mois (répartis en phases : Diagnostic, Prototypage, Validation terrain, Pré-série).", s["bullet"]))
+    story.append(Paragraph("• <b>Calendrier prévisionnel d'accompagnement :</b> Rythmé par les jalons d'avancement convenus avec le mentor et les revues de suivi à 3 et 6 mois.", s["bullet"]))
 
     # Section 6
     story.append(Paragraph("Section 6 — Pièces obligatoires à joindre au dossier", s["article_title"]))
     story.append(Paragraph(
-        "Tout dossier incomplet à la date limite de soumission est déclaré irrecevable :",
+        "Le dépôt s'effectue dans l'espace porteur (Mon espace → Dépôt de candidature). Tout dossier incomplet à la soumission est bloqué par la plateforme. Les 3 pièces obligatoires sont au format PDF (10 Mo maximum chacune) :",
         s["body"],
     ))
-    story.append(Paragraph("1. Copie de la pièce d'identité (CNI ou passeport en cours de validité) de chaque membre ;", s["bullet"]))
-    story.append(Paragraph("2. Curriculum vitae actualisé du porteur principal et des associés techniques ;", s["bullet"]))
-    story.append(Paragraph("3. Note conceptuelle détaillée de 5 à 10 pages décrivant l'architecture de la solution ;", s["bullet"]))
-    story.append(Paragraph("4. Budget prévisionnel estimatif des composants et outillages de prototypage.", s["bullet"]))
+    story.append(Paragraph("1. <b>Fiche de projet</b> : description de la problématique, solution technique, domaine d'application et maturité (PDF, max 10 Mo) ;", s["bullet"]))
+    story.append(Paragraph("2. <b>Présentation de l'équipe</b> : composition, rôles, compétences techniques et parcours des membres (PDF, max 10 Mo) ;", s["bullet"]))
+    story.append(Paragraph("3. <b>Budget prévisionnel</b> : estimation détaillée des besoins en composants, outillages et prototypage (PDF, max 10 Mo).", s["bullet"]))
 
     # Section 7
     story.append(Paragraph("Section 7 — Déclaration sur l'honneur et engagement de sincérité", s["article_title"]))
@@ -596,6 +595,156 @@ def build_dossier_candidature_pdf(buf: io.BytesIO) -> int:
         ])
     )
     story.append(t_sig)
+
+    doc.build(story, canvasmaker=PortalDocCanvas)
+    return doc.page
+
+
+def build_guide_incubation_pdf(buf: io.BytesIO) -> int:
+    """Génère le Guide du parcours d'incubation et des pièces à déposer (2 à 4 pages)."""
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=45,
+        rightMargin=45,
+        topMargin=50,
+        bottomMargin=50,
+    )
+    s = _get_portal_styles()
+    story = []
+
+    # En-tête
+    story.append(Paragraph("Guide du parcours d'incubation et des pièces à déposer", s["title"]))
+    story.append(Paragraph("Procédure officielle de candidature, pièces requises, évaluation multicritère et suivi", s["subtitle"]))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=COLOR_DORE, spaceAfter=8))
+
+    notice_text = (
+        "Version de démonstration rédigée par l'équipe du projet, à valider par l'ISEP. "
+        "Ce guide présente l'ensemble du parcours d'incubation du CIAT, depuis le dépôt des candidatures "
+        "jusqu'à la valorisation des prototypes au sein de la galerie des innovations."
+    )
+    story.append(_build_notice_box(notice_text, s["notice"]))
+    story.append(Spacer(1, 8))
+
+    # Section 1 : Dépôt dans l'espace porteur et pièces obligatoires
+    story.append(Paragraph("1. Dépôt de candidature et pièces obligatoires", s["article_title"]))
+    story.append(Paragraph(
+        "Le dépôt des dossiers de candidature s'effectue exclusivement en ligne sur la plateforme du CIAT, "
+        "dans l'espace porteur accessible via la rubrique <b>Mon espace → Dépôt de candidature</b> (lien direct : <code>/incubateur</code>).",
+        s["body"],
+    ))
+    story.append(Paragraph(
+        "Pour être recevable, le dossier doit impérativement comporter les <b>trois pièces obligatoires</b> suivantes :",
+        s["body"],
+    ))
+    story.append(Paragraph(
+        "• <b>Fiche de projet :</b> document synthétisant le titre de l'innovation, le problème de terrain adressé, "
+        "la solution technologique conçue, le domaine d'application parmi les 7 filières du CIAT et le degré de maturité.",
+        s["bullet"],
+    ))
+    story.append(Paragraph(
+        "• <b>Présentation de l'équipe :</b> document détaillant l'identité des fondateurs, leurs rôles respectifs, "
+        "leurs compétences techniques, académiques et managériales, ainsi que la complémentarité du groupe.",
+        s["bullet"],
+    ))
+    story.append(Paragraph(
+        "• <b>Budget prévisionnel :</b> document chiffré récapitulant l'estimation des besoins financiers et matériels "
+        "nécessaires à la conception, aux composants électroniques ou mécaniques, à l'usinage et aux essais de prototypage.",
+        s["bullet"],
+    ))
+    story.append(Paragraph(
+        "<b>Contraintes techniques strictes :</b> Chacune des 3 pièces obligatoires doit obligatoirement être téléversée "
+        "au format <b>PDF</b> (document PDF valide avec signature binaire). La taille maximale autorisée est de <b>10 Mo par pièce</b>. "
+        "Tout fichier vide (0 octet) ou excédant 10 Mo est rejeté par la plateforme.",
+        s["body"],
+    ))
+    story.append(Spacer(1, 4))
+
+    # Section 2 : Vérification de complétude, soumission et accusé de réception
+    story.append(Paragraph("2. Vérification de complétude, soumission et accusé de réception", s["article_title"]))
+    story.append(Paragraph(
+        "La plateforme intègre un moteur automatique de vérification de complétude. Tant que les 3 pièces obligatoires "
+        "ne sont pas toutes déposées, le dossier conserve le statut <b>Brouillon</b> et la jauge de complétude indique les pièces manquantes. "
+        "La soumission officielle est strictement bloquée tant que le taux de complétude n'atteint pas 100 %.",
+        s["body"],
+    ))
+    story.append(Paragraph(
+        "Dès que les 3 pièces sont validées, le porteur peut procéder à la <b>soumission</b> officielle de sa candidature. "
+        "Le statut du dossier passe alors à <b>Soumis</b> et un <b>accusé de réception</b> est immédiatement délivré dans l'espace porteur, "
+        "attestant du dépôt officiel et de l'enregistrement de la candidature.",
+        s["body"],
+    ))
+    story.append(Spacer(1, 4))
+
+    # Section 3 : Évaluation par le comité et grille multicritère
+    story.append(Paragraph("3. Évaluation par le comité et grille multicritère", s["article_title"]))
+    story.append(Paragraph(
+        "Tout dossier soumis fait l'objet d'une instruction collégiale par les membres du comité de sélection et experts du CIAT. "
+        "L'évaluation s'appuie rigoureusement sur une <b>grille multicritère</b> comportant 5 dimensions d'appréciation :",
+        s["body"],
+    ))
+    story.append(Paragraph("1. <b>Pertinence du problème et adéquation de la solution :</b> clarté du besoin territorial et valeur ajoutée technique ;", s["bullet"]))
+    story.append(Paragraph("2. <b>Caractère innovant et faisabilité technique :</b> réalisme de fabrication au sein des ateliers et laboratoires du CIAT ;", s["bullet"]))
+    story.append(Paragraph("3. <b>Modèle économique et viabilité financière :</b> cohérence du budget et potentiel de pérennisation économique ;", s["bullet"]))
+    story.append(Paragraph("4. <b>Compétences, profil et complémentarité de l'équipe :</b> capacité technique et engagement des membres ;", s["bullet"]))
+    story.append(Paragraph("5. <b>Impact socio-économique et durabilité :</b> création de valeur locale, retombées pour la communauté et respect environnemental.", s["bullet"]))
+    story.append(Paragraph(
+        "À l'issue de l'évaluation, le comité formule une <b>décision motivée</b> formalisée dans la plateforme : "
+        "<b>Accepté</b> (accès au parcours d'incubation), <b>Ajourné</b> (recommandations d'améliorations avant nouvelle soumission) ou <b>Refusé</b>.",
+        s["body"],
+    ))
+    story.append(Spacer(1, 4))
+
+    # Section 4 : Accompagnement, mentorat, jalons et revues à 3 et 6 mois
+    story.append(Paragraph("4. Affectation d'un mentor, objectifs, jalons et revues à 3 et 6 mois", s["article_title"]))
+    story.append(Paragraph(
+        "Pour chaque projet accepté, la coordination du CIAT procède à l'<b>affectation d'un mentor dédié</b>. "
+        "Le mentor accompagne l'équipe fondatrice dans la structuration technique, l'accès aux machines des ateliers et la conduite du prototypage.",
+        s["body"],
+    ))
+    story.append(Paragraph(
+        "Le parcours s'organise autour d'<b>objectifs opérationnels</b> déclinés en <b>jalons d'avancement</b> datés. "
+        "Pour chaque jalon franchi, le porteur dépose ses preuves d'avancement (rapports de test, schémas, photos de maquette) validées par le mentor. "
+        "Le suivi périodique comprend obligatoirement deux revues majeures :",
+        s["body"],
+    ))
+    story.append(Paragraph("• <b>Revue à 3 mois :</b> bilan intermédiaire de conception, premier état du prototype et réalignement éventuel des objectifs ;", s["bullet"]))
+    story.append(Paragraph("• <b>Revue à 6 mois :</b> évaluation de la maturité fonctionnelle du prototype et validation des livrables techniques.", s["bullet"]))
+    story.append(Spacer(1, 4))
+
+    # Section 5 : Galerie des innovations
+    story.append(Paragraph("5. Galerie des innovations et transfert technologique", s["article_title"]))
+    story.append(Paragraph(
+        "À mesure que les projets incubés valident leurs jalons et atteignent le stade de prototype fonctionnel, "
+        "une <b>fiche d'innovation</b> est publiée dans la <b>Galerie des innovations</b> sur le portail public du CIAT. "
+        "Cette vitrine permet de valoriser les technologies développées auprès des industriels, des partenaires financiers et des collectivités territoriales.",
+        s["body"],
+    ))
+    story.append(Spacer(1, 4))
+
+    # Section 6 : FAQ du porteur de projet (7 questions)
+    story.append(Paragraph("6. Foire aux questions (FAQ) du porteur de projet", s["article_title"]))
+
+    faq_items = [
+        ("Où déposer mon dossier de candidature ?",
+         "Le dépôt se réalise exclusivement en ligne sur la plateforme CIAT : connectez-vous puis accédez à <b>Mon espace → Dépôt de candidature</b> (lien : <code>/incubateur</code>)."),
+        ("Quelles sont les pièces obligatoires à fournir pour être incubé ?",
+         "Vous devez obligatoirement fournir 3 pièces : 1° la Fiche de projet, 2° la Présentation de l'équipe, 3° le Budget prévisionnel."),
+        ("Quels sont le format et la taille maximale autorisés pour les documents ?",
+         "Toutes les pièces doivent impérativement être au format PDF. La taille maximale est strictement fixée à 10 Mo par document."),
+        ("Puis-je soumettre un dossier incomplet s'il me manque une pièce ?",
+         "Non. La plateforme exige 100 % de complétude. Le bouton de soumission est bloqué tant que les 3 pièces obligatoires ne sont pas téléversées."),
+        ("Comment se déroule l'évaluation de ma candidature ?",
+         "Le comité de sélection examine votre dossier selon une grille multicritère (innovation, faisabilité, équipe, modèle économique, impact) et notifie une décision motivée."),
+        ("Comment s'effectue l'accompagnement après acceptation ?",
+         "Un mentor dédié vous est affecté pour fixer vos objectifs opérationnels, cadencer vos jalons d'avancement et conduire les revues de suivi à 3 et 6 mois."),
+        ("Où mon prototype sera-t-il mis en valeur ?",
+         "Une fois le prototype validé, votre projet fait l'objet d'une fiche publiée dans la Galerie des innovations du portail public du CIAT."),
+    ]
+
+    for q_idx, (question, reponse) in enumerate(faq_items, start=1):
+        story.append(Paragraph(f"<b>Q{q_idx}. {question}</b>", s["article_title"]))
+        story.append(Paragraph(reponse, s["body"]))
 
     doc.build(story, canvasmaker=PortalDocCanvas)
     return doc.page
@@ -633,6 +782,12 @@ def generer_tous_documents_portail(stdout=None, force: bool = False) -> dict:
             "categorie": "Candidatures & Formulaires",
             "filename": "dossier_candidature_incubation_2026.pdf",
             "builder": build_dossier_candidature_pdf,
+        },
+        {
+            "titre": "Guide du parcours d'incubation et des pièces à déposer",
+            "categorie": "Guides & Méthodologie",
+            "filename": "guide_parcours_incubation_pieces.pdf",
+            "builder": build_guide_incubation_pdf,
         },
     ]
 
