@@ -26,6 +26,10 @@ import {
   postInteretFiche,
   type FicheInnovation,
 } from "@/lib/gallery-api";
+import {
+  filterValidExternalMedias,
+  resolveFichePhotos,
+} from "../galerie-visuals";
 
 function getAvancementBadgeTone(avancement: string): "succes" | "alerte" | "info" | "neutre" {
   const norm = avancement.toLowerCase();
@@ -277,9 +281,13 @@ function FicheDetailContent({
     );
   }
 
-  const photos = fiche.medias?.filter((m) => m.type === "photo") || [];
-  const videos = fiche.medias?.filter((m) => m.type === "video") || [];
-  const demos = fiche.medias?.filter((m) => m.type === "demo") || [];
+  const photos = resolveFichePhotos(fiche);
+  const videos = filterValidExternalMedias(
+    fiche.medias?.filter((m) => m.type === "video") || []
+  );
+  const demos = filterValidExternalMedias(
+    fiche.medias?.filter((m) => m.type === "demo") || []
+  );
 
   return (
     <div className="bg-[#FAF8F5] min-h-screen py-10">
@@ -451,7 +459,7 @@ function FicheDetailContent({
                         </span>
                         <span>Accéder à la démonstration #{idx + 1}</span>
                       </div>
-                      <span className="text-xs text-beige font-bold">Ouvrir ↗</span>
+                      <span className="text-xs text-brun font-bold">Ouvrir ↗</span>
                     </a>
                   ))}
 
@@ -481,7 +489,7 @@ function FicheDetailContent({
             {/* Bannière Partenaires & Investisseurs — Appel à manifestation d'intérêt */}
             <div className="rounded-2xl border border-[#EBE4DC] bg-white p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#C99A68]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
                   OPPORTUNITÉ DE COOPÉRATION & PARTENARIAT
                 </span>
                 <h3 className="text-lg font-bold text-[#24140D] mt-0.5">
@@ -536,7 +544,7 @@ function FicheDetailContent({
 
             {/* Carte QR Code Officielle */}
             <div className="rounded-2xl border-2 border-beige/60 bg-white p-6 shadow-sm text-center">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-beige">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-brun">
                 Accès Mobile & Salon
               </span>
               <h2 className="mt-1 text-base font-bold text-brun">

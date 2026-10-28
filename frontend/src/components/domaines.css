@@ -1,682 +1,856 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+/* =============================================================================
+ * LES 7 DOMAINES D'INTERVENTION — CIAT 360 (ISEP AMADOU TRAWARÉ DE DIAMNIADIO)
+ * Direction artistique : Référentiel Scientifique & Architecture Éditoriale
+ * Charte stricte CIAT :
+ *   Brun Nuit (#24140D) · Brun CIAT (#612D10) · Ocre Doré (#C99A68)
+ *   Sable Doux (#FAF7F2) · Lin Bordure (#EFE4D6) · Blanc Pur (#FFFFFF)
+ * ============================================================================= */
 
-:root {
-  --ciat-brown: #24140d;
-  --ciat-terra: #612d10;
-  --ciat-ochre: #c99a68;
-  --ciat-cream: #faf7f2;
-  --ciat-beige: #efe4d6;
-  --ciat-white: #ffffff;
-}
+.ciat-domains-root {
+  --d-night: #24140d;
+  --d-night-soft: #311b11;
+  --d-brown: #612d10;
+  --d-brown-hover: #7a3915;
+  --d-ochre: #c99a68;
+  --d-ochre-bright: #dfae79;
+  --d-ochre-pale: #f5eadc;
+  --d-sand: #faf7f2;
+  --d-linen: #efe4d6;
+  --d-border: #e5d7c6;
+  --d-muted: #655346;
+  --d-white: #ffffff;
+  --d-container: 1280px;
 
-.ciat-domains-page {
-  overflow: hidden;
   width: 100%;
-  color: var(--ciat-brown);
-  background: var(--ciat-cream);
-  font-family: "Inter", sans-serif;
+  min-height: 100vh;
+  background-color: var(--d-sand);
+  color: var(--d-night);
+  font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: clip;
 }
 
-.ciat-domains-page *,
-.ciat-domains-page *::before,
-.ciat-domains-page *::after {
+.ciat-domains-root *,
+.ciat-domains-root *::before,
+.ciat-domains-root *::after {
   box-sizing: border-box;
 }
 
-.ciat-domains-page a {
-  color: inherit;
-  text-decoration: none;
-}
+/* =============================================================================
+ * 1. HERO ARCHITECTURAL MONUMENTAL (SPLIT ÉDITORIAL & PHOTOGRAPHIE LABO HD)
+ * ============================================================================= */
 
-.ciat-domains-page h1,
-.ciat-domains-page h2 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: -0.045em;
-}
-
-/* HERO */
-
-.ciat-hero {
+.d-hero {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  max-height: 880px;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(97, 45, 16, 0.42), transparent 56%),
+    var(--d-night);
+  color: var(--d-white);
   display: grid;
-  grid-template-columns: 42% 58%;
-  min-height: 390px;
-  color: var(--ciat-cream);
-  background: var(--ciat-brown);
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  border-bottom: 1px solid rgba(201, 154, 104, 0.28);
+  overflow: hidden;
 }
 
-.ciat-hero-content {
+.d-hero-copy {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
-  padding: 38px 25px 35px clamp(28px, 5vw, 68px);
-  background:
-    radial-gradient(ellipse at 30% 10%, #612d104c, transparent 58%),
-    var(--ciat-brown);
+  padding: clamp(44px, 5vw, 76px) clamp(24px, 4vw, 56px) clamp(44px, 5vw, 76px)
+    clamp(24px, 6vw, 88px);
 }
 
-.ciat-eyebrow,
-.ciat-section-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-}
-
-.ciat-eyebrow {
-  color: var(--ciat-ochre);
-}
-
-.ciat-eyebrow-line,
-.ciat-section-eyebrow i {
-  display: inline-block;
-  width: 40px;
-  height: 1px;
-  background: var(--ciat-ochre);
-}
-
-.ciat-hero h1 {
-  margin: 21px 0 16px;
-  font-size: clamp(38px, 4vw, 57px);
-  line-height: 1.02;
-}
-
-.ciat-hero h1 em,
-.ciat-closing h2 em {
-  color: var(--ciat-ochre);
-  font-style: italic;
-}
-
-.ciat-hero-description {
-  max-width: 320px;
-  margin: 0;
-  color: #e0d5ca;
-  font-size: 10px;
-  line-height: 1.8;
-}
-
-.ciat-hero-action {
+.d-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 19px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--ciat-ochre);
-  font-size: 9px;
-  font-weight: 500;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.ciat-action-arrow {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--ciat-ochre);
-  border-radius: 50%;
-  font-size: 15px;
+.d-eyebrow-line {
+  width: 36px;
+  height: 1.5px;
+  background: var(--d-ochre);
 }
 
-.ciat-hero-stats {
+.d-eyebrow-text {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--d-ochre-bright);
+}
+
+.d-hero-title {
+  margin: 0 0 20px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(34px, 3.6vw, 52px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.028em;
+  color: var(--d-white);
+}
+
+.d-hero-title span {
+  color: var(--d-ochre);
+}
+
+.d-hero-lead {
+  margin: 0 0 30px;
+  max-width: 560px;
+  font-size: clamp(14.5px, 1.15vw, 16.5px);
+  line-height: 1.75;
+  color: rgba(250, 247, 242, 0.86);
+}
+
+.d-hero-actions {
   display: flex;
-  gap: 0;
-  margin-top: 25px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 36px;
 }
 
-.ciat-hero-stats > div {
+.d-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  background: var(--d-ochre);
+  border: 1px solid var(--d-ochre);
+  color: var(--d-night) !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.d-btn-gold:hover {
+  background: var(--d-ochre-bright);
+  border-color: var(--d-ochre-bright);
+  transform: translateY(-2px);
+}
+
+.d-btn-ghost-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--d-white) !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.d-btn-ghost-light:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--d-ochre);
+}
+
+.d-hero-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(201, 154, 104, 0.24);
+  max-width: 580px;
+}
+
+.d-kpi {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 66px;
-  padding-right: 18px;
 }
 
-.ciat-hero-stats > div + div {
+.d-kpi + .d-kpi {
   padding-left: 18px;
-  border-left: 1px solid #c99a6855;
+  border-left: 1px solid rgba(201, 154, 104, 0.22);
 }
 
-.ciat-hero-stats strong {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
-  font-weight: 400;
+.d-kpi strong {
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--d-ochre);
+  white-space: nowrap;
 }
 
-.ciat-hero-stats span {
-  font-size: 8px;
-  color: #e0d5ca;
+.d-kpi span {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(250, 247, 242, 0.78);
+  line-height: 1.35;
 }
 
-.ciat-hero-visual {
+/* Colonne visuelle droite du Hero */
+.d-hero-media {
   position: relative;
-  min-width: 0;
-  min-height: 390px;
+  min-height: 460px;
   overflow: hidden;
-  isolation: isolate;
+  background: #170c07;
 }
 
-.ciat-hero-photo {
+.d-hero-media img {
+  object-fit: cover;
+  object-position: center 35%;
+}
+
+.d-hero-media-shade {
   position: absolute;
   inset: 0;
-  background-image: url("/images/ciat-hero-electronique.jpg");
-  background-position: center 43%;
-  background-size: cover;
-}
-
-/* Découpes superposées du hero */
-.ciat-hero-overlay {
-  position: absolute;
-  inset: 0 auto 0 0;
+  background:
+    linear-gradient(
+      90deg,
+      var(--d-night) 0%,
+      rgba(36, 20, 13, 0.45) 18%,
+      rgba(36, 20, 13, 0) 48%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(20, 10, 6, 0.18) 0%,
+      transparent 45%,
+      rgba(20, 10, 6, 0.82) 100%
+    );
   pointer-events: none;
 }
 
-.ciat-hero-overlay-back {
-  z-index: 1;
-  width: 40%;
-  background: var(--ciat-terra);
-  clip-path: polygon(60% 0, 100% 0, 37% 52%, 0 100%, 0 0);
-}
-
-.ciat-hero-overlay-front {
-  z-index: 2;
-  width: 32%;
-  background: #612d10d9;
-  clip-path: polygon(0 0, 100% 0, 55% 22%, 28% 57%, 44% 78%, 0 100%);
-  opacity: 0.9;
-}
-
-.ciat-hero-principles {
+.d-hero-plaque {
   position: absolute;
-  z-index: 3;
-  top: 30px;
-  right: 24px;
+  bottom: 28px;
+  left: 28px;
+  right: 28px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: rgba(28, 15, 9, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(201, 154, 104, 0.36);
+}
+
+.d-plaque-meta span {
+  display: block;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--d-ochre-bright);
+  margin-bottom: 3px;
+}
+
+.d-plaque-meta strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--d-white);
+}
+
+.d-plaque-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.d-plaque-tags span {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--d-white);
+}
+
+/* =============================================================================
+ * 2. BARRE D'INDEX RAPIDE DES 7 FILIÈRES OFFICIELLES (STICKY NAVIGATION)
+ * ============================================================================= */
+
+.d-quicknav-wrap {
+  position: sticky;
+  top: 72px;
+  z-index: 30;
+  background: rgba(250, 247, 242, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--d-border);
+}
+
+.d-quicknav {
+  width: min(100%, var(--d-container));
+  margin: 0 auto;
+  padding: 11px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.d-quicknav::-webkit-scrollbar {
+  display: none;
+}
+
+.d-quicknav-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--d-white);
+  border: 1px solid var(--d-border);
+  color: var(--d-night) !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.d-quicknav-pill:hover {
+  border-color: var(--d-brown);
+  background: var(--d-ochre-pale);
+  color: var(--d-brown) !important;
+}
+
+.d-quicknav-num {
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--d-brown);
+}
+
+/* =============================================================================
+ * 3. SECTION PRINCIPALE : LES 7 DOSSIERS DE FILIÈRES ARCHITECTURAUX
+ * ============================================================================= */
+
+.d-section {
+  width: min(100%, var(--d-container));
+  margin: 0 auto;
+  padding: 72px 24px 80px;
+}
+
+.d-section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 36px;
+  align-items: end;
+  margin-bottom: 48px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--d-border);
+}
+
+.d-section-title {
+  margin: 8px 0 0;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--d-night);
+}
+
+.d-section-intro {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--d-muted);
+}
+
+/* Liste éditoriale alternée des 7 filières d'excellence */
+.d-dossiers-stack {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding-left: 12px;
-  border-left: 1px solid #faf7f299;
-  font-size: 8px;
-  letter-spacing: 0.12em;
+  gap: 32px;
 }
 
-.ciat-hero-principles i {
-  width: 32px;
-  height: 1px;
-  margin-top: 7px;
-  background: var(--ciat-cream);
-}
-
-/* INTRODUCTION */
-
-.ciat-domains-section {
-  padding: 34px clamp(22px, 4.9vw, 70px) 24px;
-  background:
-    radial-gradient(ellipse at 75% 0%, #ffffffb8, transparent 40%),
-    var(--ciat-cream);
-}
-
-.ciat-domains-header {
+.d-dossier-card {
+  scroll-margin-top: 145px;
   display: grid;
-  grid-template-columns: 1.1fr 0.95fr 0.45fr;
-  align-items: center;
-  gap: 30px;
-  margin-bottom: 27px;
-}
-
-.ciat-section-eyebrow {
-  color: var(--ciat-terra);
-}
-
-.ciat-domains-heading h2 {
-  margin: 13px 0 0;
-  font-size: clamp(29px, 3.1vw, 43px);
-  line-height: 1.06;
-}
-
-.ciat-domains-intro {
-  margin: 0;
-  padding-left: 20px;
-  border-left: 1px solid #c99a68a0;
-  color: #6f645b;
-  font-size: 9px;
-  line-height: 1.9;
-}
-
-.ciat-intro-note {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 13px;
-  color: #6f645b;
-  font-size: 8px;
-  line-height: 1.8;
-}
-
-.ciat-intro-note a {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 27px;
-  height: 27px;
-  border: 1px solid var(--ciat-ochre);
-  border-radius: 50%;
-  color: var(--ciat-terra);
-}
-
-/* CARTES */
-
-.ciat-domain-grid {
-  display: grid;
-  gap: 18px;
-}
-
-.ciat-domain-grid-large {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.ciat-domain-grid-small {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 18px;
-}
-
-.ciat-domain-card {
-  position: relative;
-  min-width: 0;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  background: var(--d-white);
+  border: 1px solid var(--d-border);
+  border-radius: 26px;
   overflow: hidden;
-  border: 1px solid #24140d20;
-  border-radius: 6px;
-  background: var(--ciat-cream);
-  transition: box-shadow 220ms ease, transform 220ms ease;
+  box-shadow: 0 12px 36px rgba(36, 20, 13, 0.05);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.28s ease;
 }
 
-.ciat-domain-card:hover {
+.d-dossier-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 28px #24140d12;
+  border-color: var(--d-ochre);
+  box-shadow: 0 24px 54px rgba(36, 20, 13, 0.1);
 }
 
-.ciat-card-image {
-  height: clamp(135px, 16vw, 190px);
-  background-color: var(--ciat-beige);
-  background-position: center;
-  background-size: cover;
+.d-dossier-reverse {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
 }
 
-.ciat-domain-card-small .ciat-card-image {
-  height: clamp(105px, 13vw, 145px);
+.d-dossier-reverse .d-dossier-visual {
+  order: 2;
 }
 
-.ciat-card-icon {
+.d-dossier-reverse .d-dossier-body {
+  order: 1;
+}
+
+.d-dossier-visual {
   position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin: -21px 0 0 14px;
-  border: 2px solid var(--ciat-cream);
-  border-radius: 50%;
-  color: var(--ciat-white);
-  font-size: 19px;
-}
-
-.ciat-card-icon.orange { background: #b65a20; }
-.ciat-card-icon.gold { background: #d59b4e; }
-.ciat-card-icon.green { background: #78943b; }
-.ciat-card-icon.yellow { background: #e4a02b; }
-.ciat-card-icon.red { background: #a94123; }
-.ciat-card-icon.purple { background: #6e567f; }
-.ciat-card-icon.terracotta { background: #bd6334; }
-
-.ciat-card-content {
-  padding: 0 17px 16px;
-}
-
-.ciat-card-number {
-  display: block;
-  margin: 0 0 6px;
-  color: #8b7969;
-  font-size: 8px;
-  letter-spacing: 0.05em;
-}
-
-.ciat-card-content h3 {
-  margin: 0 0 10px;
-  font-family: "Inter", sans-serif;
-  font-size: clamp(12px, 1.15vw, 15px);
-  font-weight: 500;
-  line-height: 1.28;
-  letter-spacing: -0.035em;
-}
-
-.ciat-domain-card-small .ciat-card-content h3 {
-  font-size: clamp(11px, 1vw, 13px);
-}
-
-.ciat-card-content p {
-  margin: 0;
-  color: #766c63;
-  font-size: 9px;
-  line-height: 1.7;
-}
-
-.ciat-card-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 15px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--ciat-ochre);
-  color: var(--ciat-terra) !important;
-  font-size: 8px;
-  font-weight: 600;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  cursor: pointer;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.ciat-card-link span {
-  transition: transform 180ms ease;
-}
-
-.ciat-card-link:hover span {
-  transform: translateX(4px);
-}
-
-/* BANDEAU FINAL */
-
-.ciat-closing {
-  display: grid;
-  grid-template-columns: 47% 53%;
-  min-height: 280px;
-  color: var(--ciat-cream);
-  background:
-    radial-gradient(ellipse at 20% 20%, #612d1044, transparent 55%),
-    var(--ciat-brown);
-}
-
-.ciat-closing-content {
-  align-self: center;
-  padding: 34px 20px 34px clamp(28px, 5vw, 68px);
-}
-
-.ciat-closing-content .ciat-section-eyebrow {
-  color: var(--ciat-ochre);
-}
-
-.ciat-closing h2 {
-  margin: 13px 0 10px;
-  font-size: clamp(28px, 3vw, 41px);
-  line-height: 1.05;
-}
-
-.ciat-closing-content > p {
-  max-width: 360px;
-  margin: 0;
-  color: #e0d5ca;
-  font-size: 9px;
-  line-height: 1.8;
-}
-
-.ciat-closing-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 22px;
-  margin-top: 15px;
-  padding: 9px 17px;
-  border-radius: 24px;
-  background: var(--ciat-ochre);
-  color: var(--ciat-brown) !important;
-  font-size: 9px;
-  font-weight: 600;
-  transition: background 180ms ease;
-}
-
-.ciat-closing-button:hover {
-  background: var(--ciat-cream);
-}
-
-.ciat-closing-visual {
-  position: relative;
-  min-width: 0;
-  min-height: 280px;
+  min-height: 360px;
+  background: var(--d-night);
   overflow: hidden;
-  isolation: isolate;
 }
 
-.ciat-closing-photo {
+.d-dossier-visual img {
+  object-fit: cover;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.d-dossier-card:hover .d-dossier-visual img {
+  transform: scale(1.04);
+}
+
+.d-dossier-visual-shade {
   position: absolute;
   inset: 0;
-  background-image: url("/images/ciat-batiment.jpg");
-  background-position: center;
-  background-size: cover;
-  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 10, 6, 0.28) 0%,
+    transparent 42%,
+    rgba(20, 10, 6, 0.78) 100%
+  );
+  pointer-events: none;
 }
 
-.ciat-closing-cut {
+.d-dossier-num-badge {
   position: absolute;
-  z-index: 1;
-  inset: 0 auto 0 0;
-  width: 34%;
-  background: var(--ciat-terra);
-  clip-path: polygon(65% 0, 100% 0, 30% 100%, 0 100%);
-}
-
-.ciat-closing-curve {
-  position: absolute;
+  top: 20px;
+  left: 20px;
   z-index: 2;
-  left: -2%;
-  bottom: -70%;
-  width: 75%;
-  height: 95%;
-  background: var(--ciat-ochre);
-  clip-path: ellipse(65% 40% at 70% 100%);
-  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(28, 15, 9, 0.86);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201, 154, 104, 0.45);
+  color: var(--d-white);
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-/* MODAL INTERACTIVE EN SAVOIR PLUS */
-.ciat-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(20, 10, 6, 0.75);
-  backdrop-filter: blur(6px);
+.d-dossier-atelier-bar {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  color: var(--d-night);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(20, 10, 6, 0.2);
 }
 
-.ciat-modal-card {
-  position: relative;
-  background: #FFFFFF;
-  color: #24140D;
-  border-radius: 16px;
-  max-width: 640px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
-  border: 1px solid #EFE4D6;
-  padding: 32px;
+.d-dossier-body {
+  padding: clamp(26px, 3.2vw, 42px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
 }
 
-.ciat-modal-close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #FAF7F2;
-  border: 1px solid #EFE4D6;
-  color: #24140D;
+.d-dossier-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.d-dossier-icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--d-sand);
+  border: 1px solid var(--d-border);
+  color: var(--d-brown);
   display: grid;
   place-items: center;
-  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.d-dossier-card:hover .d-dossier-icon-box {
+  background: var(--d-brown);
+  border-color: var(--d-brown);
+  color: var(--d-white);
+}
+
+.d-dossier-big-num {
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--d-brown);
+}
+
+.d-dossier-title {
+  margin: 0 0 12px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(20px, 2vw, 25px);
+  font-weight: 800;
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+  color: var(--d-night);
+}
+
+.d-dossier-desc {
+  margin: 0 0 18px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--d-muted);
+}
+
+.d-axes-list {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  list-style: none;
+  border-radius: 16px;
+  background: var(--d-sand);
+  border: 1px solid var(--d-linen);
+  display: grid;
+  gap: 8px;
+}
+
+.d-axes-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--d-night);
+}
+
+.d-proto-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.d-proto-label {
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--d-muted);
+  margin-right: 4px;
+}
+
+.d-proto-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--d-ochre-pale);
+  border: 1px solid rgba(201, 154, 104, 0.4);
+  color: var(--d-brown);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.d-dossier-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--d-linen);
+}
+
+.d-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 11px;
+  border: 1px solid var(--d-border);
+  background: var(--d-white);
+  color: var(--d-night);
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
-.ciat-modal-close:hover {
-  background: #24140D;
-  color: #FFFFFF;
+.d-btn-outline:hover {
+  border-color: var(--d-brown);
+  background: var(--d-sand);
+  color: var(--d-brown);
 }
 
-/* RESPONSIVE */
-
-@media (min-width: 1500px) {
-  .ciat-hero {
-    min-height: 460px;
-  }
-
-  .ciat-hero-visual {
-    min-height: 460px;
-  }
-
-  .ciat-card-image {
-    height: 220px;
-  }
-
-  .ciat-domain-card-small .ciat-card-image {
-    height: 165px;
-  }
+.d-btn-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 11px;
+  border: 1px solid var(--d-night);
+  background: var(--d-night);
+  color: var(--d-white) !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.18s ease;
 }
 
-@media (max-width: 900px) {
-  .ciat-hero {
-    grid-template-columns: 45% 55%;
-  }
-
-  .ciat-hero h1 {
-    font-size: clamp(34px, 4.5vw, 45px);
-  }
-
-  .ciat-domains-header {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .ciat-intro-note {
-    display: none;
-  }
-
-  .ciat-domain-grid-small {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .ciat-domain-card-small .ciat-card-image {
-    height: 165px;
-  }
+.d-btn-solid:hover {
+  background: var(--d-brown);
+  border-color: var(--d-brown);
 }
 
-@media (max-width: 600px) {
-  .ciat-hero {
+/* =============================================================================
+ * 4. MATRICE D'INTERDISCIPLINARITÉ & CONVERGENCE DES PÔLES
+ * ============================================================================= */
+
+.d-synergy-band {
+  background: var(--d-white);
+  border-top: 1px solid var(--d-border);
+  border-bottom: 1px solid var(--d-border);
+  padding: 72px 24px;
+}
+
+.d-synergy-inner {
+  width: min(100%, var(--d-container));
+  margin: 0 auto;
+}
+
+.d-synergy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.d-synergy-card {
+  padding: 28px;
+  border-radius: 22px;
+  background: var(--d-sand);
+  border: 1px solid var(--d-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.d-synergy-poles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.d-synergy-poles span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--d-night);
+  color: var(--d-ochre-bright);
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.d-synergy-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--d-night);
+}
+
+.d-synergy-card p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--d-muted);
+}
+
+/* =============================================================================
+ * 5. BANDEAU MONUMENTAL DE CLÔTURE (CAMPUS CIAT DIAMNIADIO)
+ * ============================================================================= */
+
+.d-closing {
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(201, 154, 104, 0.16), transparent 55%),
+    var(--d-night);
+  color: var(--d-white);
+  padding: 72px 24px;
+}
+
+.d-closing-inner {
+  width: min(100%, var(--d-container));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 44px;
+  align-items: center;
+}
+
+.d-closing-title {
+  margin: 10px 0 16px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--d-white);
+}
+
+.d-closing-title span {
+  color: var(--d-ochre);
+}
+
+.d-closing-lead {
+  margin: 0 0 28px;
+  max-width: 520px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: rgba(250, 247, 242, 0.84);
+}
+
+.d-closing-photo-frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 154, 104, 0.35);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.d-closing-photo-frame img {
+  object-fit: cover;
+}
+
+/* =============================================================================
+ * RESPONSIVE DESIGN (1024px · 768px · 390px)
+ * ============================================================================= */
+
+@media (max-width: 1040px) {
+  .d-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .d-hero-media {
+    min-height: 360px;
+  }
+
+  .d-hero-media-shade {
+    background: linear-gradient(
+      180deg,
+      rgba(20, 10, 6, 0.3) 0%,
+      transparent 40%,
+      rgba(20, 10, 6, 0.85) 100%
+    );
+  }
+
+  .d-section-header {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .d-dossier-card,
+  .d-dossier-reverse {
     grid-template-columns: 1fr;
   }
 
-  .ciat-hero-content {
-    padding: 45px 22px 30px;
+  .d-dossier-reverse .d-dossier-visual {
+    order: 0;
   }
 
-  .ciat-hero h1 {
-    font-size: clamp(39px, 10vw, 53px);
+  .d-dossier-reverse .d-dossier-body {
+    order: 0;
   }
 
-  .ciat-hero-visual {
-    min-height: 260px;
+  .d-dossier-visual {
+    min-height: 280px;
   }
 
-  .ciat-hero-photo {
-    background-position: center;
-  }
-
-  .ciat-hero-principles {
-    top: 16px;
-    right: 15px;
-    font-size: 7px;
-  }
-
-  .ciat-domains-section {
-    padding: 30px 16px 25px;
-  }
-
-  .ciat-domains-header {
-    grid-template-columns: 1fr;
-    gap: 18px;
-    margin-bottom: 22px;
-  }
-
-  .ciat-domains-heading h2 {
-    font-size: 34px;
-  }
-
-  .ciat-domains-intro {
-    padding-left: 13px;
-    font-size: 10px;
-  }
-
-  .ciat-domain-grid-large,
-  .ciat-domain-grid-small {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .ciat-domain-grid-small {
-    margin-top: 15px;
-  }
-
-  .ciat-card-image,
-  .ciat-domain-card-small .ciat-card-image {
-    height: 190px;
-  }
-
-  .ciat-card-content h3,
-  .ciat-domain-card-small .ciat-card-content h3 {
-    font-size: 15px;
-  }
-
-  .ciat-card-content {
-    padding-right: 16px;
-    padding-bottom: 17px;
-    padding-left: 16px;
-  }
-
-  .ciat-card-content p {
-    font-size: 10px;
-  }
-
-  .ciat-closing {
+  .d-synergy-grid {
     grid-template-columns: 1fr;
   }
 
-  .ciat-closing-content {
-    padding: 38px 22px 30px;
-  }
-
-  .ciat-closing h2 {
-    font-size: 35px;
-  }
-
-  .ciat-closing-visual {
-    min-height: 230px;
-  }
-
-  .ciat-closing-photo {
-    clip-path: none;
+  .d-closing-inner {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ciat-domain-card,
-  .ciat-card-link span,
-  .ciat-closing-button {
-    transition: none;
+@media (max-width: 640px) {
+  .d-hero-kpis {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .d-kpi + .d-kpi {
+    padding-left: 0;
+    padding-top: 12px;
+    border-left: none;
+    border-top: 1px solid rgba(201, 154, 104, 0.22);
+  }
+
+  .d-dossier-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .d-btn-outline,
+  .d-btn-solid {
+    justify-content: center;
   }
 }

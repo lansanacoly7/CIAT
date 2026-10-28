@@ -345,3 +345,917 @@
   .pageRoot { scroll-behavior: auto; }
   .pageRoot, .pageRoot *, .pageRoot *::before, .pageRoot *::after { transition: none !important; }
 }
+
+
+/* =============================================================================
+ * NOUVELLE ARCHITECTURE SOUS LE HERO — GUICHET APPELS & PARCOURS CERTIFIÉ CIAT
+ * (Le bloc .hero ci-dessus est intégralement préservé sans aucune modification)
+ * ============================================================================= */
+
+.ap-body-wrap {
+  background: #FAF7F2;
+  color: #24140D;
+  font-family: var(--font-inter), "Inter", sans-serif;
+}
+
+.ap-container {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+}
+
+.ap-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: #612D10;
+  margin-bottom: 12px;
+}
+
+.ap-kicker-light {
+  color: #DFae79;
+}
+
+.ap-kicker-line {
+  width: 30px;
+  height: 1.5px;
+  background: #612D10;
+}
+
+.ap-h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.024em;
+  color: #24140D;
+}
+
+.ap-h2-sm {
+  margin: 0;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(22px, 2.1vw, 28px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #24140D;
+}
+
+.ap-lead-muted {
+  margin: 0;
+  max-width: 460px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #655346;
+}
+
+.ap-body-text {
+  margin: 0 0 26px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #655346;
+}
+
+/* 1. SESSIONS EN COURS */
+.ap-sessions-section {
+  padding: 68px 0 60px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5D7C6;
+}
+
+.ap-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 34px;
+}
+
+.ap-sessions-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.38fr) minmax(300px, 0.78fr);
+  gap: 26px;
+  align-items: stretch;
+}
+
+.ap-active-call {
+  border-radius: 26px;
+  padding: clamp(26px, 3.2vw, 40px);
+  background:
+    radial-gradient(ellipse at top right, rgba(201, 154, 104, 0.18), transparent 58%),
+    #24140D;
+  border: 1px solid rgba(201, 154, 104, 0.42);
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 24px 56px rgba(36, 20, 13, 0.14);
+}
+
+.ap-call-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ap-status-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #BBF7D0;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ap-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ADE80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.28);
+}
+
+.ap-deadline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #F5EADC;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ap-call-title {
+  margin: 0 0 12px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(22px, 2.3vw, 30px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #FFFFFF !important;
+}
+
+.ap-call-desc {
+  margin: 0 0 22px;
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: rgba(250, 247, 242, 0.85);
+}
+
+.ap-call-pieces {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 24px;
+}
+
+.ap-pieces-label {
+  display: block;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #DFae79;
+  margin-bottom: 10px;
+}
+
+.ap-pieces-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ap-piece-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(20, 10, 6, 0.65);
+  border: 1px solid rgba(201, 154, 104, 0.28);
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.ap-call-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ap-call-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ap-call-meta-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: rgba(250, 247, 242, 0.78);
+}
+
+.ap-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ap-info-box {
+  flex: 1;
+  padding: 24px;
+  border-radius: 22px;
+  background: #FAF7F2;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-side-tag {
+  display: block;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #612D10;
+  margin-bottom: 16px;
+}
+
+.ap-metrics-list {
+  display: grid;
+  gap: 14px;
+}
+
+.ap-metrics-list > div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #EFE4D6;
+}
+
+.ap-metrics-list > div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ap-metrics-list strong {
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #24140D;
+  min-width: 86px;
+}
+
+.ap-metrics-list span {
+  font-size: 12.5px;
+  color: #655346;
+  line-height: 1.4;
+}
+
+.ap-closed-card {
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: #FFFFFF;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-status-closed {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #EFE4D6;
+  color: #612D10;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ap-closed-card h4 {
+  margin: 0 0 6px;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-closed-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #655346;
+}
+
+/* BOUTONS UNIFIÉS */
+.ap-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: #C99A68;
+  border: 1px solid #C99A68;
+  color: #24140D !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ap-btn-gold:hover {
+  background: #DFae79;
+  border-color: #DFae79;
+  transform: translateY(-1px);
+}
+
+.ap-btn-ghost-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #FFFFFF !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ap-btn-ghost-light:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.ap-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: #24140D;
+  border: 1px solid #24140D;
+  color: #FFFFFF !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ap-btn-dark:hover {
+  background: #612D10;
+  border-color: #612D10;
+}
+
+.ap-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #D8C7B5;
+  color: #24140D !important;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ap-btn-outline:hover {
+  border-color: #612D10;
+  color: #612D10 !important;
+  background: #FAF7F2;
+}
+
+/* 2. PARCOURS & BARÈME JURY */
+.ap-parcours-section {
+  scroll-margin-top: 90px;
+  padding: 76px 0;
+  background: #FAF7F2;
+}
+
+.ap-parcours-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+  gap: clamp(32px, 4vw, 56px);
+  align-items: start;
+}
+
+.ap-benefits-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.ap-benefit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #FFFFFF;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-benefit-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #FAF7F2;
+  border: 1px solid #EFE4D6;
+  color: #612D10;
+  display: grid;
+  place-items: center;
+}
+
+.ap-benefit-card h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-benefit-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #655346;
+}
+
+.ap-timeline-panel {
+  background: #FFFFFF;
+  border: 1px solid #E5D7C6;
+  border-radius: 26px;
+  padding: clamp(26px, 3vw, 38px);
+  box-shadow: 0 14px 40px rgba(36, 20, 13, 0.05);
+}
+
+.ap-timeline-head {
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #EFE4D6;
+}
+
+.ap-steps-vertical {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.ap-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #FAF7F2;
+  border: 1px solid #EFE4D6;
+}
+
+.ap-step-num {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #24140D;
+  color: #DFae79;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ap-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-step-content h3 {
+  margin: 0;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-step-delay {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1px solid #E5D7C6;
+  font-size: 11px;
+  font-weight: 700;
+  color: #612D10;
+}
+
+.ap-step-content p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.62;
+  color: #655346;
+}
+
+/* Barème du jury */
+.ap-jury-band {
+  margin-top: 44px;
+  padding: 30px 32px;
+  border-radius: 24px;
+  background: #FFFFFF;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-jury-intro {
+  margin-bottom: 22px;
+}
+
+.ap-jury-intro h3 {
+  margin: 4px 0 0;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #24140D;
+}
+
+.ap-jury-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ap-jury-card {
+  padding: 18px;
+  border-radius: 16px;
+  background: #FAF7F2;
+  border: 1px solid #EFE4D6;
+}
+
+.ap-jury-weight {
+  display: inline-block;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #612D10;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.ap-jury-card h4 {
+  margin: 0 0 6px;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-jury-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #655346;
+}
+
+/* 3. LES 7 FILIÈRES ÉLIGIBLES */
+.ap-sectors-band {
+  background: #24140D;
+  color: #FFFFFF;
+  padding: 76px 0;
+  border-top: 1px solid rgba(201, 154, 104, 0.25);
+  border-bottom: 1px solid rgba(201, 154, 104, 0.25);
+}
+
+.ap-sectors-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  gap: clamp(32px, 4.5vw, 58px);
+  align-items: center;
+}
+
+.ap-sectors-photo-card {
+  position: relative;
+  aspect-ratio: 4 / 4.2;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 154, 104, 0.35);
+}
+
+.ap-sectors-photo-card img {
+  object-fit: cover;
+}
+
+.ap-sectors-photo-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 45%,
+    rgba(20, 10, 6, 0.88) 100%
+  );
+}
+
+.ap-sectors-photo-caption {
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
+  right: 22px;
+  z-index: 2;
+}
+
+.ap-sectors-photo-caption span {
+  display: block;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #DFae79;
+  margin-bottom: 4px;
+}
+
+.ap-sectors-photo-caption strong {
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #FFFFFF;
+}
+
+.ap-sectors-lead {
+  margin: 0 0 22px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: rgba(250, 247, 242, 0.8);
+}
+
+.ap-filieres-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ap-filiere-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.ap-filiere-item:hover {
+  background: rgba(201, 154, 104, 0.12);
+  border-color: rgba(201, 154, 104, 0.55);
+  transform: translateX(3px);
+}
+
+.ap-filiere-num {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(201, 154, 104, 0.18);
+  color: #DFae79;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.ap-filiere-item h3 {
+  margin: 0;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF !important;
+  line-height: 1.35;
+}
+
+.ap-filiere-item p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(250, 247, 242, 0.68);
+}
+
+/* 4. CONSTITUTION DU DOSSIER & FAQ (#preparer) */
+.ap-dossier-section {
+  scroll-margin-top: 90px;
+  padding: 76px 0 88px;
+  background: #FFFFFF;
+}
+
+.ap-dossier-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(32px, 4.5vw, 56px);
+  align-items: start;
+}
+
+.ap-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.ap-check-card {
+  padding: 18px;
+  border-radius: 16px;
+  background: #FAF7F2;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-check-card h3 {
+  margin: 0;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-check-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #655346;
+}
+
+.ap-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ap-faq-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ap-campus-card {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid #E5D7C6;
+}
+
+.ap-campus-card img {
+  object-fit: cover;
+}
+
+.ap-campus-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(20, 10, 6, 0.85) 100%);
+}
+
+.ap-campus-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 18px;
+  right: 18px;
+  z-index: 2;
+  color: #FFFFFF;
+}
+
+.ap-campus-badge span {
+  display: block;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #DFae79;
+  margin-bottom: 2px;
+}
+
+.ap-campus-badge strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ap-faq-box {
+  border-radius: 22px;
+  background: #FAF7F2;
+  border: 1px solid #E5D7C6;
+  padding: 24px;
+}
+
+.ap-faq-heading {
+  margin: 0 0 14px;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: #24140D;
+}
+
+.ap-faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ap-faq-item {
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #EFE4D6;
+  overflow: hidden;
+}
+
+.ap-faq-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: var(--font-jakarta), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #24140D;
+  cursor: pointer;
+}
+
+.ap-faq-ans {
+  margin: 0;
+  padding: 0 16px 15px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #655346;
+}
+
+@media (max-width: 1024px) {
+  .ap-sessions-grid,
+  .ap-parcours-grid,
+  .ap-sectors-layout,
+  .ap-dossier-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-jury-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ap-sectors-photo-card {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 640px) {
+  .ap-jury-grid,
+  .ap-checklist-grid {
+    grid-template-columns: 1fr;
+  }
+}

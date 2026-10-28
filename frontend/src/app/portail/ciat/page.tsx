@@ -2,111 +2,196 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  GraduationCap,
-  Lightbulb,
-  Share2,
-  Users,
-  ShieldCheck,
+  ArrowUpRight,
+  BrainCircuit,
+  ChartNoAxesColumnIncreasing,
   CheckCircle2,
   Download,
+  FileText,
+  GraduationCap,
+  Images,
+  Landmark,
+  Lightbulb,
+  Share2,
+  ShieldCheck,
+  Sprout,
+  Users,
 } from "lucide-react";
 
 export const metadata = {
-  title: "Le CIAT — Centre d'Innovation et d'Accélération Technologique",
+  title: "Le CIAT — Centre d'Innovation, d'Application et de Transfert",
   description:
-    "Un catalyseur d'innovation au service de l'entrepreneuriat et de l'impact à l'ISEP Amadou Trawaré de Diamniadio : missions, approche, infrastructures et documents officiels.",
+    "Un catalyseur d'innovation au service de l'entrepreneuriat et de l'impact à l'ISEP Amadou Trawaré de Diamniadio : missions statutaires, protocole en 5 jalons, ateliers 4.0, modules CIAT 360 et cadre officiel.",
 };
 
-// 4 piliers de la mission avec la charte officielle CIAT
-const MISSIONS_LIST = [
+const MISSIONS_STATUTAIRES = [
   {
     icon: Lightbulb,
     num: "01",
-    titre: "Innovation & Prototypage",
-    desc: "Encourager la créativité et le prototypage rapide de solutions technologiques concrètes adaptées aux défis du Sénégal.",
+    titre: "Recherche Appliquée & Prototypage",
+    desc: "Transformer les problématiques industrielles, agricoles et sanitaires du Sénégal en prototypes matériels et logiciels éprouvés sur bancs d'essai.",
+    livrable: "Maquettes fonctionnelles & dossiers CAO/PCB",
   },
   {
     icon: GraduationCap,
     num: "02",
-    titre: "Formation & Mentorat",
-    desc: "Développer les compétences pratiques des apprenants et entrepreneurs grâce à l'expertise des enseignants-chercheurs.",
+    titre: "Formation par le Faire & Mentorat",
+    desc: "Immerger les apprenants de l'ISEP et porteurs externes dans une ingénierie de terrain encadrée par les enseignants-chercheurs et maîtres-artisans.",
+    livrable: "Compétences certifiées Industrie 4.0",
   },
   {
     icon: Share2,
     num: "03",
-    titre: "Transfert Technologique",
-    desc: "Valoriser les brevets et résultats de recherche appliquée pour faciliter leur industrialisation par les PME et startups.",
+    titre: "Homologation & Propriété Intellectuelle",
+    desc: "Qualifier la fiabilité normative (échelle TRL 1 à 8) et sécuriser les droits des inventeurs via des dépôts de brevets et modèles auprès de l'OAPI.",
+    livrable: "Certificats d'homologation & titres PI",
   },
   {
     icon: Users,
     num: "04",
-    titre: "Impact & Création de Valeur",
-    desc: "Participer activement à la souveraineté économique, à l'emploi des jeunes et au rayonnement du Pôle Urbain de Diamniadio.",
+    titre: "Transfert Industriel & Amorçage",
+    desc: "Connecter les innovations matures aux PME locales, collectivités territoriales et fonds d'investissement pour industrialiser au Sénégal.",
+    livrable: "Licences d'exploitation & startups créées",
   },
 ];
 
-// 4 étapes du parcours de l'approche CIAT
-const APPROCHE_ETAPES = [
+const PROTOCOLE_CINQ_JALONS = [
   {
     num: "01",
-    titre: "Cadrage & Diagnostic",
-    desc: "Identification précise du besoin terrain, analyse de faisabilité technique et feuille de route d'incubation.",
+    trl: "TRL 1–2",
+    titre: "Cadrage Terrain & Recevabilité",
+    desc: "Validation de la réalité du besoin socio-économique, état de l'art technologique et structuration de la feuille de route d'atelier.",
   },
   {
     num: "02",
-    titre: "Prototypage en Ateliers",
-    desc: "Accès libre aux machines de haute précision (CNC, 3D, bancs électroniques) et mentorat par les pairs.",
+    trl: "TRL 3–4",
+    titre: "Preuve de Concept & Maquettage",
+    desc: "Modélisation 3D, schémas électroniques, architecture logicielle et validation analytique du premier démonstrateur critique.",
   },
   {
     num: "03",
-    titre: "Validation Terrain & TRL",
-    desc: "Bancs d'essai en conditions réelles (solaire, agro, santé) pour certifier la viabilité et les normes.",
+    trl: "TRL 5–6",
+    titre: "Prototypage Intégré aux Ateliers 4.0",
+    desc: "Usinage CNC, intégration capteurs/énergie et tests d'endurance sur les plateformes techniques de l'ISEP Diamniadio.",
   },
   {
     num: "04",
-    titre: "Homologation & Transfert",
-    desc: "Protection de la propriété intellectuelle, mise en relation avec investisseurs et déploiement industriel.",
+    trl: "TRL 7",
+    titre: "Pilote en Conditions Réelles",
+    desc: "Déploiement expérimental sur site partenaire (exploitation agricole, poste de santé, commune ou usine) et métrologie d'impact.",
+  },
+  {
+    num: "05",
+    trl: "TRL 8",
+    titre: "Homologation, Brevet OAPI & Transfert",
+    desc: "Certification finale par le Comité Scientifique, protection de la propriété intellectuelle et passage à l'échelle industrielle.",
   },
 ];
 
-// 3 infrastructures techniques réelles du campus
-const INFRASTRUCTURES = [
+const PLATEFORMES_TECHNIQUES = [
   {
-    titre: "FabLab & Ateliers Makerspace",
-    desc: "Centres d'usinage numérique, découpe laser, électronique embarquée et impression 3D de précision.",
-    image: "/images/galerie_moments/fablab-prototypage.jpg",
-    badge: "Matériel 4.0",
+    num: "01",
+    badge: "Usinage & Fabrication 4.0",
+    titre: "FabLab Industriel & Centre CNC 5 Axes",
+    desc: "Usinage haute tolérance en acier inoxydable et aluminium, rétro-ingénierie par scanner laser 3D, découpe plasma et fabrication additive technique.",
+    specs: "CNC 5 axes · Scanners 3D · Impression polymères techniques",
+    image: "/images/innovations/cnc-4-0-clean.jpg",
   },
   {
-    titre: "Bancs d'Essai & Énergies Renouvelables",
-    desc: "Plateformes de test photovoltaïque, régulateurs d'irrigation intelligente et mini-réseaux microgrid.",
-    image: "/images/galerie_moments/solaire-campus.jpg",
-    badge: "Laboratoires R&D",
+    num: "02",
+    badge: "Électronique & Robotique",
+    titre: "Laboratoire Systèmes Embarqués & IoT",
+    desc: "Conception et brasage de cartes électroniques CMS, programmation de microcontrôleurs, mécatronique 6 axes et passerelles radio LoRaWAN.",
+    specs: "Oscilloscopes numériques · Bancs CMS · Robotique",
+    image: "/images/ciat_galerie_hero_elec.jpg",
   },
   {
-    titre: "Espaces Coworking & Salles Projets",
-    desc: "Zones modulaires haut débit, salles de brainstorming et espaces d'accueil des délégations industrielles.",
-    image: "/images/galerie_moments/nos-espaces.jpg",
-    badge: "Campus Connecté",
+    num: "03",
+    badge: "Énergie & AgriTech",
+    titre: "Plateforme Solaire, Froid & Génie Hydrique",
+    desc: "Dimensionnement de mini-réseaux photovoltaïques intelligents, chaînes du froid autonomes et stations d'irrigation pilotées par sondes.",
+    specs: "Bancs MPPT & LiFePO4 · Sondes pédologiques · Pilotes solaires",
+    image: "/images/innovations/agrisol-iot.jpg",
+  },
+  {
+    num: "04",
+    badge: "Cité du Savoir · Diamniadio",
+    titre: "Incubateur, Accueil & Plateau Collaboratif",
+    desc: "Espaces de coworking haut débit, salles de revues de jalons, showroom permanent de démonstration et accueil des délégations partenaires.",
+    specs: "Showroom officiel · Salles de comité · Guichet partenaires",
+    image: "/images/contact/contact-accueil-campus.jpg",
   },
 ];
 
-// Les 3 pièces justificatives demandées pour candidater
+const MODULES_CIAT_360 = [
+  {
+    num: "01",
+    icon: Landmark,
+    titre: "Portail Institutionnel",
+    desc: "Gouvernance scientifique, référentiel des 7 filières d'intervention, appels à projets et ressources réglementaires.",
+    href: "/portail/domaines",
+    cta: "Explorer les 7 filières",
+  },
+  {
+    num: "02",
+    icon: Sprout,
+    titre: "Gestion de l'Incubateur",
+    desc: "Suivi numérique des cohortes sur 5 jalons, revues du comité d'évaluation, livrables et mentorat personnalisé.",
+    href: "/portail/incubateur",
+    cta: "Voir le parcours incubateur",
+  },
+  {
+    num: "03",
+    icon: Images,
+    titre: "Galerie & Showroom 360",
+    desc: "Catalogue public des prototypes certifiés, badges QR Code salon et canal direct de manifestation d'intérêt.",
+    href: "/galerie",
+    cta: "Visiter le showroom",
+  },
+  {
+    num: "04",
+    icon: ChartNoAxesColumnIncreasing,
+    titre: "Tableau Décisionnel",
+    desc: "Pilotage consolidé des indicateurs de maturité TRL, répartition sectorielle et suivi de performance des cohortes.",
+    href: "/tableau-de-bord",
+    cta: "Accéder aux indicateurs",
+  },
+  {
+    num: "05",
+    icon: FileText,
+    titre: "Générateur Documentaire",
+    desc: "Édition normée des fiches descriptives, attestations d'incubation, conventions et rapports d'instruction.",
+    href: "/documents",
+    cta: "Ouvrir l'outil documentaire",
+  },
+  {
+    num: "06",
+    icon: BrainCircuit,
+    titre: "Assistant Méthodologique IA",
+    desc: "Accompagnement intelligent à la structuration des dossiers, diagnostic de maturité et orientation technique.",
+    href: "/assistant",
+    cta: "Consulter l'assistant",
+  },
+];
+
 const PIECES_JUSTIFICATIVES_DEMANDEES = [
   {
     num: "1",
-    titre: "Fiche descriptive du projet",
-    detail: "Exposé clair du problème identifié, de la solution technologique proposée et du niveau de maturité actuel (idée, maquette ou premier prototype fonctionnel).",
+    titre: "Fiche descriptive & architecture technique du projet",
+    detail:
+      "Exposé documenté du problème terrain, de la solution technologique envisagée, de sa filière de rattachement et du niveau de maturité initial.",
   },
   {
     num: "2",
-    titre: "Présentation détaillée de l'équipe",
-    detail: "Curriculum vitae, compétences techniques, complémentarité des membres et engagement effectif dans le calendrier de la cohorte.",
+    titre: "Dossier de compétences & engagement de l'équipe",
+    detail:
+      "Curriculum vitae des co-porteurs, répartition claire des rôles (technique, métier, déploiement) et disponibilité sur le calendrier des 5 jalons.",
   },
   {
     num: "3",
-    titre: "Budget prévisionnel & besoins de prototypage",
-    detail: "Chiffrage réaliste des matières premières, composants électroniques et bancs d'essai sollicités auprès du CIAT.",
+    titre: "Cahier des besoins d'atelier & budget prévisionnel",
+    detail:
+      "Estimation réaliste des matières premières, composants électroniques et heures machines sollicités sur les plateformes du CIAT.",
   },
 ];
 
@@ -198,49 +283,117 @@ export default function CiatPresentationPage() {
       </section>
 
       {/* =====================================================================
-       * SECTION 2 — LES 4 PILIERS DE NOTRE MISSION
+       * BANDEAU D'ANCRAGE INSTITUTIONNEL — CITÉ DU SAVOIR DE DIAMNIADIO
        * ===================================================================== */}
-      <section id="missions" className="py-16 md:py-24 border-b border-[#EBE4DC] bg-white">
+      <section
+        aria-label="Repères institutionnels du CIAT"
+        className="bg-[#24140D] border-b border-[#C99A68]/25 text-white"
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:divide-x lg:divide-white/12">
+            {[
+              {
+                val: "ISEP Diamniadio",
+                lbl: "Ancrage académique officiel",
+                sub: "Pôle Urbain de la Cité du Savoir",
+              },
+              {
+                val: "07 Filières",
+                lbl: "Domaines sectoriels prioritaires",
+                sub: "Numérique, CNC, Agro, Énergie, Santé…",
+              },
+              {
+                val: "05 Jalons TRL",
+                lbl: "Protocole d'homologation normé",
+                sub: "De l'idéation au brevet industriel",
+              },
+              {
+                val: "CIAT 360°",
+                lbl: "Plateforme intégrée en 6 modules",
+                sub: "Incubation, showroom, IA & pilotage",
+              },
+            ].map((kpi, idx) => (
+              <div
+                key={kpi.val}
+                className={idx > 0 ? "lg:pl-7 flex flex-col" : "flex flex-col"}
+              >
+                <strong className="font-[family-name:var(--font-jakarta)] text-xl sm:text-2xl font-extrabold text-[#DFae79]">
+                  {kpi.val}
+                </strong>
+                <span className="mt-1 text-xs sm:text-sm font-bold text-white">
+                  {kpi.lbl}
+                </span>
+                <span className="mt-0.5 text-[11px] sm:text-xs text-[#D8C7B5]">
+                  {kpi.sub}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+       * SECTION 2 — LES 4 MISSIONS STATUTAIRES (#missions)
+       * ===================================================================== */}
+      <section
+        id="missions"
+        className="scroll-mt-24 py-20 md:py-24 border-b border-[#E5D7C6] bg-white"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mb-12">
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
-              NOS MISSIONS FONDAMENTALES
-            </span>
-            <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#24140D] tracking-tight">
-              Quatre axes pour accélérer le progrès technologique
-            </h2>
-            <p className="mt-3 text-sm sm:text-base leading-relaxed text-[#6B5646]">
-              Le CIAT combine rigueur académique, bancs d’essai de niveau industriel et mentorat entrepreneurial
-              pour offrir un tremplin complet aux innovateurs sénégalais.
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-3 mb-3">
+                <span className="h-[1.5px] w-8 bg-[#612D10]" />
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#612D10]">
+                  Mandat Institutionnel
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-[#24140D] tracking-tight leading-[1.14]">
+                Quatre missions fondamentales au service de la souveraineté
+                productive
+              </h2>
+            </div>
+
+            <p className="text-sm sm:text-base leading-relaxed text-[#655346] max-w-md">
+              Le CIAT articule formation supérieure professionnelle, ingénierie
+              d&apos;atelier et valorisation économique au sein d&apos;un guichet
+              unique.
             </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {MISSIONS_LIST.map((m) => {
+            {MISSIONS_STATUTAIRES.map((m, idx) => {
               const Icon = m.icon;
               return (
-                <div
+                <article
                   key={m.num}
-                  className="rounded-2xl border border-[#EBE4DC] bg-[#FAF7F2] p-6 shadow-xs hover:border-[#612D10] hover:shadow-md transition-all group flex flex-col justify-between"
+                  className={`group relative rounded-2xl border border-[#EFE4D6] border-t-[3px] ${
+                    idx % 2 === 0 ? "border-t-[#612D10]" : "border-t-[#C99A68]"
+                  } bg-[#FAF7F2] p-7 hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between`}
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white border border-[#EBE4DC] text-[#612D10] group-hover:bg-[#612D10] group-hover:text-white transition-colors shadow-2xs">
-                        <Icon size={22} />
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#612D10] group-hover:bg-[#612D10] group-hover:text-white transition-colors">
+                        <Icon size={20} />
                       </div>
-                      <span className="font-mono text-xs font-bold text-[#AFA496]">
+                      <span className="font-[family-name:var(--font-jakarta)] text-lg font-extrabold text-[#612D10]">
                         {m.num}
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-bold text-[#24140D] tracking-tight group-hover:text-[#612D10] transition-colors">
+                    <h3 className="font-[family-name:var(--font-jakarta)] text-lg font-bold text-[#24140D] leading-snug mb-3">
                       {m.titre}
                     </h3>
-                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#6B5646]">
+                    <p className="text-xs sm:text-sm leading-relaxed text-[#655346]">
                       {m.desc}
                     </p>
                   </div>
-                </div>
+
+                  <div className="mt-6 pt-4 border-t border-[#EFE4D6] flex items-center gap-2 text-[11.5px] font-bold text-[#612D10]">
+                    <CheckCircle2 size={14} className="shrink-0 text-[#612D10]" />
+                    <span>{m.livrable}</span>
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -248,40 +401,51 @@ export default function CiatPresentationPage() {
       </section>
 
       {/* =====================================================================
-       * SECTION 3 — NOTRE APPROCHE : DE L'IDÉE AU TRANSFERT
+       * SECTION 3 — PROTOCOLE D'INCUBATION & HOMOLOGATION EN 5 JALONS (#jalons)
        * ===================================================================== */}
-      <section className="bg-[#24140D] text-white py-16 md:py-24 overflow-hidden border-b border-[#3D1D10]">
+      <section
+        id="jalons"
+        className="scroll-mt-24 bg-[#24140D] text-white py-20 md:py-28 overflow-hidden border-b border-[#C99A68]/25"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-            {/* Colonne Gauche : Descriptif et timeline en 4 étapes */}
-            <div className="lg:col-span-6 space-y-6">
+            <div className="lg:col-span-7 space-y-6">
               <div>
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#C99A68]">
-                  MÉTHODOLOGIE D&apos;ACCOMPAGNEMENT
-                </span>
-                <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-                  Un parcours éprouvé en 4 étapes clés
+                <div className="inline-flex items-center gap-3 mb-3">
+                  <span className="h-[1.5px] w-8 bg-[#C99A68]" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#DFae79]">
+                    Méthodologie Certifiée · TRL 1 à TRL 8
+                  </span>
+                </div>
+                <h2 className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-4xl lg:text-[40px] font-extrabold !text-white tracking-tight leading-[1.14]">
+                  Cinq jalons normés, de l&apos;idée au transfert industriel
                 </h2>
-                <p className="mt-3 text-sm text-[#FAF7F2]/80 leading-relaxed max-w-xl">
-                  Du premier atelier de créativité jusqu&apos;à la signature des accords de licence industrielle,
-                  chaque projet bénéficie d&apos;un protocole d&apos;évaluation rigoureux.
+                <p className="mt-3 text-sm sm:text-base text-[#E5D7C6] leading-relaxed max-w-2xl">
+                  Chaque passage de jalon fait l&apos;objet d&apos;une revue
+                  collégiale par le Comité Scientifique et Industriel du CIAT,
+                  garantissant la robustesse technique des solutions publiées.
                 </p>
               </div>
 
-              <div className="space-y-4 pt-2">
-                {APPROCHE_ETAPES.map((etape) => (
+              <div className="space-y-3.5 pt-2">
+                {PROTOCOLE_CINQ_JALONS.map((etape) => (
                   <div
                     key={etape.num}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#C99A68] transition-colors"
+                    className="flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white/[0.04] border border-white/12 hover:border-[#C99A68]/60 hover:bg-white/[0.07] transition-all"
                   >
-                    <span className="font-mono text-sm font-extrabold text-[#C99A68] shrink-0 pt-0.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C99A68]/20 border border-[#C99A68]/40 font-[family-name:var(--font-jakarta)] text-sm font-extrabold text-[#DFae79]">
                       {etape.num}
                     </span>
-                    <div>
-                      <h3 className="text-sm font-bold text-white tracking-wide">
-                        {etape.titre}
-                      </h3>
-                      <p className="text-xs text-[#FAF7F2]/70 mt-1 leading-relaxed">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm sm:text-base font-bold !text-white">
+                          {etape.titre}
+                        </h3>
+                        <span className="rounded-full bg-[#C99A68]/15 border border-[#C99A68]/35 px-2.5 py-0.5 text-[10.5px] font-extrabold tracking-wider text-[#DFae79]">
+                          {etape.trl}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-[#E5D7C6]/85 mt-1.5 leading-relaxed">
                         {etape.desc}
                       </p>
                     </div>
@@ -290,25 +454,44 @@ export default function CiatPresentationPage() {
               </div>
             </div>
 
-            {/* Colonne Droite : Véritable photo d'atelier et citation */}
-            <div className="lg:col-span-6 flex flex-col items-center">
-              <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/15">
+            <div className="lg:col-span-5 flex flex-col gap-5">
+              <div className="relative w-full aspect-[4/4.3] rounded-3xl overflow-hidden shadow-2xl border border-[#C99A68]/35 bg-[#160B06]">
                 <Image
                   src="/images/collaboration-innovante-ciat.png"
-                  alt="Équipe d'innovateurs au travail au CIAT"
+                  alt="Séance de travail collaboratif et revue de prototype entre ingénieurs et porteurs au CIAT Diamniadio"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  sizes="(max-width: 1024px) 100vw, 42vw"
                   className="object-cover object-center"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#160B06] via-[#160B06]/35 to-transparent" />
                 <div className="absolute bottom-6 inset-x-6 text-white">
-                  <blockquote className="text-sm sm:text-base font-serif italic text-white/95 leading-relaxed">
-                    “L&apos;innovation n&apos;est pas une promesse abstraite : c&apos;est un prototype validé qui résout un problème concret.”
+                  <blockquote className="font-[family-name:var(--font-jakarta)] text-base sm:text-lg font-semibold text-white leading-relaxed">
+                    “L&apos;innovation utile ne se mesure pas aux intentions,
+                    mais à un prototype éprouvé capable d&apos;opérer durablement
+                    sur le terrain.”
                   </blockquote>
-                  <span className="text-xs text-[#C99A68] font-bold block mt-2">
+                  <span className="text-xs text-[#DFae79] font-extrabold uppercase tracking-wider block mt-3">
                     Direction Scientifique · CIAT ISEP Diamniadio
                   </span>
                 </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/[0.05] border border-white/12 p-5 flex items-center justify-between gap-4">
+                <div>
+                  <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#DFae79]">
+                    Parcours Incubateur
+                  </span>
+                  <p className="text-xs text-[#E5D7C6] mt-0.5">
+                    Découvrez le détail des livrables et du mentorat associé.
+                  </p>
+                </div>
+                <Link
+                  href="/portail/incubateur"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-4 py-2.5 text-xs font-extrabold !text-[#24140D] shrink-0 transition"
+                >
+                  Explorer
+                  <ArrowUpRight size={14} />
+                </Link>
               </div>
             </div>
           </div>
@@ -316,140 +499,220 @@ export default function CiatPresentationPage() {
       </section>
 
       {/* =====================================================================
-       * SECTION 4 — INFRASTRUCTURES & ÉQUIPEMENTS DU CAMPUS
+       * SECTION 4 — PLATEFORMES TECHNOLOGIQUES & ATELIERS 4.0 (#ateliers)
        * ===================================================================== */}
-      <section className="py-16 md:py-24 border-b border-[#EBE4DC] bg-[#FAF7F2]">
+      <section
+        id="ateliers"
+        className="scroll-mt-24 py-20 md:py-26 border-b border-[#E5D7C6] bg-[#FAF7F2]"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
-                UN LIEU DE HAUTE TECHNOLOGIE
-              </span>
-              <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#24140D] tracking-tight">
-                Nos plateformes d&apos;expérimentation
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-3 mb-3">
+                <span className="h-[1.5px] w-8 bg-[#612D10]" />
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#612D10]">
+                  Infrastructures d&apos;Ingénierie
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-[#24140D] tracking-tight leading-[1.14]">
+                Nos plateformes d&apos;expérimentation à Diamniadio
               </h2>
-              <p className="mt-2 text-sm text-[#6B5646] max-w-xl">
-                Des équipements aux standards industriels ouverts aux apprenants, porteurs de projets et entreprises partenaires.
+              <p className="mt-3 text-sm sm:text-base text-[#655346] leading-relaxed">
+                Quatre plateaux techniques complémentaires ouverts aux cohortes
+                incubées, aux filières ISEP et aux industriels partenaires.
               </p>
             </div>
 
             <Link
-              href="/portail/incubateur"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[#612D10] hover:text-[#C99A68] transition-colors shrink-0"
+              href="/galerie"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#D8C7B5] bg-white hover:border-[#612D10] px-5 py-3 text-xs sm:text-sm font-bold text-[#24140D] transition shrink-0"
             >
-              <span>Voir le parcours d&apos;incubation</span>
-              <ArrowRight size={16} />
+              <span>Voir les prototypes usinés ici</span>
+              <ArrowRight size={15} className="text-[#612D10]" />
             </Link>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {INFRASTRUCTURES.map((infra, idx) => (
-              <div
-                key={idx}
-                className="group rounded-2xl border border-[#EBE4DC] bg-white overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col"
+          <div className="grid gap-7 md:grid-cols-2">
+            {PLATEFORMES_TECHNIQUES.map((infra) => (
+              <article
+                key={infra.num}
+                className="group rounded-2xl border border-[#EFE4D6] bg-white overflow-hidden shadow-xs hover:shadow-xl hover:border-[#C99A68] transition-all duration-300 flex flex-col"
               >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/30">
+                <div className="relative aspect-[16/9.5] w-full overflow-hidden bg-[#24140D]">
                   <Image
                     src={infra.image}
                     alt={infra.titre}
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 right-3">
-                    <span className="rounded-full bg-black/60 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-xs">
+
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-[#24140D]/88 border border-[#C99A68]/45 px-3.5 py-1 text-[11px] font-bold text-[#F5EADC] backdrop-blur-xs">
                       {infra.badge}
+                    </span>
+                    <span className="font-[family-name:var(--font-jakarta)] text-xs font-extrabold uppercase tracking-wider text-white bg-[#24140D]/80 px-3 py-1 rounded-full">
+                      Plateau {infra.num}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors tracking-tight">
+                    <h3 className="font-[family-name:var(--font-jakarta)] text-lg sm:text-xl font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors leading-snug">
                       {infra.titre}
                     </h3>
-                    <p className="mt-2 text-xs sm:text-sm text-[#6B5646] leading-relaxed">
+                    <p className="mt-2.5 text-xs sm:text-sm text-[#655346] leading-relaxed">
                       {infra.desc}
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-4 border-t border-[#FAF7F2] flex items-center justify-between text-xs">
-                    <span className="text-[#AFA496] font-medium">Campus Diamniadio</span>
-                    <span className="text-[#612D10] font-bold group-hover:translate-x-1 transition-transform">
-                      Explorer →
+                  <div className="mt-5 pt-4 border-t border-[#EFE4D6] flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span className="font-semibold text-[#612D10]">
+                      {infra.specs}
                     </span>
+                    <Link
+                      href="/portail/contact"
+                      className="inline-flex items-center gap-1 font-bold text-[#24140D] hover:text-[#612D10]"
+                    >
+                      Réserver un créneau
+                      <ArrowUpRight size={14} />
+                    </Link>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       {/* =====================================================================
-       * SECTION 5 — LES DOCUMENTS DEMANDÉS & CADRE OFFICIEL DE CANDIDATURE
+       * SECTION 5 — ARCHITECTURE NUMÉRIQUE CIAT 360 (#modules)
        * ===================================================================== */}
-      <section id="documents-demandes" className="py-20 md:py-28 bg-[#FAF7F2] border-b border-[#EBE4DC] relative overflow-hidden">
-        {/* Voiles lumineux d'arrière-plan très doux */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#C99A68]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#24140D]/5 rounded-full blur-3xl pointer-events-none" />
+      <section
+        id="modules"
+        className="scroll-mt-24 py-20 md:py-24 border-b border-[#E5D7C6] bg-white"
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-14">
+            <div className="inline-flex items-center gap-3 mb-3">
+              <span className="h-[1.5px] w-8 bg-[#612D10]" />
+              <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#612D10]">
+                Système d&apos;Information Unifié
+              </span>
+            </div>
+            <h2 className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-[#24140D] tracking-tight leading-[1.14]">
+              Les 6 modules intégrés de l&apos;écosystème CIAT 360
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-[#655346] leading-relaxed">
+              Au-delà de ses murs, le CIAT s&apos;appuie sur une infrastructure
+              logicielle complète reliant porteurs de projets, mentors, jury
+              d&apos;évaluation et partenaires industriels.
+            </p>
+          </div>
 
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {MODULES_CIAT_360.map((mod, idx) => {
+              const Icon = mod.icon;
+              return (
+                <Link
+                  key={mod.num}
+                  href={mod.href}
+                  className={`group rounded-2xl border border-[#EFE4D6] border-t-[3px] ${
+                    idx % 2 === 0 ? "border-t-[#612D10]" : "border-t-[#C99A68]"
+                  } bg-[#FAF7F2] hover:bg-white p-7 transition-all duration-200 hover:shadow-lg flex flex-col justify-between`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#612D10] group-hover:bg-[#612D10] group-hover:text-white transition-colors">
+                        <Icon size={20} />
+                      </span>
+                      <span className="font-[family-name:var(--font-jakarta)] text-xs font-extrabold tracking-widest text-[#612D10]">
+                        MODULE {mod.num}
+                      </span>
+                    </div>
+
+                    <h3 className="font-[family-name:var(--font-jakarta)] text-lg font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors">
+                      {mod.titre}
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-sm text-[#655346] leading-relaxed">
+                      {mod.desc}
+                    </p>
+                  </div>
+
+                  <span className="mt-6 pt-4 border-t border-[#EFE4D6] inline-flex items-center justify-between text-xs font-bold text-[#612D10]">
+                    <span>{mod.cta}</span>
+                    <ArrowRight
+                      size={15}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+       * SECTION 6 — CADRE OFFICIEL & DOCUMENTS DEMANDÉS (#documents-demandes)
+       * ===================================================================== */}
+      <section
+        id="documents-demandes"
+        className="scroll-mt-24 py-20 md:py-28 bg-[#FAF7F2] border-b border-[#E5D7C6] relative overflow-hidden"
+      >
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* En-tête solennel & institutionnel */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="h-2 w-2 rounded-full bg-[#C99A68] animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#612D10]">
-                  MODALITÉS OFFICIELLES &amp; SÉLECTION
+              <div className="inline-flex items-center gap-3 mb-3">
+                <span className="h-[1.5px] w-8 bg-[#612D10]" />
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#612D10]">
+                  Conformité &amp; Recevabilité
                 </span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#24140D] tracking-tight leading-tight">
-                Les documents demandés pour intégrer le CIAT
+              <h2 className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-[#24140D] tracking-tight leading-[1.14]">
+                Les documents officiels requis pour intégrer le CIAT
               </h2>
-              <p className="mt-4 text-sm sm:text-base leading-relaxed text-[#6B5646]">
-                Pour garantir l&apos;équité, la transparence et la rigueur de l&apos;instruction, chaque dossier de candidature
-                doit comporter les trois pièces obligatoires définies par le comité scientifique de l&apos;ISEP Diamniadio.
+              <p className="mt-3 text-sm sm:text-base leading-relaxed text-[#655346]">
+                Pour garantir l&apos;équité et la traçabilité de
+                l&apos;instruction, tout dossier soumis au comité scientifique
+                comporte les trois pièces normées suivantes.
               </p>
             </div>
 
-            <div className="shrink-0 flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-2xl border border-[#EBE4DC] shadow-xs text-xs font-semibold text-[#612D10]">
-              <ShieldCheck size={18} className="text-[#C99A68]" />
-              <span>Contrôle de conformité officiel ISEP</span>
+            <div className="shrink-0 flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-2xl border border-[#E5D7C6] shadow-2xs text-xs font-bold text-[#612D10]">
+              <ShieldCheck size={18} className="text-[#612D10]" />
+              <span>Instruction collégiale ISEP Diamniadio</span>
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
-            {/* Colonne Gauche (7 cols) : Les 3 pièces justificatives sous forme de fiches d'excellence */}
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#EBE4DC]">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
-                    PIÈCES OBLIGATOIRES AU DOSSIER
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#E5D7C6]">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#612D10]">
+                    Pièces obligatoires au dossier
                   </span>
-                  <span className="text-xs font-semibold text-[#8C7A6B]">
-                    3 pièces exigées
+                  <span className="text-xs font-semibold text-[#655346]">
+                    3 livrables exigés
                   </span>
                 </div>
 
                 {PIECES_JUSTIFICATIVES_DEMANDEES.map((piece) => (
                   <div
                     key={piece.num}
-                    className="group relative rounded-2xl border border-[#EBE4DC] bg-white p-6 shadow-xs hover:shadow-md hover:border-[#C99A68] transition-all duration-200"
+                    className="group relative rounded-2xl border border-[#E5D7C6] bg-white p-6 shadow-2xs hover:shadow-md hover:border-[#C99A68] transition-all duration-200"
                   >
                     <div className="flex items-start gap-4">
-                      {/* Numéro Typographique Noble */}
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FAF7F2] border border-[#EBE4DC] font-serif text-base font-bold text-[#612D10] group-hover:bg-[#28150C] group-hover:text-white transition-colors">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF7F2] border border-[#E5D7C6] font-[family-name:var(--font-jakarta)] text-sm font-extrabold text-[#612D10] group-hover:bg-[#24140D] group-hover:text-[#DFae79] transition-colors">
                         0{piece.num}
                       </span>
 
                       <div className="flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h4 className="text-base font-bold text-[#24140D] tracking-tight group-hover:text-[#612D10] transition-colors">
-                            {piece.titre}
-                          </h4>
-                        </div>
-                        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#6B5646]">
+                        <h3 className="font-[family-name:var(--font-jakarta)] text-base font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors">
+                          {piece.titre}
+                        </h3>
+                        <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-[#655346]">
                           {piece.detail}
                         </p>
                       </div>
@@ -458,64 +721,62 @@ export default function CiatPresentationPage() {
                 ))}
               </div>
 
-              {/* Note d'intégrité & instruction académique */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EBE4DC] shadow-xs text-xs text-[#6B5646] flex items-start gap-3.5 mt-4">
-                <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200/60">
+              <div className="p-5 rounded-2xl bg-white border border-[#E5D7C6] text-xs text-[#655346] flex items-start gap-3.5">
+                <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
                   <CheckCircle2 size={18} />
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-[#24140D]">Instruction collégiale &amp; Sauvegarde temps réel</p>
-                  <p className="mt-0.5 text-[#6B5646] leading-relaxed">
-                    Un dossier incomplet ne peut être soumis à l&apos;évaluation. Vos saisies et pièces jointes sont protégées et automatiquement enregistrées dans votre espace candidat.
+                <div>
+                  <p className="font-bold text-[#24140D]">
+                    Confidentialité garantie &amp; sauvegarde continue
+                  </p>
+                  <p className="mt-1 leading-relaxed">
+                    Vos documents techniques demeurent strictement confidentiels
+                    et sont archivés dans votre espace porteur sécurisé.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Colonne Droite (5 cols) : Canevas officiel & Accès direct portail */}
             <div className="lg:col-span-5 flex flex-col justify-between gap-4">
-              <div className="flex items-center justify-between pb-2.5 border-b border-[#EBE4DC]">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#612D10]">
-                  CANEVAS &amp; CADRE JURIDIQUE
+              <div className="flex items-center justify-between pb-2.5 border-b border-[#E5D7C6]">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#612D10]">
+                  Trames &amp; Règlements Officiels
                 </span>
                 <Link
                   href="/portail/documents"
-                  className="text-xs font-bold text-[#612D10] hover:text-[#C99A68] flex items-center gap-1 transition-colors"
+                  className="text-xs font-bold text-[#612D10] hover:text-[#24140D] flex items-center gap-1"
                 >
-                  Tous les documents <ArrowRight size={13} />
+                  Centre documentaire <ArrowRight size={13} />
                 </Link>
               </div>
 
-              {/* Carte 1 : Dossier Officiel (Dark Card Prestigieuse) */}
-              <div className="relative overflow-hidden rounded-3xl bg-[#24140D] p-6 sm:p-7 text-white shadow-lg border border-black/10 flex flex-col justify-between">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#C99A68]/15 rounded-full blur-2xl pointer-events-none" />
-
+              <div className="relative overflow-hidden rounded-2xl bg-[#24140D] p-7 text-white shadow-lg border border-[#C99A68]/30 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#F3CA9C] bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
-                      CANDIDATURE COHORTE 2026
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#DFae79] bg-white/10 px-3 py-1 rounded-full">
+                      COHORTE 2026
                     </span>
-                    <span className="text-[10px] font-mono font-semibold text-white/70 bg-white/5 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-semibold text-white/75 bg-white/10 px-2.5 py-0.5 rounded">
                       DOCX &amp; PDF
                     </span>
                   </div>
 
-                  <h4 className="text-lg font-bold text-white tracking-tight">
-                    Dossier de Candidature Officiel
-                  </h4>
-                  <p className="mt-2 text-xs leading-relaxed text-white/80">
-                    Trame officielle standardisée à compléter par le porteur de projet avant transmission au comité de sélection du CIAT.
+                  <h3 className="font-[family-name:var(--font-jakarta)] text-lg font-bold !text-white">
+                    Canevas Officiel de Candidature
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#E5D7C6]">
+                    Modèle structuré validé par la Direction Scientifique du
+                    CIAT pour préparer votre soumission.
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-[11px] text-[#F3CA9C] font-semibold flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#F3CA9C]" />
-                    Modèle indispensable
+                <div className="mt-6 pt-4 border-t border-white/12 flex items-center justify-between">
+                  <span className="text-[11px] text-[#DFae79] font-semibold">
+                    Trame recommandée
                   </span>
                   <Link
                     href="/portail/documents"
-                    className="inline-flex items-center gap-2 text-xs font-bold bg-[#C99A68] hover:bg-[#D8AB7A] text-[#24140D] py-2 px-3.5 rounded-xl transition shadow-sm active:scale-95"
+                    className="inline-flex items-center gap-2 text-xs font-extrabold bg-[#C99A68] hover:bg-[#DFae79] !text-[#24140D] py-2.5 px-4 rounded-xl transition"
                   >
                     <Download size={14} />
                     Télécharger
@@ -523,33 +784,33 @@ export default function CiatPresentationPage() {
                 </div>
               </div>
 
-              {/* Carte 2 : Charte PI & Déontologie */}
-              <div className="rounded-3xl border border-[#EBE4DC] bg-white p-6 shadow-xs hover:border-[#C99A68] transition-all flex flex-col justify-between">
+              <div className="rounded-2xl border border-[#E5D7C6] bg-white p-6 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#612D10]">
-                      RÈGLEMENTS &amp; DROITS
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#612D10]">
+                      PROPRIÉTÉ INTELLECTUELLE
                     </span>
-                    <span className="text-[10px] font-semibold text-[#612D10] bg-[#FAF7F2] border border-[#EBE4DC] px-2 py-0.5 rounded">
-                      PDF Officiel
+                    <span className="text-[10px] font-bold text-[#612D10] bg-[#FAF7F2] border border-[#E5D7C6] px-2.5 py-0.5 rounded">
+                      OAPI · PDF
                     </span>
                   </div>
 
-                  <h4 className="text-base font-bold text-[#24140D]">
-                    Charte de Propriété Intellectuelle (PI)
-                  </h4>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#6B5646]">
-                    Définit les règles de copropriété, de brevetabilité et de protection intégrale des inventions conçues sur les plateformes du CIAT.
+                  <h3 className="font-[family-name:var(--font-jakarta)] text-base font-bold text-[#24140D]">
+                    Charte des Inventeurs &amp; Brevets CIAT
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#655346]">
+                    Encadre la titularité des inventions, le partage équitable
+                    des redevances et les accords de confidentialité.
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3.5 border-t border-[#FAF7F2] flex items-center justify-between">
-                  <span className="text-[11px] text-emerald-800 font-semibold flex items-center gap-1">
-                    ✓ Protection des inventeurs
+                <div className="mt-5 pt-3.5 border-t border-[#EFE4D6] flex items-center justify-between">
+                  <span className="text-[11px] text-emerald-800 font-bold">
+                    ✓ Droits des porteurs garantis
                   </span>
                   <Link
                     href="/portail/documents"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] hover:text-[#C99A68] transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] hover:text-[#24140D]"
                   >
                     <Download size={13} />
                     Consulter
@@ -557,13 +818,12 @@ export default function CiatPresentationPage() {
                 </div>
               </div>
 
-              {/* Bouton de Soumission Principal */}
               <Link
-                href="/connexion?next=/incubateur"
-                className="w-full inline-flex items-center justify-center rounded-2xl bg-[#28150C] hover:bg-[#3D2012] px-6 py-4 text-sm font-bold text-white shadow-md transition-all active:scale-[0.99] gap-2.5"
+                href="/portail/appels"
+                className="w-full inline-flex items-center justify-center rounded-2xl bg-[#612D10] hover:bg-[#24140D] px-6 py-4 text-sm font-bold !text-white shadow-md transition-all gap-2.5"
               >
-                <span>Déposer mon dossier de candidature en ligne</span>
-                <ArrowRight size={16} className="text-[#E2A669]" />
+                <span>Voir l&apos;appel à candidatures en cours</span>
+                <ArrowRight size={16} className="text-[#DFae79]" />
               </Link>
             </div>
           </div>
@@ -571,32 +831,33 @@ export default function CiatPresentationPage() {
       </section>
 
       {/* =====================================================================
-       * BANDEAU D'APPEL À L'ACTION FINAL
+       * BANDEAU PRESTIGE FINAL
        * ===================================================================== */}
-      <section className="bg-gradient-to-r from-[#24140D] via-[#3D1D10] to-[#24140D] text-white py-16 border-t border-[#3D1D10]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="space-y-1.5 text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-extrabold !text-white tracking-tight">
-              Prêt à accélérer votre projet au CIAT ?
+      <section className="bg-[#24140D] text-white py-16 border-t border-[#C99A68]/25">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-1.5 text-center md:text-left">
+            <h2 className="font-[family-name:var(--font-jakarta)] text-2xl sm:text-3xl font-extrabold !text-white">
+              Prêt à façonner votre prototype à Diamniadio ?
             </h2>
-            <p className="text-xs sm:text-sm text-[#FAF7F2]/80 max-w-xl">
-              Consultez le parcours de l’incubateur ou contactez notre secrétariat à Diamniadio.
+            <p className="text-xs sm:text-sm text-[#E5D7C6] max-w-xl">
+              Rejoignez la prochaine cohorte d&apos;incubation ou sollicitez nos
+              plateaux techniques pour un partenariat industriel.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
             <Link
-              href="/portail/incubateur"
-              className="inline-flex items-center justify-center rounded-xl border border-white/50 bg-white/10 px-6 py-3 text-xs font-semibold text-white transition-all hover:bg-white/20 active:scale-95"
+              href="/portail/contact"
+              className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 text-xs sm:text-sm font-semibold !text-white transition hover:bg-white/20"
             >
-              Voir le parcours incubateur
+              Contacter la Direction
             </Link>
             <Link
               href="/connexion?next=/incubateur"
-              className="inline-flex items-center justify-center rounded-xl bg-[#612D10] px-6 py-3 text-xs font-bold text-white shadow-lg transition-all hover:bg-[#C99A68] hover:text-[#24140D] active:scale-95 border border-[#C99A68]/40"
+              className="inline-flex items-center justify-center rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-6 py-3.5 text-xs sm:text-sm font-extrabold !text-[#24140D] shadow-lg transition"
             >
-              Candidater maintenant
-              <ArrowRight size={14} className="ml-2" />
+              Déposer une candidature
+              <ArrowRight size={15} className="ml-2" />
             </Link>
           </div>
         </div>
