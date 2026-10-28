@@ -431,7 +431,7 @@ export default function AppelsBody() {
                 <span className="text-xs font-semibold text-[#655346]">
                   Suivi en temps réel depuis votre espace porteur CIAT 360
                 </span>
-                <a href="#preparer" className="ap-btn-dark">
+                <a href="#preparer" className="ap-btn-gold">
                   Préparer mon dossier
                   <ArrowRight size={15} />
                 </a>
@@ -610,7 +610,7 @@ export default function AppelsBody() {
               <div className="ap-cta-row">
                 <Link
                   href="/connexion?next=/incubateur"
-                  className="ap-btn-dark"
+                  className="ap-btn-gold"
                 >
                   <FolderCheck size={16} />
                   Déposer ma candidature en ligne

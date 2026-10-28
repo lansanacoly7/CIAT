@@ -733,11 +733,11 @@
   padding: 0 22px;
   border-radius: 12px;
   background: #612D10;
-  border: 1px solid #612D10;
+  border: 1px solid rgba(201, 154, 104, 0.4);
   color: #FFFFFF !important;
   font-family: var(--font-jakarta), sans-serif;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   text-decoration: none;
   transition: all 0.2s ease;
   box-shadow: 0 4px 14px rgba(97, 45, 16, 0.2);
@@ -745,7 +745,7 @@
 
 .ap-btn-dark:hover {
   background: #7D3A15;
-  border-color: #7D3A15;
+  border-color: #C99A68;
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(97, 45, 16, 0.3);
 }

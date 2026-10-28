@@ -306,6 +306,8 @@ export interface AlerteJalon {
   id: number;
   projet: number;
   projet_titre: string;
+  porteur_nom?: string;
+  mentor_nom?: string;
   titre: string;
   echeance: string;
   statut: JalonStatut;

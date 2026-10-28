@@ -1513,7 +1513,7 @@ export default function GalerieProjets() {
                 <button
                   type="button"
                   onClick={() => handleDownloadQr(qrTarget)}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#24140D] hover:bg-[#612D10] px-4 py-3 text-xs font-bold text-white transition cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-4 py-3 text-xs font-bold !text-white transition cursor-pointer"
                 >
                   <Download size={14} />
                   Télécharger PNG

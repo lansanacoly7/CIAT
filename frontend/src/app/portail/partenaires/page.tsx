@@ -206,7 +206,6 @@ export default function PartenairesPage() {
             className="object-cover object-center opacity-35"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#24140D] via-[#24140D]/75 to-transparent" />
-          <div className="absolute inset-0 bg-radial from-transparent via-[#24140D]/50 to-[#24140D]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24">

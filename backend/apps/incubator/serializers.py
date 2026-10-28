@@ -534,6 +534,8 @@ class JalonSerializer(serializers.ModelSerializer):
 
 class AlerteJalonSerializer(serializers.ModelSerializer):
     projet_titre = serializers.CharField(source="projet.titre", read_only=True)
+    porteur_nom = serializers.SerializerMethodField()
+    mentor_nom = serializers.SerializerMethodField()
     en_retard = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -542,12 +544,26 @@ class AlerteJalonSerializer(serializers.ModelSerializer):
             "id",
             "projet",
             "projet_titre",
+            "porteur_nom",
+            "mentor_nom",
             "titre",
             "echeance",
             "statut",
             "en_retard",
             "cree_le",
         ]
+
+    def get_porteur_nom(self, obj):
+        if obj.projet and obj.projet.porteur:
+            return obj.projet.porteur.get_full_name() or obj.projet.porteur.username
+        return None
+
+    def get_mentor_nom(self, obj):
+        if obj.projet:
+            aff = getattr(obj.projet, "affectation_mentor", None)
+            if aff and aff.mentor:
+                return aff.mentor.get_full_name() or aff.mentor.username
+        return None
 
 
 class SuiviProjetSerializer(serializers.ModelSerializer):
