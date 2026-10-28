@@ -14,7 +14,15 @@ import {
   ArrowUpRight,
   Clock,
   Calendar,
+  TrendingUp,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+} from "recharts";
 import type { FinancementItem } from "../types";
 import { formatDate, formatNumber } from "@/lib/format";
 import { getDomaineShortLabel, getDomaineFullName } from "@/lib/domaines";
@@ -170,6 +178,36 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       (acc, item) => acc + (Number(item.montant) || 0),
       0
     );
+  }, [historyTimelineData]);
+
+  // Données sparkline : flux cumulé par mois pour le mini-graphique dans la modale
+  const sparklineData = useMemo(() => {
+    if (historyTimelineData.length === 0) return [];
+
+    // Regrouper par mois (YYYY-MM) et calculer le cumul
+    const monthMap = new Map<string, number>();
+    const sorted = [...historyTimelineData].sort((a, b) => {
+      return new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime();
+    });
+
+    sorted.forEach((item) => {
+      const d = new Date(item.date || 0);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthMap.set(key, (monthMap.get(key) || 0) + (Number(item.montant) || 0));
+    });
+
+    let cumul = 0;
+    const result: { mois: string; montant: number; cumul: number }[] = [];
+    Array.from(monthMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([mois, montant]) => {
+        cumul += montant;
+        const [y, m] = mois.split("-");
+        const label = `${["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"][Number(m) - 1]} ${y.slice(2)}`;
+        result.push({ mois: label, montant, cumul });
+      });
+
+    return result;
   }, [historyTimelineData]);
 
   // Somme totale des montants filtrés du tableau principal
@@ -768,10 +806,12 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="history-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#21130D]/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ animation: "fadeIn 200ms ease-out" }}
         >
+          {/* Backdrop overlay */}
           <div
-            className="fixed inset-0"
+            className="absolute inset-0 bg-[#21130D]/60 backdrop-blur-sm"
             onClick={() => setIsHistoryModalOpen(false)}
             aria-hidden="true"
           />
@@ -807,7 +847,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             </div>
 
             {/* Filtres de la modale & Bandeau synthétique */}
-            <div className="border-b border-[#EFE4D6] bg-white p-4 sm:px-6">
+            <div className="border-b border-[#EFE4D6] bg-white p-4 sm:px-6 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* Puces de filtrage dans la modale */}
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -855,6 +895,62 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Mini sparkline — évolution cumulée des flux (léger, non surchargé) */}
+              {sparklineData.length >= 2 && (
+                <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 p-3">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <TrendingUp className="h-3.5 w-3.5 text-[#8C5E2D]" />
+                    <span className="text-[11px] font-semibold text-[#612D10] uppercase tracking-wider">
+                      Tendance cumulée des flux
+                    </span>
+                  </div>
+                  <div style={{ width: "100%", height: 80 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={sparklineData} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8C5E2D" stopOpacity={0.3} />
+                            <stop offset="100%" stopColor="#8C5E2D" stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="mois"
+                          tick={{ fontSize: 9, fill: "#8C6D4F" }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval="preserveStartEnd"
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            background: "#21130D",
+                            border: "none",
+                            borderRadius: 10,
+                            padding: "8px 12px",
+                            fontSize: 11,
+                            color: "#FAF7F2",
+                            boxShadow: "0 4px 20px rgba(33,19,13,0.3)",
+                          }}
+                          formatter={(value: number) => [
+                            `${formatNumber(value)} FCFA`,
+                            "Cumul",
+                          ]}
+                          labelStyle={{ color: "#C99A68", fontWeight: 600, fontSize: 10 }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="cumul"
+                          stroke="#8C5E2D"
+                          strokeWidth={2}
+                          fill="url(#sparkGrad)"
+                          dot={false}
+                          activeDot={{ r: 4, fill: "#8C5E2D", stroke: "#FAF7F2", strokeWidth: 2 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Liste chronologique détaillée des mouvements */}
