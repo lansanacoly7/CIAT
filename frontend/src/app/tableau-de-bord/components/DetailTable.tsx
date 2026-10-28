@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Search,
   X,
-  Wallet,
   CheckCircle2,
   FileText,
   Building2,
+  History,
+  ArrowUpRight,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import type { FinancementItem } from "../types";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -23,6 +26,7 @@ interface DetailTableProps {
 
 type SortField = "projet_titre" | "domaine" | "source" | "date" | "statut" | "montant";
 type SortDirection = "asc" | "desc";
+type HistoryFilterType = "all" | "decaisse" | "accorde" | "instruction";
 
 export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +35,21 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // État de la modale d'historique des fonds
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilterType>("all");
+
+  // Fermeture par touche Échap
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isHistoryModalOpen) {
+        setIsHistoryModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isHistoryModalOpen]);
 
   // Statistiques synthétiques au sommet du Registre
   const stats = useMemo(() => {
@@ -81,7 +100,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     return { all: data.length, decaisse, accorde, instruction, attente };
   }, [data]);
 
-  // Filtrage
+  // Filtrage du tableau principal
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesSearch =
@@ -101,7 +120,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     });
   }, [data, searchTerm, selectedStatut]);
 
-  // Tri
+  // Tri du tableau principal
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
       const aVal = a[sortField];
@@ -127,7 +146,33 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     });
   }, [filteredData, sortField, sortDirection]);
 
-  // Somme totale des montants filtrés
+  // Données de l'historique chronologique pour la modale
+  const historyTimelineData = useMemo(() => {
+    const list = data.filter((item) => {
+      if (historyFilter === "all") return true;
+      const s = (item.statut || "").toLowerCase();
+      if (historyFilter === "decaisse") return s.includes("decaisse") || s.includes("paye");
+      if (historyFilter === "accorde") return s.includes("accorde") || s.includes("valide");
+      if (historyFilter === "instruction") return s.includes("cours") || s.includes("instruction");
+      return true;
+    });
+
+    // Tri chronologique décroissant (le plus récent en premier)
+    return [...list].sort((a, b) => {
+      const tA = new Date(a.date || 0).getTime();
+      const tB = new Date(b.date || 0).getTime();
+      return tB - tA;
+    });
+  }, [data, historyFilter]);
+
+  const historyTotalAmount = useMemo(() => {
+    return historyTimelineData.reduce(
+      (acc, item) => acc + (Number(item.montant) || 0),
+      0
+    );
+  }, [historyTimelineData]);
+
+  // Somme totale des montants filtrés du tableau principal
   const totalAmount = useMemo(() => {
     return filteredData.reduce(
       (acc, item) => acc + (Number(item.montant) || 0),
@@ -151,7 +196,13 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     }
   };
 
-  // Badge statut sobre et conforme à la charte CIAT avec point de statut
+  // Ouvre la modale d'historique avec le filtre souhaité
+  const handleOpenHistory = (filter: HistoryFilterType) => {
+    setHistoryFilter(filter);
+    setIsHistoryModalOpen(true);
+  };
+
+  // Badge statut conforme à la charte CIAT avec pastille colorée
   const getStatusBadge = (statut?: string, statutDisplay?: string) => {
     const s = statut?.toLowerCase() || "";
     const tooltip = statutDisplay || statut || "Inconnu";
@@ -202,78 +253,120 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
   return (
     <div className="space-y-5">
-      {/* 1. Bandeau de 4 KPI décisionnels pour le Registre */}
+      {/* 1. Bandeau de 4 KPI décisionnels cliquables ouvrant l'historique des fonds */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {/* KPI 1 : Engagements totaux */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
-          <div className="flex items-center justify-between text-[#8C6D4F]">
+        {/* KPI 1 : Engagements totaux -> Ouvre l'historique global */}
+        <button
+          type="button"
+          onClick={() => handleOpenHistory("all")}
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20"
+          title="Cliquer pour consulter l'historique chronologique de tous les engagements"
+        >
+          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
               Engagements totaux
             </span>
-            <Wallet className="h-4 w-4 text-[#8C5E2D]" aria-hidden="true" />
+            <div className="flex items-center gap-1 text-[#8C5E2D] opacity-80 group-hover:opacity-100">
+              <History className="h-4 w-4" aria-hidden="true" />
+            </div>
           </div>
           <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
             {formatNumber(stats.totalEngage)}{" "}
             <span className="text-xs font-normal text-[#8C6D4F]">FCFA</span>
           </div>
-          <div className="mt-1 text-[11px] text-[#6B5646]">
-            Volume cumulé des conventions
+          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
+            <span>Volume cumulé des conventions</span>
+            <span className="inline-flex items-center gap-0.5 font-semibold text-[#8C5E2D] group-hover:underline">
+              Historique <ArrowUpRight className="h-3 w-3" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* KPI 2 : Fonds décaissés */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
-          <div className="flex items-center justify-between text-[#8C6D4F]">
+        {/* KPI 2 : Fonds décaissés -> Ouvre l'historique des décaissements */}
+        <button
+          type="button"
+          onClick={() => handleOpenHistory("decaisse")}
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#2E7D32] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#2E7D32]/20"
+          title="Cliquer pour consulter l'historique des décaissements effectifs"
+        >
+          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
               Fonds décaissés
             </span>
-            <CheckCircle2 className="h-4 w-4 text-[#2E7D32]" aria-hidden="true" />
+            <div className="flex items-center gap-1 text-[#2E7D32] opacity-80 group-hover:opacity-100">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            </div>
           </div>
           <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#1E5222] tabular-nums">
             {formatNumber(stats.totalDecaisse)}{" "}
             <span className="text-xs font-normal text-[#6B5646]">FCFA</span>
           </div>
-          <div className="mt-1 text-[11px] text-[#6B5646]">
-            <strong className="font-semibold text-[#21130D]">
-              {stats.pctDecaisse} %
-            </strong>{" "}
-            du volume total décaissé
+          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
+            <span>
+              <strong className="font-semibold text-[#21130D]">
+                {stats.pctDecaisse} %
+              </strong>{" "}
+              du volume versé
+            </span>
+            <span className="inline-flex items-center gap-0.5 font-semibold text-[#2E7D32] group-hover:underline">
+              Versements <ArrowUpRight className="h-3 w-3" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* KPI 3 : Dossiers répertoriés */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
-          <div className="flex items-center justify-between text-[#8C6D4F]">
+        {/* KPI 3 : Dossiers répertoriés -> Ouvre l'historique des conventions */}
+        <button
+          type="button"
+          onClick={() => handleOpenHistory("all")}
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20"
+          title="Cliquer pour consulter l'historique complet des dossiers"
+        >
+          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
               Dossiers au registre
             </span>
-            <FileText className="h-4 w-4 text-[#8C5E2D]" aria-hidden="true" />
+            <div className="flex items-center gap-1 text-[#8C5E2D] opacity-80 group-hover:opacity-100">
+              <FileText className="h-4 w-4" aria-hidden="true" />
+            </div>
           </div>
           <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
             {stats.count}{" "}
             <span className="text-xs font-normal text-[#8C6D4F]">dossiers</span>
           </div>
-          <div className="mt-1 text-[11px] text-[#6B5646]">
-            Conventions & subventions répertoriées
+          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
+            <span>Conventions répertoriées</span>
+            <span className="inline-flex items-center gap-0.5 font-semibold text-[#8C5E2D] group-hover:underline">
+              Traçabilité <ArrowUpRight className="h-3 w-3" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* KPI 4 : Sources partenaires */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
-          <div className="flex items-center justify-between text-[#8C6D4F]">
+        {/* KPI 4 : Sources partenaires -> Ouvre l'historique par source */}
+        <button
+          type="button"
+          onClick={() => handleOpenHistory("accorde")}
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#4A6B82] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#4A6B82]/20"
+          title="Cliquer pour consulter l'historique des accords et guichets"
+        >
+          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
               Sources partenaires
             </span>
-            <Building2 className="h-4 w-4 text-[#4A6B82]" aria-hidden="true" />
+            <div className="flex items-center gap-1 text-[#4A6B82] opacity-80 group-hover:opacity-100">
+              <Building2 className="h-4 w-4" aria-hidden="true" />
+            </div>
           </div>
           <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
             {stats.distinctSources}{" "}
             <span className="text-xs font-normal text-[#8C6D4F]">guichets</span>
           </div>
-          <div className="mt-1 text-[11px] text-[#6B5646]">
-            Diversification des appuis financiers
+          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
+            <span>Diversification des appuis</span>
+            <span className="inline-flex items-center gap-0.5 font-semibold text-[#4A6B82] group-hover:underline">
+              Accords <ArrowUpRight className="h-3 w-3" />
+            </span>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* 2. Cadre principal du Registre : Barre d'outils + Tableau + Pagination */}
@@ -668,6 +761,196 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
           </div>
         </div>
       </div>
+
+      {/* 3. MODALE D'HISTORIQUE CHRONOLOGIQUE DES FONDS */}
+      {isHistoryModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#21130D]/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+        >
+          <div
+            className="fixed inset-0"
+            onClick={() => setIsHistoryModalOpen(false)}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden">
+            {/* En-tête de la modale */}
+            <div className="flex items-start justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] p-5 sm:p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#8C5E2D] shadow-xs">
+                  <History className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3
+                    id="history-modal-title"
+                    className="text-lg font-bold text-[#21130D] tracking-tight"
+                  >
+                    Historique chronologique des fonds et conventions
+                  </h3>
+                  <p className="mt-0.5 text-xs text-[#6B5646]">
+                    Grand livre des versements, décaissements et protocoles financiers
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D] transition-colors"
+                aria-label="Fermer la modale"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Filtres de la modale & Bandeau synthétique */}
+            <div className="border-b border-[#EFE4D6] bg-white p-4 sm:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* Puces de filtrage dans la modale */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { key: "all", label: "Toutes les opérations", count: data.length },
+                    { key: "decaisse", label: "Décaissements", count: statusCounts.decaisse },
+                    { key: "accorde", label: "Conventions accordées", count: statusCounts.accorde },
+                    { key: "instruction", label: "En cours d'instruction", count: statusCounts.instruction },
+                  ].map((tab) => {
+                    const isActive = historyFilter === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setHistoryFilter(tab.key as HistoryFilterType)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                          isActive
+                            ? "bg-[#21130D] text-white shadow-xs font-semibold"
+                            : "border border-[#EFE4D6] bg-[#FAF7F2] text-[#6B5646] hover:bg-white hover:text-[#21130D]"
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        <span
+                          className={`rounded-full px-1.5 py-0.2 text-[10px] tabular-nums font-semibold ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-white text-[#8C5E2D] border border-[#EFE4D6]"
+                          }`}
+                        >
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Synthèse du sous-total */}
+                <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3.5 py-2 text-right">
+                  <span className="text-[11px] text-[#6B5646] block">
+                    Sous-total sélectionné
+                  </span>
+                  <span className="font-sans text-sm font-bold text-[#612D10] tabular-nums">
+                    {formatNumber(historyTotalAmount)}{" "}
+                    <span className="text-xs font-normal text-[#8C5E2D]">FCFA</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Liste chronologique détaillée des mouvements */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 max-h-[55vh]">
+              {historyTimelineData.length === 0 ? (
+                <div className="py-12 text-center text-xs text-[#6B5646]">
+                  <Clock className="h-8 w-8 text-[#8C5E2D]/40 mx-auto mb-2" />
+                  <p className="font-semibold text-[#21130D]">
+                    Aucun flux financier enregistré pour ce statut.
+                  </p>
+                </div>
+              ) : (
+                historyTimelineData.map((op, idx) => {
+                  const s = (op.statut || "").toLowerCase();
+                  const isDecaisse = s.includes("decaisse") || s.includes("paye");
+                  const isAccorde = s.includes("accorde") || s.includes("valide");
+
+                  return (
+                    <div
+                      key={op.id || idx}
+                      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#EFE4D6] bg-white p-4 transition-all hover:border-[#8C5E2D]/50 hover:bg-[#FAF7F2]/40 hover:shadow-2xs"
+                    >
+                      {/* Bloc gauche : Date, Statut, Titre et Source */}
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#612D10]">
+                            <Calendar className="h-3 w-3 text-[#8C5E2D]" />
+                            {formatDate(op.date)}
+                          </span>
+
+                          {getStatusBadge(op.statut, op.statut_display)}
+
+                          {op.domaine && (
+                            <span className="rounded-md border border-[#EFE4D6] bg-white px-2 py-0.5 text-[10px] font-semibold text-[#8C5E2D]">
+                              {getDomaineShortLabel(op.domaine)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Titre du projet et porteur */}
+                        <div className="font-semibold text-[14px] text-[#21130D] group-hover:text-[#8C5E2D] transition-colors leading-snug">
+                          {op.projet_titre}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-[#6B5646] flex-wrap">
+                          <span>Porteur : <strong className="text-[#21130D]">{op.porteur_nom || "Non renseigné"}</strong></span>
+                          {op.cohorte && <span>· Cohorte : {op.cohorte}</span>}
+                          <span>· Guichet : <strong className="text-[#612D10]">{op.source || "Fonds CIAT"}</strong></span>
+                        </div>
+
+                        {op.description && (
+                          <p className="text-[11px] text-[#8C6D4F] italic line-clamp-2 mt-1">
+                            « {op.description} »
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Bloc droite : Montant */}
+                      <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#EFE4D6]/60">
+                        <span className="text-[11px] text-[#6B5646] block font-medium">
+                          {isDecaisse ? "Montant décaissé" : isAccorde ? "Montant conventionné" : "Montant sollicité"}
+                        </span>
+                        <div
+                          className={`font-sans text-base sm:text-lg font-black tabular-nums ${
+                            isDecaisse
+                              ? "text-[#1E5222]"
+                              : "text-[#21130D]"
+                          }`}
+                        >
+                          {formatNumber(Number(op.montant) || 0)}{" "}
+                          <span className="text-xs font-semibold text-[#8C5E2D]">FCFA</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Pied de la modale */}
+            <div className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2] p-4 sm:px-6 text-xs text-[#6B5646]">
+              <span>
+                Total : <strong className="text-[#21130D]">{historyTimelineData.length} opérations</strong> répertoriées au grand livre
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="rounded-lg bg-[#21130D] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3D2314] active:scale-95 transition-all"
+              >
+                Fermer l&apos;historique
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
