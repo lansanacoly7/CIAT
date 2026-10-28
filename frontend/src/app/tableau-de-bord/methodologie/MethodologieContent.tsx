@@ -469,26 +469,26 @@ export function MethodologieContent() {
                   </div>
 
                   {/* Formule de calcul */}
-                  <div className="rounded-xl border border-zinc-200/90 bg-zinc-900 p-3.5 text-white shadow-inner">
+                  <div className="rounded-xl border border-zinc-200/90 bg-zinc-900 p-3 sm:p-3.5 text-white shadow-inner overflow-hidden">
                     <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
                       <span className="flex items-center gap-1.5">
                         <Calculator className="h-3.5 w-3.5 text-amber-400" />
                         Formule mathématique & logique
                       </span>
                     </div>
-                    <div className="mt-1.5 font-mono text-sm font-medium text-amber-200">
+                    <div className="mt-1.5 font-mono text-xs sm:text-sm font-medium text-amber-200 break-words overflow-x-auto leading-relaxed">
                       {ind.formule}
                     </div>
                   </div>
 
                   {/* Grille Source & Période */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3.5">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3 sm:p-3.5">
                       <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
                         <Database className="h-3.5 w-3.5 text-[#9a3412]" />
                         <span>Source des données</span>
                       </div>
-                      <p className="mt-1 text-xs font-mono text-zinc-600">
+                      <p className="mt-1 text-xs font-mono text-zinc-600 break-words">
                         {ind.source}
                       </p>
                     </div>

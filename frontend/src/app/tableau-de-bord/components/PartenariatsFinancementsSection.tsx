@@ -357,90 +357,167 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
         </div>
 
         {activeTab === "financements" ? (
-          <div className="mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
-            {financements.length === 0 ? (
-              <p className="py-8 text-center text-xs text-[#5A4B42]">
-                Aucun financement enregistré dans le périmètre sélectionné.
-              </p>
-            ) : (
-              <table className="w-full text-left text-xs table-fixed min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
-                    <th className="py-2.5 px-3 w-[34%]">Projet</th>
-                    <th className="py-2.5 px-3 w-[20%]">Source</th>
-                    <th className="py-2.5 px-3 w-[16%] text-right">Montant (FCFA)</th>
-                    <th className="py-2.5 px-3 w-[15%] text-center">Statut</th>
-                    <th className="py-2.5 px-3 w-[15%] text-center">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
-                  {financements.slice(0, 10).map((f) => (
-                    <tr key={f.id} className="hover:bg-[#FBF8F3]/50 transition-colors h-[50px]">
-                      <td className="py-2.5 px-3 font-medium text-[#21130D] truncate" title={f.projet_titre}>
+          <div>
+            {/* ── Cartes empilées sur mobile (< 640px) ── */}
+            <div className="block sm:hidden space-y-3 mt-3">
+              {financements.length === 0 ? (
+                <p className="py-8 text-center text-xs text-[#5A4B42]">
+                  Aucun financement enregistré dans le périmètre sélectionné.
+                </p>
+              ) : (
+                financements.slice(0, 10).map((f) => (
+                  <div
+                    key={f.id}
+                    className="rounded-xl border border-[#EFE4D6] bg-white p-3.5 shadow-2xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="text-[13px] font-semibold text-[#21130D] line-clamp-2" title={f.projet_titre}>
                         {f.projet_titre}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#5A4B42] truncate" title={f.source}>
-                        {f.source}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-sans font-semibold text-[#21130D] tabular-nums">
+                      </h4>
+                      <span className="shrink-0 inline-flex items-center rounded-md bg-[#5A7D65]/15 px-2 py-0.5 text-[10px] font-semibold text-[#3B5442]">
+                        {f.statut_display}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-[#6B5646] border-t border-[#EFE4D6]/60 pt-1.5">
+                      <span className="font-medium text-[#612D10] truncate max-w-[190px]">{f.source}</span>
+                      <span className="font-mono tabular-nums text-[#8C6D4F]">{formatDate(f.date)}</span>
+                    </div>
+
+                    <div className="flex items-center justify-end pt-1">
+                      <span className="font-sans text-[14px] font-bold text-[#21130D] tabular-nums">
                         {formatNumber(Number(f.montant) || 0)}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex min-w-[80px] justify-center items-center rounded-md bg-[#5A7D65]/15 px-2 py-0.5 text-[11px] font-medium text-[#3B5442]">
-                          {f.statut_display}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center text-[#5A4B42] tabular-nums">
-                        {formatDate(f.date)}
-                      </td>
+                      </span>
+                      <span className="ml-1 text-[11px] font-normal text-[#8C6D4F]">FCFA</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* ── Tableau fixe pour tablette / desktop (>= 640px) ── */}
+            <div className="hidden sm:block mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
+              {financements.length === 0 ? (
+                <p className="py-8 text-center text-xs text-[#5A4B42]">
+                  Aucun financement enregistré dans le périmètre sélectionné.
+                </p>
+              ) : (
+                <table className="w-full text-left text-xs table-fixed min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
+                      <th className="py-2.5 px-3 w-[34%]">Projet</th>
+                      <th className="py-2.5 px-3 w-[20%]">Source</th>
+                      <th className="py-2.5 px-3 w-[16%] text-right">Montant (FCFA)</th>
+                      <th className="py-2.5 px-3 w-[15%] text-center">Statut</th>
+                      <th className="py-2.5 px-3 w-[15%] text-center">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
+                    {financements.slice(0, 10).map((f) => (
+                      <tr key={f.id} className="hover:bg-[#FBF8F3]/50 transition-colors h-[50px]">
+                        <td className="py-2.5 px-3 font-medium text-[#21130D] truncate" title={f.projet_titre}>
+                          {f.projet_titre}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#5A4B42] truncate" title={f.source}>
+                          {f.source}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-sans font-semibold text-[#21130D] tabular-nums">
+                          {formatNumber(Number(f.montant) || 0)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex min-w-[80px] justify-center items-center rounded-md bg-[#5A7D65]/15 px-2 py-0.5 text-[11px] font-medium text-[#3B5442]">
+                            {f.statut_display}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center text-[#5A4B42] tabular-nums">
+                          {formatDate(f.date)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
-            {partenariats.length === 0 ? (
-              <p className="py-8 text-center text-xs text-[#5A4B42]">
-                Aucun partenariat enregistré dans le périmètre sélectionné.
-              </p>
-            ) : (
-              <table className="w-full text-left text-xs table-fixed min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
-                    <th className="py-2.5 px-3 w-[34%]">Projet</th>
-                    <th className="py-2.5 px-3 w-[22%]">Partenaire</th>
-                    <th className="py-2.5 px-3 w-[16%]">Type</th>
-                    <th className="py-2.5 px-3 w-[14%] text-center">Statut</th>
-                    <th className="py-2.5 px-3 w-[14%] text-center">Date début</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
-                  {partenariats.slice(0, 10).map((p) => (
-                    <tr key={p.id} className="hover:bg-[#FBF8F3]/50 transition-colors h-[50px]">
-                      <td className="py-2.5 px-3 font-medium text-[#21130D] truncate" title={p.projet_titre}>
+          <div>
+            {/* ── Cartes empilées Partenariats sur mobile (< 640px) ── */}
+            <div className="block sm:hidden space-y-3 mt-3">
+              {partenariats.length === 0 ? (
+                <p className="py-8 text-center text-xs text-[#5A4B42]">
+                  Aucun partenariat enregistré dans le périmètre sélectionné.
+                </p>
+              ) : (
+                partenariats.slice(0, 10).map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-[#EFE4D6] bg-white p-3.5 shadow-2xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="text-[13px] font-semibold text-[#21130D] line-clamp-2" title={p.projet_titre}>
                         {p.projet_titre}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#5A4B42] truncate" title={p.partenaire}>
-                        {p.partenaire}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#21130D] font-medium truncate">
-                        {p.type_display}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex min-w-[80px] justify-center items-center rounded-md bg-[#C99A68]/20 px-2 py-0.5 text-[11px] font-medium text-[#8C5E2D]">
-                          {p.statut_display}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center text-[#5A4B42] tabular-nums">
-                        {formatDate(p.date_debut)}
-                      </td>
+                      </h4>
+                      <span className="shrink-0 inline-flex items-center rounded-md bg-[#C99A68]/20 px-2 py-0.5 text-[10px] font-semibold text-[#8C5E2D]">
+                        {p.statut_display}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-[#6B5646] border-t border-[#EFE4D6]/60 pt-1.5">
+                      <span className="font-medium text-[#612D10] truncate max-w-[190px]">{p.partenaire}</span>
+                      <span className="font-mono tabular-nums text-[#8C6D4F]">{formatDate(p.date_debut)}</span>
+                    </div>
+
+                    <div className="text-[11px] font-medium text-[#5A4B42]">
+                      Nature : <span className="text-[#21130D] font-semibold">{p.type_display}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* ── Tableau fixe Partenariats pour tablette / desktop (>= 640px) ── */}
+            <div className="hidden sm:block mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
+              {partenariats.length === 0 ? (
+                <p className="py-8 text-center text-xs text-[#5A4B42]">
+                  Aucun partenariat enregistré dans le périmètre sélectionné.
+                </p>
+              ) : (
+                <table className="w-full text-left text-xs table-fixed min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
+                      <th className="py-2.5 px-3 w-[34%]">Projet</th>
+                      <th className="py-2.5 px-3 w-[22%]">Partenaire</th>
+                      <th className="py-2.5 px-3 w-[16%]">Type</th>
+                      <th className="py-2.5 px-3 w-[14%] text-center">Statut</th>
+                      <th className="py-2.5 px-3 w-[14%] text-center">Date début</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
+                    {partenariats.slice(0, 10).map((p) => (
+                      <tr key={p.id} className="hover:bg-[#FBF8F3]/50 transition-colors h-[50px]">
+                        <td className="py-2.5 px-3 font-medium text-[#21130D] truncate" title={p.projet_titre}>
+                          {p.projet_titre}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#5A4B42] truncate" title={p.partenaire}>
+                          {p.partenaire}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#21130D] font-medium truncate">
+                          {p.type_display}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex min-w-[80px] justify-center items-center rounded-md bg-[#C99A68]/20 px-2 py-0.5 text-[11px] font-medium text-[#8C5E2D]">
+                            {p.statut_display}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center text-[#5A4B42] tabular-nums">
+                          {formatDate(p.date_debut)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         )}
       </div>

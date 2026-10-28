@@ -183,12 +183,34 @@ def collecter_donnees_analyses(request):
         "H": "Hommes",
         "A": "Autre / non précisé",
     }
+    totals_genre = {"Femmes": 0, "Hommes": 0, "Autre / non précisé": 0}
+    for item in par_genre_raw:
+        genre_code = item["porteur__genre"]
+        label = mapping_genre.get(genre_code, "Autre / non précisé")
+        totals_genre[label] = totals_genre.get(label, 0) + item["total"]
+
     par_genre = [
+        {"genre": label, "total": total}
+        for label, total in totals_genre.items()
+    ]
+
+
+    # Évolution chronologique par mois de création
+    from django.db.models.functions import TruncMonth
+
+    evolution_raw = (
+        qs.annotate(mois=TruncMonth("cree_le"))
+        .values("mois")
+        .annotate(total=Count("id"))
+        .order_by("mois")
+    )
+    evolution = [
         {
-            "genre": mapping_genre.get(item["porteur__genre"], "Non renseigné"),
+            "mois": item["mois"].strftime("%Y-%m") if hasattr(item["mois"], "strftime") else str(item["mois"])[:7],
             "total": item["total"],
         }
-        for item in par_genre_raw
+        for item in evolution_raw
+        if item["mois"] is not None
     ]
 
     filtres_actifs = []
@@ -204,9 +226,11 @@ def collecter_donnees_analyses(request):
         "par_domaine": par_domaine,
         "par_cohorte": par_cohorte,
         "par_genre": par_genre,
+        "evolution": evolution,
         "filtres_texte": filtres_texte,
         "date_export": timezone.now().strftime("%d/%m/%Y à %H:%M"),
     }
+
 
 
 # ==============================================================================
@@ -365,6 +389,33 @@ def generer_export_xlsx(data: dict) -> io.BytesIO:
         c2.alignment = Alignment(horizontal="right")
         c3.alignment = Alignment(horizontal="right")
         current_row += 1
+
+    current_row += 2
+
+    # 5. Section Évolution Chronologique des Dépôts
+    if data.get("evolution"):
+        add_section_header("5. ÉVOLUTION CHRONOLOGIQUE DES DÉPÔTS")
+        headers_evo = ["Mois", "Nombre de dépôts"]
+        for col_idx, h in enumerate(headers_evo, 1):
+            cell = ws.cell(row=current_row, column=col_idx, value=h)
+            cell.fill = fill_header
+            cell.font = font_th
+            cell.alignment = Alignment(horizontal="left" if col_idx == 1 else "right")
+            cell.border = border_cell
+        current_row += 1
+
+        for idx, e in enumerate(data["evolution"]):
+            c1 = ws.cell(row=current_row, column=1, value=e["mois"])
+            c2 = ws.cell(row=current_row, column=2, value=e["total"])
+            c1.font = font_td
+            c2.font = font_td
+            c1.border = border_cell
+            c2.border = border_cell
+            c2.alignment = Alignment(horizontal="right")
+            if idx % 2 == 1:
+                c1.fill = fill_zebra
+                c2.fill = fill_zebra
+            current_row += 1
 
     # Ajustement largeur des colonnes
     for col in ws.columns:
@@ -648,6 +699,35 @@ def generer_export_pdf(data: dict) -> io.BytesIO:
     )
     story.append(t_gen)
 
+    # 5. Évolution chronologique des dépôts
+    if data.get("evolution"):
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("5. Évolution Chronologique des Dépôts", h2_style))
+        t_evo_data = [
+            [
+                Paragraph("Mois", cell_th_style),
+                Paragraph("Nombre de dépôts", cell_th_style),
+            ]
+        ]
+        for e in data["evolution"]:
+            t_evo_data.append([
+                Paragraph(e["mois"], cell_td_style),
+                Paragraph(str(e["total"]), cell_td_right),
+            ])
+        t_evo = Table(t_evo_data, colWidths=[240, 247])
+        t_evo.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), c_brun),
+                ("GRID", (0, 0), (-1, -1), 0.5, c_border),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, c_zebra]),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ])
+        )
+        story.append(t_evo)
+
     doc.build(story, canvasmaker=_AnalyticsNumberedCanvas)
     buf.seek(0)
     return buf
+

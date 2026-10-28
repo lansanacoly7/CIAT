@@ -285,19 +285,18 @@ export function DashboardSidebar() {
                 href="/compte"
                 onClick={onItemClick}
                 className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-white/10"
-                title="Mon profil & Compte"
-                aria-label="Mon profil & Compte"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] text-[11px] font-bold">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] text-[11px] font-bold" aria-hidden="true">
                     {userInitial}
                   </div>
                   <div className="min-w-0 text-left">
                     <p className="truncate font-semibold">{userDisplayName}</p>
                     <p className="text-[10px] text-[#cbb7a3] truncate">({roleLabel})</p>
+                    <span className="sr-only">Mon profil &amp; Compte</span>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-white/60" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
               </Link>
             ) : null}
 
