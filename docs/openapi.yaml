@@ -7,11 +7,11 @@ info:
 paths:
   /api/analytics/evolution/:
     get:
-      operationId: analytics_evolution_retrieve
+      operationId: api_analytics_evolution_retrieve
       description: Restitue l'évolution mensuelle des dépôts de projets pour analyser
         la saisonnalité.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -19,11 +19,11 @@ paths:
           description: No response body
   /api/analytics/export/:
     get:
-      operationId: analytics_export_retrieve
+      operationId: api_analytics_export_retrieve
       description: Génère et télécharge le rapport consolidé du tableau de bord au
         format Excel ou PDF institutionnel.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -31,11 +31,11 @@ paths:
           description: No response body
   /api/analytics/financements/:
     get:
-      operationId: analytics_financements_retrieve
+      operationId: api_analytics_financements_retrieve
       description: Liste les financements accordés et décaissés avec traçabilité des
         guichets d'origine.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -43,7 +43,7 @@ paths:
           description: No response body
   /api/analytics/indicateurs/:
     get:
-      operationId: analytics_indicateurs_retrieve
+      operationId: api_analytics_indicateurs_retrieve
       description: |-
         Calcule les indicateurs globaux du pipeline en une seule requête SQL performante.
 
@@ -52,7 +52,7 @@ paths:
         - Taux de sélection : calculé rigoureusement sur le ratio des projets retenus par rapport
           aux dossiers déposés éligibles.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -60,7 +60,7 @@ paths:
           description: No response body
   /api/analytics/indicateurs/definitions/:
     get:
-      operationId: analytics_indicateurs_definitions_retrieve
+      operationId: api_analytics_indicateurs_definitions_retrieve
       description: |-
         GET /api/analytics/indicateurs/definitions/
 
@@ -75,7 +75,7 @@ paths:
         - limites méthodologiques (ex: dossiers déposés vs idées reçues)
         - guide d'interprétation et seuils d'analyse
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -83,11 +83,11 @@ paths:
           description: No response body
   /api/analytics/par-cohorte/:
     get:
-      operationId: analytics_par_cohorte_retrieve
+      operationId: api_analytics_par_cohorte_retrieve
       description: Compare la performance et le passage à l'échelle (prototypes) entre
         promotions annuelles.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -95,11 +95,11 @@ paths:
           description: No response body
   /api/analytics/par-domaine/:
     get:
-      operationId: analytics_par_domaine_retrieve
+      operationId: api_analytics_par_domaine_retrieve
       description: Agrège le volume de projets par filière technologique pour guider
         l'affectation des ressources.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -107,11 +107,11 @@ paths:
           description: No response body
   /api/analytics/par-genre/:
     get:
-      operationId: analytics_par_genre_retrieve
+      operationId: api_analytics_par_genre_retrieve
       description: Mesure la parité femmes/hommes des porteurs de projets selon les
         engagements institutionnels.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -119,11 +119,11 @@ paths:
           description: No response body
   /api/analytics/partenariats/:
     get:
-      operationId: analytics_partenariats_retrieve
+      operationId: api_analytics_partenariats_retrieve
       description: Liste les conventions et partenariats rattachés aux projets selon
         les filtres actifs.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -131,11 +131,11 @@ paths:
           description: No response body
   /api/analytics/partenariats-financements/stats/:
     get:
-      operationId: analytics_partenariats_financements_stats_retrieve
+      operationId: api_analytics_partenariats_financements_stats_retrieve
       description: Calcule les agrégats financiers globaux (montant mobilisé vs décaissé)
         et le taux de partenariats actifs.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -143,11 +143,11 @@ paths:
           description: No response body
   /api/analytics/question/:
     post:
-      operationId: analytics_question_create
+      operationId: api_analytics_question_create
       description: Traite une question décisionnelle en langage naturel avec limitation
         de débit et capture d'erreur 503.
       tags:
-      - analytics
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -155,12 +155,12 @@ paths:
           description: No response body
   /api/assistant/conversations/:
     get:
-      operationId: assistant_conversations_list
+      operationId: api_assistant_conversations_list
       description: Gestion des conversations privées de l'utilisateur avec l'assistant
         IA.
       summary: Lister mes conversations avec l'assistant
       tags:
-      - assistant
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -173,12 +173,12 @@ paths:
                   $ref: '#/components/schemas/Conversation'
           description: ''
     post:
-      operationId: assistant_conversations_create
+      operationId: api_assistant_conversations_create
       description: Gestion des conversations privées de l'utilisateur avec l'assistant
         IA.
       summary: Créer une nouvelle conversation
       tags:
-      - assistant
+      - api
       requestBody:
         content:
           application/json:
@@ -201,7 +201,7 @@ paths:
           description: ''
   /api/assistant/conversations/{id}/:
     get:
-      operationId: assistant_conversations_retrieve
+      operationId: api_assistant_conversations_retrieve
       description: Consultation et suppression d'une conversation privée avec l'assistant
         IA.
       summary: Détail d'une conversation
@@ -212,7 +212,7 @@ paths:
           type: integer
         required: true
       tags:
-      - assistant
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -237,7 +237,7 @@ paths:
                 additionalProperties: {}
           description: ''
     delete:
-      operationId: assistant_conversations_destroy
+      operationId: api_assistant_conversations_destroy
       description: Consultation et suppression d'une conversation privée avec l'assistant
         IA.
       summary: Supprimer une conversation privée (Droit à l'effacement RGPD)
@@ -248,7 +248,7 @@ paths:
           type: integer
         required: true
       tags:
-      - assistant
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -270,7 +270,7 @@ paths:
           description: ''
   /api/assistant/conversations/{id}/messages/:
     get:
-      operationId: assistant_conversations_messages_list
+      operationId: api_assistant_conversations_messages_list
       description: Lecture de l'historique et soumission d'une question à l'assistant
         IA.
       summary: Lister les messages d'une conversation
@@ -281,7 +281,7 @@ paths:
           type: integer
         required: true
       tags:
-      - assistant
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -294,7 +294,7 @@ paths:
                   $ref: '#/components/schemas/MessageAssistant'
           description: ''
     post:
-      operationId: assistant_conversations_messages_create
+      operationId: api_assistant_conversations_messages_create
       description: Lecture de l'historique et soumission d'une question à l'assistant
         IA.
       summary: Envoyer un message et obtenir la réponse de l'assistant
@@ -305,7 +305,7 @@ paths:
           type: integer
         required: true
       tags:
-      - assistant
+      - api
       requestBody:
         content:
           application/json:
@@ -343,12 +343,12 @@ paths:
           description: ''
   /api/assistant/indexation/:
     post:
-      operationId: assistant_indexation_create
+      operationId: api_assistant_indexation_create
       description: Endpoint administratif permettant de découper et indexer les documents
         publics.
       summary: Réindexer les documents publics du portail pour l'assistant
       tags:
-      - assistant
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -368,7 +368,7 @@ paths:
           description: ''
   /api/audit/:
     get:
-      operationId: audit_list
+      operationId: api_audit_list
       description: Consultation en lecture seule du journal d'audit, filtrable par
         acteur, action et date.
       summary: Journal d'audit des actions sensibles
@@ -376,23 +376,23 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - audit
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -406,10 +406,10 @@ paths:
           description: Accès réservé à l'équipe CIAT
   /api/auth/me/:
     get:
-      operationId: auth_me_retrieve
+      operationId: api_auth_me_retrieve
       summary: Consulter mon profil utilisateur
       tags:
-      - auth
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -420,10 +420,10 @@ paths:
                 $ref: '#/components/schemas/User'
           description: ''
     put:
-      operationId: auth_me_update
+      operationId: api_auth_me_update
       summary: Modifier l'ensemble de mon profil
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -445,10 +445,10 @@ paths:
                 $ref: '#/components/schemas/User'
           description: ''
     patch:
-      operationId: auth_me_partial_update
+      operationId: api_auth_me_partial_update
       summary: Modifier partiellement mon profil
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -470,13 +470,13 @@ paths:
                 $ref: '#/components/schemas/User'
           description: ''
     delete:
-      operationId: auth_me_destroy
+      operationId: api_auth_me_destroy
       description: Exige le mot de passe actuel pour confirmation. Supprime les conversations
         privées de l'assistant et anonymise les données personnelles en conservant
         l'intégrité des projets.
       summary: Supprimer ou anonymiser mon compte (Droit à l'effacement RGPD)
       tags:
-      - auth
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -498,13 +498,13 @@ paths:
           description: ''
   /api/auth/me/export/:
     get:
-      operationId: auth_me_export_retrieve
+      operationId: api_auth_me_export_retrieve
       description: Télécharge un fichier JSON structuré reprenant profil, projets,
         dossiers, documents, conversations assistant et interactions.
       summary: Exporter l'ensemble de mes données personnelles en JSON (Portabilité
         RGPD)
       tags:
-      - auth
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -518,14 +518,14 @@ paths:
           description: ''
   /api/auth/mot-de-passe/oublie/:
     post:
-      operationId: auth_mot_de_passe_oublie_create
+      operationId: api_auth_mot_de_passe_oublie_create
       description: Envoie un lien contenant un jeton sécurisé à usage unique expiré
         au bout de 1 heure. Pour des raisons strictes de sécurité (anti-énumération
         de comptes), cette route renvoie toujours un statut 200 avec le même message,
         que l'adresse email existe ou non.
       summary: Demande de réinitialisation de mot de passe (Public)
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -548,14 +548,14 @@ paths:
           description: Format d'adresse email invalide.
   /api/auth/mot-de-passe/reinitialiser/:
     post:
-      operationId: auth_mot_de_passe_reinitialiser_create
+      operationId: api_auth_mot_de_passe_reinitialiser_create
       description: 'Valide le jeton à usage unique (durée de validité : 1 heure),
         vérifie les contraintes de robustesse du nouveau mot de passe selon la politique
         de sécurité du CIAT, et invalide immédiatement le jeton pour prévenir toute
         réutilisation.'
       summary: Définition d'un nouveau mot de passe via jeton sécurisé (Public)
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -578,9 +578,9 @@ paths:
           description: Jeton expiré, déjà utilisé ou mot de passe non conforme.
   /api/auth/register/:
     post:
-      operationId: auth_register_create
+      operationId: api_auth_register_create
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -605,10 +605,10 @@ paths:
           description: ''
   /api/auth/token/:
     post:
-      operationId: auth_token_create
+      operationId: api_auth_token_create
       description: Obtention du JWT protégé par limitation de débit anti force-brute.
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -630,12 +630,12 @@ paths:
           description: ''
   /api/auth/token/refresh/:
     post:
-      operationId: auth_token_refresh_create
+      operationId: api_auth_token_refresh_create
       description: |-
         Takes a refresh type JSON web token and returns an access type JSON web
         token if the refresh token is valid.
       tags:
-      - auth
+      - api
       requestBody:
         content:
           application/json:
@@ -657,22 +657,22 @@ paths:
           description: ''
   /api/cohortes/:
     get:
-      operationId: cohortes_list
+      operationId: api_cohortes_list
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - cohortes
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -685,9 +685,9 @@ paths:
                   $ref: '#/components/schemas/Cohorte'
           description: ''
     post:
-      operationId: cohortes_create
+      operationId: api_cohortes_create
       tags:
-      - cohortes
+      - api
       requestBody:
         content:
           application/json:
@@ -711,16 +711,16 @@ paths:
           description: ''
   /api/cohortes/{id}/:
     get:
-      operationId: cohortes_retrieve
+      operationId: api_cohortes_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
-      - cohortes
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -731,16 +731,16 @@ paths:
                 $ref: '#/components/schemas/Cohorte'
           description: ''
     put:
-      operationId: cohortes_update
+      operationId: api_cohortes_update
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
-      - cohortes
+      - api
       requestBody:
         content:
           application/json:
@@ -763,16 +763,16 @@ paths:
                 $ref: '#/components/schemas/Cohorte'
           description: ''
     patch:
-      operationId: cohortes_partial_update
+      operationId: api_cohortes_partial_update
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
-      - cohortes
+      - api
       requestBody:
         content:
           application/json:
@@ -794,16 +794,16 @@ paths:
                 $ref: '#/components/schemas/Cohorte'
           description: ''
     delete:
-      operationId: cohortes_destroy
+      operationId: api_cohortes_destroy
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        description: A unique integer value identifying this Cohorte d'incubation.
         required: true
       tags:
-      - cohortes
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -811,11 +811,11 @@ paths:
           description: No response body
   /api/documents/:
     get:
-      operationId: documents_retrieve
+      operationId: api_documents_retrieve
       description: 'GET /api/documents/ : Liste mes documents (l''équipe CIAT voit
         tous les documents).'
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -823,7 +823,7 @@ paths:
           description: No response body
   /api/documents/{id}/:
     get:
-      operationId: documents_retrieve_2
+      operationId: api_documents_retrieve_2
       description: |-
         GET /api/documents/{id}/ : Détail avec sections de la version courante.
 
@@ -835,14 +835,14 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     patch:
-      operationId: documents_partial_update
+      operationId: api_documents_partial_update
       description: |-
         GET /api/documents/{id}/ : Détail avec sections de la version courante.
 
@@ -854,7 +854,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -862,7 +862,7 @@ paths:
           description: No response body
   /api/documents/{id}/brouillon/:
     post:
-      operationId: documents_brouillon_create
+      operationId: api_documents_brouillon_create
       description: |-
         POST /api/documents/{id}/brouillon/ : Coordonnateur ou Administrateur.
 
@@ -874,7 +874,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -882,7 +882,7 @@ paths:
           description: No response body
   /api/documents/{id}/export/:
     get:
-      operationId: documents_export_retrieve
+      operationId: api_documents_export_retrieve
       description: |-
         GET /api/documents/{id}/export/?format=docx ou ?format=pdf :
 
@@ -894,7 +894,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -902,7 +902,7 @@ paths:
           description: No response body
   /api/documents/{id}/publier/:
     post:
-      operationId: documents_publier_create
+      operationId: api_documents_publier_create
       description: |-
         POST /api/documents/{id}/publier/ : Administrateur uniquement.
 
@@ -914,7 +914,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -922,7 +922,7 @@ paths:
           description: No response body
   /api/documents/{id}/valider/:
     post:
-      operationId: documents_valider_create
+      operationId: api_documents_valider_create
       description: |-
         POST /api/documents/{id}/valider/ : Coordonnateur ou Administrateur.
 
@@ -934,7 +934,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -942,7 +942,7 @@ paths:
           description: No response body
   /api/documents/{id}/versions/:
     get:
-      operationId: documents_versions_retrieve
+      operationId: api_documents_versions_retrieve
       description: 'GET /api/documents/{id}/versions/ : Historique des versions d''un
         document.'
       parameters:
@@ -952,7 +952,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -960,7 +960,7 @@ paths:
           description: No response body
   /api/documents/{id}/versions/{numero}/:
     get:
-      operationId: documents_versions_retrieve_2
+      operationId: api_documents_versions_retrieve_2
       description: 'GET /api/documents/{id}/versions/{numero}/ : Détail d''une version
         spécifique.'
       parameters:
@@ -975,7 +975,7 @@ paths:
           type: integer
         required: true
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -983,11 +983,11 @@ paths:
           description: No response body
   /api/documents/generer/:
     post:
-      operationId: documents_generer_create
+      operationId: api_documents_generer_create
       description: Génération assistée par IA d'un document structuré conforme à la
         charte CIAT.
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -995,10 +995,10 @@ paths:
           description: No response body
   /api/documents/modeles/:
     get:
-      operationId: documents_modeles_retrieve
+      operationId: api_documents_modeles_retrieve
       description: Liste des modèles de documents, filtrable par type (?type=id_ou_code).
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1006,11 +1006,11 @@ paths:
           description: No response body
   /api/documents/types/:
     get:
-      operationId: documents_types_retrieve
+      operationId: api_documents_types_retrieve
       description: Liste des types de documents disponibles (appel, convention, fiche,
         PV...).
       tags:
-      - documents
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1018,22 +1018,22 @@ paths:
           description: No response body
   /api/domaines/:
     get:
-      operationId: domaines_list
+      operationId: api_domaines_list
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - domaines
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1046,9 +1046,9 @@ paths:
                   $ref: '#/components/schemas/Domaine'
           description: ''
     post:
-      operationId: domaines_create
+      operationId: api_domaines_create
       tags:
-      - domaines
+      - api
       requestBody:
         content:
           application/json:
@@ -1072,16 +1072,16 @@ paths:
           description: ''
   /api/domaines/{id}/:
     get:
-      operationId: domaines_retrieve
+      operationId: api_domaines_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
-      - domaines
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1092,16 +1092,16 @@ paths:
                 $ref: '#/components/schemas/Domaine'
           description: ''
     put:
-      operationId: domaines_update
+      operationId: api_domaines_update
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
-      - domaines
+      - api
       requestBody:
         content:
           application/json:
@@ -1124,16 +1124,16 @@ paths:
                 $ref: '#/components/schemas/Domaine'
           description: ''
     patch:
-      operationId: domaines_partial_update
+      operationId: api_domaines_partial_update
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
-      - domaines
+      - api
       requestBody:
         content:
           application/json:
@@ -1155,16 +1155,16 @@ paths:
                 $ref: '#/components/schemas/Domaine'
           description: ''
     delete:
-      operationId: domaines_destroy
+      operationId: api_domaines_destroy
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        description: A unique integer value identifying this Domaine d'intervention.
         required: true
       tags:
-      - domaines
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1172,7 +1172,7 @@ paths:
           description: No response body
   /api/gallery/fiches/:
     get:
-      operationId: gallery_fiches_list
+      operationId: api_gallery_fiches_list
       description: Consultation publique des fiches publiées et création par un porteur.
       summary: Lister les fiches d'innovation publiées (Public)
       parameters:
@@ -1197,7 +1197,7 @@ paths:
           type: string
         description: Recherche textuelle libre
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -1211,11 +1211,11 @@ paths:
                   $ref: '#/components/schemas/FicheInnovation'
           description: ''
     post:
-      operationId: gallery_fiches_create
+      operationId: api_gallery_fiches_create
       description: Consultation publique des fiches publiées et création par un porteur.
       summary: Créer une fiche d'innovation pour son projet (Porteur)
       tags:
-      - gallery
+      - api
       requestBody:
         content:
           application/json:
@@ -1253,7 +1253,7 @@ paths:
           description: ''
   /api/gallery/fiches/{id}/refuser/:
     post:
-      operationId: gallery_fiches_refuser_create
+      operationId: api_gallery_fiches_refuser_create
       description: 'Workflow : refuse une fiche en la passant au statut ''refuse''.'
       summary: Refuser une fiche d'innovation (Coordonnateur ou Administrateur)
       parameters:
@@ -1263,7 +1263,7 @@ paths:
           type: integer
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1282,7 +1282,7 @@ paths:
           description: ''
   /api/gallery/fiches/{id}/soumettre/:
     post:
-      operationId: gallery_fiches_soumettre_create
+      operationId: api_gallery_fiches_soumettre_create
       description: 'Workflow : passe une fiche de ''brouillon'' à ''en_validation''.'
       summary: Soumettre une fiche d'innovation pour validation (Porteur)
       parameters:
@@ -1292,7 +1292,7 @@ paths:
           type: integer
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1318,7 +1318,7 @@ paths:
           description: ''
   /api/gallery/fiches/{id}/valider/:
     post:
-      operationId: gallery_fiches_valider_create
+      operationId: api_gallery_fiches_valider_create
       description: 'Workflow : valide une fiche en la passant au statut ''publie''.'
       summary: Valider et publier une fiche d'innovation (Coordonnateur ou Administrateur)
       parameters:
@@ -1328,7 +1328,7 @@ paths:
           type: integer
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1347,7 +1347,7 @@ paths:
           description: ''
   /api/gallery/fiches/{slug}/:
     get:
-      operationId: gallery_fiches_retrieve
+      operationId: api_gallery_fiches_retrieve
       description: Consultation publique du détail d'une fiche publiée avec incrémentation
         du compteur de vues.
       summary: Détail d'une fiche d'innovation publiée (Public)
@@ -1358,7 +1358,7 @@ paths:
           type: string
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -1378,7 +1378,7 @@ paths:
           description: ''
   /api/gallery/fiches/{slug}/fiche/:
     get:
-      operationId: gallery_fiches_fiche_retrieve
+      operationId: api_gallery_fiches_fiche_retrieve
       description: Génère un document PDF officiel d'une page A4 aux couleurs du CIAT,
         comprenant le titre, le problème, la solution innovante, l'équipe et le QR
         code officiel.
@@ -1390,7 +1390,7 @@ paths:
           type: string
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -1411,7 +1411,7 @@ paths:
           description: ''
   /api/gallery/fiches/{slug}/interet/:
     post:
-      operationId: gallery_fiches_interet_create
+      operationId: api_gallery_fiches_interet_create
       description: Enregistrement d'une manifestation d'intérêt d'un partenaire ou
         investisseur.
       summary: Manifester son intérêt pour une fiche d'innovation (Public)
@@ -1422,7 +1422,7 @@ paths:
           type: string
         required: true
       tags:
-      - gallery
+      - api
       requestBody:
         content:
           application/json:
@@ -1475,7 +1475,7 @@ paths:
           description: ''
   /api/gallery/fiches/{slug}/qr/:
     get:
-      operationId: gallery_fiches_qr_retrieve
+      operationId: api_gallery_fiches_qr_retrieve
       description: Renvoie une image PNG du QR code menant à la fiche d'innovation.
       summary: Obtenir le QR code PNG d'une fiche publiée (Public)
       parameters:
@@ -1485,7 +1485,7 @@ paths:
           type: string
         required: true
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -1506,7 +1506,7 @@ paths:
           description: ''
   /api/gallery/interets/:
     get:
-      operationId: gallery_interets_list
+      operationId: api_gallery_interets_list
       description: Consultation sécurisée des manifestations d'intérêt avec filtres
         et pagination.
       summary: Lister les manifestations d'intérêt (Porteurs et Équipe CIAT)
@@ -1532,7 +1532,7 @@ paths:
           type: string
         description: Slug ou ID de la fiche
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1553,12 +1553,12 @@ paths:
           description: ''
   /api/gallery/statistiques/:
     get:
-      operationId: gallery_statistiques_retrieve
+      operationId: api_gallery_statistiques_retrieve
       description: 'Statistiques de consultation : total des vues, total des intérêts
         et répartition par fiche.'
       summary: Consulter les statistiques des fiches (Équipe CIAT)
       tags:
-      - gallery
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1577,12 +1577,12 @@ paths:
           description: ''
   /api/health/:
     get:
-      operationId: health_retrieve
+      operationId: api_health_retrieve
       description: Route publique sans authentification ni donnée sensible renvoyant
         l'état de fonctionnement de l'API et de la connexion à la base de données.
       summary: État de santé de l'API et de la base de données
       tags:
-      - health
+      - api
       security:
       - {}
       responses:
@@ -1614,11 +1614,11 @@ paths:
           description: La base de données ne répond pas ou est dégradée.
   /api/incubator/alertes/:
     get:
-      operationId: incubator_alertes_retrieve
+      operationId: api_incubator_alertes_retrieve
       description: Retourne la liste des jalons dépassés filtrés selon le périmètre
         d'habilitation.
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1626,7 +1626,7 @@ paths:
           description: No response body
   /api/incubator/calendrier/:
     get:
-      operationId: incubator_calendrier_list
+      operationId: api_incubator_calendrier_list
       description: Renvoie pour l'utilisateur connecté les jalons et objectifs du
         mois spécifié sous la forme [{ date, type, titre, projet, statut, en_retard
         }], triés par date. Les porteurs voient leurs projets, les mentors ceux qui
@@ -1640,7 +1640,7 @@ paths:
         description: 'Mois d''échéance au format AAAA-MM (ex: 2026-10)'
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1658,30 +1658,30 @@ paths:
           description: Authentification requise
   /api/incubator/dossiers/:
     get:
-      operationId: incubator_dossiers_list
+      operationId: api_incubator_dossiers_list
       description: Liste les dossiers selon le rôle de l'utilisateur et permet au
         porteur autorisé d'en créer un.
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1692,11 +1692,11 @@ paths:
                 $ref: '#/components/schemas/PaginatedDossierList'
           description: ''
     post:
-      operationId: incubator_dossiers_create
+      operationId: api_incubator_dossiers_create
       description: Liste les dossiers selon le rôle de l'utilisateur et permet au
         porteur autorisé d'en créer un.
       tags:
-      - incubator
+      - api
       requestBody:
         content:
           application/json:
@@ -1719,7 +1719,7 @@ paths:
           description: ''
   /api/incubator/dossiers/{id}/:
     get:
-      operationId: incubator_dossiers_retrieve
+      operationId: api_incubator_dossiers_retrieve
       description: Consultation et modification sécurisée d'un dossier.
       parameters:
       - in: path
@@ -1728,7 +1728,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1739,7 +1739,7 @@ paths:
                 $ref: '#/components/schemas/Dossier'
           description: ''
     put:
-      operationId: incubator_dossiers_update
+      operationId: api_incubator_dossiers_update
       description: Consultation et modification sécurisée d'un dossier.
       parameters:
       - in: path
@@ -1748,7 +1748,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       requestBody:
         content:
           application/json:
@@ -1770,7 +1770,7 @@ paths:
                 $ref: '#/components/schemas/Dossier'
           description: ''
     patch:
-      operationId: incubator_dossiers_partial_update
+      operationId: api_incubator_dossiers_partial_update
       description: Consultation et modification sécurisée d'un dossier.
       parameters:
       - in: path
@@ -1779,7 +1779,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       requestBody:
         content:
           application/json:
@@ -1802,7 +1802,7 @@ paths:
           description: ''
   /api/incubator/dossiers/{id}/accuse/:
     get:
-      operationId: incubator_dossiers_accuse_retrieve
+      operationId: api_incubator_dossiers_accuse_retrieve
       description: Génère et télécharge l'accusé de réception officiel en PDF pour
         un dossier de candidature soumis. Accessible au porteur du projet, à l'équipe
         CIAT et aux membres du comité de sélection.
@@ -1836,7 +1836,7 @@ paths:
           description: Dossier de candidature non trouvé
   /api/incubator/dossiers/{id}/decision/:
     post:
-      operationId: incubator_dossiers_decision_create
+      operationId: api_incubator_dossiers_decision_create
       description: Enregistre la décision motivée du jury et bascule de façon atomique
         le statut du projet.
       parameters:
@@ -1846,7 +1846,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1854,7 +1854,7 @@ paths:
           description: No response body
   /api/incubator/dossiers/{id}/evaluations/:
     get:
-      operationId: incubator_dossiers_evaluations_retrieve
+      operationId: api_incubator_dossiers_evaluations_retrieve
       description: Restitue les évaluations multicritères et calcule le score moyen
         collégial.
       parameters:
@@ -1864,14 +1864,14 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     post:
-      operationId: incubator_dossiers_evaluations_create
+      operationId: api_incubator_dossiers_evaluations_create
       description: Enregistre la notation d'un membre du comité sous verrou transactionnel
         (select_for_update).
       parameters:
@@ -1881,7 +1881,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1889,7 +1889,7 @@ paths:
           description: No response body
   /api/incubator/dossiers/{id}/pieces/:
     post:
-      operationId: incubator_dossiers_pieces_create
+      operationId: api_incubator_dossiers_pieces_create
       description: Réceptionne et valide une pièce jointe avant soumission définitive
         du dossier.
       parameters:
@@ -1899,7 +1899,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1907,7 +1907,7 @@ paths:
           description: No response body
   /api/incubator/dossiers/{id}/pieces/{piece_id}/:
     delete:
-      operationId: incubator_dossiers_pieces_destroy
+      operationId: api_incubator_dossiers_pieces_destroy
       description: Supprime une pièce jointe tant que le dossier est encore à l'état
         de brouillon.
       parameters:
@@ -1922,7 +1922,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1930,7 +1930,7 @@ paths:
           description: No response body
   /api/incubator/dossiers/{id}/soumettre/:
     post:
-      operationId: incubator_dossiers_soumettre_create
+      operationId: api_incubator_dossiers_soumettre_create
       description: Valide la complétude à 100 %, verrouille le dossier et déclenche
         l'accusé de réception.
       parameters:
@@ -1940,7 +1940,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1948,11 +1948,11 @@ paths:
           description: No response body
   /api/incubator/grilles/actuelle/:
     get:
-      operationId: incubator_grilles_actuelle_retrieve
+      operationId: api_incubator_grilles_actuelle_retrieve
       description: Fournit la grille d'évaluation active et ses critères de notation
         pondérés.
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1960,7 +1960,7 @@ paths:
           description: No response body
   /api/incubator/jalons/{id}/:
     patch:
-      operationId: incubator_jalons_partial_update
+      operationId: api_incubator_jalons_partial_update
       description: Actualise l'état d'un jalon (à faire, en cours, fait) avec historisation.
       parameters:
       - in: path
@@ -1969,7 +1969,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1977,7 +1977,7 @@ paths:
           description: No response body
   /api/incubator/jalons/{id}/commentaires/:
     post:
-      operationId: incubator_jalons_commentaires_create
+      operationId: api_incubator_jalons_commentaires_create
       description: Enregistre un retour ou une consigne d'accompagnement sur le jalon.
       parameters:
       - in: path
@@ -1986,7 +1986,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -1994,7 +1994,7 @@ paths:
           description: No response body
   /api/incubator/jalons/{id}/preuves/:
     post:
-      operationId: incubator_jalons_preuves_create
+      operationId: api_incubator_jalons_preuves_create
       description: Téléverse un fichier de preuve justifiant la complétion d'un jalon.
       parameters:
       - in: path
@@ -2003,7 +2003,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2011,29 +2011,29 @@ paths:
           description: No response body
   /api/incubator/mentors/:
     get:
-      operationId: incubator_mentors_list
+      operationId: api_incubator_mentors_list
       description: Liste de tous les mentors disponibles.
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2045,7 +2045,7 @@ paths:
           description: ''
   /api/incubator/objectifs/{id}/:
     patch:
-      operationId: incubator_objectifs_partial_update
+      operationId: api_incubator_objectifs_partial_update
       description: Met à jour le statut ou le libellé d'un objectif opérationnel.
       parameters:
       - in: path
@@ -2054,7 +2054,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2062,7 +2062,7 @@ paths:
           description: No response body
   /api/incubator/projets/{id}/compte-rendu/:
     get:
-      operationId: incubator_projets_compte_rendu_retrieve
+      operationId: api_incubator_projets_compte_rendu_retrieve
       description: 'Génération et téléchargement du compte rendu complet d''un projet
         incubé reprenant les 4 blocs essentiels : Projet & Identité, Objectifs d''incubation,
         Jalons clés et Bilans de suivi périodique. Formats supportés : ''xlsx'' (défaut)
@@ -2099,7 +2099,7 @@ paths:
           description: Projet d'incubation non trouvé
   /api/incubator/projets/{id}/jalons/:
     get:
-      operationId: incubator_projets_jalons_retrieve
+      operationId: api_incubator_projets_jalons_retrieve
       description: Liste les jalons d'un projet avec leurs preuves et commentaires
         associés.
       parameters:
@@ -2109,14 +2109,14 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     post:
-      operationId: incubator_projets_jalons_create
+      operationId: api_incubator_projets_jalons_create
       description: Crée un nouveau jalon avec échéance et livrable attendu.
       parameters:
       - in: path
@@ -2125,7 +2125,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2133,7 +2133,7 @@ paths:
           description: No response body
   /api/incubator/projets/{id}/mentor/:
     get:
-      operationId: incubator_projets_mentor_retrieve
+      operationId: api_incubator_projets_mentor_retrieve
       description: Consulte le mentor assigné avec contrôle strict d'anonymat (tiers
         non autorisés rejetés).
       parameters:
@@ -2143,14 +2143,14 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     post:
-      operationId: incubator_projets_mentor_create
+      operationId: api_incubator_projets_mentor_create
       description: Affecte un mentor au projet incubé et notifie les parties prenantes.
       parameters:
       - in: path
@@ -2159,7 +2159,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2167,7 +2167,7 @@ paths:
           description: No response body
   /api/incubator/projets/{id}/objectifs/:
     get:
-      operationId: incubator_projets_objectifs_retrieve
+      operationId: api_incubator_projets_objectifs_retrieve
       description: Récupère l'ensemble des objectifs fixés pour le projet incubé.
       parameters:
       - in: path
@@ -2176,14 +2176,14 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     post:
-      operationId: incubator_projets_objectifs_create
+      operationId: api_incubator_projets_objectifs_create
       description: Définit un nouvel objectif d'accompagnement (réservé au mentor
         et à l'équipe CIAT).
       parameters:
@@ -2193,7 +2193,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2201,7 +2201,7 @@ paths:
           description: No response body
   /api/incubator/projets/{id}/suivis/:
     get:
-      operationId: incubator_projets_suivis_retrieve
+      operationId: api_incubator_projets_suivis_retrieve
       description: Restitue les bilans d'étape à 3 et 6 mois du projet.
       parameters:
       - in: path
@@ -2210,14 +2210,14 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
         '200':
           description: No response body
     post:
-      operationId: incubator_projets_suivis_create
+      operationId: api_incubator_projets_suivis_create
       description: Enregistre le bilan semestriel formalisé par l'équipe d'accompagnement.
       parameters:
       - in: path
@@ -2226,7 +2226,7 @@ paths:
           type: integer
         required: true
       tags:
-      - incubator
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2234,7 +2234,7 @@ paths:
           description: No response body
   /api/notifications/:
     get:
-      operationId: notifications_list
+      operationId: api_notifications_list
       description: Renvoie les notifications de l'utilisateur connecté avec filtre
         optionnel ?non_lues=1.
       summary: Liste des notifications de l'utilisateur
@@ -2242,23 +2242,23 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - notifications
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2270,7 +2270,7 @@ paths:
           description: ''
   /api/notifications/{id}/lue/:
     post:
-      operationId: notifications_lue_create
+      operationId: api_notifications_lue_create
       description: Passe la notification spécifiée au statut lu pour l'utilisateur
         connecté.
       summary: Marquer une notification comme lue
@@ -2281,7 +2281,7 @@ paths:
           type: integer
         required: true
       tags:
-      - notifications
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2295,12 +2295,12 @@ paths:
           description: Notification introuvable
   /api/notifications/tout-lire/:
     post:
-      operationId: notifications_tout_lire_create
+      operationId: api_notifications_tout_lire_create
       description: Marque l'intégralité des notifications non lues de l'utilisateur
         connecté comme lues.
       summary: Marquer toutes les notifications comme lues
       tags:
-      - notifications
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2308,7 +2308,7 @@ paths:
           description: Notifications marquées comme lues
   /api/portal/actualites/:
     get:
-      operationId: portal_actualites_list
+      operationId: api_portal_actualites_list
       description: |-
         Actualités du CIAT.
 
@@ -2319,23 +2319,23 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2346,7 +2346,7 @@ paths:
                 $ref: '#/components/schemas/PaginatedActualiteList'
           description: ''
     post:
-      operationId: portal_actualites_create
+      operationId: api_portal_actualites_create
       description: |-
         Actualités du CIAT.
 
@@ -2354,7 +2354,7 @@ paths:
         administrateurs et coordonnateurs.
       summary: Créer une actualité (Admin / Coordonnateur)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2378,7 +2378,7 @@ paths:
           description: ''
   /api/portal/actualites/{id}/:
     get:
-      operationId: portal_actualites_retrieve
+      operationId: api_portal_actualites_retrieve
       description: |-
         Actualités du CIAT.
 
@@ -2390,10 +2390,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        description: A unique integer value identifying this Actualité.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2404,7 +2404,7 @@ paths:
                 $ref: '#/components/schemas/Actualite'
           description: ''
     put:
-      operationId: portal_actualites_update
+      operationId: api_portal_actualites_update
       description: |-
         Actualités du CIAT.
 
@@ -2416,10 +2416,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        description: A unique integer value identifying this Actualité.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2442,7 +2442,7 @@ paths:
                 $ref: '#/components/schemas/Actualite'
           description: ''
     patch:
-      operationId: portal_actualites_partial_update
+      operationId: api_portal_actualites_partial_update
       description: |-
         Actualités du CIAT.
 
@@ -2454,10 +2454,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        description: A unique integer value identifying this Actualité.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2479,7 +2479,7 @@ paths:
                 $ref: '#/components/schemas/Actualite'
           description: ''
     delete:
-      operationId: portal_actualites_destroy
+      operationId: api_portal_actualites_destroy
       description: |-
         Actualités du CIAT.
 
@@ -2491,10 +2491,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        description: A unique integer value identifying this Actualité.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2502,7 +2502,7 @@ paths:
           description: No response body
   /api/portal/appels/:
     get:
-      operationId: portal_appels_list
+      operationId: api_portal_appels_list
       description: |-
         Appels à projets du CIAT.
 
@@ -2512,19 +2512,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       - in: query
@@ -2533,7 +2533,7 @@ paths:
           type: string
         description: Filtrer par statut ('ouvert' ou 'clos')
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2544,14 +2544,14 @@ paths:
                 $ref: '#/components/schemas/PaginatedAppelProjetList'
           description: ''
     post:
-      operationId: portal_appels_create
+      operationId: api_portal_appels_create
       description: |-
         Appels à projets du CIAT.
 
         Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
       summary: Créer un appel à projets (Admin / Coordonnateur)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2575,7 +2575,7 @@ paths:
           description: ''
   /api/portal/appels/{id}/:
     get:
-      operationId: portal_appels_retrieve
+      operationId: api_portal_appels_retrieve
       description: |-
         Appels à projets du CIAT.
 
@@ -2586,10 +2586,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        description: A unique integer value identifying this Appel à projets.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2600,7 +2600,7 @@ paths:
                 $ref: '#/components/schemas/AppelProjet'
           description: ''
     put:
-      operationId: portal_appels_update
+      operationId: api_portal_appels_update
       description: |-
         Appels à projets du CIAT.
 
@@ -2611,10 +2611,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        description: A unique integer value identifying this Appel à projets.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2637,7 +2637,7 @@ paths:
                 $ref: '#/components/schemas/AppelProjet'
           description: ''
     patch:
-      operationId: portal_appels_partial_update
+      operationId: api_portal_appels_partial_update
       description: |-
         Appels à projets du CIAT.
 
@@ -2648,10 +2648,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        description: A unique integer value identifying this Appel à projets.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2673,7 +2673,7 @@ paths:
                 $ref: '#/components/schemas/AppelProjet'
           description: ''
     delete:
-      operationId: portal_appels_destroy
+      operationId: api_portal_appels_destroy
       description: |-
         Appels à projets du CIAT.
 
@@ -2684,41 +2684,61 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        description: A unique integer value identifying this Appel à projets.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
         '204':
           description: No response body
+  /api/portal/chiffres-cles/:
+    get:
+      operationId: api_portal_chiffres_cles_retrieve
+      description: 'Renvoie les comptages réels consolidés du CIAT pour la page d''accueil
+        et les filières : projets incubés, prototypes réalisés, porteurs accompagnés,
+        partenaires, domaines d''intervention avec leur volume de projets, et cohortes.
+        Aucune donnée personnelle exposée. Cache court de 60 secondes.'
+      summary: Chiffres clés publics réels calculés depuis la base de données
+      tags:
+      - Portail — Chiffres Clés
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChiffresCles'
+          description: Chiffres consolidés exacts.
   /api/portal/contact/:
     get:
-      operationId: portal_contact_list
+      operationId: api_portal_contact_list
       description: Formulaire de contact public et consultation par l'équipe CIAT.
       summary: Consulter les messages de contact (Équipe CIAT uniquement)
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2729,11 +2749,11 @@ paths:
                 $ref: '#/components/schemas/PaginatedMessageContactList'
           description: ''
     post:
-      operationId: portal_contact_create
+      operationId: api_portal_contact_create
       description: Formulaire de contact public et consultation par l'équipe CIAT.
       summary: Envoyer un message de contact (Public, avec anti-spam)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2758,7 +2778,7 @@ paths:
           description: ''
   /api/portal/contact/{id}/:
     get:
-      operationId: portal_contact_retrieve
+      operationId: api_portal_contact_retrieve
       description: Formulaire de contact public et consultation par l'équipe CIAT.
       summary: Détail d'un message de contact (Équipe CIAT uniquement)
       parameters:
@@ -2766,11 +2786,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Message de
-          contact.
+        description: A unique integer value identifying this Message de contact.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2781,18 +2800,17 @@ paths:
                 $ref: '#/components/schemas/MessageContact'
           description: ''
     put:
-      operationId: portal_contact_update
+      operationId: api_portal_contact_update
       description: Formulaire de contact public et consultation par l'équipe CIAT.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Message de
-          contact.
+        description: A unique integer value identifying this Message de contact.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2815,18 +2833,17 @@ paths:
                 $ref: '#/components/schemas/MessageContact'
           description: ''
     patch:
-      operationId: portal_contact_partial_update
+      operationId: api_portal_contact_partial_update
       description: Formulaire de contact public et consultation par l'équipe CIAT.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Message de
-          contact.
+        description: A unique integer value identifying this Message de contact.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2849,30 +2866,30 @@ paths:
           description: ''
   /api/portal/documents/:
     get:
-      operationId: portal_documents_list
+      operationId: api_portal_documents_list
       description: Documents publics (guides, chartes, rapports).
       summary: Lister les documents publics téléchargeables
       parameters:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2883,11 +2900,11 @@ paths:
                 $ref: '#/components/schemas/PaginatedDocumentPublicList'
           description: ''
     post:
-      operationId: portal_documents_create
+      operationId: api_portal_documents_create
       description: Documents publics (guides, chartes, rapports).
       summary: Ajouter un document public (Admin / Coordonnateur)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2911,7 +2928,7 @@ paths:
           description: ''
   /api/portal/documents/{id}/:
     get:
-      operationId: portal_documents_retrieve
+      operationId: api_portal_documents_retrieve
       description: Documents publics (guides, chartes, rapports).
       summary: Détail d'un document public
       parameters:
@@ -2919,11 +2936,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Document
-          public.
+        description: A unique integer value identifying this Document public.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -2934,7 +2950,7 @@ paths:
                 $ref: '#/components/schemas/DocumentPublic'
           description: ''
     put:
-      operationId: portal_documents_update
+      operationId: api_portal_documents_update
       description: Documents publics (guides, chartes, rapports).
       summary: Modifier un document (Admin / Coordonnateur)
       parameters:
@@ -2942,11 +2958,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Document
-          public.
+        description: A unique integer value identifying this Document public.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -2969,7 +2984,7 @@ paths:
                 $ref: '#/components/schemas/DocumentPublic'
           description: ''
     patch:
-      operationId: portal_documents_partial_update
+      operationId: api_portal_documents_partial_update
       description: Documents publics (guides, chartes, rapports).
       summary: Modifier partiellement un document
       parameters:
@@ -2977,11 +2992,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Document
-          public.
+        description: A unique integer value identifying this Document public.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3003,7 +3017,7 @@ paths:
                 $ref: '#/components/schemas/DocumentPublic'
           description: ''
     delete:
-      operationId: portal_documents_destroy
+      operationId: api_portal_documents_destroy
       description: Documents publics (guides, chartes, rapports).
       summary: Supprimer un document (Admin / Coordonnateur)
       parameters:
@@ -3011,11 +3025,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Document
-          public.
+        description: A unique integer value identifying this Document public.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3023,7 +3036,7 @@ paths:
           description: No response body
   /api/portal/evenements/:
     get:
-      operationId: portal_evenements_list
+      operationId: api_portal_evenements_list
       description: |-
         Événements organisés par le CIAT.
 
@@ -3038,23 +3051,23 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3065,14 +3078,14 @@ paths:
                 $ref: '#/components/schemas/PaginatedEvenementList'
           description: ''
     post:
-      operationId: portal_evenements_create
+      operationId: api_portal_evenements_create
       description: |-
         Événements organisés par le CIAT.
 
         Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
       summary: Créer un événement (Admin / Coordonnateur)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3096,7 +3109,7 @@ paths:
           description: ''
   /api/portal/evenements/{id}/:
     get:
-      operationId: portal_evenements_retrieve
+      operationId: api_portal_evenements_retrieve
       description: |-
         Événements organisés par le CIAT.
 
@@ -3107,10 +3120,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        description: A unique integer value identifying this Événement.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3121,7 +3134,7 @@ paths:
                 $ref: '#/components/schemas/Evenement'
           description: ''
     put:
-      operationId: portal_evenements_update
+      operationId: api_portal_evenements_update
       description: |-
         Événements organisés par le CIAT.
 
@@ -3132,10 +3145,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        description: A unique integer value identifying this Événement.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3158,7 +3171,7 @@ paths:
                 $ref: '#/components/schemas/Evenement'
           description: ''
     patch:
-      operationId: portal_evenements_partial_update
+      operationId: api_portal_evenements_partial_update
       description: |-
         Événements organisés par le CIAT.
 
@@ -3169,10 +3182,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        description: A unique integer value identifying this Événement.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3194,7 +3207,7 @@ paths:
                 $ref: '#/components/schemas/Evenement'
           description: ''
     delete:
-      operationId: portal_evenements_destroy
+      operationId: api_portal_evenements_destroy
       description: |-
         Événements organisés par le CIAT.
 
@@ -3205,10 +3218,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        description: A unique integer value identifying this Événement.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3216,7 +3229,7 @@ paths:
           description: No response body
   /api/portal/evenements/calendrier.ics:
     get:
-      operationId: portal_evenements_calendrier.ics_retrieve
+      operationId: api_portal_evenements_calendrier.ics_retrieve
       description: Génère un flux d'agenda iCalendar conforme RFC 5545 contenant les
         événements officiels du CIAT, directement importable dans Google Agenda, Outlook
         ou Apple Calendar.
@@ -3239,9 +3252,157 @@ paths:
       responses:
         '200':
           description: Flux d'événements iCalendar (text/calendar)
+  /api/portal/lettre/abonnements/:
+    get:
+      operationId: api_portal_lettre_abonnements_list
+      description: Consultation et filtrage des abonnés pour l'administration CIAT.
+      summary: Lister les abonnés à la lettre d'information (Équipe CIAT)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAbonnementLettreAdminList'
+          description: ''
+  /api/portal/lettre/abonnements/{id}/:
+    get:
+      operationId: api_portal_lettre_abonnements_retrieve
+      description: Consultation et filtrage des abonnés pour l'administration CIAT.
+      summary: Détail d'un abonnement (Équipe CIAT)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Abonnement à la lettre
+          d'information.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbonnementLettreAdmin'
+          description: ''
+  /api/portal/lettre/abonner/:
+    post:
+      operationId: api_portal_lettre_abonner_create
+      description: Enregistre la demande d'abonnement et envoie un courriel de confirmation
+        avec un jeton sécurisé signé. Pour des motifs stricts de sécurité et de confidentialité
+        (anti-énumération), la réponse est rigoureusement identique que l'adresse
+        email existe déjà ou non.
+      summary: Demande d'abonnement à la lettre d'information (Public, double opt-in)
+      tags:
+      - Portail — Lettre d'information
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreDemande'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreDemande'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreDemande'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Demande d'abonnement prise en compte. Courriel envoyé si l'adresse
+            est valide.
+        '400':
+          description: Adresse email invalide ou manquante.
+  /api/portal/lettre/confirmer/:
+    post:
+      operationId: api_portal_lettre_confirmer_create
+      description: Valide l'abonnement via le jeton signé à usage unique reçu par
+        courriel. Renvoie HTTP 400 clair si le jeton est expiré, rejoué, révoqué ou
+        corrompu.
+      summary: Confirmation d'abonnement à la lettre d'information (Public)
+      tags:
+      - Portail — Lettre d'information
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Abonnement confirmé avec succès.
+        '400':
+          description: Jeton expiré, déjà utilisé ou invalide.
+  /api/portal/lettre/desabonner/:
+    post:
+      operationId: api_portal_lettre_desabonner_create
+      description: Résiliation de l'abonnement via le jeton signé à usage unique présent
+        dans chaque courriel. Renvoie HTTP 400 clair si le jeton est déjà utilisé,
+        expiré ou invalide.
+      summary: Désabonnement de la lettre d'information (Public)
+      tags:
+      - Portail — Lettre d'information
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AbonnementLettreJeton'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Désabonnement effectué avec succès.
+        '400':
+          description: Jeton expiré, déjà utilisé ou invalide.
   /api/portal/partenaires/:
     get:
-      operationId: portal_partenaires_list
+      operationId: api_portal_partenaires_list
       description: |-
         Partenaires du CIAT.
 
@@ -3251,17 +3412,17 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3274,14 +3435,14 @@ paths:
                   $ref: '#/components/schemas/Partenaire'
           description: ''
     post:
-      operationId: portal_partenaires_create
+      operationId: api_portal_partenaires_create
       description: |-
         Partenaires du CIAT.
 
         Lecture publique sans pagination, modification réservée à l'équipe.
       summary: Ajouter un partenaire (Admin / Coordonnateur)
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3305,7 +3466,7 @@ paths:
           description: ''
   /api/portal/partenaires/{id}/:
     get:
-      operationId: portal_partenaires_retrieve
+      operationId: api_portal_partenaires_retrieve
       description: |-
         Partenaires du CIAT.
 
@@ -3316,10 +3477,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        description: A unique integer value identifying this Partenaire.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3330,7 +3491,7 @@ paths:
                 $ref: '#/components/schemas/Partenaire'
           description: ''
     put:
-      operationId: portal_partenaires_update
+      operationId: api_portal_partenaires_update
       description: |-
         Partenaires du CIAT.
 
@@ -3341,10 +3502,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        description: A unique integer value identifying this Partenaire.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3367,7 +3528,7 @@ paths:
                 $ref: '#/components/schemas/Partenaire'
           description: ''
     patch:
-      operationId: portal_partenaires_partial_update
+      operationId: api_portal_partenaires_partial_update
       description: |-
         Partenaires du CIAT.
 
@@ -3378,10 +3539,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        description: A unique integer value identifying this Partenaire.
         required: true
       tags:
-      - portal
+      - api
       requestBody:
         content:
           application/json:
@@ -3403,7 +3564,7 @@ paths:
                 $ref: '#/components/schemas/Partenaire'
           description: ''
     delete:
-      operationId: portal_partenaires_destroy
+      operationId: api_portal_partenaires_destroy
       description: |-
         Partenaires du CIAT.
 
@@ -3414,10 +3575,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        description: A unique integer value identifying this Partenaire.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3425,7 +3586,7 @@ paths:
           description: No response body
   /api/portal/projets-incubes/:
     get:
-      operationId: portal_projets_incubes_list
+      operationId: api_portal_projets_incubes_list
       description: Ne renvoie que les projets aux statuts `incube`, `prototype` ou
         `termine`. Aucune donnée personnelle exposée.
       summary: Annuaire public des projets incubés
@@ -3443,13 +3604,13 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - in: query
@@ -3463,7 +3624,7 @@ paths:
           type: string
         description: Filtre par statut (incube, prototype, termine)
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -3476,7 +3637,7 @@ paths:
           description: ''
   /api/portal/projets-incubes/{id}/:
     get:
-      operationId: portal_projets_incubes_retrieve
+      operationId: api_portal_projets_incubes_retrieve
       description: |-
         Annuaire public des projets incubés.
 
@@ -3487,10 +3648,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       - {}
@@ -3501,9 +3662,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjetIncube'
           description: ''
+  /api/portal/recherche/:
+    get:
+      operationId: api_portal_recherche_retrieve
+      description: 'Recherche plein-texte insensible à la casse et aux accents dans
+        l''ensemble des contenus publics : actualités publiées, événements, appels
+        à projets, projets incubés validés, fiches de galerie publiées, documents
+        publics et partenaires. Jamais de contenu non publié, de brouillon, de fiche
+        refusée ni de donnée personnelle.'
+      summary: Recherche globale dans les contenus publics du site
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Terme recherché (au moins 2 caractères requis).
+        required: true
+      tags:
+      - Portail — Recherche
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Résultats groupés par type ordonnés par pertinence.
+        '400':
+          description: Requête invalide (terme q manquant ou inférieur à 2 caractères).
   /api/portal/statistiques/:
     get:
-      operationId: portal_statistiques_retrieve
+      operationId: api_portal_statistiques_retrieve
       description: |-
         GET /api/portal/statistiques/ : Réservé à l'équipe CIAT.
 
@@ -3515,7 +3702,7 @@ paths:
             "projets": [{"id": int, "titre": str, "vues": int}]
         }
       tags:
-      - portal
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3523,7 +3710,7 @@ paths:
           description: No response body
   /api/projets/:
     get:
-      operationId: projets_list
+      operationId: api_projets_list
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       parameters:
@@ -3538,19 +3725,19 @@ paths:
       - name: ordering
         required: false
         in: query
-        description: Quel champ utiliser pour classer les résultats.
+        description: Which field to use when ordering the results.
         schema:
           type: string
       - name: page
         required: false
         in: query
-        description: Un numéro de page de l'ensemble des résultats.
+        description: A page number within the paginated result set.
         schema:
           type: integer
       - name: search
         required: false
         in: query
-        description: Un terme de recherche.
+        description: A search term.
         schema:
           type: string
       - in: query
@@ -3575,7 +3762,7 @@ paths:
           * `termine` - Incubation terminée
           * `rejete` - Non retenu
       tags:
-      - projets
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3586,11 +3773,11 @@ paths:
                 $ref: '#/components/schemas/PaginatedProjetList'
           description: ''
     post:
-      operationId: projets_create
+      operationId: api_projets_create
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       tags:
-      - projets
+      - api
       requestBody:
         content:
           application/json:
@@ -3614,7 +3801,7 @@ paths:
           description: ''
   /api/projets/{id}/:
     get:
-      operationId: projets_retrieve
+      operationId: api_projets_retrieve
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       parameters:
@@ -3622,10 +3809,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
-      - projets
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3636,7 +3823,7 @@ paths:
                 $ref: '#/components/schemas/Projet'
           description: ''
     put:
-      operationId: projets_update
+      operationId: api_projets_update
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       parameters:
@@ -3644,10 +3831,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
-      - projets
+      - api
       requestBody:
         content:
           application/json:
@@ -3670,7 +3857,7 @@ paths:
                 $ref: '#/components/schemas/Projet'
           description: ''
     patch:
-      operationId: projets_partial_update
+      operationId: api_projets_partial_update
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       parameters:
@@ -3678,10 +3865,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
-      - projets
+      - api
       requestBody:
         content:
           application/json:
@@ -3703,7 +3890,7 @@ paths:
                 $ref: '#/components/schemas/Projet'
           description: ''
     delete:
-      operationId: projets_destroy
+      operationId: api_projets_destroy
       description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
         et les mentors les voient tous.
       parameters:
@@ -3711,10 +3898,10 @@ paths:
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        description: A unique integer value identifying this Projet.
         required: true
       tags:
-      - projets
+      - api
       security:
       - jwtAuth: []
       responses:
@@ -3722,7 +3909,7 @@ paths:
           description: No response body
   /api/users/{id}/role/:
     patch:
-      operationId: users_role_partial_update
+      operationId: api_users_role_partial_update
       description: Permet à un administrateur de modifier le rôle d'un utilisateur.
       summary: Modifier le rôle d'un utilisateur (Administrateur)
       parameters:
@@ -3732,7 +3919,7 @@ paths:
           type: integer
         required: true
       tags:
-      - users
+      - api
       requestBody:
         content:
           application/json:
@@ -3757,6 +3944,79 @@ paths:
           description: Accès réservé aux administrateurs
 components:
   schemas:
+    AbonnementLettreAdmin:
+      type: object
+      description: Sérialiseur d'administration pour la liste des abonnés.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adresse email
+          description: Adresse email unique de l'abonné.
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/AbonnementLettreAdminStatutEnum'
+          readOnly: true
+          title: Statut de l'abonnement
+        statut_libelle:
+          type: string
+          readOnly: true
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'inscription
+        confirme_le:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Date de confirmation (opt-in)
+        desabonne_le:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Date de désabonnement
+      required:
+      - confirme_le
+      - cree_le
+      - desabonne_le
+      - email
+      - id
+      - statut
+      - statut_libelle
+    AbonnementLettreAdminStatutEnum:
+      enum:
+      - en_attente
+      - confirme
+      - desabonne
+      type: string
+      description: |-
+        * `en_attente` - En attente
+        * `confirme` - Confirmé
+        * `desabonne` - Désabonné
+    AbonnementLettreDemande:
+      type: object
+      description: Validation de la demande d'abonnement public avec limitation anti-spam.
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    AbonnementLettreJeton:
+      type: object
+      description: Validation du jeton de confirmation ou de désabonnement.
+      properties:
+        jeton:
+          type: string
+      required:
+      - jeton
     Actualite:
       type: object
       description: 'Format : { id, titre, slug, resume, contenu, image, publie_le
@@ -3823,6 +4083,32 @@ components:
     BlankEnum:
       enum:
       - ''
+    ChiffresCles:
+      type: object
+      description: Format des chiffres clés publics réels calculés depuis la base.
+      properties:
+        projets_incubes:
+          type: integer
+        prototypes:
+          type: integer
+        porteurs_accompagnes:
+          type: integer
+        partenaires:
+          type: integer
+        cohortes:
+          type: integer
+        domaines:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - cohortes
+      - domaines
+      - partenaires
+      - porteurs_accompagnes
+      - projets_incubes
+      - prototypes
     Cohorte:
       type: object
       properties:
@@ -4024,12 +4310,9 @@ components:
           format: date-time
           nullable: true
         lien_inscription:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 500
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          maxLength: 500
       required:
       - debut
       - description
@@ -4536,6 +4819,29 @@ components:
         * `fiche_refusee` - Fiche refusée
         * `mentor_affecte` - Nouveau mentor affecté
         * `autre` - Autre notification
+    PaginatedAbonnementLettreAdminList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbonnementLettreAdmin'
     PaginatedActualiteList:
       type: object
       required:
@@ -4804,12 +5110,9 @@ components:
           format: uri
           nullable: true
         site_web:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 300
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          maxLength: 300
         description:
           type: string
       required:
@@ -4993,12 +5296,9 @@ components:
           format: date-time
           nullable: true
         lien_inscription:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 500
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          maxLength: 500
     PatchedMessageContact:
       type: object
       description: 'Format : { nom, email, sujet, message }'
@@ -5036,12 +5336,9 @@ components:
           format: uri
           nullable: true
         site_web:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 300
-          - type: string
-            maxLength: 0
+          type: string
+          format: uri
+          maxLength: 300
         description:
           type: string
     PatchedProjet:
@@ -5083,7 +5380,7 @@ components:
           readOnly: true
         statut:
           allOf:
-          - $ref: '#/components/schemas/StatutF4cEnum'
+          - $ref: '#/components/schemas/StatutF3aEnum'
           title: Statut du projet
         cree_le:
           type: string
@@ -5115,7 +5412,7 @@ components:
           maxLength: 150
         role:
           allOf:
-          - $ref: '#/components/schemas/Role2bbEnum'
+          - $ref: '#/components/schemas/Role743Enum'
           readOnly: true
         telephone:
           type: string
@@ -5132,7 +5429,7 @@ components:
       description: Validation de la mise à jour du rôle utilisateur par l'administrateur.
       properties:
         role:
-          $ref: '#/components/schemas/Role2bbEnum'
+          $ref: '#/components/schemas/Role743Enum'
     Piece:
       type: object
       description: Sérialiseur et validateur de pièces jointes (fichiers PDF/documents
@@ -5209,7 +5506,7 @@ components:
           readOnly: true
         statut:
           allOf:
-          - $ref: '#/components/schemas/StatutF4cEnum'
+          - $ref: '#/components/schemas/StatutF3aEnum'
           title: Statut du projet
         cree_le:
           type: string
@@ -5258,7 +5555,7 @@ components:
           readOnly: true
         statut:
           allOf:
-          - $ref: '#/components/schemas/StatutF4cEnum'
+          - $ref: '#/components/schemas/StatutF3aEnum'
           readOnly: true
           title: Statut du projet
         vues:
@@ -5326,7 +5623,7 @@ components:
       - email
       - id
       - password
-    Role2bbEnum:
+    Role743Enum:
       enum:
       - administrateur
       - coordonnateur
@@ -5371,7 +5668,7 @@ components:
         * `en_validation` - En validation
         * `publie` - Publié
         * `refuse` - Refusé
-    StatutF4cEnum:
+    StatutF3aEnum:
       enum:
       - idee
       - depose
@@ -5441,7 +5738,7 @@ components:
           maxLength: 150
         role:
           allOf:
-          - $ref: '#/components/schemas/Role2bbEnum'
+          - $ref: '#/components/schemas/Role743Enum'
           readOnly: true
         telephone:
           type: string
