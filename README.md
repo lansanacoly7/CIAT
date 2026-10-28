@@ -109,9 +109,158 @@ npm run test:e2e
 ```
 *Temps d'exécution mesuré : ~1 min 15 s (75 secondes sur démarrage complet avec migrations et seed_all, 100% autonome sans clé IA externe).*
 
+---
+
+## Guide d'Exploitation
+
+### 1. Sauvegarde et restauration de la base de données
+
+Deux scripts POSIX robustes situés dans le dossier `scripts/` permettent d'exploiter les sauvegardes PostgreSQL, que la base soit hébergée localement ou dans un conteneur Docker.
+
+#### Sauvegarde (`scripts/sauvegarde_bd.sh`)
+Crée un dump binaire compressé avec `pg_dump -Fc`.
+```bash
+# Sauvegarde horodatée dans ./backups/ (ex: ciat_backup_YYYYMMDD_HHMMSS.dump)
+./scripts/sauvegarde_bd.sh
+
+# Sauvegarde vers un chemin personnalisé
+./scripts/sauvegarde_bd.sh /chemin/vers/sauvegarde.dump
+
+# Sauvegarde incluant également l'archive tar.gz du répertoire média (pièces jointes, visuels)
+./scripts/sauvegarde_bd.sh --avec-media
+
+# Sauvegarde via conteneur Docker (docker compose exec -T db)
+USE_DOCKER=1 ./scripts/sauvegarde_bd.sh
+```
+*Rétention automatique :* le script conserve par défaut les 14 sauvegardes les plus récentes (paramétrable via `BACKUP_KEEP`).
+
+#### Restauration (`scripts/restauration_bd.sh`)
+Restaure un dump PostgreSQL de manière propre et atomique via `pg_restore --clean --if-exists`.
+```bash
+# Restauration automatique du dump le plus récent dans ./backups/
+./scripts/restauration_bd.sh --yes
+
+# Restauration d'un fichier spécifique
+./scripts/restauration_bd.sh /chemin/vers/sauvegarde.dump --yes
+
+# Restauration avec extraction de l'archive média associée
+./scripts/restauration_bd.sh /chemin/vers/sauvegarde.dump --yes --avec-media
+
+# Restauration dans un conteneur Docker
+USE_DOCKER=1 ./scripts/restauration_bd.sh /chemin/vers/sauvegarde.dump --yes
+```
+
+#### Test et vérification de la procédure
+Un script de contrôle valide la chaîne complète (sauvegarde, injection de marqueur, restauration, vérification d'intégrité) :
+```bash
+./scripts/verifier_sauvegarde_restauration.sh
+```
+
+---
+
+### 2. Variables d'environnement importantes
+
+| Variable | Fichier | Rôle & Impact | Valeur par défaut / Exemple |
+|---|---|---|---|
+| `DJANGO_SECRET_KEY` | `backend/.env` | Clé cryptographique Django (sessions, tokens) | `change-me` en dev, générer une clé aléatoire forte en prod |
+| `DJANGO_DEBUG` | `backend/.env` | Mode débogage (1 = actif, 0 = inactif pour production) | `1` en dev, impérativement `0` en prod |
+| `DATABASE_URL` | `backend/.env` | URL de connexion à la base de données (PostgreSQL) | Non définie = SQLite locale (`db.sqlite3`) ; sinon `postgres://ciat:ciat@localhost:5432/ciat` |
+| `SITE_URL` | `backend/.env` | URL publique du site, utilisée pour les liens absolus et QR codes | `http://localhost:3000` |
+| `CORS_ALLOWED_ORIGINS` | `backend/.env` | Domaines front-end autorisés pour les requêtes API | `http://localhost:3000` |
+| `AI_PROVIDERS` | `backend/.env` | Ordre d'essai des fournisseurs d'IA avec bascule automatique | `groq,gemini` |
+| `GROQ_API_KEY` | `backend/.env` | Clé d'API Groq (Llama / Mixtral) | Clé sur https://console.groq.com/keys |
+| `GEMINI_API_KEY` | `backend/.env` | Clé d'API Google Gemini | Clé sur https://aistudio.google.com/apikey |
+| `EMAIL_BACKEND` | `backend/.env` | Moteur d'envoi d'emails (console en dev, SMTP en prod) | `django.core.mail.backends.console.EmailBackend` |
+| `DJANGO_LOG_LEVEL` | `backend/.env` | Seuil de journalisation (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` |
+| `NEXT_PUBLIC_API_URL` | `frontend/.env.local` | URL de l'API consommée par le client Next.js | `http://localhost:8000/api` |
+| `NEXT_PUBLIC_SITE_URL` | `frontend/.env.local` | URL publique de base pour le SEO et le sitemap | `http://localhost:3000` |
+| `NEXT_PUBLIC_MODE_DEMO`| `frontend/.env.local` | Active la simulation autonome en mode déconnecté | `0` (normal) ou `1` (démo autonome sans backend) |
+
+---
+
+### 3. Réinitialisation des données de démonstration
+
+Pour remettre la base de données dans un état de référence propre et cohérent avec l'ensemble des 62 projets réalistes :
+
+```bash
+cd backend
+.venv\Scripts\activate          # Linux/Mac : source .venv/bin/activate
+
+# 1. Purge et réapplication des migrations
+python manage.py flush --no-input
+python manage.py migrate
+
+# 2. Peuplement complet et cohérent de tous les modules (idempotent)
+python manage.py seed_all
+```
+
+Cette commande initialise :
+- Les 7 domaines d'intervention et 3 cohortes officielles (2024, 2025, 2026).
+- Les 45 comptes utilisateurs (équipe CIAT et 40 porteurs de projets avec parité de 39 %).
+- Les 62 projets répartis sur tous les statuts (idée, déposé, sélectionné, incubé, prototype, terminé, rejeté).
+- Les 58 dossiers de candidature complets avec leurs 3 pièces obligatoires (PDF valides).
+- Les évaluations multicritères et décisions motivées concordantes.
+- Les affectations de mentors, objectifs opérationnels, jalons d'avancement et bilans de suivi à 3 et 6 mois.
+- Les 23 fiches de la galerie des innovations avec photos locales et QR codes.
+- Les documents institutionnels générés sans dépendance externe.
+- Les partenariats et données financières du tableau de bord décisionnel.
+
+---
+
+### 4. Que faire si l'IA répond 503 (Service Unavailable)
+
+L'architecture du module IA (`apps/core/ai.py`) intègre un mécanisme de résilience multi-niveaux :
+1. **Tolérance aux pannes (Failover automatique) :** Si Groq répond une erreur de quota ou de timeout, l'orchestrateur bascule instantanément sur Gemini (et inversement selon `AI_PROVIDERS`).
+2. **Gestion gracieuse des erreurs :** Lorsqu'aucun fournisseur n'est joignable, les vues (`/api/assistant/messages/`, `/api/documents/generer/`, `/api/analytics/question/`) retournent un code HTTP `503 Service Unavailable` documenté, empêchant tout crash serveur 500.
+3. **Fonctionnement hors-ligne :**
+   - Le générateur de documents dispose de gabarits structurés pré-remplis sans appel réseau.
+   - Le tableau de bord décisionnel répond à un ensemble de questions métier en langage naturel via une analyse statistique locale directe.
+   - Le frontend propose le mode autonome `NEXT_PUBLIC_MODE_DEMO=1`.
+
+**Procédure de rétablissement en production :**
+1. Consulter les journaux d'application (`[WARNING] [apps.core.ai]` ou `[ERROR] [apps.core.ai]`).
+2. Vérifier les quotas sur les consoles fournisseurs :
+   - Groq : https://console.groq.com/settings/limits
+   - Google AI Studio : https://aistudio.google.com/
+3. Inverser temporairement la priorité dans `backend/.env` :
+   ```env
+   AI_PROVIDERS=gemini,groq
+   ```
+4. Relancer le service backend (`python manage.py runserver` ou `systemctl restart ciat`).
+
+---
+
+### 5. Où lire et configurer les journaux (Logs)
+
+La journalisation est unifiée via le module `apps.core.logging` et configurée dans `settings.py` :
+- **Sécurité et conformité RGPD / Souveraineté :** Le filtre `SensitiveDataFilter` intercepte automatiquement chaque message de log et masque systématiquement les mots de passe, tokens JWT (`Bearer eyJ...`), clés d'API et numéros de cartes (`[MASQUÉ]`).
+
+#### Emplacements des journaux :
+- **En développement :** Les logs sont émis directement sur la sortie standard (`stdout` / `stderr`) du terminal exécutant `python manage.py runserver`.
+- **En production sous Linux (systemd) :**
+  ```bash
+  # Suivre les journaux applicatifs en direct
+  journalctl -u ciat -f
+
+  # Consulter les 100 dernières lignes d'erreurs
+  journalctl -u ciat -p err -n 100
+  ```
+- **En production sous Docker :**
+  ```bash
+  docker compose logs -f backend
+  ```
+- **Ajuster la granularité des logs :**
+  Modifier la variable `DJANGO_LOG_LEVEL` dans `backend/.env` :
+  - `DEBUG` : requêtes SQL détaillées et traçage complet (développement uniquement).
+  - `INFO` : événements métier importants (authentifications, décisions, génération de documents, audits).
+  - `WARNING` / `ERROR` : anomalies, indisponibilités temporaires d'API et rejets stricts.
+
+---
+
 ## Vérifier avant de proposer son travail
 ```bash
-cd backend && python manage.py check && python manage.py makemigrations --check && python manage.py test apps.analytics
+cd backend && python manage.py check && python manage.py makemigrations --check && python manage.py test
 cd frontend && npm run lint && npm run build && npm run test:e2e
 ```
+
 

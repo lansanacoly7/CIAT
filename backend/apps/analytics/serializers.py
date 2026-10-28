@@ -4,6 +4,7 @@ from .models import Financement, Partenariat
 
 
 class PartenariatSerializer(serializers.ModelSerializer):
+    """Sérialiseur complet pour l'exposition des partenariats au tableau de bord décisionnel."""
     projet_titre = serializers.CharField(source="projet.titre", read_only=True)
     cohorte = serializers.CharField(source="projet.cohorte.nom", default=None, read_only=True)
     domaine = serializers.CharField(source="projet.domaine.nom", default=None, read_only=True)
@@ -31,12 +32,14 @@ class PartenariatSerializer(serializers.ModelSerializer):
         ]
 
     def get_porteur_nom(self, obj):
+        """Récupère le nom complet du porteur du projet ou son adresse email à défaut."""
         if obj.projet and obj.projet.porteur:
             return obj.projet.porteur.get_full_name() or obj.projet.porteur.email
         return "Non renseigné"
 
 
 class FinancementSerializer(serializers.ModelSerializer):
+    """Sérialiseur des lignes de financement mobilisées avec libellés enrichis."""
     projet_titre = serializers.CharField(source="projet.titre", read_only=True)
     cohorte = serializers.CharField(source="projet.cohorte.nom", default=None, read_only=True)
     domaine = serializers.CharField(source="projet.domaine.nom", default=None, read_only=True)
@@ -62,6 +65,7 @@ class FinancementSerializer(serializers.ModelSerializer):
         ]
 
     def get_porteur_nom(self, obj):
+        """Extrait l'identité du porteur pour faciliter les analyses décisionnelles."""
         if obj.projet and obj.projet.porteur:
             return obj.projet.porteur.get_full_name() or obj.projet.porteur.email
         return "Non renseigné"
