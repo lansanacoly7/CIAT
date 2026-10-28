@@ -44,6 +44,9 @@ async function refreshAccess(): Promise<boolean> {
   });
   if (!res.ok) {
     clearTokens();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("ciat:auth:expired"));
+    }
     return false;
   }
   const data = await res.json();

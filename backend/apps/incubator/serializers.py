@@ -30,10 +30,26 @@ from .models import (
 
 class ProjetSimpleSerializer(serializers.ModelSerializer):
     """Représentation allégée du projet dans le dossier."""
+    porteur_nom = serializers.SerializerMethodField()
+    domaine_nom = serializers.CharField(source="domaine.nom", read_only=True)
 
     class Meta:
         model = Projet
-        fields = ["id", "titre"]
+        fields = [
+            "id",
+            "titre",
+            "resume",
+            "probleme",
+            "solution",
+            "domaine",
+            "domaine_nom",
+            "porteur_nom",
+        ]
+
+    def get_porteur_nom(self, obj):
+        if obj.porteur:
+            return obj.porteur.get_full_name() or obj.porteur.email
+        return ""
 
 
 class PieceSerializer(serializers.ModelSerializer):

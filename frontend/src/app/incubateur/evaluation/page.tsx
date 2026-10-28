@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   FolderKanban,
   Clock,
@@ -15,6 +16,8 @@ import {
   ArrowLeft,
   ShieldCheck,
   Info,
+  AlertCircle,
+  LogIn,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
@@ -32,6 +35,9 @@ import DecisionModal from "@/components/incubateur/DecisionModal";
 type ProjetFull = ProjetData & { porteur_nom?: string };
 
 function message(err: unknown, fallback: string) {
+  if (err instanceof ApiError && err.status === 401) {
+    return "Votre session a expiré. Veuillez vous reconnecter pour accéder aux dossiers.";
+  }
   return err instanceof ApiError
     ? fallback
     : "Impossible de joindre le serveur. Vérifiez votre connexion internet.";
@@ -43,6 +49,7 @@ function EvaluationBoard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [scores, setScores] = useState<Record<number, number | null>>({});
   const [evals, setEvals] = useState<EvaluationsSummary | null>(null);
@@ -58,20 +65,21 @@ function EvaluationBoard() {
       const rawList = Array.isArray(page) ? page : page.results ?? [];
       const list = rawList.filter((d) => d.statut !== "brouillon");
 
-      // Enrichissement des détails du projet si disponible
-      const enriched = await Promise.all(
-        list.map(async (d): Promise<DossierEval> => {
-          try {
-            const p = await api<ProjetFull>(`/projets/${d.projet.id}/`);
-            return { ...d, projet: { ...d.projet, ...p }, porteur_nom: p.porteur_nom };
-          } catch {
-            return d;
-          }
-        }),
-      );
+      // Données de projet déjà consolidées depuis le sérialiseur
+      const enriched: DossierEval[] = list.map((d) => {
+        const p = d.projet as ProjetFull;
+        return {
+          ...d,
+          porteur_nom: p?.porteur_nom || (d as DossierEval).porteur_nom,
+        };
+      });
       setDossiers(enriched);
       setError(null);
+      setIsAuthError(false);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setIsAuthError(true);
+      }
       setError(message(err, "Impossible de charger les dossiers."));
     } finally {
       setLoading(false);
@@ -210,9 +218,31 @@ function EvaluationBoard() {
       {error && (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 shadow-2xs"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 shadow-2xs"
         >
-          {error}
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+            <span>{error}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => loadDossiers(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 bg-white text-xs font-bold text-red-700 hover:bg-red-50 transition-colors shadow-2xs"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Réessayer</span>
+            </button>
+            {isAuthError && (
+              <Link
+                href="/connexion?next=/incubateur/evaluation"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#612D10] text-xs font-bold text-white hover:bg-[#3F1D0A] transition-colors shadow-2xs"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Se reconnecter</span>
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
