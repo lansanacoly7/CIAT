@@ -668,10 +668,6 @@ export default function GalerieProjets() {
               <div className="g-spotlight-visual-shade" />
 
               <div className="g-spotlight-top-badges">
-                <span className="g-badge-stage" style={{ position: "static" }}>
-                  <Sparkles size={12} className="text-[#DFae79]" />
-                  {activeSpotlight.stageBadge}
-                </span>
                 <span className="g-badge-views" style={{ position: "static" }}>
                   <Eye size={13} />
                   {activeSpotlight.vues} consultations
@@ -738,7 +734,7 @@ export default function GalerieProjets() {
                   <button
                     type="button"
                     onClick={() => openInteretModal(activeSpotlight)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-4 py-2.5 text-xs font-extrabold text-[#24140D] transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-4 py-2.5 text-xs font-bold !text-white transition cursor-pointer"
                   >
                     <Handshake size={14} />
                     Soutenir / Déployer
@@ -992,8 +988,6 @@ export default function GalerieProjets() {
                         />
                       </Link>
 
-                      <span className="g-badge-stage">{fiche.stageBadge}</span>
-
                       <button
                         type="button"
                         onClick={() => setQrTarget(fiche)}
@@ -1181,7 +1175,7 @@ export default function GalerieProjets() {
             <div className="flex flex-wrap gap-3.5">
               <Link
                 href="/portail/contact"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-6 py-3.5 text-xs sm:text-sm font-extrabold !text-[#24140D] transition shadow-lg"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-6 py-3.5 text-xs sm:text-sm font-bold !text-white transition shadow-lg"
               >
                 Contacter le Bureau de Transfert
                 <ArrowRight size={16} />
@@ -1309,7 +1303,7 @@ export default function GalerieProjets() {
                     <button
                       type="button"
                       onClick={() => setInteretTarget(null)}
-                      className="px-6 py-2.5 rounded-xl bg-[#24140D] text-white text-xs font-bold cursor-pointer"
+                      className="px-6 py-2.5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white text-xs font-bold cursor-pointer transition-colors"
                     >
                       Fermer
                     </button>
@@ -1445,7 +1439,7 @@ export default function GalerieProjets() {
                     <button
                       type="submit"
                       disabled={interetSubmitting}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#612D10] hover:bg-[#24140D] text-white text-xs sm:text-sm font-bold transition cursor-pointer disabled:opacity-60"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white text-xs sm:text-sm font-bold transition cursor-pointer disabled:opacity-60"
                     >
                       {interetSubmitting ? (
                         <>

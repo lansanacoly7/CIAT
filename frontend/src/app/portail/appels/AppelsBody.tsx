@@ -268,13 +268,9 @@ export default function AppelsBody() {
             {/* Carte principale : Appel actif */}
             <article className="ap-active-call">
               <div className="ap-call-top">
-                <span className="ap-status-open">
-                  <span className="ap-pulse-dot" />
-                  Session ouverte aux dépôts
-                </span>
                 <span className="ap-deadline-pill">
                   <Calendar size={14} />
-                  Clôture : {formatDateFr(appelOuvert.date_limite)}
+                  Clôture des candidatures : {formatDateFr(appelOuvert.date_limite)}
                 </span>
               </div>
 

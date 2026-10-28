@@ -288,22 +288,23 @@
   min-height: 46px;
   padding: 0 22px;
   border-radius: 12px;
-  background: var(--g-night);
+  background: var(--g-brown);
   color: var(--g-white) !important;
   font-family: var(--font-jakarta), sans-serif;
   font-size: 13px;
   font-weight: 700;
-  border: 1px solid var(--g-night);
+  border: 1px solid var(--g-brown);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 20px rgba(36, 20, 13, 0.18);
+  box-shadow: 0 4px 14px rgba(97, 45, 16, 0.2);
 }
 
 .g-btn-primary:hover {
-  background: var(--g-brown);
-  border-color: var(--g-brown);
+  background: #7D3A15;
+  border-color: #7D3A15;
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(97, 45, 16, 0.3);
 }
 
 .g-btn-secondary {
@@ -926,7 +927,7 @@
 }
 
 .g-stage-btn-active {
-  background: var(--g-night) !important;
+  background: var(--g-brown) !important;
   color: var(--g-white) !important;
 }
 
@@ -1204,7 +1205,7 @@
 }
 
 .g-btn-interet:hover {
-  background: var(--g-night);
+  background: #7D3A15;
   transform: translateY(-1px);
 }
 

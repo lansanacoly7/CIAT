@@ -487,7 +487,7 @@ export default function CiatPresentationPage() {
                 </div>
                 <Link
                   href="/portail/incubateur"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-4 py-2.5 text-xs font-extrabold !text-[#24140D] shrink-0 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-4 py-2.5 text-xs font-bold !text-white shrink-0 transition"
                 >
                   Explorer
                   <ArrowUpRight size={14} />
@@ -776,7 +776,7 @@ export default function CiatPresentationPage() {
                   </span>
                   <Link
                     href="/portail/documents"
-                    className="inline-flex items-center gap-2 text-xs font-extrabold bg-[#C99A68] hover:bg-[#DFae79] !text-[#24140D] py-2.5 px-4 rounded-xl transition"
+                    className="inline-flex items-center gap-2 text-xs font-bold bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 !text-white py-2.5 px-4 rounded-xl transition"
                   >
                     <Download size={14} />
                     Télécharger
@@ -820,7 +820,7 @@ export default function CiatPresentationPage() {
 
               <Link
                 href="/portail/appels"
-                className="w-full inline-flex items-center justify-center rounded-2xl bg-[#612D10] hover:bg-[#24140D] px-6 py-4 text-sm font-bold !text-white shadow-md transition-all gap-2.5"
+                className="w-full inline-flex items-center justify-center rounded-2xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-6 py-4 text-sm font-bold !text-white shadow-md transition-all gap-2.5"
               >
                 <span>Voir l&apos;appel à candidatures en cours</span>
                 <ArrowRight size={16} className="text-[#DFae79]" />
@@ -854,10 +854,10 @@ export default function CiatPresentationPage() {
             </Link>
             <Link
               href="/connexion?next=/incubateur"
-              className="inline-flex items-center justify-center rounded-xl bg-[#C99A68] hover:bg-[#DFae79] px-6 py-3.5 text-xs sm:text-sm font-extrabold !text-[#24140D] shadow-lg transition"
+              className="inline-flex items-center justify-center rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-6 py-3.5 text-xs sm:text-sm font-bold !text-white shadow-xl transition"
             >
               Déposer une candidature
-              <ArrowRight size={15} className="ml-2" />
+              <ArrowRight size={15} className="ml-2 text-[#C99A68]" />
             </Link>
           </div>
         </div>

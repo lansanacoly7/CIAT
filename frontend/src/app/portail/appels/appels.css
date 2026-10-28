@@ -684,20 +684,22 @@
   min-height: 46px;
   padding: 0 22px;
   border-radius: 12px;
-  background: #C99A68;
-  border: 1px solid #C99A68;
-  color: #24140D !important;
+  background: #612D10;
+  border: 1px solid rgba(201, 154, 104, 0.4);
+  color: #FFFFFF !important;
   font-family: var(--font-jakarta), sans-serif;
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(97, 45, 16, 0.2);
 }
 
 .ap-btn-gold:hover {
-  background: #DFae79;
-  border-color: #DFae79;
+  background: #7D3A15;
+  border-color: #C99A68;
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(97, 45, 16, 0.3);
 }
 
 .ap-btn-ghost-light {
@@ -730,19 +732,22 @@
   min-height: 46px;
   padding: 0 22px;
   border-radius: 12px;
-  background: #24140D;
-  border: 1px solid #24140D;
+  background: #612D10;
+  border: 1px solid #612D10;
   color: #FFFFFF !important;
   font-family: var(--font-jakarta), sans-serif;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(97, 45, 16, 0.2);
 }
 
 .ap-btn-dark:hover {
-  background: #612D10;
-  border-color: #612D10;
+  background: #7D3A15;
+  border-color: #7D3A15;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(97, 45, 16, 0.3);
 }
 
 .ap-btn-outline {

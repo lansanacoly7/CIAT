@@ -63,7 +63,7 @@ function FicheDetailContent({
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [copied, setCopied] = useState(false);
   const mounted = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => true,
     () => false
   );
@@ -213,7 +213,7 @@ function FicheDetailContent({
       if (res.success) {
         setInteretSuccess(
           res.message ||
-            "Votre manifestation d'intérêt a bien été enregistrée pour cette innovation. Le porteur et le coordonnateur du CIAT prendront contact avec vous."
+          "Votre manifestation d'intérêt a bien été enregistrée pour cette innovation. Le porteur et le coordonnateur du CIAT prendront contact avec vous."
         );
         setInteretNom("");
         setInteretEmail("");
@@ -361,28 +361,27 @@ function FicheDetailContent({
                 />
               </div>
 
-                {photos.length > 1 && (
-                  <div className="flex gap-2 p-3 bg-ivoire overflow-x-auto border-t border-bordure/60">
-                    {photos.map((photo, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setActivePhotoIndex(idx)}
-                        className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                          activePhotoIndex === idx ? "border-brun shadow-xs" : "border-transparent opacity-70 hover:opacity-100"
+              {photos.length > 1 && (
+                <div className="flex gap-2 p-3 bg-ivoire overflow-x-auto border-t border-bordure/60">
+                  {photos.map((photo, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActivePhotoIndex(idx)}
+                      className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition ${activePhotoIndex === idx ? "border-brun shadow-xs" : "border-transparent opacity-70 hover:opacity-100"
                         }`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={photo.url}
-                          alt={`Aperçu ${idx + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.url}
+                        alt={`Aperçu ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
 
             {/* Problème Adressé */}
             <Card>
@@ -459,7 +458,7 @@ function FicheDetailContent({
                         </span>
                         <span>Accéder à la démonstration #{idx + 1}</span>
                       </div>
-                      <span className="text-xs text-brun font-bold">Ouvrir ↗</span>
+                      <span className="text-xs text-beige font-bold">Ouvrir ↗</span>
                     </a>
                   ))}
 
@@ -505,7 +504,7 @@ function FicheDetailContent({
                   setInteretError(null);
                   setShowInteretModal(true);
                 }}
-                className="shrink-0 min-h-[44px] py-3 px-6 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#C99A68]"
+                className="shrink-0 min-h-[44px] py-3 px-6 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#C99A68]"
               >
                 <Handshake className="h-4 w-4 text-[#E2A669]" />
                 Je suis intéressé
@@ -535,7 +534,7 @@ function FicheDetailContent({
                   setInteretError(null);
                   setShowInteretModal(true);
                 }}
-                className="w-full mt-4 min-h-[44px] py-3.5 px-5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68]"
+                className="w-full mt-4 min-h-[44px] py-3.5 px-5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68]"
               >
                 <Handshake className="h-4 w-4 text-[#E2A669]" />
                 Je suis intéressé
@@ -544,7 +543,7 @@ function FicheDetailContent({
 
             {/* Carte QR Code Officielle */}
             <div className="rounded-2xl border-2 border-beige/60 bg-white p-6 shadow-sm text-center">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-brun">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-beige">
                 Accès Mobile & Salon
               </span>
               <h2 className="mt-1 text-base font-bold text-brun">
@@ -591,11 +590,10 @@ function FicheDetailContent({
                   return (
                     <div key={idx} className="flex items-center gap-3 text-xs">
                       <span
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${
-                          isCurrent
-                            ? "bg-succes text-white ring-2 ring-succes/30"
-                            : "bg-ivoire text-texte-doux border border-bordure"
-                        }`}
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isCurrent
+                          ? "bg-succes text-white ring-2 ring-succes/30"
+                          : "bg-ivoire text-texte-doux border border-bordure"
+                          }`}
                       >
                         {idx + 1}
                       </span>
@@ -695,7 +693,7 @@ function FicheDetailContent({
                       setInteretSuccess(null);
                       setShowInteretModal(false);
                     }}
-                    className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition cursor-pointer"
+                    className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white font-semibold text-sm transition cursor-pointer"
                   >
                     Fermer
                   </button>
@@ -818,7 +816,7 @@ function FicheDetailContent({
                   <button
                     type="submit"
                     disabled={interetSubmitting}
-                    className="min-h-[44px] flex-1 py-3 px-5 rounded-xl bg-[#28150C] hover:bg-[#3D2012] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
+                    className="min-h-[44px] flex-1 py-3 px-5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] text-white font-semibold text-sm transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {interetSubmitting ? (
                       <>

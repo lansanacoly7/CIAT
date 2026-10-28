@@ -1,856 +1,371 @@
 /* =============================================================================
  * LES 7 DOMAINES D'INTERVENTION — CIAT 360 (ISEP AMADOU TRAWARÉ DE DIAMNIADIO)
- * Direction artistique : Référentiel Scientifique & Architecture Éditoriale
- * Charte stricte CIAT :
- *   Brun Nuit (#24140D) · Brun CIAT (#612D10) · Ocre Doré (#C99A68)
- *   Sable Doux (#FAF7F2) · Lin Bordure (#EFE4D6) · Blanc Pur (#FFFFFF)
+ * Direction artistique : Architecture Épurée, Pavillon Maître-Détail & Bento
+ * Charte stricte CIAT 360 :
+ *   Typographies : Plus Jakarta Sans (Titres) & Inter (Corps)
+ *   Palette      : Brun Nuit (#24140D) · Brun CIAT (#612D10) · Ocre Doré (#C99A68)
+ *                  Sable Doux (#FAF7F2) · Lin Bordure (#EFE4D6) · Blanc Pur (#FFFFFF)
  * ============================================================================= */
 
-.ciat-domains-root {
+.ciat-domains-page {
   --d-night: #24140d;
-  --d-night-soft: #311b11;
+  --d-espresso: #160c07;
   --d-brown: #612d10;
-  --d-brown-hover: #7a3915;
+  --d-brown-hover: #7d3a15;
   --d-ochre: #c99a68;
-  --d-ochre-bright: #dfae79;
-  --d-ochre-pale: #f5eadc;
+  --d-ochre-light: #e2b483;
   --d-sand: #faf7f2;
   --d-linen: #efe4d6;
   --d-border: #e5d7c6;
-  --d-muted: #655346;
+  --d-muted: #5c4b3e;
   --d-white: #ffffff;
-  --d-container: 1280px;
 
   width: 100%;
   min-height: 100vh;
-  background-color: var(--d-sand);
+  background-color: var(--d-white);
   color: var(--d-night);
   font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: clip;
 }
 
-.ciat-domains-root *,
-.ciat-domains-root *::before,
-.ciat-domains-root *::after {
+.ciat-domains-page *,
+.ciat-domains-page *::before,
+.ciat-domains-page *::after {
   box-sizing: border-box;
 }
 
 /* =============================================================================
- * 1. HERO ARCHITECTURAL MONUMENTAL (SPLIT ÉDITORIAL & PHOTOGRAPHIE LABO HD)
+ * 1. UTILITAIRES TYPOGRAPHIQUES ÉDITORIAUX
  * ============================================================================= */
 
-.d-hero {
-  position: relative;
-  width: 100%;
-  min-height: calc(100vh - 78px);
-  max-height: 880px;
-  background:
-    radial-gradient(ellipse at 18% 12%, rgba(97, 45, 16, 0.42), transparent 56%),
-    var(--d-night);
-  color: var(--d-white);
-  display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
-  border-bottom: 1px solid rgba(201, 154, 104, 0.28);
-  overflow: hidden;
-}
-
-.d-hero-copy {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(44px, 5vw, 76px) clamp(24px, 4vw, 56px) clamp(44px, 5vw, 76px)
-    clamp(24px, 6vw, 88px);
-}
-
-.d-eyebrow {
+.dm-overline {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
-}
-
-.d-eyebrow-line {
-  width: 36px;
-  height: 1.5px;
-  background: var(--d-ochre);
-}
-
-.d-eyebrow-text {
-  font-family: var(--font-jakarta), sans-serif;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--d-ochre-bright);
-}
-
-.d-hero-title {
-  margin: 0 0 20px;
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(34px, 3.6vw, 52px);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.028em;
-  color: var(--d-white);
-}
-
-.d-hero-title span {
-  color: var(--d-ochre);
-}
-
-.d-hero-lead {
-  margin: 0 0 30px;
-  max-width: 560px;
-  font-size: clamp(14.5px, 1.15vw, 16.5px);
-  line-height: 1.75;
-  color: rgba(250, 247, 242, 0.86);
-}
-
-.d-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 36px;
-}
-
-.d-btn-gold {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  min-height: 48px;
-  padding: 0 24px;
-  border-radius: 12px;
-  background: var(--d-ochre);
-  border: 1px solid var(--d-ochre);
-  color: var(--d-night) !important;
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
-}
-
-.d-btn-gold:hover {
-  background: var(--d-ochre-bright);
-  border-color: var(--d-ochre-bright);
-  transform: translateY(-2px);
-}
-
-.d-btn-ghost-light {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 22px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  color: var(--d-white) !important;
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.d-btn-ghost-light:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: var(--d-ochre);
-}
-
-.d-hero-kpis {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(201, 154, 104, 0.24);
-  max-width: 580px;
-}
-
-.d-kpi {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.d-kpi + .d-kpi {
-  padding-left: 18px;
-  border-left: 1px solid rgba(201, 154, 104, 0.22);
-}
-
-.d-kpi strong {
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(22px, 2vw, 28px);
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--d-ochre);
-  white-space: nowrap;
-}
-
-.d-kpi span {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(250, 247, 242, 0.78);
-  line-height: 1.35;
-}
-
-/* Colonne visuelle droite du Hero */
-.d-hero-media {
-  position: relative;
-  min-height: 460px;
-  overflow: hidden;
-  background: #170c07;
-}
-
-.d-hero-media img {
-  object-fit: cover;
-  object-position: center 35%;
-}
-
-.d-hero-media-shade {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      var(--d-night) 0%,
-      rgba(36, 20, 13, 0.45) 18%,
-      rgba(36, 20, 13, 0) 48%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(20, 10, 6, 0.18) 0%,
-      transparent 45%,
-      rgba(20, 10, 6, 0.82) 100%
-    );
-  pointer-events: none;
-}
-
-.d-hero-plaque {
-  position: absolute;
-  bottom: 28px;
-  left: 28px;
-  right: 28px;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 22px;
-  border-radius: 18px;
-  background: rgba(28, 15, 9, 0.84);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(201, 154, 104, 0.36);
-}
-
-.d-plaque-meta span {
-  display: block;
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--d-ochre-bright);
-  margin-bottom: 3px;
-}
-
-.d-plaque-meta strong {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--d-white);
-}
-
-.d-plaque-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.d-plaque-tags span {
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--d-white);
-}
-
-/* =============================================================================
- * 2. BARRE D'INDEX RAPIDE DES 7 FILIÈRES OFFICIELLES (STICKY NAVIGATION)
- * ============================================================================= */
-
-.d-quicknav-wrap {
-  position: sticky;
-  top: 72px;
-  z-index: 30;
-  background: rgba(250, 247, 242, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--d-border);
-}
-
-.d-quicknav {
-  width: min(100%, var(--d-container));
-  margin: 0 auto;
-  padding: 11px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.d-quicknav::-webkit-scrollbar {
-  display: none;
-}
-
-.d-quicknav-pill {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: var(--d-white);
-  border: 1px solid var(--d-border);
-  color: var(--d-night) !important;
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.18s ease;
-}
-
-.d-quicknav-pill:hover {
-  border-color: var(--d-brown);
-  background: var(--d-ochre-pale);
-  color: var(--d-brown) !important;
-}
-
-.d-quicknav-num {
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: 11.5px;
-  font-weight: 800;
   color: var(--d-brown);
 }
 
+.dm-overline::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 1.5px;
+  background-color: var(--d-ochre);
+  flex-shrink: 0;
+}
+
+.dm-overline-light {
+  color: var(--d-ochre-light);
+}
+
 /* =============================================================================
- * 3. SECTION PRINCIPALE : LES 7 DOSSIERS DE FILIÈRES ARCHITECTURAUX
+ * 2. PAVILLON INTERACTIF MAÎTRE-DÉTAIL (SECTION PHARE)
  * ============================================================================= */
 
-.d-section {
-  width: min(100%, var(--d-container));
-  margin: 0 auto;
-  padding: 72px 24px 80px;
+.dm-master-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--d-linen);
 }
 
-.d-section-header {
+.dm-master-tab {
+  position: relative;
+  width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: 36px;
-  align-items: end;
-  margin-bottom: 48px;
-  padding-bottom: 28px;
-  border-bottom: 1px solid var(--d-border);
+  grid-template-columns: 40px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px 18px 20px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--d-linen);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.22s ease, padding-left 0.22s ease;
 }
 
-.d-section-title {
-  margin: 8px 0 0;
+.dm-master-tab::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--d-brown);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dm-master-tab:hover {
+  background-color: rgba(250, 247, 242, 0.72);
+}
+
+.dm-master-tab:focus-visible {
+  outline: 2px solid var(--d-brown);
+  outline-offset: -2px;
+}
+
+.dm-master-tab[aria-selected="true"] {
+  background-color: var(--d-sand);
+  padding-left: 24px;
+}
+
+.dm-master-tab[aria-selected="true"]::before {
+  transform: scaleY(1);
+}
+
+.dm-tab-num {
   font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(26px, 2.8vw, 38px);
+  font-size: 13px;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--d-muted);
+  transition: color 0.2s ease;
+}
+
+.dm-master-tab[aria-selected="true"] .dm-tab-num {
+  color: var(--d-brown);
+}
+
+.dm-tab-title {
+  display: block;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--d-night);
+  transition: color 0.2s ease;
+}
+
+.dm-master-tab[aria-selected="true"] .dm-tab-title {
+  font-weight: 800;
   color: var(--d-night);
 }
 
-.d-section-intro {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.75;
+.dm-tab-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--d-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Liste éditoriale alternée des 7 filières d'excellence */
-.d-dossiers-stack {
+.dm-tab-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--d-muted);
+  opacity: 0.45;
+  transform: translateX(-3px);
+  transition: opacity 0.22s ease, transform 0.22s ease, color 0.22s ease;
+}
+
+.dm-master-tab:hover .dm-tab-arrow,
+.dm-master-tab[aria-selected="true"] .dm-tab-arrow {
+  opacity: 1;
+  color: var(--d-brown);
+  transform: translateX(0);
+}
+
+/* Panneau immersif droit */
+.dm-pavilion-stage {
+  border-radius: 24px;
+  background-color: var(--d-white);
+  border: 1px solid var(--d-border);
+  overflow: hidden;
+  box-shadow: 0 24px 64px -24px rgba(36, 20, 13, 0.11);
+}
+
+@keyframes dmStageReveal {
+  from {
+    opacity: 0.55;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dm-stage-photo-anim {
+  animation: dmStageReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.dm-axes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.dm-axe-col {
+  padding-left: 14px;
+  border-left: 1.5px solid var(--d-linen);
+}
+
+.dm-axe-index {
+  display: block;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--d-brown);
+  margin-bottom: 6px;
+}
+
+/* =============================================================================
+ * 3. ATLAS SYNOPTIQUE BENTO DES 7 FILIÈRES (7+5 / 4+4+4 / 5+7)
+ * ============================================================================= */
+
+.dm-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.dm-bento-card {
+  scroll-margin-top: 108px;
+  grid-column: span 4 / span 4;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-}
-
-.d-dossier-card {
-  scroll-margin-top: 145px;
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  background: var(--d-white);
+  justify-content: space-between;
+  background-color: var(--d-white);
   border: 1px solid var(--d-border);
-  border-radius: 26px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(36, 20, 13, 0.05);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.28s ease;
 }
 
-.d-dossier-card:hover {
-  transform: translateY(-3px);
+/* Rythme architectural asymétrique sur grand écran :
+ * Ligne 1 : 01 (7 col) + 02 (5 col)
+ * Ligne 2 : 03 (4 col) + 04 (4 col) + 05 (4 col)
+ * Ligne 3 : 06 (5 col) + 07 (7 col)
+ */
+.dm-bento-span-7 {
+  grid-column: span 7 / span 7;
+}
+
+.dm-bento-span-5 {
+  grid-column: span 5 / span 5;
+}
+
+.dm-bento-span-4 {
+  grid-column: span 4 / span 4;
+}
+
+.dm-bento-card:hover {
+  transform: translateY(-4px);
   border-color: var(--d-ochre);
-  box-shadow: 0 24px 54px rgba(36, 20, 13, 0.1);
+  box-shadow: 0 22px 48px -18px rgba(36, 20, 13, 0.13);
 }
 
-.d-dossier-reverse {
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+.dm-bento-card-active {
+  border-color: var(--d-brown);
+  box-shadow: 0 20px 44px -16px rgba(97, 45, 16, 0.16);
 }
 
-.d-dossier-reverse .d-dossier-visual {
-  order: 2;
-}
-
-.d-dossier-reverse .d-dossier-body {
-  order: 1;
-}
-
-.d-dossier-visual {
+.dm-bento-media {
   position: relative;
-  min-height: 360px;
-  background: var(--d-night);
+  width: 100%;
+  height: 252px;
+  background-color: var(--d-espresso);
   overflow: hidden;
 }
 
-.d-dossier-visual img {
+.dm-bento-span-4 .dm-bento-media {
+  height: 218px;
+}
+
+.dm-bento-media img {
   object-fit: cover;
+  object-position: center 26%;
   transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.d-dossier-card:hover .d-dossier-visual img {
-  transform: scale(1.04);
+.dm-bento-card:hover .dm-bento-media img {
+  transform: scale(1.045);
 }
 
-.d-dossier-visual-shade {
+.dm-bento-num-tag {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(20, 10, 6, 0.28) 0%,
-    transparent 42%,
-    rgba(20, 10, 6, 0.78) 100%
-  );
-  pointer-events: none;
-}
-
-.d-dossier-num-badge {
-  position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
+  gap: 6px;
+  padding: 5px 11px;
   border-radius: 999px;
-  background: rgba(28, 15, 9, 0.86);
+  background: rgba(22, 12, 7, 0.84);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(201, 154, 104, 0.45);
-  color: var(--d-white);
-  font-family: var(--font-jakarta), sans-serif;
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(201, 154, 104, 0.38);
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.d-dossier-atelier-bar {
-  position: absolute;
-  bottom: 18px;
-  left: 18px;
-  right: 18px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  color: var(--d-night);
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 10px 24px rgba(20, 10, 6, 0.2);
-}
-
-.d-dossier-body {
-  padding: clamp(26px, 3.2vw, 42px);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.d-dossier-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.d-dossier-icon-box {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: var(--d-sand);
-  border: 1px solid var(--d-border);
-  color: var(--d-brown);
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-}
-
-.d-dossier-card:hover .d-dossier-icon-box {
-  background: var(--d-brown);
-  border-color: var(--d-brown);
   color: var(--d-white);
-}
-
-.d-dossier-big-num {
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--d-brown);
-}
-
-.d-dossier-title {
-  margin: 0 0 12px;
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(20px, 2vw, 25px);
-  font-weight: 800;
-  line-height: 1.24;
-  letter-spacing: -0.02em;
-  color: var(--d-night);
-}
-
-.d-dossier-desc {
-  margin: 0 0 18px;
-  font-size: 14.5px;
-  line-height: 1.7;
-  color: var(--d-muted);
-}
-
-.d-axes-list {
-  margin: 0 0 18px;
-  padding: 14px 16px;
-  list-style: none;
-  border-radius: 16px;
-  background: var(--d-sand);
-  border: 1px solid var(--d-linen);
-  display: grid;
-  gap: 8px;
-}
-
-.d-axes-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--d-night);
-}
-
-.d-proto-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-}
-
-.d-proto-label {
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--d-muted);
-  margin-right: 4px;
-}
-
-.d-proto-chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--d-ochre-pale);
-  border: 1px solid rgba(201, 154, 104, 0.4);
-  color: var(--d-brown);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.d-dossier-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--d-linen);
-}
-
-.d-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 0 18px;
-  border-radius: 11px;
-  border: 1px solid var(--d-border);
-  background: var(--d-white);
-  color: var(--d-night);
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.d-btn-outline:hover {
-  border-color: var(--d-brown);
-  background: var(--d-sand);
-  color: var(--d-brown);
-}
-
-.d-btn-solid {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 0 18px;
-  border-radius: 11px;
-  border: 1px solid var(--d-night);
-  background: var(--d-night);
-  color: var(--d-white) !important;
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 12.5px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.18s ease;
-}
-
-.d-btn-solid:hover {
-  background: var(--d-brown);
-  border-color: var(--d-brown);
-}
-
-/* =============================================================================
- * 4. MATRICE D'INTERDISCIPLINARITÉ & CONVERGENCE DES PÔLES
- * ============================================================================= */
-
-.d-synergy-band {
-  background: var(--d-white);
-  border-top: 1px solid var(--d-border);
-  border-bottom: 1px solid var(--d-border);
-  padding: 72px 24px;
-}
-
-.d-synergy-inner {
-  width: min(100%, var(--d-container));
-  margin: 0 auto;
-}
-
-.d-synergy-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  margin-top: 36px;
-}
-
-.d-synergy-card {
-  padding: 28px;
-  border-radius: 22px;
-  background: var(--d-sand);
-  border: 1px solid var(--d-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.d-synergy-poles {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.d-synergy-poles span {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--d-night);
-  color: var(--d-ochre-bright);
-  font-family: var(--font-jakarta), sans-serif;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.d-synergy-card h3 {
-  margin: 0 0 8px;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 21px;
-  font-weight: 600;
-  color: var(--d-night);
-}
-
-.d-synergy-card p {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: var(--d-muted);
-}
-
-/* =============================================================================
- * 5. BANDEAU MONUMENTAL DE CLÔTURE (CAMPUS CIAT DIAMNIADIO)
- * ============================================================================= */
-
-.d-closing {
-  background:
-    radial-gradient(ellipse at 15% 20%, rgba(201, 154, 104, 0.16), transparent 55%),
-    var(--d-night);
-  color: var(--d-white);
-  padding: 72px 24px;
-}
-
-.d-closing-inner {
-  width: min(100%, var(--d-container));
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 44px;
-  align-items: center;
-}
-
-.d-closing-title {
-  margin: 10px 0 16px;
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(26px, 2.8vw, 38px);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-  color: var(--d-white);
-}
-
-.d-closing-title span {
-  color: var(--d-ochre);
-}
-
-.d-closing-lead {
-  margin: 0 0 28px;
-  max-width: 520px;
-  font-size: 15px;
-  line-height: 1.75;
-  color: rgba(250, 247, 242, 0.84);
-}
-
-.d-closing-photo-frame {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(201, 154, 104, 0.35);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-}
-
-.d-closing-photo-frame img {
-  object-fit: cover;
 }
 
 /* =============================================================================
  * RESPONSIVE DESIGN (1024px · 768px · 390px)
  * ============================================================================= */
 
-@media (max-width: 1040px) {
-  .d-hero {
-    grid-template-columns: 1fr;
-    min-height: auto;
-    max-height: none;
+@media (max-width: 1024px) {
+  .dm-bento-span-7,
+  .dm-bento-span-5,
+  .dm-bento-span-4 {
+    grid-column: span 6 / span 6;
   }
 
-  .d-hero-media {
-    min-height: 360px;
+  .dm-bento-span-7:last-child {
+    grid-column: span 12 / span 12;
   }
 
-  .d-hero-media-shade {
-    background: linear-gradient(
-      180deg,
-      rgba(20, 10, 6, 0.3) 0%,
-      transparent 40%,
-      rgba(20, 10, 6, 0.85) 100%
-    );
-  }
-
-  .d-section-header {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .d-dossier-card,
-  .d-dossier-reverse {
-    grid-template-columns: 1fr;
-  }
-
-  .d-dossier-reverse .d-dossier-visual {
-    order: 0;
-  }
-
-  .d-dossier-reverse .d-dossier-body {
-    order: 0;
-  }
-
-  .d-dossier-visual {
-    min-height: 280px;
-  }
-
-  .d-synergy-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .d-closing-inner {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .d-hero-kpis {
+  .dm-axes-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
+}
 
-  .d-kpi + .d-kpi {
-    padding-left: 0;
-    padding-top: 12px;
-    border-left: none;
-    border-top: 1px solid rgba(201, 154, 104, 0.22);
+@media (max-width: 680px) {
+  .dm-bento-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
-  .d-dossier-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .dm-bento-span-7,
+  .dm-bento-span-5,
+  .dm-bento-span-4,
+  .dm-bento-span-7:last-child {
+    grid-column: 1 / -1;
   }
 
-  .d-btn-outline,
-  .d-btn-solid {
-    justify-content: center;
+  .dm-bento-media,
+  .dm-bento-span-4 .dm-bento-media {
+    height: 208px;
+  }
+
+  .dm-master-tab {
+    padding: 15px 14px;
+    grid-template-columns: 32px minmax(0, 1fr) 20px;
+    gap: 10px;
+  }
+
+  .dm-tab-title {
+    font-size: 14px;
   }
 }

@@ -2,23 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowRight,
   ArrowUpRight,
-  Building2,
   CheckCircle2,
-  Cog,
-  Cpu,
-  GraduationCap,
-  HeartPulse,
-  Layers,
-  MapPin,
-  Sprout,
-  SunMedium,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import type { DomaineCode } from "@/app/galerie/galerie-visuals";
 import "./domaines.css";
@@ -27,13 +23,13 @@ interface DomaineOfficiel {
   numero: string;
   galerieCode: Exclude<DomaineCode, "tous">;
   shortLabel: string;
+  bentoSpan: "dm-bento-span-7" | "dm-bento-span-5" | "dm-bento-span-4";
   titre: string;
   description: string;
   image: string;
   imageAlt: string;
-  Icon: LucideIcon;
   enjeux: string;
-  axes: string[];
+  axes: [string, string, string];
   prototypes: string[];
   atelier: string;
   equipements: string;
@@ -44,19 +40,19 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
     numero: "01",
     galerieCode: "numerique",
     shortLabel: "Numérique & IA",
+    bentoSpan: "dm-bento-span-7",
     titre: "TIC, numérique, intelligence artificielle et données",
     description:
-      "Concevoir des architectures logicielles souveraines, des modèles d'IA embarquée et des systèmes de données adaptés aux réalités économiques et linguistiques du Sénégal.",
+      "Architectures logicielles souveraines, modèles d'IA embarquée hors-ligne et systèmes de données adaptés aux réalités économiques et linguistiques du Sénégal.",
     image: "/images/domaine_01_tic_hd.jpg",
     imageAlt:
       "Ingénieur en intelligence artificielle et science des données au laboratoire numérique du CIAT",
-    Icon: Cpu,
     enjeux:
       "Souveraineté numérique nationale, valorisation des données agricoles et territoriales sénégalaises, traitement automatique des langues nationales (Wolof, Pulaar, Sérère) et cybersécurité des infrastructures critiques.",
     axes: [
       "Vision par ordinateur embarquée & diagnostic terrain hors-ligne",
       "Traitement vocal en langues nationales (NLP) pour services essentiels",
-      "Plateformes infonuagiques souveraines, IoT LoRaWAN & cybersécurité",
+      "Plateformes souveraines, réseaux IoT LoRaWAN & cybersécurité",
     ],
     prototypes: [
       "SunuAgri AI",
@@ -71,15 +67,15 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
     numero: "02",
     galerieCode: "mecanique",
     shortLabel: "Mécanique & CNC",
+    bentoSpan: "dm-bento-span-5",
     titre: "Mécanique, fabrication et maintenance",
     description:
-      "industrialiser localement les pièces critiques de rechange, outillages et machines agroalimentaires grâce à l'usinage numérique de haute précision et la rétro-ingénierie 3D.",
+      "Industrialisation locale de pièces critiques de rechange, outillages et machines agroalimentaires par usinage numérique 5 axes et rétro-ingénierie 3D.",
     image: "/images/innovations/cnc-4-0-clean.jpg",
     imageAlt:
       "Centre d'usinage numérique CNC 5 axes haute précision au sein du FabLab 4.0 du CIAT",
-    Icon: Cog,
     enjeux:
-      "Réduction drastique des arrêts de lignes industrielles liés à l'importation de pièces détachées, standardisation qualité des équipements fabriqués au Sénégal et maintenance prédictive.",
+      "Réduction durable des arrêts de lignes industrielles liés à l'importation de pièces détachées, standardisation métrologique des équipements fabriqués au Sénégal et maintenance prédictive.",
     axes: [
       "Usinage numérique CNC 4 et 5 axes en alliages et inox alimentaire",
       "Scannérisation laser 3D, CAO/FAO paramétrique & rétro-ingénierie",
@@ -98,17 +94,17 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
     numero: "03",
     galerieCode: "agriculture",
     shortLabel: "Agro & Environnement",
+    bentoSpan: "dm-bento-span-4",
     titre: "Agriculture, transformation et environnement",
     description:
-      "Sécuriser les rendements maraîchers et céréaliers tout en réduisant les pertes post-récolte par l'irrigation pilotée par capteurs et les procédés propres de conservation.",
+      "Sécurisation des rendements maraîchers et réduction des pertes post-récolte par l'irrigation pilotée par capteurs et les procédés propres de conservation.",
     image: "/images/innovations/agrisol-iot.jpg",
     imageAlt:
-      "Station connectée solaire de suivi hydrique et agronomique déployée en plein champ",
-    Icon: Sprout,
+      "Station agrométéorologique connectée de suivi hydrique déployée en parcelle maraîchère au Sénégal",
     enjeux:
-      "Résilience climatique des bassins agricoles (Niayes, Vallée du Fleuve, Casamance), économie de 40 % sur la ressource hydrique et valorisation à haute valeur ajoutée des productions locales.",
+      "Résilience climatique des bassins agricoles (Niayes, Vallée du Fleuve, Casamance), maîtrise de la ressource hydrique et valorisation locale des productions agricoles.",
     axes: [
-      "Irrigation goutte-à-goutte automatisée par sondes capacitives solaires",
+      "Irrigation goutte-à-goutte automatisée par sondes capacitives",
       "Séchage thermodynamique et conservation post-récolte zéro déchet",
       "Monitoring environnemental des sols, nappes et intrants organiques",
     ],
@@ -125,15 +121,15 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
     numero: "04",
     galerieCode: "energie",
     shortLabel: "Énergie Solaire",
+    bentoSpan: "dm-bento-span-4",
     titre: "Énergie, efficacité énergétique et énergies renouvelables",
     description:
-      "Déployer des micro-réseaux photovoltaïques intelligents, des systèmes de stockage résilients et des équipements frigorifiques solaires pour l'autonomie productive des territoires.",
-    image: "/images/domaine-energie.jpg",
+      "Déploiement de micro-réseaux photovoltaïques intelligents, systèmes de stockage LiFePO4 résilients et chaîne du froid solaire pour l'autonomie des territoires.",
+    image: "/images/d04_unsplash.jpg",
     imageAlt:
-      "Installation solaire autonome avec capteurs de télémesure énergétique en environnement sahélien",
-    Icon: SunMedium,
+      "Champ photovoltaïque et infrastructure solaire de production d'énergie propre",
     enjeux:
-      "Électrification productive des zones rurales hors-réseau, maîtrise de la chaîne du froid solaire pour l'agriculture et la pêche, et optimisation énergétique des bâtiments tertiaires.",
+      "Électrification productive des zones rurales hors-réseau, maîtrise de la chaîne du froid solaire pour l'agriculture et la pêche, et optimisation énergétique des bâtiments.",
     axes: [
       "Micro-réseaux intelligents (Smart Grids) avec comptage Pay-As-You-Go",
       "Chaîne du froid solaire mobile et stockage lithium-fer-phosphate",
@@ -152,17 +148,17 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
     numero: "05",
     galerieCode: "biomedical",
     shortLabel: "Biomédical & Santé",
+    bentoSpan: "dm-bento-span-4",
     titre: "Pharmaceutique et biomédical",
     description:
-      "Concevoir des dispositifs médicaux robustes, réparables localement et adaptés aux postes de santé isolés, ainsi que des procédés de valorisation biopharmaceutique.",
+      "Conception de dispositifs médicaux robustes, réparables localement et adaptés aux postes de santé isolés, ainsi que valorisation biopharmaceutique.",
     image: "/images/innovations/telemedical-device.jpg",
     imageAlt:
       "Moniteur physiologique portable et banc d'instrumentation électronique biomédicale au CIAT",
-    Icon: HeartPulse,
     enjeux:
-      "Équité d'accès au diagnostic précoce dans les zones éloignées, souveraineté en équipements hospitaliers de première nécessité et maintenance biomédicale préventive.",
+      "Équité d'accès au diagnostic précoce dans les zones éloignées, souveraineté en équipements hospitaliers essentiels et maintenance biomédicale préventive.",
     axes: [
-      "Valises de télédiagnostic connectées (ECG, SpO2, auscultation numérique)",
+      "Valises de télédiagnostic connectées (ECG, SpO2, auscultation)",
       "Équipements néonataux et maternels basse consommation sur batterie",
       "Standardisation galénique et contrôle qualité d'extraits actifs locaux",
     ],
@@ -178,16 +174,16 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
   {
     numero: "06",
     galerieCode: "education",
-    shortLabel: "Éducation & VR",
+    shortLabel: "Éducation & EdTech",
+    bentoSpan: "dm-bento-span-5",
     titre: "Éducation, formation professionnelle et insertion",
     description:
-      "Démultiplier l'apprentissage des métiers techniques et industriels par les jumeaux numériques, la réalité virtuelle d'atelier et des kits robotiques conçus au Sénégal.",
-    image: "/images/domaine-education.jpg",
+      "Démultiplication de l'apprentissage des métiers techniques par les jumeaux numériques, les simulateurs d'atelier et des kits robotiques conçus au Sénégal.",
+    image: "/images/ciat-depot-innovation.jpg",
     imageAlt:
-      "Apprenants et ingénieurs collaborant au sein de l'espace d'ingénierie pédagogique du CIAT",
-    Icon: GraduationCap,
+      "Apprenants ingénieurs et encadrant testant un kit électronique et robotique pédagogique en atelier à Diamniadio",
     enjeux:
-      "Adéquation immédiate entre la formation professionnelle (ISEP, lycées techniques) et les standards de l'industrie 4.0, tout en sécurisant l'entraînement sur équipements coûteux.",
+      "Adéquation directe entre la formation professionnelle (ISEP, lycées techniques) et les standards de l'industrie 4.0, tout en sécurisant l'entraînement pratique.",
     axes: [
       "Simulateurs immersifs VR pour soudure, usinage et maintenance",
       "Kits didactiques open-hardware de robotique et d'automatisme",
@@ -205,20 +201,20 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
   {
     numero: "07",
     galerieCode: "collectivites",
-    shortLabel: "Collectivités & Impact",
+    shortLabel: "Collectivités & Incubation",
+    bentoSpan: "dm-bento-span-7",
     titre: "Services aux collectivités, entrepreneuriat et incubation",
     description:
-      "Accompagner la modernisation des communes sénégalaises (mobilité, salubrité, fiscalité locale) et structurer les jeunes pousses jusqu'à leur passage à l'échelle.",
+      "Modernisation des services communaux sénégalais (salubrité, mobilité, fiscalité locale) et structuration des startups technologiques jusqu'au transfert.",
     image: "/images/auth-incubateur.jpg",
     imageAlt:
       "Équipe d'entrepreneurs sénégalais et mentor évaluant un prototype fonctionnel à l'incubateur CIAT",
-    Icon: Building2,
     enjeux:
       "Efficacité des services publics de proximité dans les pôles urbains émergents, économie circulaire municipale et création d'entreprises technologiques pérennes.",
     axes: [
-      "Optimisation connectée de la collecte des déchets et équipements urbains",
-      "Digitalisation transparente des services communaux et marchés publics",
-      "Incubation certifiée en 5 jalons : idéation, MVP, PI et levée d'amorçage",
+      "Optimisation connectée de la collecte urbaine et équipements publics",
+      "Digitalisation transparente des services communaux et marchés locaux",
+      "Incubation certifiée en 5 jalons : idéation, MVP, PI OAPI et amorçage",
     ],
     prototypes: [
       "Dakar Waste Solutions",
@@ -232,14 +228,35 @@ const DOMAINES_OFFICIELS: DomaineOfficiel[] = [
 ];
 
 export default function DomainesShowcase() {
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [selectedDomaine, setSelectedDomaine] =
     useState<DomaineOfficiel | null>(null);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   );
+
+  // Synchronisation propre avec les ancres profondes #domaine-01 .. #domaine-07
+  useEffect(() => {
+    const syncFromHash = () => {
+      const match = window.location.hash.match(/^#domaine-0([1-7])$/);
+      if (match) {
+        const idx = Number(match[1]) - 1;
+        if (idx >= 0 && idx < DOMAINES_OFFICIELS.length) {
+          setActiveIndex(idx);
+        }
+      }
+    };
+    const timer = window.setTimeout(syncFromHash, 0);
+    window.addEventListener("hashchange", syncFromHash);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", syncFromHash);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = selectedDomaine ? "hidden" : "";
@@ -255,272 +272,458 @@ export default function DomainesShowcase() {
     };
   }, [selectedDomaine]);
 
+  const handleTabKeyDown = (
+    e: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    const total = DOMAINES_OFFICIELS.length;
+    let nextIndex: number | null = null;
+
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+      nextIndex = (index + 1) % total;
+    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+      nextIndex = (index - 1 + total) % total;
+    } else if (e.key === "Home") {
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      nextIndex = total - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      setActiveIndex(nextIndex);
+      tabRefs.current[nextIndex]?.focus();
+    }
+  };
+
+  const activeDomaine = DOMAINES_OFFICIELS[activeIndex];
+
   return (
-    <div className="ciat-domains-root">
+    <div className="ciat-domains-page selection:bg-[#C99A68]/30">
       {/* =====================================================================
-       * 1. HERO ARCHITECTURAL MONUMENTAL
+       * ACTE I — HERO CINÉMATIQUE PLEIN ÉCRAN CALÉ À GAUCHE
+       * Cohérence totale avec les pages Accueil, Le CIAT et L'Incubateur
        * ===================================================================== */}
-      <section className="d-hero" aria-labelledby="domaines-hero-title">
-        <div className="d-hero-copy">
-          <div className="d-eyebrow">
-            <span className="d-eyebrow-line" />
-            <span className="d-eyebrow-text">
-              Référentiel Officiel · 7 Filières CIAT
-            </span>
-          </div>
+      <section
+        aria-labelledby="domaines-hero-heading"
+        className="relative w-full min-h-[calc(100vh-72px)] flex items-center overflow-hidden bg-[#120A06]"
+      >
+        <Image
+          src="/images/ciat-hero-electronique.jpg"
+          alt="Chercheuse et ingénieur du CIAT assemblant un bras mécatronique et une carte électronique en laboratoire à Diamniadio"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[center_26%]"
+        />
 
-          <h1 id="domaines-hero-title" className="d-hero-title">
-            Sept pôles d&apos;excellence pour{" "}
-            <span>bâtir l&apos;impact industriel.</span>
-          </h1>
+        {/* Dégradé directionnel net : contraste intégral sur mobile, clarté photographique totale à droite sur grand écran */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[#120A06]/72 lg:bg-transparent lg:bg-gradient-to-r lg:from-[#120A06]/92 lg:via-[#120A06]/68 lg:via-48% lg:to-transparent pointer-events-none"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#120A06]/80 to-transparent pointer-events-none"
+        />
 
-          <p className="d-hero-lead">
-            À la Cité du Savoir de Diamniadio, le CIAT articule recherche
-            appliquée, usinage de haute précision et incubation entrepreneuriale
-            autour de sept filières prioritaires pour la souveraineté
-            technologique du Sénégal.
-          </p>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+          <div className="max-w-2xl lg:max-w-3xl flex flex-col items-start text-left">
+            <h1
+              id="domaines-hero-heading"
+              className="font-[family-name:var(--font-jakarta)] text-3xl sm:text-5xl lg:text-6xl font-extrabold !text-white tracking-tight leading-[1.12]"
+            >
+              Sept domaines d’expertise au service d’un{" "}
+              <span className="text-[#C99A68]">impact durable</span>
+            </h1>
 
-          <div className="d-hero-actions">
-            <a href="#referentiel-domaines" className="d-btn-gold">
-              Explorer les 7 filières
-              <ArrowRight size={16} />
-            </a>
-            <Link href="/galerie" className="d-btn-ghost-light">
-              Voir les prototypes homologués
-              <ArrowUpRight size={16} />
-            </Link>
-          </div>
+            <p className="mt-5 text-sm sm:text-base lg:text-lg text-white/90 max-w-2xl leading-relaxed font-normal">
+              De l’intelligence artificielle embarquée à l’usinage 5 axes et à
+              l’instrumentation biomédicale, le CIAT articule recherche
+              appliquée, prototypage industriel et incubation autour de sept
+              filières prioritaires à Diamniadio.
+            </p>
 
-          <div className="d-hero-kpis">
-            <div className="d-kpi">
-              <strong>07</strong>
-              <span>Filières officielles d&apos;intervention</span>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href="#pavillon-domaines"
+                className="inline-flex items-center justify-center rounded-xl bg-[#612D10] hover:bg-[#7D3A15] px-7 py-3.5 text-xs sm:text-sm font-bold !text-white shadow-xl hover:shadow-2xl transition-all active:scale-95 border border-[#C99A68]/40"
+              >
+                Explorer les 7 filières
+                <ArrowRight size={16} className="ml-2 text-[#C99A68]" />
+              </a>
+
+              <Link
+                href="/galerie"
+                className="inline-flex items-center justify-center rounded-xl border border-white/35 bg-white/10 hover:bg-white/20 px-7 py-3.5 text-xs sm:text-sm font-semibold !text-white transition-all active:scale-95"
+              >
+                Voir le showroom des prototypes
+              </Link>
             </div>
-            <div className="d-kpi">
-              <strong>04</strong>
-              <span>Plateformes &amp; FabLabs industriels</span>
-            </div>
-            <div className="d-kpi">
-              <strong>TRL 1–8</strong>
-              <span>De l&apos;idéation au transfert certifié</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="d-hero-media">
-          <Image
-            src="/images/ciat-hero-electronique.jpg"
-            alt="Chercheurs et ingénieurs du CIAT assemblant un bras mécatronique et une carte électronique en laboratoire à Diamniadio"
-            fill
-            priority
-            sizes="(max-width: 1040px) 100vw, 50vw"
-          />
-          <div className="d-hero-media-shade" aria-hidden="true" />
-
-          <div className="d-hero-plaque">
-            <div className="d-plaque-meta">
-              <span>ISEP Amadou Trawaré · Diamniadio</span>
-              <strong>
-                Laboratoires d&apos;Ingénierie &amp; Prototypage Multidisciplinaire
-              </strong>
-            </div>
-            <div className="d-plaque-tags">
-              <span>Innover</span>
-              <span>Former</span>
-              <span>Incuber</span>
-              <span>Transférer</span>
+            <div className="mt-12 pt-6 border-t border-white/15 flex flex-wrap items-center gap-6 text-xs text-white/80 font-medium">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                07 Filières Statutaires
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                04 Plateformes &amp; FabLabs 4.0
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                Homologation TRL 1–8
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
+                ISEP Amadou Trawaré • Diamniadio
+              </span>
             </div>
           </div>
         </div>
       </section>
 
       {/* =====================================================================
-       * 2. INDEX D'ACCÈS RAPIDE AUX 7 FILIÈRES (STICKY)
-       * ===================================================================== */}
-      <nav
-        className="d-quicknav-wrap"
-        aria-label="Accès direct aux 7 filières du CIAT"
-      >
-        <div className="d-quicknav">
-          {DOMAINES_OFFICIELS.map((dom) => {
-            const Icon = dom.Icon;
-            return (
-              <a
-                key={dom.numero}
-                href={`#domaine-${dom.numero}`}
-                className="d-quicknav-pill"
-              >
-                <span className="d-quicknav-num">{dom.numero}</span>
-                <Icon size={14} className="text-[#612D10]" />
-                <span>{dom.shortLabel}</span>
-              </a>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* =====================================================================
-       * 3. LES 7 DOSSIERS DE FILIÈRES D'EXCELLENCE
+       * ACTE II — PAVILLON INTERACTIF MAÎTRE-DÉTAIL DES 7 FILIÈRES
        * ===================================================================== */}
       <section
-        className="d-section"
-        id="referentiel-domaines"
-        aria-labelledby="referentiel-heading"
+        id="pavillon-domaines"
+        aria-labelledby="pavillon-heading"
+        className="scroll-mt-20 bg-white py-20 lg:py-28 border-b border-[#EFE4D6]"
       >
-        <header className="d-section-header">
-          <div>
-            <div className="d-eyebrow" style={{ marginBottom: 6 }}>
-              <span
-                className="d-eyebrow-line"
-                style={{ background: "#612D10" }}
-              />
-              <span
-                className="d-eyebrow-text"
-                style={{ color: "#612D10" }}
-              >
-                Architecture Sectorielle CIAT 360
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-8 items-end pb-10 border-b border-[#EFE4D6]">
+            <div className="lg:col-span-7">
+              <span className="dm-overline">
+                Pavillon Sectoriel Interactif
               </span>
+              <h2
+                id="pavillon-heading"
+                className="mt-3 font-[family-name:var(--font-jakarta)] text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#24140D] tracking-tight leading-[1.15]"
+              >
+                Inspectez chaque pôle d’ingénierie et ses bancs d’essai dédiés
+              </h2>
             </div>
-            <h2 id="referentiel-heading" className="d-section-title">
-              Sept filières complémentaires, une même exigence d&apos;impact
-            </h2>
+
+            <p className="lg:col-span-5 text-sm sm:text-[15px] text-[#5C4B3E] leading-relaxed m-0">
+              Sélectionnez une filière dans le répertoire pour consulter ses
+              enjeux prioritaires au Sénégal, ses trois axes de recherche
+              appliquée et ses prototypes certifiés.
+            </p>
           </div>
 
-          <p className="d-section-intro">
-            Chaque domaine dispose d&apos;ateliers dédiés, d&apos;encadrants techniques
-            spécialisés et d&apos;un portefeuille de prototypes vérifiés directement
-            consultables dans le showroom officiel.
-          </p>
-        </header>
-
-        <div className="d-dossiers-stack">
-          {DOMAINES_OFFICIELS.map((dom, index) => {
-            const Icon = dom.Icon;
-            const isReverse = index % 2 === 1;
-            const formattedDescription =
-              dom.description.charAt(0).toUpperCase() +
-              dom.description.slice(1);
-
-            return (
-              <article
-                key={dom.numero}
-                id={`domaine-${dom.numero}`}
-                className={`d-dossier-card ${
-                  isReverse ? "d-dossier-reverse" : ""
-                }`}
+          <div className="mt-12 grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+            {/* Colonne Gauche (5/12) : Répertoire Architectural numéroté 01–07 */}
+            <div className="lg:col-span-5">
+              <div
+                role="tablist"
+                aria-orientation="vertical"
+                aria-label="Répertoire des 7 filières officielles du CIAT"
+                className="dm-master-list"
               >
-                <div className="d-dossier-visual">
+                {DOMAINES_OFFICIELS.map((dom, idx) => {
+                  const isActive = idx === activeIndex;
+                  return (
+                    <button
+                      key={dom.numero}
+                      ref={(el) => {
+                        tabRefs.current[idx] = el;
+                      }}
+                      type="button"
+                      role="tab"
+                      id={`pavillon-tab-${dom.numero}`}
+                      aria-selected={isActive}
+                      aria-controls="pavillon-stage-panel"
+                      tabIndex={isActive ? 0 : -1}
+                      onClick={() => {
+                        setActiveIndex(idx);
+                        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                          document
+                            .getElementById("pavillon-stage-panel")
+                            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }
+                      }}
+                      onKeyDown={(e) => handleTabKeyDown(e, idx)}
+                      className="dm-master-tab"
+                    >
+                      <span className="dm-tab-num">{dom.numero}</span>
+                      <span className="min-w-0">
+                        <span className="dm-tab-title">{dom.titre}</span>
+                        <span className="dm-tab-sub">{dom.atelier}</span>
+                      </span>
+                      <span className="dm-tab-arrow" aria-hidden="true">
+                        <ArrowRight size={15} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 flex items-center justify-between text-xs text-[#5C4B3E] px-1">
+                <span>Navigation clavier (↑ / ↓) ou clic direct</span>
+                <a
+                  href="#atlas-domaines"
+                  className="font-bold text-[#612D10] hover:underline"
+                >
+                  Vue synoptique des 7 pôles ↓
+                </a>
+              </div>
+            </div>
+
+            {/* Colonne Droite (7/12) : Grand Pavillon Immersif */}
+            <div
+              id="pavillon-stage-panel"
+              role="tabpanel"
+              aria-labelledby={`pavillon-tab-${activeDomaine.numero}`}
+              className="scroll-mt-24 lg:col-span-7 lg:sticky lg:top-24"
+            >
+              <article className="dm-pavilion-stage">
+                {/* Cadre photographique 16:9 haute définition */}
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#160C07]">
                   <Image
-                    src={dom.image}
-                    alt={dom.imageAlt}
+                    key={activeDomaine.numero}
+                    src={activeDomaine.image}
+                    alt={activeDomaine.imageAlt}
                     fill
-                    sizes="(max-width: 1040px) 100vw, 48vw"
+                    sizes="(max-width: 1024px) 100vw, 58vw"
+                    className="object-cover dm-stage-photo-anim"
                   />
-                  <div className="d-dossier-visual-shade" aria-hidden="true" />
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-gradient-to-t from-[#140A06]/85 via-[#140A06]/15 to-transparent pointer-events-none"
+                  />
 
-                  <span className="d-dossier-num-badge">
-                    Filière {dom.numero} · {dom.shortLabel}
-                  </span>
-                </div>
-
-                <div className="d-dossier-body">
-                  <div>
-                    <div className="d-dossier-topline">
-                      <div className="d-dossier-icon-box">
-                        <Icon size={22} />
-                      </div>
-                      <span className="d-dossier-big-num" aria-hidden="true">
-                        {dom.numero}
+                  <div className="absolute inset-x-5 sm:inset-x-8 bottom-5 sm:bottom-6 z-10 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <span className="block font-[family-name:var(--font-jakarta)] text-[10.5px] font-extrabold uppercase tracking-[0.18em] text-[#E2B483]">
+                        Filière Officielle {activeDomaine.numero} / 07
+                      </span>
+                      <span className="mt-0.5 block text-xs sm:text-sm font-semibold text-white">
+                        {activeDomaine.atelier}
                       </span>
                     </div>
 
-                    <h3 className="d-dossier-title">{dom.titre}</h3>
+                    <span className="rounded-full border border-white/25 bg-black/45 backdrop-blur-md px-3 py-1 text-[11px] font-bold tracking-wider uppercase text-white">
+                      Homologation TRL 1–8
+                    </span>
+                  </div>
+                </div>
 
-                    <p className="d-dossier-desc">{formattedDescription}</p>
+                {/* Fiche éditoriale épurée */}
+                <div className="p-6 sm:p-8 lg:p-9">
+                  <h3 className="font-[family-name:var(--font-jakarta)] text-xl sm:text-2xl lg:text-[26px] font-extrabold text-[#24140D] leading-snug tracking-tight m-0">
+                    {activeDomaine.titre}
+                  </h3>
 
-                    <div className="mb-5 inline-flex items-center gap-2 rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] px-3.5 py-2 text-xs font-semibold text-[#612D10]">
-                      <MapPin size={14} className="shrink-0" />
-                      <span>{dom.atelier}</span>
-                    </div>
+                  <p className="mt-3 text-sm sm:text-[15px] text-[#5C4B3E] leading-relaxed m-0">
+                    {activeDomaine.enjeux}
+                  </p>
 
-                    <div className="d-proto-row">
-                      <span className="d-proto-label">Prototypes phares :</span>
-                      {dom.prototypes.map((proto) => (
-                        <span key={proto} className="d-proto-chip">
-                          {proto}
-                        </span>
+                  {/* 3 Axes de recherche appliquée en grille architecturale */}
+                  <div className="mt-7 pt-6 border-t border-[#EFE4D6]">
+                    <span className="block font-[family-name:var(--font-jakarta)] text-[10.5px] font-extrabold uppercase tracking-[0.16em] text-[#612D10] mb-4">
+                      Axes Prioritaires R&amp;D &amp; Prototypage
+                    </span>
+
+                    <div className="dm-axes-grid">
+                      {activeDomaine.axes.map((axe, i) => (
+                        <div key={axe} className="dm-axe-col">
+                          <span className="dm-axe-index">
+                            {activeDomaine.numero}.0{i + 1}
+                          </span>
+                          <p className="text-[13px] text-[#24140D] font-medium leading-relaxed m-0">
+                            {axe}
+                          </p>
+                        </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="d-dossier-actions">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDomaine(dom)}
-                      className="d-btn-outline"
-                    >
-                      Fiche technique complète
-                      <Layers size={15} />
-                    </button>
+                  {/* Pied du pavillon : prototypes témoins + actions */}
+                  <div className="mt-7 pt-6 border-t border-[#EFE4D6] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="text-xs text-[#5C4B3E] leading-relaxed">
+                      <span className="font-extrabold uppercase tracking-wider text-[#24140D] mr-2">
+                        Prototypes :
+                      </span>
+                      {activeDomaine.prototypes.join(" · ")}
+                    </div>
 
-                    <Link
-                      href={`/galerie?domaine=${dom.galerieCode}`}
-                      className="d-btn-solid"
-                    >
-                      Voir les projets en galerie
-                      <ArrowRight size={15} />
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDomaine(activeDomaine)}
+                        className="inline-flex items-center justify-center rounded-xl border border-[#DFCDB9] bg-[#FAF7F2] hover:bg-[#EFE4D6] px-4 py-2.5 text-xs font-bold text-[#24140D] transition cursor-pointer"
+                      >
+                        Équipements &amp; fiche
+                      </button>
+
+                      <Link
+                        href={`/galerie?domaine=${activeDomaine.galerieCode}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-4 py-2.5 text-xs font-bold !text-white transition"
+                      >
+                        Voir en galerie
+                        <ArrowRight size={14} />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </article>
-            );
-          })}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* =====================================================================
-       * 4. BANDEAU DE CLÔTURE INSTITUTIONNEL
+       * ACTE III — ATLAS SYNOPTIQUE BENTO DES 7 FILIÈRES (#domaine-01..07)
        * ===================================================================== */}
-      <section className="d-closing" aria-labelledby="closing-heading">
-        <div className="d-closing-inner">
-          <div>
-            <div className="d-eyebrow">
-              <span className="d-eyebrow-line" />
-              <span className="d-eyebrow-text">
-                Rejoindre l&apos;Écosystème CIAT
+      <section
+        id="atlas-domaines"
+        aria-labelledby="atlas-heading"
+        className="scroll-mt-20 bg-[#FAF7F2] py-20 lg:py-28"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="max-w-2xl">
+              <span className="dm-overline">
+                Atlas Synoptique · 01 à 07
               </span>
+              <h2
+                id="atlas-heading"
+                className="mt-3 font-[family-name:var(--font-jakarta)] text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#24140D] tracking-tight leading-[1.15]"
+              >
+                Vue d’ensemble des sept filières statutaires
+              </h2>
             </div>
 
-            <h2 id="closing-heading" className="d-closing-title">
-              Votre projet s&apos;inscrit dans l&apos;une de nos{" "}
-              <span>sept filières ?</span>
-            </h2>
-
-            <p className="d-closing-lead">
-              Bénéficiez de nos bancs d&apos;usinage, de nos laboratoires solaires et
-              biomédicaux ainsi que de l&apos;accompagnement du comité scientifique
-              de Diamniadio pour franchir les jalons d&apos;homologation.
-            </p>
-
-            <div className="flex flex-wrap gap-3.5">
-              <Link href="/portail/appels" className="d-btn-gold">
-                Candidater à l&apos;appel en cours
-                <ArrowRight size={16} />
-              </Link>
-              <Link href="/portail/ciat" className="d-btn-ghost-light">
-                Découvrir nos infrastructures
-              </Link>
-            </div>
+            <Link
+              href="/galerie"
+              className="inline-flex items-center gap-2 self-start md:self-auto rounded-xl border border-[#DFCDB9] bg-white hover:bg-[#EFE4D6] px-5 py-3 text-xs sm:text-sm font-bold !text-[#24140D] transition"
+            >
+              Parcourir tous les prototypes homologués
+              <ArrowUpRight size={16} className="text-[#612D10]" />
+            </Link>
           </div>
 
-          <div className="d-closing-photo-frame">
-            <Image
-              src="/images/ciat-batiment.jpg"
-              alt="Façade architecturale du Centre d'Innovation Technologique CIAT à Diamniadio"
-              fill
-              sizes="(max-width: 1040px) 100vw, 45vw"
-            />
+          <div className="dm-bento-grid">
+            {DOMAINES_OFFICIELS.map((dom, idx) => {
+              const isSelectedInPavilion = idx === activeIndex;
+              return (
+                <article
+                  key={dom.numero}
+                  id={`domaine-${dom.numero}`}
+                  className={`dm-bento-card ${dom.bentoSpan} ${
+                    isSelectedInPavilion ? "dm-bento-card-active" : ""
+                  }`}
+                >
+                  <div>
+                    <div className="dm-bento-media">
+                      <Image
+                        src={dom.image}
+                        alt={dom.imageAlt}
+                        fill
+                        sizes="(max-width: 680px) 100vw, (max-width: 1024px) 50vw, 45vw"
+                      />
+                      <span className="dm-bento-num-tag">
+                        Pôle {dom.numero}
+                      </span>
+                    </div>
+
+                    <div className="p-6 pb-4">
+                      <span className="block font-[family-name:var(--font-jakarta)] text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#612D10]">
+                        {dom.shortLabel}
+                      </span>
+
+                      <h3 className="mt-2 font-[family-name:var(--font-jakarta)] text-lg sm:text-[19px] font-extrabold text-[#24140D] leading-snug tracking-tight">
+                        {dom.titre}
+                      </h3>
+
+                      <p className="mt-2.5 text-[13.5px] text-[#5C4B3E] leading-relaxed line-clamp-2 m-0">
+                        {dom.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="px-6 pb-6 pt-4 mt-2 border-t border-[#F2EAE0] flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDomaine(dom)}
+                      className="text-xs font-bold text-[#24140D] hover:text-[#612D10] transition cursor-pointer bg-transparent border-0 p-0"
+                    >
+                      Fiche technique complète
+                    </button>
+
+                    <Link
+                      href={`/galerie?domaine=${dom.galerieCode}`}
+                      className="inline-flex items-center gap-1 text-xs font-extrabold !text-[#612D10] hover:!text-[#24140D] transition"
+                    >
+                      Prototypes
+                      <ArrowUpRight size={14} />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+       * ACTE IV — BANDEAU DE CLÔTURE INSTITUTIONNEL SOBRE (BRUN NUIT #24140D)
+       * ===================================================================== */}
+      <section
+        aria-labelledby="domaines-closing-heading"
+        className="bg-[#24140D] text-white py-20 lg:py-24 border-t border-[#C99A68]/25"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            <div className="lg:col-span-7">
+              <span className="dm-overline dm-overline-light">
+                Incubation &amp; Transfert Technologique
+              </span>
+
+              <h2
+                id="domaines-closing-heading"
+                className="mt-3 font-[family-name:var(--font-jakarta)] text-2xl sm:text-3xl lg:text-4xl font-extrabold !text-white tracking-tight leading-[1.16]"
+              >
+                Votre innovation s’inscrit dans l’une de nos{" "}
+                <span className="text-[#C99A68]">sept filières ?</span>
+              </h2>
+
+              <p className="mt-4 text-sm sm:text-base text-white/80 max-w-xl leading-relaxed">
+                Accédez aux plateformes d’usinage CNC, aux bancs solaires et
+                biomédicaux ainsi qu’à l’accompagnement certifié en 5 jalons du
+                comité scientifique de Diamniadio.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/portail/appels"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#612D10] hover:bg-[#7D3A15] px-7 py-3.5 text-xs sm:text-sm font-bold !text-white shadow-xl transition-all border border-[#C99A68]/40"
+                >
+                  Candidater à l’appel en cours
+                  <ArrowRight size={16} className="ml-2 text-[#C99A68]" />
+                </Link>
+
+                <Link
+                  href="/portail/ciat#ateliers"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/5 hover:bg-white/15 px-6 py-3.5 text-xs sm:text-sm font-semibold !text-white transition-all"
+                >
+                  Découvrir nos plateaux techniques
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden border border-[#C99A68]/35 shadow-2xl bg-[#160C07]">
+                <Image
+                  src="/images/domaines_ecosystem_building_hd.jpg"
+                  alt="Campus architectural du Centre d'Innovation Technologique CIAT à Diamniadio"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -562,7 +765,7 @@ export default function DomainesShowcase() {
                 </button>
 
                 <div className="absolute bottom-5 left-6 right-6 text-white">
-                  <span className="inline-block text-[11px] font-extrabold uppercase tracking-widest text-[#DFae79] mb-1">
+                  <span className="inline-block text-[11px] font-extrabold uppercase tracking-widest text-[#E2B483] mb-1">
                     Filière Officielle {selectedDomaine.numero} ·{" "}
                     {selectedDomaine.shortLabel}
                   </span>
@@ -588,12 +791,12 @@ export default function DomainesShowcase() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="rounded-2xl border border-[#EFE4D6] p-4">
                     <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#612D10] mb-2">
-                      Atelier &amp; Plateau Dédié
+                      Plateau Technique Dédié
                     </span>
                     <p className="text-sm font-bold text-[#24140D] m-0">
                       {selectedDomaine.atelier}
                     </p>
-                    <p className="text-xs text-[#655346] leading-relaxed mt-1.5 mb-0">
+                    <p className="text-xs text-[#5C4B3E] leading-relaxed mt-1.5 mb-0">
                       {selectedDomaine.equipements}
                     </p>
                   </div>
@@ -630,9 +833,9 @@ export default function DomainesShowcase() {
                   </Link>
 
                   <Link
-                    href="/connexion?next=/incubateur"
+                    href="/portail/appels"
                     onClick={() => setSelectedDomaine(null)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#24140D] px-5 py-3 text-xs font-bold !text-white transition"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#7D3A15] border border-[#C99A68]/40 px-5 py-3 text-xs font-bold !text-white transition"
                   >
                     Candidater dans cette filière
                     <ArrowRight size={14} />
