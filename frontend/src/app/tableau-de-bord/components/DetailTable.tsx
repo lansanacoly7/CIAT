@@ -6,6 +6,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  X,
+  Wallet,
+  CheckCircle2,
+  FileText,
+  Building2,
 } from "lucide-react";
 import type { FinancementItem } from "../types";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -27,6 +32,55 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // Statistiques synthétiques au sommet du Registre
+  const stats = useMemo(() => {
+    const totalEngage = data.reduce(
+      (acc, item) => acc + (Number(item.montant) || 0),
+      0
+    );
+    const totalDecaisse = data
+      .filter((item) => {
+        const s = (item.statut || "").toLowerCase();
+        return s.includes("decaisse") || s.includes("paye");
+      })
+      .reduce((acc, item) => acc + (Number(item.montant) || 0), 0);
+    const totalAccorde = data
+      .filter((item) => {
+        const s = (item.statut || "").toLowerCase();
+        return s.includes("accorde") || s.includes("valide");
+      })
+      .reduce((acc, item) => acc + (Number(item.montant) || 0), 0);
+
+    const distinctSources = new Set(data.map((d) => d.source).filter(Boolean)).size;
+    const pctDecaisse =
+      totalEngage > 0 ? Math.round((totalDecaisse / totalEngage) * 100) : 0;
+
+    return {
+      totalEngage,
+      totalDecaisse,
+      totalAccorde,
+      distinctSources,
+      pctDecaisse,
+      count: data.length,
+    };
+  }, [data]);
+
+  // Décompte par statut pour les puces de filtrage
+  const statusCounts = useMemo(() => {
+    let decaisse = 0;
+    let accorde = 0;
+    let instruction = 0;
+    let attente = 0;
+    data.forEach((item) => {
+      const s = (item.statut || "").toLowerCase();
+      if (s.includes("decaisse") || s.includes("paye")) decaisse++;
+      else if (s.includes("accorde") || s.includes("valide")) accorde++;
+      else if (s.includes("cours") || s.includes("instruction")) instruction++;
+      else attente++;
+    });
+    return { all: data.length, decaisse, accorde, instruction, attente };
+  }, [data]);
+
   // Filtrage
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -38,8 +92,8 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
       const s = (item.statut || "").toLowerCase();
       let matchesStatut = selectedStatut === "all";
-      if (selectedStatut === "decaisse") matchesStatut = s.includes("decaisse");
-      else if (selectedStatut === "accorde") matchesStatut = s.includes("accorde");
+      if (selectedStatut === "decaisse") matchesStatut = s.includes("decaisse") || s.includes("paye");
+      else if (selectedStatut === "accorde") matchesStatut = s.includes("accorde") || s.includes("valide");
       else if (selectedStatut === "instruction") matchesStatut = s.includes("cours") || s.includes("instruction");
       else if (selectedStatut === "attente") matchesStatut = s.includes("attente") || s.includes("discussion");
 
@@ -75,7 +129,10 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
   // Somme totale des montants filtrés
   const totalAmount = useMemo(() => {
-    return filteredData.reduce((acc, item) => acc + (Number(item.montant) || 0), 0);
+    return filteredData.reduce(
+      (acc, item) => acc + (Number(item.montant) || 0),
+      0
+    );
   }, [filteredData]);
 
   // Pagination
@@ -94,7 +151,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
     }
   };
 
-  // Badge statut : min 96px, une ligne, libellés courts
+  // Badge statut sobre et conforme à la charte CIAT avec point de statut
   const getStatusBadge = (statut?: string, statutDisplay?: string) => {
     const s = statut?.toLowerCase() || "";
     const tooltip = statutDisplay || statut || "Inconnu";
@@ -103,9 +160,10 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       return (
         <span
           title={tooltip}
-          className="inline-flex min-w-[96px] justify-center items-center rounded-md bg-[#5A7D65]/15 px-2 py-0.5 text-[11px] font-medium text-[#3B5442] whitespace-nowrap"
+          className="inline-flex min-w-[102px] items-center justify-center gap-1.5 rounded-full border border-[#2E7D32]/25 bg-[#2E7D32]/10 px-2.5 py-1 text-[11px] font-semibold text-[#1E5222] whitespace-nowrap"
         >
-          Décaissé
+          <span className="h-1.5 w-1.5 rounded-full bg-[#2E7D32]" />
+          <span>Décaissé</span>
         </span>
       );
     }
@@ -113,9 +171,10 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       return (
         <span
           title={tooltip}
-          className="inline-flex min-w-[96px] justify-center items-center rounded-md bg-[#C99A68]/20 px-2 py-0.5 text-[11px] font-medium text-[#8C5E2D] whitespace-nowrap"
+          className="inline-flex min-w-[102px] items-center justify-center gap-1.5 rounded-full border border-[#8C5E2D]/25 bg-[#8C5E2D]/10 px-2.5 py-1 text-[11px] font-semibold text-[#612D10] whitespace-nowrap"
         >
-          Accordé
+          <span className="h-1.5 w-1.5 rounded-full bg-[#8C5E2D]" />
+          <span>Accordé</span>
         </span>
       );
     }
@@ -123,331 +182,490 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       return (
         <span
           title={tooltip}
-          className="inline-flex min-w-[96px] justify-center items-center rounded-md bg-[#4A6B82]/15 px-2 py-0.5 text-[11px] font-medium text-[#2F4D61] whitespace-nowrap"
+          className="inline-flex min-w-[102px] items-center justify-center gap-1.5 rounded-full border border-[#4A6B82]/25 bg-[#4A6B82]/10 px-2.5 py-1 text-[11px] font-semibold text-[#213542] whitespace-nowrap"
         >
-          En instruction
+          <span className="h-1.5 w-1.5 rounded-full bg-[#4A6B82]" />
+          <span>En instruction</span>
         </span>
       );
     }
     return (
       <span
         title={tooltip}
-        className="inline-flex min-w-[96px] justify-center items-center rounded-md bg-[#5A4B42]/12 px-2 py-0.5 text-[11px] font-medium text-[#574C45] whitespace-nowrap"
+        className="inline-flex min-w-[102px] items-center justify-center gap-1.5 rounded-full border border-[#5A4B42]/20 bg-[#5A4B42]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3A2E26] whitespace-nowrap"
       >
-        En attente
+        <span className="h-1.5 w-1.5 rounded-full bg-[#5A4B42]" />
+        <span>En attente</span>
       </span>
     );
   };
 
   return (
-    <div className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-4 sm:p-5 space-y-4">
-      {/* Barre d'outils du tableau : Recherche + Filtres Statut Rapides + PageSize */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(60,35,20,0.06)] pb-4">
-        {/* Recherche */}
-        <div className="relative min-w-[240px] flex-1 max-w-sm">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#5A4B42]" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            aria-label="Rechercher par projet, porteur ou guichet"
-            placeholder="Rechercher un projet, porteur, guichet..."
-            className="w-full h-9 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] pl-9 pr-3 text-xs font-medium text-[#21130D] placeholder:text-[#5A4B42] transition focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
-          />
+    <div className="space-y-5">
+      {/* 1. Bandeau de 4 KPI décisionnels pour le Registre */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {/* KPI 1 : Engagements totaux */}
+        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
+          <div className="flex items-center justify-between text-[#8C6D4F]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+              Engagements totaux
+            </span>
+            <Wallet className="h-4 w-4 text-[#8C5E2D]" aria-hidden="true" />
+          </div>
+          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
+            {formatNumber(stats.totalEngage)}{" "}
+            <span className="text-xs font-normal text-[#8C6D4F]">FCFA</span>
+          </div>
+          <div className="mt-1 text-[11px] text-[#6B5646]">
+            Volume cumulé des conventions
+          </div>
         </div>
 
-        {/* Filtres rapides statut */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {[
-            { key: "all", label: "Tous" },
-            { key: "decaisse", label: "Décaissés" },
-            { key: "accorde", label: "Accordés" },
-            { key: "instruction", label: "En instruction" },
-            { key: "attente", label: "En attente" },
-          ].map((pill) => (
-            <button
-              key={pill.key}
-              type="button"
-              onClick={() => {
-                setSelectedStatut(pill.key);
+        {/* KPI 2 : Fonds décaissés */}
+        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
+          <div className="flex items-center justify-between text-[#8C6D4F]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+              Fonds décaissés
+            </span>
+            <CheckCircle2 className="h-4 w-4 text-[#2E7D32]" aria-hidden="true" />
+          </div>
+          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#1E5222] tabular-nums">
+            {formatNumber(stats.totalDecaisse)}{" "}
+            <span className="text-xs font-normal text-[#6B5646]">FCFA</span>
+          </div>
+          <div className="mt-1 text-[11px] text-[#6B5646]">
+            <strong className="font-semibold text-[#21130D]">
+              {stats.pctDecaisse} %
+            </strong>{" "}
+            du volume total décaissé
+          </div>
+        </div>
+
+        {/* KPI 3 : Dossiers répertoriés */}
+        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
+          <div className="flex items-center justify-between text-[#8C6D4F]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+              Dossiers au registre
+            </span>
+            <FileText className="h-4 w-4 text-[#8C5E2D]" aria-hidden="true" />
+          </div>
+          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
+            {stats.count}{" "}
+            <span className="text-xs font-normal text-[#8C6D4F]">dossiers</span>
+          </div>
+          <div className="mt-1 text-[11px] text-[#6B5646]">
+            Conventions & subventions répertoriées
+          </div>
+        </div>
+
+        {/* KPI 4 : Sources partenaires */}
+        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:border-[#8C5E2D]/40 hover:shadow-xs">
+          <div className="flex items-center justify-between text-[#8C6D4F]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
+              Sources partenaires
+            </span>
+            <Building2 className="h-4 w-4 text-[#4A6B82]" aria-hidden="true" />
+          </div>
+          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
+            {stats.distinctSources}{" "}
+            <span className="text-xs font-normal text-[#8C6D4F]">guichets</span>
+          </div>
+          <div className="mt-1 text-[11px] text-[#6B5646]">
+            Diversification des appuis financiers
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Cadre principal du Registre : Barre d'outils + Tableau + Pagination */}
+      <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs space-y-4">
+        {/* Barre d'outils du tableau : Recherche + Filtres Statut Rapides + PageSize */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE4D6] pb-4">
+          {/* Recherche avec bouton de réinitialisation rapide */}
+          <div className="relative min-w-[260px] flex-1 max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#8C5E2D]" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                selectedStatut === pill.key
-                  ? "bg-[#21130D] text-[#FBF8F3]"
-                  : "bg-[#FBF8F3] text-[#5A4B42] hover:bg-[#C99A68]/15 hover:text-[#21130D]"
-              }`}
-            >
-              {pill.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Sélecteur de pagination (10 / 25 / 50) */}
-        <div className="flex items-center gap-2 text-xs text-[#5A4B42]">
-          <span>Lignes par page :</span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            aria-label="Nombre de lignes par page"
-            className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2 text-xs font-semibold text-[#21130D] focus:border-[#C99A68] focus:outline-hidden"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table avec mise en page stricte : table-layout: fixed, largeurs proportionnelles, min-w-[820px] avec défilement fluide */}
-      <div className="relative overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
-        <table className="w-full text-left text-xs table-fixed min-w-[820px]">
-          <colgroup>
-            <col className="w-[30%]" />
-            <col className="w-[20%]" />
-            <col className="w-[15%]" />
-            <col className="w-[10%]" />
-            <col className="w-[12%]" />
-            <col className="w-[13%]" />
-          </colgroup>
-          <thead className="sticky top-0 z-10 border-b border-[#EFE4D6] bg-[#FAF7F2] shadow-xs">
-            <tr className="h-11">
-              <th
-                onClick={() => handleSort("projet_titre")}
-                className="group/th cursor-pointer px-4 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+              aria-label="Rechercher par projet, porteur ou guichet"
+              placeholder="Rechercher un projet, porteur, guichet..."
+              className="w-full h-9 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] pl-9 pr-8 text-xs font-medium text-[#21130D] placeholder:text-[#6B5646] transition focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/10"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2.5 top-2.5 text-[#6B5646] hover:text-[#21130D]"
+                aria-label="Effacer la recherche"
               >
-                <div className="flex items-center gap-1.5">
-                  <span>Projet</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "projet_titre"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-
-              <th
-                onClick={() => handleSort("domaine")}
-                className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>Domaine</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "domaine"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-
-              <th
-                onClick={() => handleSort("source")}
-                className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>Source</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "source"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-
-              <th
-                onClick={() => handleSort("date")}
-                className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <span>Date</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "date"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-
-              <th
-                onClick={() => handleSort("statut")}
-                className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <span>Statut</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "statut"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-
-              <th
-                onClick={() => handleSort("montant")}
-                className="group/th cursor-pointer px-3 text-right font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
-              >
-                <div className="flex items-center justify-end gap-1">
-                  <span>Montant (FCFA)</span>
-                  <ArrowUpDown
-                    className={`h-3 w-3 text-[#C99A68] transition-opacity ${
-                      sortField === "montant"
-                        ? "opacity-100"
-                        : "opacity-0 group-hover/th:opacity-100"
-                    }`}
-                  />
-                </div>
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="h-[60px] animate-pulse">
-                  <td colSpan={6} className="px-4 py-3">
-                    <div className="h-4 w-3/4 rounded bg-[rgba(60,35,20,0.06)]" />
-                  </td>
-                </tr>
-              ))
-            ) : paginatedData.length === 0 ? (
-              <tr className="h-28 text-center text-[#5A4B42]">
-                <td colSpan={6}>Aucun enregistrement ne correspond aux filtres.</td>
-              </tr>
-            ) : (
-              paginatedData.map((row) => (
-                <tr
-                  key={row.id}
-                  className="group relative h-[60px] transition-colors hover:bg-[#FBF8F3]/60"
-                >
-                  {/* Projet : Nom en clamp 2 lignes 14px 500 avec tooltip + porteur et cohorte en secondaire 12px */}
-                  <td className="px-4 py-2">
-                    <div
-                      title={row.projet_titre}
-                      className="line-clamp-2 text-[14px] font-[500] text-[#21130D] leading-tight group-hover:text-[#612D10]"
-                    >
-                      {row.projet_titre || "Projet CIAT"}
-                    </div>
-                    <div className="truncate text-[12px] text-[#5A4B42] mt-0.5">
-                      {row.porteur_nom || "Porteur non renseigné"}
-                      {row.cohorte ? ` · ${row.cohorte}` : ""}
-                    </div>
-                  </td>
-
-                  {/* Domaine : libellé normalisé avec line-clamp-2 pour éviter toute troncature avec points de suspension */}
-                  <td className="px-3 py-2">
-                    <span
-                      title={getDomaineFullName(row.domaine)}
-                      className="line-clamp-2 text-[13px] text-[#5A4B42] leading-tight block"
-                    >
-                      {getDomaineShortLabel(row.domaine)}
-                    </span>
-                  </td>
-
-                  {/* Source : 13px, clamp 2 lignes avec tooltip */}
-                  <td className="px-3 py-2">
-                    <span
-                      title={row.source}
-                      className="line-clamp-2 text-[13px] text-[#21130D] leading-tight"
-                    >
-                      {row.source || "Fonds CIAT"}
-                    </span>
-                  </td>
-
-                  {/* Date en jj/mm/aaaa, couleur secondaire */}
-                  <td className="px-2 py-2 text-center text-[12px] text-[#5A4B42] tabular-nums whitespace-nowrap">
-                    {formatDate(row.date)}
-                  </td>
-
-                  {/* Statut : badge min 96px, une ligne */}
-                  <td className="px-2 py-2 text-center whitespace-nowrap">
-                    {getStatusBadge(row.statut, row.statut_display)}
-                  </td>
-
-                  {/* Montant : aligné à droite, sans-serif 14px poids 600, tabular-nums */}
-                  <td className="px-3 py-2 text-right font-sans text-[14px] font-semibold text-[#21130D] tabular-nums whitespace-nowrap">
-                    {formatNumber(Number(row.montant) || 0)}
-                  </td>
-                </tr>
-              ))
+                <X className="h-4 w-4" />
+              </button>
             )}
-          </tbody>
+          </div>
 
-          {/* Ligne de total synthétique : 472 000 000 */}
-          {filteredData.length > 0 && (
-            <tfoot className="border-t-2 border-[rgba(60,35,20,0.12)] bg-[#FBF8F3]">
-              <tr className="h-12 font-semibold">
-                <td
-                  colSpan={4}
-                  className="px-4 text-[12px] uppercase tracking-[0.06em] text-[#5A4B42]"
+          {/* Filtres rapides statut avec compteurs */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {[
+              { key: "all", label: "Tous", count: statusCounts.all },
+              { key: "decaisse", label: "Décaissés", count: statusCounts.decaisse },
+              { key: "accorde", label: "Accordés", count: statusCounts.accorde },
+              { key: "instruction", label: "En instruction", count: statusCounts.instruction },
+              { key: "attente", label: "En attente", count: statusCounts.attente },
+            ].map((pill) => {
+              const isActive = selectedStatut === pill.key;
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStatut(pill.key);
+                    setCurrentPage(1);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                    isActive
+                      ? "bg-[#21130D] text-white shadow-xs font-semibold"
+                      : "border border-[#EFE4D6] bg-[#FAF7F2] text-[#6B5646] hover:bg-white hover:text-[#21130D] font-medium"
+                  }`}
                 >
-                  Total des engagements filtrés ({filteredData.length} dossiers)
-                </td>
-                <td className="px-2 text-center text-[12px] text-[#5A4B42]">
-                  —
-                </td>
-                <td className="px-3 text-right font-sans text-[14px] font-semibold text-[#21130D] tabular-nums whitespace-nowrap">
-                  {formatNumber(totalAmount)}
-                </td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+                  <span>{pill.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] tabular-nums font-semibold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-white text-[#8C5E2D] border border-[#EFE4D6]"
+                    }`}
+                  >
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Pagination & Compteur */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-[#5A4B42]">
-        <div>
-          Affichage de{" "}
-          <strong className="text-[#21130D]">
-            {filteredData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-          </strong>{" "}
-          à{" "}
-          <strong className="text-[#21130D]">
-            {Math.min(currentPage * pageSize, filteredData.length)}
-          </strong>{" "}
-          sur <strong className="text-[#21130D]">{data.length}</strong> financements
+          {/* Sélecteur de pagination (10 / 25 / 50) */}
+          <div className="flex items-center gap-2 text-xs text-[#6B5646]">
+            <span>Lignes par page :</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              aria-label="Nombre de lignes par page"
+              className="h-8 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-xs font-semibold text-[#21130D] focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            aria-label="Page précédente"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] transition hover:bg-white disabled:opacity-40"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
+        {/* Table avec mise en page stricte : table-layout: fixed, largeurs proportionnelles, min-w-[820px] avec défilement fluide */}
+        <div className="relative overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
+          <table className="w-full text-left text-xs table-fixed min-w-[820px]">
+            <colgroup>
+              <col className="w-[30%]" />
+              <col className="w-[20%]" />
+              <col className="w-[15%]" />
+              <col className="w-[10%]" />
+              <col className="w-[12%]" />
+              <col className="w-[13%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10 border-b border-[#EFE4D6] bg-[#FAF7F2] shadow-xs">
+              <tr className="h-11">
+                <th
+                  onClick={() => handleSort("projet_titre")}
+                  className="group/th cursor-pointer px-4 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Projet & Porteur</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "projet_titre"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
 
-          <span className="px-2 font-medium">
-            Page {currentPage} sur {totalPages}
-          </span>
+                <th
+                  onClick={() => handleSort("domaine")}
+                  className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Domaine</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "domaine"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
 
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            aria-label="Page suivante"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] transition hover:bg-white disabled:opacity-40"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+                <th
+                  onClick={() => handleSort("source")}
+                  className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Source financière</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "source"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
+
+                <th
+                  onClick={() => handleSort("date")}
+                  className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Date</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "date"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
+
+                <th
+                  onClick={() => handleSort("statut")}
+                  className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Statut</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "statut"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
+
+                <th
+                  onClick={() => handleSort("montant")}
+                  className="group/th cursor-pointer px-4 text-right font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Montant (FCFA)</span>
+                    <ArrowUpDown
+                      className={`h-3 w-3 text-[#C99A68] transition-opacity ${
+                        sortField === "montant"
+                          ? "opacity-100 text-[#8C5E2D]"
+                          : "opacity-40 group-hover/th:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-[#EFE4D6]/60">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="h-[64px] animate-pulse">
+                    <td colSpan={6} className="px-4 py-3">
+                      <div className="h-4 w-3/4 rounded bg-[#EFE4D6]/40" />
+                    </td>
+                  </tr>
+                ))
+              ) : paginatedData.length === 0 ? (
+                <tr className="h-32 text-center text-[#6B5646]">
+                  <td colSpan={6} className="p-6">
+                    <div className="flex flex-col items-center justify-center text-xs">
+                      <FileText className="h-8 w-8 text-[#8C5E2D]/40 mb-2" />
+                      <span className="font-semibold text-[#21130D]">
+                        Aucun enregistrement ne correspond aux critères
+                      </span>
+                      <span className="text-[11px] text-[#8C6D4F] mt-0.5">
+                        Modifiez votre recherche ou réinitialisez les filtres de statut.
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="group relative h-[64px] transition-colors hover:bg-[#FAF7F2]/70"
+                  >
+                    {/* Projet : Nom en clamp 2 lignes 13.5px avec tooltip + porteur et cohorte en badge */}
+                    <td className="px-4 py-2.5">
+                      <div
+                        title={row.projet_titre}
+                        className="line-clamp-2 text-[13.5px] font-semibold text-[#21130D] leading-snug group-hover:text-[#8C5E2D] transition-colors"
+                      >
+                        {row.projet_titre || "Projet CIAT"}
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5 truncate text-[11px] text-[#6B5646]">
+                        <span className="truncate">{row.porteur_nom || "Porteur non renseigné"}</span>
+                        {row.cohorte && (
+                          <span className="shrink-0 rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-1.5 py-0.2 text-[10px] font-semibold text-[#8C5E2D]">
+                            {row.cohorte}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Domaine : Badge sobre en ivoire */}
+                    <td className="px-3 py-2.5">
+                      <span
+                        title={getDomaineFullName(row.domaine)}
+                        className="line-clamp-2 inline-flex items-center rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 py-1 text-xs font-medium text-[#612D10] leading-tight"
+                      >
+                        {getDomaineShortLabel(row.domaine)}
+                      </span>
+                    </td>
+
+                    {/* Source : 13px avec typographie soignée */}
+                    <td className="px-3 py-2.5">
+                      <span
+                        title={row.source}
+                        className="line-clamp-2 text-[13px] font-medium text-[#21130D] leading-tight"
+                      >
+                        {row.source || "Fonds CIAT"}
+                      </span>
+                    </td>
+
+                    {/* Date en format tabulaire, couleur secondaire */}
+                    <td className="px-2 py-2.5 text-center text-xs font-mono font-medium text-[#6B5646] tabular-nums whitespace-nowrap">
+                      {formatDate(row.date)}
+                    </td>
+
+                    {/* Statut : badge arrondi avec point indicateur */}
+                    <td className="px-2 py-2.5 text-center whitespace-nowrap">
+                      {getStatusBadge(row.statut, row.statut_display)}
+                    </td>
+
+                    {/* Montant : aligné à droite, sans-serif 14px poids 700, tabular-nums */}
+                    <td className="px-4 py-2.5 text-right font-sans whitespace-nowrap">
+                      <span className="text-[14px] font-bold text-[#21130D] tabular-nums">
+                        {formatNumber(Number(row.montant) || 0)}
+                      </span>
+                      <span className="ml-1 text-[11px] font-normal text-[#8C6D4F]">
+                        FCFA
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+
+            {/* Ligne de total synthétique */}
+            {filteredData.length > 0 && (
+              <tfoot className="border-t-2 border-[#EFE4D6] bg-[#FAF7F2]">
+                <tr className="h-12 font-semibold">
+                  <td
+                    colSpan={4}
+                    className="px-4 text-[12px] uppercase tracking-[0.06em] text-[#612D10]"
+                  >
+                    Total des engagements filtrés ({filteredData.length} dossiers)
+                  </td>
+                  <td className="px-2 text-center text-[12px] text-[#8C6D4F]">
+                    —
+                  </td>
+                  <td className="px-4 text-right font-sans whitespace-nowrap">
+                    <span className="text-[15px] font-extrabold text-[#612D10] tabular-nums">
+                      {formatNumber(totalAmount)}
+                    </span>
+                    <span className="ml-1 text-xs font-semibold text-[#8C5E2D]">
+                      FCFA
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+
+        {/* Pagination & Compteur */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-[#6B5646]">
+          <div>
+            Affichage de{" "}
+            <strong className="text-[#21130D]">
+              {filteredData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
+            </strong>{" "}
+            à{" "}
+            <strong className="text-[#21130D]">
+              {Math.min(currentPage * pageSize, filteredData.length)}
+            </strong>{" "}
+            sur <strong className="text-[#21130D]">{data.length}</strong> conventions enregistrées
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              aria-label="Page précédente"
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-[#21130D] transition hover:bg-white disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Précédent</span>
+            </button>
+
+            {/* Boutons de pagination numérotés */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(
+                  (p) =>
+                    p === 1 ||
+                    p === totalPages ||
+                    Math.abs(p - currentPage) <= 1
+                )
+                .map((page, idx, arr) => {
+                  const prevPage = arr[idx - 1];
+                  const hasGap = prevPage && page - prevPage > 1;
+                  const isActive = currentPage === page;
+
+                  return (
+                    <div key={page} className="flex items-center">
+                      {hasGap && <span className="px-1 text-[#8C6D4F]">…</span>}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 min-w-[32px] rounded-lg px-2 text-xs transition-all ${
+                          isActive
+                            ? "bg-[#21130D] text-white shadow-xs font-bold"
+                            : "border border-[#EFE4D6] bg-[#FAF7F2] text-[#6B5646] hover:bg-white hover:text-[#21130D] font-medium"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              aria-label="Page suivante"
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-[#21130D] transition hover:bg-white disabled:opacity-40"
+            >
+              <span className="hidden sm:inline">Suivant</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

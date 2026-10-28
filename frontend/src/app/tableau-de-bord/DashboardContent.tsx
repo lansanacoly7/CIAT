@@ -598,21 +598,28 @@ export function DashboardContent() {
                  ========================================================================= */}
               {activeTab === "registre" && (
                 <section aria-labelledby="detail-table-heading" className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs">
                     <div>
-                      <h2
-                        id="detail-table-heading"
-                        className="text-base font-semibold text-[#21130D]"
-                      >
-                        Registre analytique des financements et conventions
-                      </h2>
-                      <p className="text-xs text-[#5A4B42]">
-                        Consultation détaillée des engagements financiers, subventions et protocoles
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h2
+                          id="detail-table-heading"
+                          className="text-lg font-bold text-[#21130D]"
+                        >
+                          Registre analytique des engagements & conventions
+                        </h2>
+                        <span className="rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-2 py-0.5 text-xs font-semibold text-[#8C5E2D]">
+                          Grand Livre CIAT
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#6B5646]">
+                        Consultation exhaustive et traçabilité des subventions, protocoles et décaissements de l&apos;incubateur
                       </p>
                     </div>
-                    <span className="text-xs font-medium text-[#5A4B42] tabular-nums">
-                      {financementsData.length} lignes
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-1.5 text-xs font-bold text-[#21130D] tabular-nums">
+                        {financementsData.length} enregistrements
+                      </span>
+                    </div>
                   </div>
 
                   <DetailTable data={financementsData} isLoading={isLoading} />
