@@ -70,32 +70,31 @@ export function ChartCard({
 
   return (
     <div className="flex flex-col rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-4 sm:p-5 transition hover:shadow-[0_2px_8px_rgba(60,35,20,0.04)]">
-      {/* En-tête : Titre 14px, Sous-titre dynamique, Bouton table discret */}
+      {/* En-tête : Titre 14px, Badge insight dynamique, Bouton table discret */}
       <div className="mb-3 flex items-start justify-between gap-3 border-b border-[rgba(60,35,20,0.06)] pb-2.5">
-        <div>
-          <h3 className="text-[14px] font-semibold text-[#21130D]">
-            {title}
-          </h3>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-[14px] font-semibold text-[#21130D]">
+              {title}
+            </h3>
+            {summaryValue && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E8DFD8] bg-[#F7F3EE] px-2.5 py-0.5 text-[11px] font-medium text-[#7D4F27] tabular-nums shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#8C5E2D]/70" aria-hidden="true" />
+                {summaryValue}
+              </span>
+            )}
+          </div>
           {description && (
             <p className="mt-0.5 text-[12px] text-[#5A4B42]">{description}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {summaryValue && (
-            <div className="text-right">
-              <span className="font-sans text-[13px] font-medium text-[#5A4B42] tabular-nums">
-                {summaryValue}
-              </span>
-            </div>
-          )}
-
-          {tableData && tableColumns && (
-            <div
-              className="flex items-center rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-0.5 shadow-2xs"
-              role="group"
-              aria-label="Mode d'affichage"
-            >
+        {tableData && tableColumns && (
+          <div
+            className="shrink-0 flex items-center rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-0.5 shadow-2xs"
+            role="group"
+            aria-label="Mode d'affichage"
+          >
               <button
                 type="button"
                 onClick={() => setShowTable(false)}
@@ -135,7 +134,6 @@ export function ChartCard({
             </div>
           )}
         </div>
-      </div>
 
       {/* Contenu : Graphique OU Table respectant rigoureusement la charte CIAT */}
       <div className="w-full flex-1">

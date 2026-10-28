@@ -338,12 +338,13 @@ export function DashboardContent() {
       const parts = peak.mois.split("-");
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
       const moisFr = new Intl.DateTimeFormat("fr-FR", {
-        month: "short",
+        month: "long",
         year: "numeric",
       }).format(d);
-      return `Pic en ${moisFr} : ${peak.total} projets`;
+      const moisCap = moisFr.charAt(0).toUpperCase() + moisFr.slice(1);
+      return `Record mensuel : ${peak.total} projets (${moisCap})`;
     } catch {
-      return `Pic : ${peak.total} projets`;
+      return `Record mensuel : ${peak.total} projets`;
     }
   }, [evolutionData]);
 
@@ -354,7 +355,7 @@ export function DashboardContent() {
       (prev, curr) => (curr.total > prev.total ? curr : prev),
       parCohorteData[0]
     );
-    return top ? `${top.cohorte} en tête (${top.total} projets)` : undefined;
+    return top ? `Promotion leader : ${top.cohorte} (${top.total} projets)` : undefined;
   }, [parCohorteData]);
 
   return (
@@ -557,7 +558,7 @@ export function DashboardContent() {
                       <ChartCard
                         title="Projets par domaine prioritaire"
                         description="Répartition des innovations par filière d'excellence"
-                        summaryValue={`${data.parDomaine.length} domaines`}
+                        summaryValue={`${data.parDomaine.length} filières actives`}
                         tableData={data.parDomaine.map((d) => ({
                           Domaine: d.domaine,
                           Total: d.total,
@@ -577,7 +578,7 @@ export function DashboardContent() {
                       <ChartCard
                         title="Mixité et parité des équipes"
                         description="Représentativité et répartition par genre des porteurs"
-                        summaryValue={`${data.indicateurs.idees_recues} porteurs`}
+                        summaryValue={`${data.indicateurs.idees_recues} porteurs recensés`}
                         tableData={data.parGenre.map((g) => ({
                           Genre: g.genre,
                           Porteurs: g.total,
