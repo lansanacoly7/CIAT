@@ -164,3 +164,59 @@ class MessageContact(models.Model):
 
     def __str__(self):
         return f"Message de {self.nom} ({self.email}) - {self.sujet}"
+
+
+# ==============================================================================
+# Phase 9 — T1 : Lettre d'information avec double opt-in
+# ==============================================================================
+
+class AbonnementLettre(models.Model):
+    """Abonnement à la lettre d'information institutionnelle du CIAT avec double opt-in."""
+
+    class Statut(models.TextChoices):
+        EN_ATTENTE = "en_attente", "En attente"
+        CONFIRME = "confirme", "Confirmé"
+        DESABONNE = "desabonne", "Désabonné"
+
+    email = models.EmailField(
+        unique=True,
+        db_index=True,
+        verbose_name="Adresse email",
+        help_text="Adresse email unique de l'abonné.",
+    )
+    statut = models.CharField(
+        max_length=20,
+        choices=Statut.choices,
+        default=Statut.EN_ATTENTE,
+        db_index=True,
+        verbose_name="Statut de l'abonnement",
+    )
+    jeton = models.CharField(
+        max_length=255,
+        blank=True,
+        db_index=True,
+        verbose_name="Jeton de validation / désabonnement à usage unique",
+    )
+    cree_le = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        verbose_name="Date d'inscription",
+    )
+    confirme_le = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de confirmation (opt-in)",
+    )
+    desabonne_le = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de désabonnement",
+    )
+
+    class Meta:
+        ordering = ["-cree_le"]
+        verbose_name = "Abonnement à la lettre d'information"
+        verbose_name_plural = "Abonnements à la lettre d'information"
+
+    def __str__(self):
+        return f"{self.email} ({self.get_statut_display()})"
