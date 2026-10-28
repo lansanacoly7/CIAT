@@ -1,4 +1,5 @@
 """Modèles communs à toute la plateforme : utilisateurs, domaines, cohortes et projets."""
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.text import slugify
@@ -155,3 +156,80 @@ class Projet(models.Model):
 
     def __str__(self):
         return self.titre
+
+
+class JournalAudit(models.Model):
+    """Journal d'audit des actions sensibles pour la traçabilité des décisions."""
+
+    acteur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="actions_audit",
+    )
+    action = models.CharField(max_length=100, db_index=True)
+    objet = models.CharField(max_length=255)
+    avant = models.JSONField(default=dict, blank=True)
+    apres = models.JSONField(default=dict, blank=True)
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-date"]
+        verbose_name = "Entrée du journal d'audit"
+        verbose_name_plural = "Journal d'audit"
+
+    def __str__(self):
+        acteur_str = self.acteur.email if self.acteur else "Système"
+        return f"[{self.date:%Y-%m-%d %H:%M}] {acteur_str} - {self.action} - {self.objet}"
+
+    @property
+    def objet_concerne(self):
+        return self.objet
+
+    @property
+    def cree_le(self):
+        return self.date
+
+
+class Notification(models.Model):
+    """Notification interne visible dans la plateforme pour un utilisateur."""
+
+    class Type(models.TextChoices):
+        DECISION_DOSSIER = "decision_dossier", "Décision sur le dossier"
+        JALON_RETARD = "jalon_retard", "Jalon en retard"
+        DOCUMENT_VALIDE = "document_valide", "Document validé"
+        DOCUMENT_PUBLIE = "document_publie", "Document publié"
+        FICHE_VALIDEE = "fiche_validee", "Fiche validée"
+        FICHE_REFUSEE = "fiche_refusee", "Fiche refusée"
+        MENTOR_AFFECTE = "mentor_affecte", "Nouveau mentor affecté"
+        AUTRE = "autre", "Autre notification"
+
+    destinataire = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    type = models.CharField(
+        max_length=50,
+        choices=Type.choices,
+        default=Type.AUTRE,
+        db_index=True,
+    )
+    message = models.CharField(max_length=255)
+    lien = models.CharField(max_length=255, blank=True)
+    lue = models.BooleanField(default=False, db_index=True)
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-date"]
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        statut_str = "Lue" if self.lue else "Non lue"
+        return f"[{statut_str}] {self.destinataire.email}: {self.message}"
+
+    @property
+    def cree_le(self):
+        return self.date

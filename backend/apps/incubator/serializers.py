@@ -608,3 +608,17 @@ class SuiviProjetSerializer(serializers.ModelSerializer):
         return SuiviProjet.objects.create(projet=projet, redige_par=user, **validated_data)
 
 
+class IncubateurCalendrierItemSerializer(serializers.Serializer):
+    """Élément du calendrier d'incubation (jalon ou objectif)."""
+
+    date = serializers.DateField(help_text="Date d'échéance au format ISO AAAA-MM-JJ")
+    type = serializers.ChoiceField(
+        choices=["jalon", "objectif"],
+        help_text="Type d'élément (jalon ou objectif)",
+    )
+    titre = serializers.CharField(help_text="Intitulé du jalon ou de l'objectif")
+    projet = serializers.CharField(help_text="Titre du projet associé")
+    statut = serializers.CharField(help_text="Statut d'avancement")
+    en_retard = serializers.BooleanField(
+        help_text="Indicateur d'échéance dépassée non validée"
+    )

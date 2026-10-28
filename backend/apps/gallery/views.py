@@ -13,6 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.models import Role
+from apps.core.services import (
+    tracer_refus_fiche_galerie,
+    tracer_validation_fiche_galerie,
+)
 from apps.core.throttling import GalleryInteretRateThrottle
 
 from .models import FicheInnovation, ManifestationInteret
@@ -320,6 +324,7 @@ class FicheValiderView(APIView):
         fiche = get_object_or_404(FicheInnovation, pk=pk)
         fiche.statut = FicheInnovation.Statut.PUBLIE
         fiche.save(update_fields=["statut", "modifie_le"])
+        tracer_validation_fiche_galerie(request.user, fiche)
 
         return Response(FicheInnovationSerializer(fiche).data, status=status.HTTP_200_OK)
 
@@ -344,6 +349,7 @@ class FicheRefuserView(APIView):
         fiche = get_object_or_404(FicheInnovation, pk=pk)
         fiche.statut = FicheInnovation.Statut.REFUSE
         fiche.save(update_fields=["statut", "modifie_le"])
+        tracer_refus_fiche_galerie(request.user, fiche)
 
         return Response(FicheInnovationSerializer(fiche).data, status=status.HTTP_200_OK)
 

@@ -164,6 +164,18 @@ function DepotDossier() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
+        {/* Fil d'Ariane harmonisé */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+          <Link
+            href="/incubateur/projets"
+            className="hover:text-[#612D10] hover:underline transition-colors"
+          >
+            Suivi des projets
+          </Link>
+          <span className="text-[#C99A68]/60">/</span>
+          <span className="text-[#612D10] font-bold">Dépôt de candidature</span>
+        </div>
+
         {/* 1. HERO BANNER EN CARTE INTÉGRÉE (Harmonisée avec /incubateur/projets et /compte) */}
         <div className="relative overflow-hidden rounded-2xl border border-[#3d2315] bg-[#1F130B] shadow-sm">
           {/* Photo panoramique de fond — 100% nette et contrastée, sans voile blanc */}
@@ -203,7 +215,7 @@ function DepotDossier() {
                 <div className="flex items-center shrink-0">
                   <Link
                     href="/incubateur/projets"
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#FAF7F2] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10]"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#612D10] shadow-md transition-all hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#612D10] active:scale-[0.98] cursor-pointer"
                   >
                     Mes projets
                   </Link>
@@ -220,25 +232,10 @@ function DepotDossier() {
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8">
-            {/* Passerelle d'étape : console en carte blanche douce avec ombre légère faisant la jonction naturelle */}
+            {/* Bannière des 3 étapes du dépôt (disposition épurée conforme à la maquette) */}
             {!submitted && (
               <div className="rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-sm">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} theme="light" />
-                  </div>
-                  {/* Annonce claire de l'étape suivante */}
-                  <div className="hidden border-l border-[#EFE4D6] pl-6 lg:block lg:max-w-xs">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D4F]">
-                      Prochaine étape
-                    </span>
-                    <p className="mt-0.5 text-xs font-semibold text-[#612D10]">
-                      {step === 0 && "2. Dépôt des 3 pièces justificatives"}
-                      {step === 1 && "3. Récapitulatif & Soumission au comité"}
-                      {step === 2 && "Instruction par le comité CIAT"}
-                    </p>
-                  </div>
-                </div>
+                <Stepper current={step} maxReached={dossier ? maxReached : 0} onSelect={goTo} theme="light" />
               </div>
             )}
 
@@ -291,7 +288,7 @@ function DepotDossier() {
                           <button
                             type="button"
                             onClick={() => goTo(0)}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border-1.5 border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] text-sm font-bold text-[#612D10] transition-all hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
                           >
                             ← Retour aux informations
                           </button>
@@ -301,7 +298,7 @@ function DepotDossier() {
                               setMaxReached(2);
                               goTo(2);
                             }}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#612D10] px-7 font-[family-name:var(--font-title)] text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#3F1D0A]"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#612D10] px-7 font-[family-name:var(--font-title)] text-sm font-bold text-white shadow-xs transition-all hover:bg-[#3F1D0A] hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                           >
                             Continuer vers le récapitulatif →
                           </button>

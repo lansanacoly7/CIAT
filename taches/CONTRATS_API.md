@@ -17,6 +17,12 @@
 | `GET /auth/me/export/` | Téléchargement du fichier JSON complet de toutes ses données personnelles (portabilité RGPD) |
 | `GET /domaines/`, `GET /cohortes/` | Listes sans pagination |
 | `GET/POST /projets/` | `{ id, titre, resume, probleme, solution, domaine, domaine_nom, cohorte, cohorte_nom, porteur, porteur_nom, statut, cree_le, modifie_le }` |
+| `GET /audit/` | Journal d'audit des actions sensibles (admin et coordonnateur, filtrable par acteur, action, date) |
+| `GET /notifications/` | Notifications internes de l'utilisateur connecté (filtre `?non_lues=1`) |
+| `POST /notifications/{id}/lue/` | Marquer une notification comme lue |
+| `POST /notifications/tout-lire/` | Marquer toutes les notifications comme lues |
+| `PATCH /users/{id}/role/` | Modification du rôle d'un utilisateur (administrateur) |
+
 
 
 Rôles : `administrateur`, `coordonnateur`, `mentor`, `membre_comite`, `porteur`, `visiteur`.
@@ -119,6 +125,7 @@ Jalon : `{ id, projet, titre, echeance, statut, en_retard, preuves: [...], comme
 | `POST /jalons/{id}/preuves/` | `multipart/form-data` : `fichier` |
 | `POST /jalons/{id}/commentaires/` | `{ texte }` |
 | `GET /alertes/` | Jalons en retard visibles pour l'utilisateur connecté |
+| `GET /calendrier/?mois=AAAA-MM` | Renvoie les jalons et objectifs du mois : `[{ date, type, titre, projet, statut, en_retard }]`, triés par date. Droits : porteur (ses projets), mentor (projets affectés), coordonnateur/admin (tout). |
 | `GET/POST /projets/{id}/suivis/` | `{ echeance: "3_mois"\|"6_mois", bilan, indicateurs }` |
 | `GET /projets/{id}/compte-rendu/?format=xlsx` | Fichier Excel à télécharger |
 
@@ -237,5 +244,4 @@ Conformément à la règle de la tâche T3 (*« corrige le document, pas le code
 4. **Route publique de santé `/api/health/` :**
    - *Constat :* Ajoutée en Phase 7 T2.
    - *Correction :* Intégrée dans le tableau socle de `taches/CONTRATS_API.md` et documentée dans `docs/API.md`.
-
 

@@ -127,14 +127,21 @@ export default function SummaryStep({
         )}
 
         <div className="pt-4 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer"
+          >
+            <span>Accéder au suivi de mes projets</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
           <button
             type="button"
             onClick={handleTelechargerAccuse}
             disabled={downloadingAccuse}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#612D10] bg-white px-6 text-xs sm:text-sm font-bold text-[#612D10] transition-all hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer disabled:opacity-60"
           >
             {downloadingAccuse ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
             ) : (
               <Download className="h-4 w-4" aria-hidden="true" />
             )}
@@ -142,15 +149,9 @@ export default function SummaryStep({
           </button>
           <Link
             href="/compte"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#612D10] bg-white px-6 text-xs sm:text-sm font-semibold text-[#612D10] transition-colors hover:bg-[#FAF7F2]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-semibold text-[#6b5646] transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
             Voir mon compte
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-semibold text-[#6b5646] transition-colors hover:bg-[#FAF7F2]"
-          >
-            Retour à l&apos;accueil
           </Link>
         </div>
       </div>
@@ -231,7 +232,7 @@ export default function SummaryStep({
               type="button"
               onClick={() => onEdit(1)}
               disabled={submitting}
-              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-semibold text-[#612D10] shadow-sm transition-all hover:bg-[#FAF7F2] hover:border-[#C99A68] disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-bold text-[#612D10] shadow-2xs transition-all hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer disabled:opacity-50"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               <span>Retour aux pièces</span>
@@ -242,7 +243,7 @@ export default function SummaryStep({
               onClick={onSubmit}
               disabled={incomplete || submitting}
               aria-describedby={incomplete ? "soumission-aide" : undefined}
-              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-8 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-8 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
               <span>{submitting ? "Envoi en cours…" : "Soumettre définitivement"}</span>
