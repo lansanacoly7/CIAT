@@ -111,4 +111,27 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class UserRoleUpdateSerializer(serializers.Serializer):
+    """Validation de la mise à jour du rôle utilisateur par l'administrateur."""
     role = serializers.ChoiceField(choices=Role.choices)
+
+
+class MotDePasseOublieSerializer(serializers.Serializer):
+    """Validation de la demande de réinitialisation de mot de passe (email uniquement)."""
+    email = serializers.EmailField(
+        required=True,
+        help_text="Adresse email du compte utilisateur pour lequel réinitialiser le mot de passe",
+    )
+
+
+class MotDePasseReinitialiserSerializer(serializers.Serializer):
+    """Validation de la saisie d'un nouveau mot de passe avec jeton sécurisé."""
+    jeton = serializers.CharField(
+        required=True,
+        help_text="Jeton sécurisé à usage unique transmis dans le lien de réinitialisation",
+    )
+    mot_de_passe = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="Nouveau mot de passe conforme aux règles de robustesse du CIAT",
+    )
+

@@ -151,10 +151,17 @@ USE_DOCKER=1 ./scripts/restauration_bd.sh /chemin/vers/sauvegarde.dump --yes
 ```
 
 #### Test et vérification de la procédure
-Un script de contrôle valide la chaîne complète (sauvegarde, injection de marqueur, restauration, vérification d'intégrité) :
+Des scripts de contrôle automatisés valident les procédures :
+- Base de données :
 ```bash
 ./scripts/verifier_sauvegarde_restauration.sh
 ```
+- Médias déposés (intégrité SHA-256 et comptage) :
+```bash
+python scripts/tester_sauvegarde_media.py
+```
+Lors de l'utilisation de l'option `--avec-media`, un manifeste SHA-256 (`.sha256`) est généré conjointement à l'archive `tar.gz`. La restauration vérifie systématiquement l'empreinte cryptographique avant de décompresser les fichiers pour garantir l'intégrité absolue des documents et pièces jointes.
+
 
 ---
 

@@ -25,8 +25,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.core.models import Cohorte, Domaine, Projet, Role, User
-from apps.gallery.models import FicheInnovation
+from apps.core.models import Cohorte, Domaine, JournalAudit, Notification, Projet, Role, User
+from apps.gallery.models import FicheInnovation, ManifestationInteret
+from apps.core.services import creer_notification, enregistrer_audit
 from apps.incubator.models import (
     ALLOWED_PIECE_EXTENSIONS,
     AffectationMentor,
@@ -36,14 +37,19 @@ from apps.incubator.models import (
     Dossier,
     Evaluation,
     Grille,
+    Jalon,
     Note,
+    Objectif,
     Piece,
     StatutDossier,
+    StatutJalon,
+    StatutObjectif,
     TypePiece,
     sanitize_filename,
     validate_file_content,
     validate_file_size,
 )
+from rest_framework_simplejwt.tokens import AccessToken
 from apps.portal.models import Actualite, AppelProjet, DocumentPublic, Evenement, Partenaire
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
@@ -1017,3 +1023,459 @@ class ProductionConfigurationTests(TestCase):
         """CORS et CSRF ne doivent pas autoriser le wildcard '*' sans restriction."""
         self.assertNotIn("*", settings.CORS_ALLOWED_ORIGINS)
         self.assertNotIn("*", settings.CSRF_TRUSTED_ORIGINS)
+
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
+class RevueSecuriteNouvellesRoutesPhase10Tests(TestCase):
+    """Revue d'attaquant sur les nouvelles routes introduites en phases 7 et 8 (Phase 10 — T1).
+
+    Couvre :
+    1. Journal d'audit (/api/audit/) : RBAC strict, absence de fuite de secrets ou tokens.
+    2. Notifications (/api/notifications/, /lue/, /tout-lire/) : isolation, IDOR sur marquage lu, filtres.
+    3. Manifestations d'intérêt (/api/gallery/interets/, /fiches/{slug}/interet/) : RBAC, IDOR porteur, anti-doublon.
+    4. Données personnelles (/api/auth/me/export/, /api/auth/me/) : isolation request.user, mot de passe requis.
+    5. Calendrier incubateur (/api/incubator/calendrier/) : isolation porteur/mentor, validation format mois.
+    6. Route de santé (/api/health/) : public, zéro secret d'infrastructure divulgué.
+    7. Interface d'administration Django (/admin/) : interdiction aux comptes non-staff (302).
+    8. Robustesse face aux jetons JWT expirés ou falsifiés sur l'ensemble des routes protégées.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        # Domaines et Cohortes
+        cls.domaine = Domaine.objects.create(nom="Revue Sécurité Phase 10")
+        cls.cohorte = Cohorte.objects.create(nom="Cohorte Sécu 2026", annee=2026)
+
+        # Utilisateurs pour chaque rôle
+        cls.admin_staff = User.objects.create_superuser(
+            email="admin.secu@ciat.sn",
+            password="AdminPassword2026!",
+            first_name="Admin",
+            last_name="System",
+        )
+        cls.coordo = User.objects.create_user(
+            email="coordo.secu@ciat.sn",
+            password="CoordoPassword2026!",
+            role=Role.COORDONNATEUR,
+            first_name="Coordo",
+            last_name="Equipe",
+        )
+        cls.porteur_a = User.objects.create_user(
+            email="porteur.a@ciat.sn",
+            password="PorteurPasswordA2026!",
+            role=Role.PORTEUR,
+            first_name="Porteur",
+            last_name="Alpha",
+        )
+        cls.porteur_b = User.objects.create_user(
+            email="porteur.b@ciat.sn",
+            password="PorteurPasswordB2026!",
+            role=Role.PORTEUR,
+            first_name="Porteur",
+            last_name="Beta",
+        )
+        cls.mentor_a = User.objects.create_user(
+            email="mentor.a@ciat.sn",
+            password="MentorPasswordA2026!",
+            role=Role.MENTOR,
+            first_name="Mentor",
+            last_name="Assigné",
+        )
+        cls.mentor_non_assigne = User.objects.create_user(
+            email="mentor.autre@ciat.sn",
+            password="MentorPasswordAutre2026!",
+            role=Role.MENTOR,
+            first_name="Mentor",
+            last_name="Tiers",
+        )
+        cls.comite = User.objects.create_user(
+            email="comite.secu@ciat.sn",
+            password="ComitePassword2026!",
+            role=Role.COMITE,
+            first_name="Jury",
+            last_name="Membre",
+        )
+        cls.visiteur = User.objects.create_user(
+            email="visiteur.secu@ciat.sn",
+            password="VisiteurPassword2026!",
+            role=Role.VISITEUR,
+            first_name="Lecteur",
+            last_name="Externe",
+        )
+
+        # Projets et affectations
+        cls.projet_a = Projet.objects.create(
+            titre="Projet Alpha Sécurisé",
+            resume="Résumé Alpha",
+            probleme="Problème Alpha",
+            solution="Solution Alpha",
+            porteur=cls.porteur_a,
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
+            statut="incube",
+        )
+        cls.projet_b = Projet.objects.create(
+            titre="Projet Beta Confidentiel",
+            resume="Résumé Beta",
+            probleme="Problème Beta",
+            solution="Solution Beta",
+            porteur=cls.porteur_b,
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
+            statut="incube",
+        )
+
+        AffectationMentor.objects.create(
+            projet=cls.projet_a,
+            mentor=cls.mentor_a,
+            affecte_par=cls.coordo,
+        )
+
+        # Fiches de la galerie
+        cls.fiche_a = FicheInnovation.objects.create(
+            projet=cls.projet_a,
+            titre="Innovation Alpha",
+            slug="innovation-alpha",
+            probleme="Problème Alpha",
+            solution="Solution Alpha",
+            equipe="Équipe Alpha",
+            statut=FicheInnovation.Statut.PUBLIE,
+        )
+        cls.fiche_b = FicheInnovation.objects.create(
+            projet=cls.projet_b,
+            titre="Innovation Beta",
+            slug="innovation-beta",
+            probleme="Problème Beta",
+            solution="Solution Beta",
+            equipe="Équipe Beta",
+            statut=FicheInnovation.Statut.PUBLIE,
+        )
+        cls.fiche_brouillon = FicheInnovation.objects.create(
+            projet=cls.projet_a,
+            titre="Innovation Brouillon",
+            slug="innovation-brouillon",
+            probleme="Problème Brouillon",
+            solution="Solution Brouillon",
+            equipe="Équipe Alpha",
+            statut=FicheInnovation.Statut.BROUILLON,
+        )
+
+        # Manifestations d'intérêt
+        cls.manif_a = ManifestationInteret.objects.create(
+            fiche=cls.fiche_a,
+            nom="Investisseur Alpha",
+            email="investisseur.a@fonds.sn",
+            organisation="Fonds A",
+            message="Proposition d'investissement privé pour Alpha",
+        )
+        cls.manif_b = ManifestationInteret.objects.create(
+            fiche=cls.fiche_b,
+            nom="Partenaire Beta",
+            email="contact.beta@partenaire.sn",
+            organisation="Partenaire B",
+            message="Offre de collaboration stratégique confidentielle pour Beta",
+        )
+
+        # Notifications
+        cls.notif_a = creer_notification(
+            destinataire=cls.porteur_a,
+            type="info",
+            message="Message privé pour Porteur Alpha",
+        )
+        cls.notif_b = creer_notification(
+            destinataire=cls.porteur_b,
+            type="info",
+            message="Message secret pour Porteur Beta",
+        )
+
+        # Entrées du journal d'audit
+        cls.audit_entry = enregistrer_audit(
+            acteur=cls.coordo,
+            action="validation_projet",
+            objet=f"Projet #{cls.projet_a.id}",
+            avant={"statut": "depose"},
+            apres={"statut": "incube"},
+        )
+
+        # Jalons et Objectifs pour le calendrier (mois 2026-10)
+        cls.jalon_a = Jalon.objects.create(
+            projet=cls.projet_a,
+            titre="Jalon Prototypage Alpha",
+            echeance=datetime.date(2026, 10, 15),
+            statut=StatutJalon.A_FAIRE,
+            cree_par=cls.mentor_a,
+        )
+        cls.jalon_b = Jalon.objects.create(
+            projet=cls.projet_b,
+            titre="Jalon Brevet Confidentiel Beta",
+            echeance=datetime.date(2026, 10, 20),
+            statut=StatutJalon.A_FAIRE,
+            cree_par=cls.coordo,
+        )
+        cls.obj_a = Objectif.objects.create(
+            projet=cls.projet_a,
+            libelle="Objectif Étude Marché Alpha",
+            echeance=datetime.date(2026, 10, 25),
+            statut=StatutObjectif.EN_COURS,
+            cree_par=cls.coordo,
+        )
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_01_securite_audit_rbac_et_non_divulgation(self):
+        """GET /api/audit/ : Accès restreint à l'équipe CIAT et zéro donnée sensible."""
+        url = "/api/audit/"
+
+        # 1. Anonyme -> 401
+        self.assertEqual(self.client.get(url).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Rôles non-équipe -> 403 Forbidden
+        for user in [self.visiteur, self.porteur_a, self.mentor_a, self.comite]:
+            self.client.force_authenticate(user=user)
+            resp = self.client.get(url)
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_403_FORBIDDEN,
+                f"L'utilisateur {user.email} (rôle {user.role}) ne doit pas accéder à l'audit",
+            )
+
+        # 3. Équipe CIAT -> 200 OK
+        for user in [self.coordo, self.admin_staff]:
+            self.client.force_authenticate(user=user)
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            # Vérification de non-divulgation de hash de mot de passe ni token
+            contenu_str = str(resp.data)
+            self.assertNotIn("pbkdf2", contenu_str.lower())
+            self.assertNotIn("md5$", contenu_str.lower())
+            self.assertNotIn("bearer", contenu_str.lower())
+
+        # 4. Paramètres de filtrage fonctionnels pour l'équipe sans fuite
+        self.client.force_authenticate(user=self.coordo)
+        resp_filtre = self.client.get(f"{url}?action=validation_projet")
+        self.assertEqual(resp_filtre.status_code, status.HTTP_200_OK)
+
+    def test_02_securite_notifications_isolation_et_idor_marquage_lu(self):
+        """GET /api/notifications/ & POST /api/notifications/{id}/lue/ : Isolation stricte et rejet IDOR."""
+        url_list = "/api/notifications/"
+
+        # 1. Isolation de consultation : Porteur A ne voit que notif_a
+        self.client.force_authenticate(user=self.porteur_a)
+        resp_a = self.client.get(url_list)
+        self.assertEqual(resp_a.status_code, status.HTTP_200_OK)
+        ids_recus = [n["id"] for n in resp_a.data.get("results", resp_a.data)]
+        self.assertIn(self.notif_a.id, ids_recus)
+        self.assertNotIn(self.notif_b.id, ids_recus)
+
+        # 2. Tentative d'élargissement de portée avec paramètres query
+        resp_tamper = self.client.get(f"{url_list}?destinataire={self.porteur_b.id}&user={self.porteur_b.id}")
+        self.assertEqual(resp_tamper.status_code, status.HTTP_200_OK)
+        ids_tamper = [n["id"] for n in resp_tamper.data.get("results", resp_tamper.data)]
+        self.assertNotIn(self.notif_b.id, ids_tamper)
+
+        # 3. Attaque IDOR : Porteur A tente de marquer comme lue la notification de Porteur B
+        url_idor = f"/api/notifications/{self.notif_b.id}/lue/"
+        resp_idor = self.client.post(url_idor)
+        self.assertEqual(
+            resp_idor.status_code,
+            status.HTTP_404_NOT_FOUND,
+            "Marquer une notification d'un tiers doit être rejeté (dissimulation 404)",
+        )
+        self.notif_b.refresh_from_db()
+        self.assertFalse(self.notif_b.lue)
+
+        # 4. Marquage nominal de sa propre notification
+        url_legit = f"/api/notifications/{self.notif_a.id}/lue/"
+        resp_legit = self.client.post(url_legit)
+        self.assertEqual(resp_legit.status_code, status.HTTP_200_OK)
+        self.notif_a.refresh_from_db()
+        self.assertTrue(self.notif_a.lue)
+
+    def test_03_securite_notifications_tout_lire_et_parametres_filtre(self):
+        """POST /api/notifications/tout-lire/ : Ne met à jour que les notifications du demandeur."""
+        notif_a2 = creer_notification(destinataire=self.porteur_a, type="info", message="Msg 2 A")
+        notif_b2 = creer_notification(destinataire=self.porteur_b, type="info", message="Msg 2 B")
+
+        self.client.force_authenticate(user=self.porteur_a)
+        resp = self.client.post("/api/notifications/tout-lire/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        notif_a2.refresh_from_db()
+        notif_b2.refresh_from_db()
+        self.assertTrue(notif_a2.lue)
+        self.assertFalse(notif_b2.lue)
+
+    def test_04_securite_gallery_manifestations_interet_rbac_et_idor(self):
+        """GET /api/gallery/interets/ : Cloisonnement strict et zéro fuite de message/email tiers."""
+        url = "/api/gallery/interets/"
+
+        # 1. Anonyme -> 401
+        self.assertEqual(self.client.get(url).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Rôles non autorisés -> 403 Forbidden
+        for user in [self.visiteur, self.mentor_a, self.comite]:
+            self.client.force_authenticate(user=user)
+            self.assertEqual(self.client.get(url).status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Porteur A ne voit que manif_a
+        self.client.force_authenticate(user=self.porteur_a)
+        resp_a = self.client.get(url)
+        self.assertEqual(resp_a.status_code, status.HTTP_200_OK)
+        items = resp_a.data.get("results", resp_a.data)
+        ids_recus = [m["id"] for m in items]
+        self.assertIn(self.manif_a.id, ids_recus)
+        self.assertNotIn(self.manif_b.id, ids_recus)
+
+        # 4. Attaque IDOR par paramètre query ?fiche=
+        resp_idor_id = self.client.get(f"{url}?fiche={self.fiche_b.id}")
+        self.assertEqual(resp_idor_id.status_code, status.HTTP_200_OK)
+        items_idor = resp_idor_id.data.get("results", resp_idor_id.data)
+        self.assertEqual(len(items_idor), 0)
+
+        resp_idor_slug = self.client.get(f"{url}?fiche={self.fiche_b.slug}")
+        self.assertEqual(resp_idor_slug.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp_idor_slug.data.get("results", resp_idor_slug.data)), 0)
+
+        # 5. Équipe CIAT -> Vue globale
+        self.client.force_authenticate(user=self.coordo)
+        resp_coordo = self.client.get(url)
+        self.assertEqual(resp_coordo.status_code, status.HTTP_200_OK)
+        ids_coordo = [m["id"] for m in resp_coordo.data.get("results", resp_coordo.data)]
+        self.assertIn(self.manif_a.id, ids_coordo)
+        self.assertIn(self.manif_b.id, ids_coordo)
+
+        # 6. POST manifestation sur fiche brouillon -> 404 Not Found
+        url_post_brouillon = f"/api/gallery/fiches/{self.fiche_brouillon.slug}/interet/"
+        resp_post_brouillon = self.client.post(url_post_brouillon, {
+            "nom": "Attaquant",
+            "email": "attaquant@test.sn",
+            "message": "Message sur fiche brouillon",
+        })
+        self.assertEqual(resp_post_brouillon.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_05_securite_donnees_personnelles_export_effacement_et_parametres(self):
+        """GET /api/auth/me/export/ & DELETE /api/auth/me/ : Aucune usurpation d'identité possible."""
+        # 1. Export : Anonyme -> 401
+        self.assertEqual(self.client.get("/api/auth/me/export/").status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Export Porteur A : seules ses données sont exportées
+        self.client.force_authenticate(user=self.porteur_a)
+        resp_export = self.client.get("/api/auth/me/export/")
+        self.assertEqual(resp_export.status_code, status.HTTP_200_OK)
+        self.assertIn("porteur.a@ciat.sn", resp_export.content.decode("utf-8"))
+        self.assertNotIn("porteur.b@ciat.sn", resp_export.content.decode("utf-8"))
+
+        # 3. Paramètre query d'usurpation ?user=
+        resp_tamper = self.client.get(f"/api/auth/me/export/?user={self.porteur_b.id}&id={self.porteur_b.id}")
+        self.assertEqual(resp_tamper.status_code, status.HTTP_200_OK)
+        self.assertNotIn("porteur.b@ciat.sn", resp_tamper.content.decode("utf-8"))
+
+        # 4. Suppression : sans mot de passe ou mauvais mot de passe -> 400 Bad Request
+        resp_del_no_pwd = self.client.delete("/api/auth/me/", {}, format="json")
+        self.assertEqual(resp_del_no_pwd.status_code, status.HTTP_400_BAD_REQUEST)
+
+        resp_del_bad_pwd = self.client.delete("/api/auth/me/", {"password": "MauvaisMotDePasse!"}, format="json")
+        self.assertEqual(resp_del_bad_pwd.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_06_securite_incubateur_calendrier_isolation_et_validation(self):
+        """GET /api/incubator/calendrier/ : Isolation par rôle et étanchéité des événements."""
+        url = "/api/incubator/calendrier/?mois=2026-10"
+
+        # 1. Anonyme -> 401
+        self.assertEqual(self.client.get(url).status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Visiteur et Comité -> tableau vide []
+        for user in [self.visiteur, self.comite]:
+            self.client.force_authenticate(user=user)
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            self.assertEqual(resp.data, [])
+
+        # 3. Porteur A ne voit que les événements de projet_a
+        self.client.force_authenticate(user=self.porteur_a)
+        resp_a = self.client.get(url)
+        self.assertEqual(resp_a.status_code, status.HTTP_200_OK)
+        projets_vus = [ev["projet"] for ev in resp_a.data]
+        self.assertIn(self.projet_a.titre, projets_vus)
+        self.assertNotIn(self.projet_b.titre, projets_vus)
+
+        # 4. Tentative de filtre ?projet= vers un projet tiers
+        resp_tamper = self.client.get(f"{url}&projet={self.projet_b.id}")
+        self.assertEqual(resp_tamper.status_code, status.HTTP_200_OK)
+        projets_tamper = [ev["projet"] for ev in resp_tamper.data]
+        self.assertNotIn(self.projet_b.titre, projets_tamper)
+
+        # 5. Mentor assigné à Alpha : voit Alpha, ne voit pas Beta
+        self.client.force_authenticate(user=self.mentor_a)
+        resp_mentor = self.client.get(url)
+        self.assertEqual(resp_mentor.status_code, status.HTTP_200_OK)
+        projets_mentor = [ev["projet"] for ev in resp_mentor.data]
+        self.assertIn(self.projet_a.titre, projets_mentor)
+        self.assertNotIn(self.projet_b.titre, projets_mentor)
+
+        # 6. Format de mois invalide -> 400 Bad Request sans 500
+        self.client.force_authenticate(user=self.porteur_a)
+        for invalid_mois in ["2026-99", "abc", "2026", ""]:
+            r_inv = self.client.get(f"/api/incubator/calendrier/?mois={invalid_mois}")
+            self.assertEqual(r_inv.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_07_securite_health_check_et_admin_staff_only(self):
+        """GET /api/health/ (public sans fuite) et /admin/ (interdit aux comptes non-staff)."""
+        # 1. Health : 200 public minimaliste
+        resp_health = self.client.get("/api/health/")
+        self.assertEqual(resp_health.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp_health.data.get("status"), "ok")
+        self.assertEqual(resp_health.data.get("database"), "connected")
+        # Zéro fuite de mot de passe, de secret ou de chemin absolu
+        self.assertNotIn("password", str(resp_health.data).lower())
+        self.assertNotIn("Users", str(resp_health.data))
+
+        # 2. Admin Django : 302 Redirection vers login pour tout utilisateur non-staff
+        for user in [None, self.visiteur, self.porteur_a, self.mentor_a, self.comite, self.coordo]:
+            if user:
+                self.client.force_authenticate(user=user)
+            else:
+                self.client.logout()
+            resp_admin = self.client.get("/admin/", follow=False)
+            self.assertEqual(
+                resp_admin.status_code,
+                status.HTTP_302_FOUND,
+                f"L'accès à /admin/ par {getattr(user, 'email', 'Anonyme')} doit rediriger (302)",
+            )
+            self.assertIn("/admin/login/", resp_admin.headers.get("Location", ""))
+
+        # 3. Superuser is_staff connecté en session Django -> 200 OK (ou 302 vers /admin/ si trailing slash requis)
+        self.client.force_login(self.admin_staff)
+        resp_admin_ok = self.client.get("/admin/", follow=True)
+        self.assertEqual(resp_admin_ok.status_code, status.HTTP_200_OK)
+
+    def test_08_securite_jetons_jwt_expires_et_falsifies(self):
+        """Toute requête avec un jeton JWT expiré ou à signature falsifiée est rejetée (401)."""
+        # 1. Jeton expiré
+        token_expire = AccessToken.for_user(self.porteur_a)
+        token_expire.set_exp(lifetime=-datetime.timedelta(days=1))
+        jwt_expire = str(token_expire)
+
+        # 2. Jeton falsifié
+        jwt_falsifie = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalidpayload.tamperedsignature"
+
+        routes_protegees = [
+            "/api/audit/",
+            "/api/notifications/",
+            "/api/gallery/interets/",
+            "/api/auth/me/export/",
+            "/api/incubator/calendrier/?mois=2026-10",
+        ]
+
+        for token in [jwt_expire, jwt_falsifie]:
+            client = APIClient()
+            client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+            for route in routes_protegees:
+                resp = client.get(route)
+                self.assertEqual(
+                    resp.status_code,
+                    status.HTTP_401_UNAUTHORIZED,
+                    f"Route {route} avec jeton invalide/expiré aurait dû renvoyer 401, reçu {resp.status_code}",
+                )
+
