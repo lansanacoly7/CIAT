@@ -58,6 +58,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ["last_name", "first_name"]
+        verbose_name = "Utilisateur"
+        verbose_name_plural = "Utilisateurs"
 
     def __str__(self):
         return self.get_full_name() or self.email
@@ -69,11 +71,13 @@ class User(AbstractUser):
 
 
 class Domaine(models.Model):
-    nom = models.CharField(max_length=120, unique=True)
+    nom = models.CharField(max_length=120, unique=True, verbose_name="Nom du domaine")
     slug = models.SlugField(max_length=140, unique=True, blank=True)
 
     class Meta:
         ordering = ["nom"]
+        verbose_name = "Domaine d'intervention"
+        verbose_name_plural = "Domaines d'intervention"
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -85,13 +89,15 @@ class Domaine(models.Model):
 
 
 class Cohorte(models.Model):
-    nom = models.CharField(max_length=120, unique=True)
-    annee = models.PositiveSmallIntegerField()
-    date_debut = models.DateField(null=True, blank=True)
-    date_fin = models.DateField(null=True, blank=True)
+    nom = models.CharField(max_length=120, unique=True, verbose_name="Nom de la cohorte")
+    annee = models.PositiveSmallIntegerField(verbose_name="Année")
+    date_debut = models.DateField(null=True, blank=True, verbose_name="Date de début")
+    date_fin = models.DateField(null=True, blank=True, verbose_name="Date de fin")
 
     class Meta:
         ordering = ["-annee", "nom"]
+        verbose_name = "Cohorte d'incubation"
+        verbose_name_plural = "Cohortes d'incubation"
 
     def __str__(self):
         return self.nom
@@ -109,26 +115,44 @@ class Projet(models.Model):
         TERMINE = "termine", "Incubation terminée"
         REJETE = "rejete", "Non retenu"
 
-    titre = models.CharField(max_length=200)
-    resume = models.TextField(blank=True)
-    probleme = models.TextField(blank=True)
-    solution = models.TextField(blank=True)
-    domaine = models.ForeignKey(Domaine, on_delete=models.PROTECT, related_name="projets")
+    titre = models.CharField(max_length=200, verbose_name="Titre du projet")
+    resume = models.TextField(blank=True, verbose_name="Résumé")
+    probleme = models.TextField(blank=True, verbose_name="Problème adressé")
+    solution = models.TextField(blank=True, verbose_name="Solution innovante")
+    domaine = models.ForeignKey(
+        Domaine, on_delete=models.PROTECT, related_name="projets", verbose_name="Domaine"
+    )
     cohorte = models.ForeignKey(
-        Cohorte, on_delete=models.SET_NULL, null=True, blank=True, related_name="projets"
+        Cohorte,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projets",
+        verbose_name="Cohorte",
     )
     porteur = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="projets_portes"
+        User, on_delete=models.PROTECT, related_name="projets_portes", verbose_name="Porteur de projet"
     )
     statut = models.CharField(
-        max_length=20, choices=Statut.choices, default=Statut.IDEE, db_index=True
+        max_length=20,
+        choices=Statut.choices,
+        default=Statut.IDEE,
+        db_index=True,
+        verbose_name="Statut du projet",
     )
-    vues = models.PositiveIntegerField(default=0, help_text="Nombre de consultations de la fiche projet.")
-    cree_le = models.DateTimeField(auto_now_add=True, db_index=True)
-    modifie_le = models.DateTimeField(auto_now=True)
+    vues = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Nombre de consultations",
+        help_text="Nombre de consultations de la fiche projet.",
+    )
+    cree_le = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date de création")
+    modifie_le = models.DateTimeField(auto_now=True, verbose_name="Dernière modification")
 
     class Meta:
         ordering = ["-cree_le"]
+        verbose_name = "Projet"
+        verbose_name_plural = "Projets"
+
 
     def __str__(self):
         return self.titre

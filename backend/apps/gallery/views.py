@@ -1,9 +1,10 @@
-"""Vues API pour la Galerie des innovations (P6)."""
+from datetime import timedelta
 from django.db import models
-from django.db.models import F, Q, Sum
+from django.db.models import Count, F, Q, Sum
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
@@ -16,15 +17,20 @@ from apps.core.services import (
     tracer_refus_fiche_galerie,
     tracer_validation_fiche_galerie,
 )
+from apps.core.throttling import GalleryInteretRateThrottle
 
-from .models import FicheInnovation
+from .models import FicheInnovation, ManifestationInteret
+from .emails import envoyer_email_manifestation_interet
 from .exports_pdf import generer_fiche_promotionnelle_pdf
 from .qr import generer_qr_code_png
 from .serializers import (
     FicheInnovationCreateSerializer,
     FicheInnovationSerializer,
+    ManifestationInteretCreateSerializer,
+    ManifestationInteretSerializer,
     StatistiquesGallerySerializer,
 )
+
 
 
 def _est_equipe_ciat(user) -> bool:
@@ -353,7 +359,7 @@ class FicheRefuserView(APIView):
     responses={200: StatistiquesGallerySerializer, 403: dict},
 )
 class StatistiquesGalleryView(APIView):
-    """Statistiques de consultation : total des vues et répartition par fiche."""
+    """Statistiques de consultation : total des vues, total des intérêts et répartition par fiche."""
 
     permission_classes = [IsAuthenticated]
 
@@ -365,12 +371,145 @@ class StatistiquesGalleryView(APIView):
             )
 
         total_vues = FicheInnovation.objects.aggregate(total=Sum("vues"))["total"] or 0
-        par_fiche = list(
-            FicheInnovation.objects.values("slug", "titre", "vues").order_by("-vues")
+        total_interets = ManifestationInteret.objects.count()
+        fiches_stats = (
+            FicheInnovation.objects.annotate(
+                interets=Count("manifestations_interet")
+            )
+            .values("slug", "titre", "vues", "interets")
+            .order_by("-vues")
         )
+        par_fiche = list(fiches_stats)
 
         data = {
             "total_vues": total_vues,
+            "total_interets": total_interets,
             "par_fiche": par_fiche,
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    summary="Manifester son intérêt pour une fiche d'innovation (Public)",
+    request=ManifestationInteretCreateSerializer,
+    responses={
+        201: ManifestationInteretSerializer,
+        400: dict,
+        404: dict,
+        409: dict,
+        429: dict,
+    },
+)
+class ManifestationInteretCreateView(APIView):
+    """Enregistrement d'une manifestation d'intérêt d'un partenaire ou investisseur."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [GalleryInteretRateThrottle]
+
+    def post(self, request, slug):
+        fiche = get_object_or_404(
+            FicheInnovation.objects.select_related("projet", "projet__porteur"),
+            slug=slug,
+            statut=FicheInnovation.Statut.PUBLIE,
+        )
+
+        serializer = ManifestationInteretCreateSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        # Anti-doublon : même email et même fiche dans l'heure
+        une_heure_plus_tot = timezone.now() - timedelta(hours=1)
+        if ManifestationInteret.objects.filter(
+            fiche=fiche,
+            email__iexact=email,
+            cree_le__gte=une_heure_plus_tot,
+        ).exists():
+            return Response(
+                {
+                    "detail": "Une manifestation d'intérêt avec cette adresse email a déjà été enregistrée pour cette fiche au cours de la dernière heure."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        manifestation = ManifestationInteret.objects.create(
+            fiche=fiche,
+            nom=serializer.validated_data["nom"],
+            email=email,
+            organisation=serializer.validated_data.get("organisation", ""),
+            message=serializer.validated_data["message"],
+        )
+
+        # Envoi d'un email de notification au porteur du projet (tolérance absolue aux pannes)
+        envoyer_email_manifestation_interet(manifestation)
+
+        return Response(
+            ManifestationInteretSerializer(manifestation).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(
+    summary="Lister les manifestations d'intérêt (Porteurs et Équipe CIAT)",
+    parameters=[
+        OpenApiParameter(name="fiche", description="Slug ou ID de la fiche", required=False, type=str),
+        OpenApiParameter(name="date", description="Date exacte (AAAA-MM-JJ)", required=False, type=str),
+        OpenApiParameter(name="date_debut", description="Date de début (AAAA-MM-JJ)", required=False, type=str),
+        OpenApiParameter(name="date_fin", description="Date de fin (AAAA-MM-JJ)", required=False, type=str),
+    ],
+    responses={200: ManifestationInteretSerializer(many=True), 403: dict},
+)
+class ManifestationInteretListView(APIView):
+    """Consultation sécurisée des manifestations d'intérêt avec filtres et pagination."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        est_equipe = _est_equipe_ciat(user)
+        est_porteur = getattr(user, "role", None) == Role.PORTEUR
+
+        if not est_equipe and not est_porteur:
+            return Response(
+                {"detail": "Accès réservé aux porteurs de projet et à l'équipe CIAT."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if est_equipe:
+            queryset = ManifestationInteret.objects.select_related("fiche", "fiche__projet").all()
+        else:
+            queryset = ManifestationInteret.objects.filter(
+                fiche__projet__porteur=user
+            ).select_related("fiche", "fiche__projet")
+
+        # Filtres
+        fiche_param = request.query_params.get("fiche")
+        if fiche_param:
+            if fiche_param.isdigit():
+                queryset = queryset.filter(fiche_id=int(fiche_param))
+            else:
+                queryset = queryset.filter(fiche__slug=fiche_param)
+
+        date_exacte = request.query_params.get("date")
+        if date_exacte:
+            queryset = queryset.filter(cree_le__date=date_exacte)
+
+        date_debut = request.query_params.get("date_debut")
+        if date_debut:
+            queryset = queryset.filter(cree_le__date__gte=date_debut)
+
+        date_fin = request.query_params.get("date_fin")
+        if date_fin:
+            queryset = queryset.filter(cree_le__date__lte=date_fin)
+
+        queryset = queryset.order_by("-cree_le")
+
+        paginator = StandardResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        if page is not None:
+            serializer = ManifestationInteretSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = ManifestationInteretSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
