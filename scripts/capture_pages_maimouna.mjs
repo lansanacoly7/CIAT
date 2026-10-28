@@ -7,10 +7,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const OUT_DIR = path.resolve(ROOT_DIR, "docs", "maquettes");
-const ARTIFACTS_DIR = "C:\\Users\\pc\\.gemini\\antigravity-ide\\brain\\3f5932c3-7a0a-4973-9201-9e4e63fb70ac";
+const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || path.resolve(ROOT_DIR, "docs", "maquettes");
 
 const BASE_URL = "http://localhost:3000";
 const API_URL = "http://localhost:8000/api";
+
+function safeCopyArtifact(srcPath, destFileName) {
+  if (ARTIFACTS_DIR && fs.existsSync(ARTIFACTS_DIR)) {
+    try {
+      const destPath = path.join(ARTIFACTS_DIR, destFileName);
+      if (path.resolve(srcPath) !== path.resolve(destPath)) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    } catch (e) {
+      console.warn(`Copie vers artifacts ignorée (${e.message})`);
+    }
+  }
+}
 
 async function fetchTokens(email = "porteur@ciat.sn", password = "Ciat2026!") {
   const res = await fetch(`${API_URL}/auth/token/`, {
@@ -53,6 +66,19 @@ const PAGES_MAIMOUNA = [
     fullPage: false,
   },
   {
+    id: "02b_modale_suppression",
+    title: "Modale de confirmation de retrait / suppression de projet",
+    route: "/incubateur/projets",
+    fullPage: false,
+    async action(page) {
+      const btn = page.locator("button:has(svg.lucide-trash-2), button:has(svg.lucide-undo-2)").first();
+      if (await btn.isVisible({ timeout: 4000 }).catch(() => false)) {
+        await btn.click();
+        await page.waitForTimeout(600);
+      }
+    },
+  },
+  {
     id: "03_projet_detail",
     title: "Fiche détaillée d'un projet & Suivi",
     route: "/incubateur/projets/67",
@@ -74,6 +100,12 @@ const PAGES_MAIMOUNA = [
     id: "06_assistant_ia",
     title: "Assistant IA du CIAT",
     route: "/assistant",
+    fullPage: false,
+  },
+  {
+    id: "07_calendrier",
+    title: "Calendrier des jalons & objectifs (Incubateur)",
+    route: "/incubateur/calendrier",
     fullPage: false,
   },
 ];
@@ -110,17 +142,20 @@ async function run() {
       await page.waitForTimeout(1500);
       await cleanDevOverlays(page);
 
+      if (typeof pageConfig.action === "function") {
+        await pageConfig.action(page);
+      }
+
       const desktopFileName = `${pageConfig.id}_desktop.png`;
       const desktopPath = path.resolve(OUT_DIR, desktopFileName);
       await page.screenshot({ path: desktopPath, fullPage: pageConfig.fullPage });
       console.log(`  ✅ Desktop ok: ${desktopFileName}`);
 
-      // Copie vers dossier artifacts
-      fs.copyFileSync(desktopPath, path.join(ARTIFACTS_DIR, desktopFileName));
+      safeCopyArtifact(desktopPath, desktopFileName);
       await context.close();
     }
 
-    // 2. Mobile (390 x 844)
+    // 2. Mobile (390 x 844) - Vue de face pure iPhone 12/13/14 sans mockup
     {
       const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
@@ -142,13 +177,16 @@ async function run() {
       await page.waitForTimeout(1500);
       await cleanDevOverlays(page);
 
+      if (typeof pageConfig.action === "function") {
+        await pageConfig.action(page);
+      }
+
       const mobileFileName = `${pageConfig.id}_mobile.png`;
       const mobilePath = path.resolve(OUT_DIR, mobileFileName);
       await page.screenshot({ path: mobilePath, fullPage: pageConfig.fullPage });
       console.log(`  ✅ Mobile ok: ${mobileFileName}`);
 
-      // Copie vers dossier artifacts
-      fs.copyFileSync(mobilePath, path.join(ARTIFACTS_DIR, mobileFileName));
+      safeCopyArtifact(mobilePath, mobileFileName);
       await context.close();
     }
   }

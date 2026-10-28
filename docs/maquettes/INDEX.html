@@ -174,7 +174,7 @@
       transition: transform 0.2s;
     }
     .mobile-img-wrap {
-      max-width: 320px;
+      max-width: 390px;
       margin: 0 auto;
     }
   </style>
@@ -184,11 +184,11 @@
   <header>
     <div class="header-content">
       <div class="badge-status">
-        ✓ Synchronisé avec origin/test & dev-maimouna (Commit 9047cbb)
+        ✓ Synchronisé avec origin/test & dev-maimouna (Phases 8 à 11)
       </div>
-      <h1>Revue des 6 Écrans — Espace Candidat & Porteur de Projet</h1>
+      <h1>Revue des 8 Vues & Modales — Espace Candidat & Porteur de Projet</h1>
       <p class="subtitle">
-        Validation visuelle officielle des pages développées par Maimouna Sall pour le CIAT. Toutes les captures sont certifiées conformes au rôle <strong>Porteur de projet</strong> (session <code>porteur@ciat.sn</code>).
+        Validation visuelle officielle des pages de l'espace porteur développées pour le CIAT, incluant la vue Calendrier et la modale de suppression/retrait. Toutes les captures sont certifiées conformes au rôle <strong>Porteur de projet</strong> (session <code>porteur@ciat.sn</code>) en résolutions Desktop (1440 × 900) et Mobile (390 × 844 px).
       </p>
 
       <div class="meta-grid">
@@ -197,16 +197,16 @@
           <div class="meta-val">porteur@ciat.sn (Rôle Porteur)</div>
         </div>
         <div class="meta-card">
-          <div class="meta-label">Projet Porté en Démo</div>
-          <div class="meta-val">ID 67 — Projet Pilote CIAT</div>
+          <div class="meta-label">Format Mobile Normé</div>
+          <div class="meta-val">390 × 844 px (iPhone 12/13/14)</div>
         </div>
         <div class="meta-card">
           <div class="meta-label">Sidebar Actif</div>
-          <div class="meta-val">Espace Candidat (4 rubriques exclusives)</div>
+          <div class="meta-val">Espace Candidat (Accès direct & Navigation fluide)</div>
         </div>
         <div class="meta-card">
-          <div class="meta-label">Date & Commit</div>
-          <div class="meta-val">27 Octobre 2026 — 9047cbb</div>
+          <div class="meta-label">Statut & Écrans</div>
+          <div class="meta-val">8 vues validées (16 captures Desktop/Mobile)</div>
         </div>
       </div>
     </div>
@@ -287,6 +287,42 @@
           </div>
           <div class="img-wrap mobile-img-wrap">
             <img src="02_suivi_projets_mobile.png" alt="Suivi des projets Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 2b -->
+    <article class="screen-block" id="screen-2b">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">2b</div>
+          <div>
+            <h2 class="screen-title">Modale de confirmation de retrait / suppression</h2>
+            <span class="screen-route">/incubateur/projets (Modale DeleteProjectModal)</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Composant sécurisé <code>DeleteProjectModal</code> (intégré via React <code>createPortal</code> au viewport) : permet au porteur de retirer une candidature déposée ou de supprimer un brouillon à l'état d'idée, avec avertissement explicite, centrage absolu sur Desktop et Mobile, et protection des projets déjà validés.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="02b_modale_suppression_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="02b_modale_suppression_desktop.png" alt="Modale suppression Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="02b_modale_suppression_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="02b_modale_suppression_mobile.png" alt="Modale suppression Mobile" loading="lazy">
           </div>
         </div>
       </div>
@@ -431,6 +467,42 @@
           </div>
           <div class="img-wrap mobile-img-wrap">
             <img src="06_assistant_ia_mobile.png" alt="Assistant IA Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 7 -->
+    <article class="screen-block" id="screen-7">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">7</div>
+          <div>
+            <h2 class="screen-title">Calendrier des jalons & objectifs (Incubateur)</h2>
+            <span class="screen-route">/incubateur/calendrier</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Vue calendaire mensuelle dédiée à la planification des jalons et objectifs d'incubation. Consomme l'API <code>/api/incubator/calendrier/</code>, met en relief les alertes de retard, offre un bandeau KPI synthétique, et s'adapte en vue liste quotidienne verticale sur écran mobile 390 × 844 px.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="07_calendrier_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="07_calendrier_desktop.png" alt="Calendrier Incubateur Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="07_calendrier_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="07_calendrier_mobile.png" alt="Calendrier Incubateur Mobile" loading="lazy">
           </div>
         </div>
       </div>
