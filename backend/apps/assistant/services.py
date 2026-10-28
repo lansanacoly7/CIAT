@@ -28,6 +28,42 @@ AVERTISSEMENT_IA_STANDARD = (
     "Réponse générée par l'intelligence artificielle du CIAT à titre informatif."
 )
 
+_SALUTATIONS = ("salut", "bonjour", "bonsoir", "hello", "hey", "coucou", "slt", "bjr", "yo", "salam", "salutations")
+_REMERCIEMENTS = ("merci", "thanks", "thank you")
+_AU_REVOIR = ("au revoir", "a bientot", "bye", "ciao", "a plus")
+_AIDE = ("aide", "aidez moi", "qui es tu", "qui etes vous", "que peux tu faire", "que sais tu faire", "tu fais quoi", "ca va", "comment vas tu", "comment ca va")
+
+SUGGESTIONS_ASSISTANT = (
+    "Je réponds à partir des documents officiels du CIAT. Vous pouvez par exemple me demander : "
+    "« Comment déposer un dossier de candidature ? », « Quelles pièces sont demandées pour être incubé ? » "
+    "ou « Comment se passe l'évaluation du dossier ? »."
+)
+
+
+def reponse_conversationnelle(texte: str) -> str | None:
+    """Répond aux formules de politesse (salutations, remerciements, aide) sans consulter les documents.
+
+    Une salutation n'est pas une question documentaire : la traiter comme telle produisait un faux
+    refus (« votre message ne contient pas de question »). Réponse déterministe, sans appel au
+    modèle, donc sans risque d'invention ; aucune source n'est renvoyée.
+    """
+    import re
+    import unicodedata
+
+    norm = unicodedata.normalize("NFD", texte or "").encode("ascii", "ignore").decode().lower()
+    norm = re.sub(r"[^a-z0-9 ]+", " ", norm)
+    norm = " ".join(norm.split())
+    if not norm or len(norm.split()) > 6:
+        return None
+    mots = norm.split()
+    if any(norm == k or norm.startswith(k + " ") for k in _REMERCIEMENTS):
+        return "Avec plaisir ! N'hésitez pas si vous avez une autre question sur le CIAT. " + SUGGESTIONS_ASSISTANT
+    if any(k in norm for k in _AU_REVOIR):
+        return "À bientôt ! Je reste disponible pour toute question sur le CIAT."
+    if mots[0] in _SALUTATIONS or any(norm == k or k in norm for k in _AIDE):
+        return "Bonjour ! Je suis l'assistant du CIAT, le Centre d'Innovation, d'Application et de Transfert de l'ISEP Amadou Trawaré. " + SUGGESTIONS_ASSISTANT
+    return None
+
 MESSAGE_REFUS_DOCUMENTS = (
     "Désolé, les documents publics du CIAT ne contiennent pas d'information "
     "permettant de répondre à cette question."
@@ -456,10 +492,15 @@ def traiter_message_assistant(
         if not PassageDocument.objects.exists() and DocumentPublic.objects.exists():
             indexer_documents_publics()
 
-        passages = rechercher_passages(contenu_utilisateur)
+        reponse_accueil = reponse_conversationnelle(contenu_utilisateur)
+        passages = [] if reponse_accueil else rechercher_passages(contenu_utilisateur)
 
+        # Politesse : réponse directe, sans source et sans faux refus
+        if reponse_accueil:
+            reponse_texte = reponse_accueil
+            sources = []
         # Le refus immédiat sans appel au modèle ne reste que si aucun passage n'existe du tout
-        if not passages:
+        elif not passages:
             reponse_texte = MESSAGE_REFUS_DOCUMENTS
             sources = []
         else:
