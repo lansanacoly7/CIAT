@@ -81,6 +81,9 @@ export interface Dossier {
   pieces: Piece[];
   pieces_manquantes: PieceType[];
   soumis_le: string | null;
+  motif?: string;
+  motif_refus?: string;
+  decision?: { decision: string; motif: string; cree_le?: string } | null;
 }
 
 /**

@@ -72,11 +72,13 @@ export default function DossierDetailCard({
   evaluations,
   evaluationsLoading,
   evaluationsError,
+  showEvaluations = true,
 }: {
   dossier: DossierEval;
   evaluations: EvaluationsSummary | null;
   evaluationsLoading: boolean;
   evaluationsError: string | null;
+  showEvaluations?: boolean;
 }) {
   const { projet } = dossier;
   const score = evaluations?.score_moyen ?? dossier.score_moyen;
@@ -249,79 +251,81 @@ export default function DossierDetailCard({
       </SectionCard>
 
       {/* Évaluations du comité */}
-      <SectionCard
-        icon={MessageSquare}
-        title="Évaluations du comité"
-        badge={
-          evaluations && evaluations.evaluations.length > 0 ? (
-            <span className="rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2.5 py-0.5 text-xs font-bold text-[#612D10]">
-              {evaluations.evaluations.length} avis émis
-            </span>
-          ) : null
-        }
-      >
-        {evaluationsLoading ? (
-          <div className="flex items-center justify-center py-6 gap-2 text-sm text-[#8C5E2D]">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C99A68] border-t-transparent" />
-            <span>Chargement des évaluations…</span>
-          </div>
-        ) : evaluationsError ? (
-          <div
-            role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700"
-          >
-            {evaluationsError}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF7F2]/70 border border-[#EFE4D6]">
-              <span className="text-xs font-semibold text-[#8C5E2D]">
-                Score moyen consolidé du jury :
+      {showEvaluations && (
+        <SectionCard
+          icon={MessageSquare}
+          title="Évaluations du comité"
+          badge={
+            evaluations && evaluations.evaluations.length > 0 ? (
+              <span className="rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2.5 py-0.5 text-xs font-bold text-[#612D10]">
+                {evaluations.evaluations.length} avis émis
               </span>
-              <strong className="text-base font-extrabold text-[#612D10]">
-                {evaluations?.score_moyen == null ? "En attente" : `${evaluations.score_moyen.toFixed(1)} / 100`}
-              </strong>
+            ) : null
+          }
+        >
+          {evaluationsLoading ? (
+            <div className="flex items-center justify-center py-6 gap-2 text-sm text-[#8C5E2D]">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C99A68] border-t-transparent" />
+              <span>Chargement des évaluations…</span>
             </div>
+          ) : evaluationsError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+            >
+              {evaluationsError}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF7F2]/70 border border-[#EFE4D6]">
+                <span className="text-xs font-semibold text-[#8C5E2D]">
+                  Score moyen consolidé du jury :
+                </span>
+                <strong className="text-base font-extrabold text-[#612D10]">
+                  {evaluations?.score_moyen == null ? "En attente" : `${evaluations.score_moyen.toFixed(1)} / 100`}
+                </strong>
+              </div>
 
-            {evaluations && evaluations.evaluations.length > 0 ? (
-              <ul className="space-y-3">
-                {evaluations.evaluations.map((ev, i) => (
-                  <li
-                    key={ev.id ?? i}
-                    className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs space-y-2"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 font-bold text-[#24140D]">
-                        <User className="h-3.5 w-3.5 text-[#C99A68]" />
-                        <span>{ev.evaluateur_nom || `Évaluateur ${i + 1}`}</span>
+              {evaluations && evaluations.evaluations.length > 0 ? (
+                <ul className="space-y-3">
+                  {evaluations.evaluations.map((ev, i) => (
+                    <li
+                      key={ev.id ?? i}
+                      className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 font-bold text-[#24140D]">
+                          <User className="h-3.5 w-3.5 text-[#C99A68]" />
+                          <span>{ev.evaluateur_nom || `Évaluateur ${i + 1}`}</span>
+                        </div>
+                        {ev.score != null && (
+                          <span className="rounded-full bg-[#E3F1E9] px-2.5 py-0.5 text-xs font-extrabold text-[#2E7D32]">
+                            Score : {Number(ev.score).toFixed(1)}/100
+                          </span>
+                        )}
                       </div>
-                      {ev.score != null && (
-                        <span className="rounded-full bg-[#E3F1E9] px-2.5 py-0.5 text-xs font-extrabold text-[#2E7D32]">
-                          Score : {Number(ev.score).toFixed(1)}/100
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-[#24140D] leading-relaxed whitespace-pre-line bg-[#FAF7F2]/50 rounded-lg p-2.5 border border-[#EFE4D6]/50">
-                      {ev.avis?.trim() || (
-                        <span className="italic text-[#8C5E2D]">Aucun avis textuel rédigé.</span>
-                      )}
-                    </p>
-                    {ev.cree_le && (
-                      <p className="text-[10px] text-[#8C5E2D] text-right">
-                        Évalué le {formatDate(ev.cree_le)}
+                      <p className="text-xs text-[#24140D] leading-relaxed whitespace-pre-line bg-[#FAF7F2]/50 rounded-lg p-2.5 border border-[#EFE4D6]/50">
+                        {ev.avis?.trim() || (
+                          <span className="italic text-[#8C5E2D]">Aucun avis textuel rédigé.</span>
+                        )}
                       </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center py-4 text-xs italic text-[#8C5E2D]">
-                Aucune évaluation enregistrée pour le moment. Vous pouvez être le premier à noter ce projet ci-dessous.
-              </p>
-            )}
-          </div>
-        )}
-      </SectionCard>
+                      {ev.cree_le && (
+                        <p className="text-[10px] text-[#8C5E2D] text-right">
+                          Évalué le {formatDate(ev.cree_le)}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-center py-4 text-xs italic text-[#8C5E2D]">
+                  Aucune évaluation enregistrée pour le moment. Vous pouvez être le premier à noter ce projet ci-dessous.
+                </p>
+              )}
+            </div>
+          )}
+        </SectionCard>
+      )}
     </div>
   );
 }

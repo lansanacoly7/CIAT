@@ -56,10 +56,10 @@ export function StatutBadge({ statut }: { statut: DossierStatut }) {
 
 const FILTERS: { value: DossierStatut | "tous"; label: string }[] = [
   { value: "tous", label: "Tous" },
-  { value: "soumis", label: "Soumis" },
-  { value: "en_evaluation", label: "En évaluation" },
-  { value: "accepte", label: "Accepté" },
-  { value: "refuse", label: "Refusé" },
+  { value: "soumis", label: "1. À instruire" },
+  { value: "en_evaluation", label: "2. En jury" },
+  { value: "accepte", label: "3. Retenus" },
+  { value: "refuse", label: "Non retenus" },
 ];
 
 export function formatDate(iso: string | null) {
@@ -295,9 +295,30 @@ export default function EvaluationDossierList({
                   >
                     {/* Ligne 1 : Titre & Statut */}
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-[family-name:var(--font-title)] text-sm font-bold text-[#612D10] leading-snug group-hover:text-[#3F1D0A]">
-                        {d.projet.titre}
-                      </h4>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {d.statut === "soumis" ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                              Étape 1 • Instruction
+                            </span>
+                          ) : d.statut === "en_evaluation" ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                              Étape 2 • En jury
+                            </span>
+                          ) : d.statut === "accepte" ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              Étape 3 • Admis
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-800 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                              Étape 3 • Refusé
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-[family-name:var(--font-title)] text-sm font-bold text-[#612D10] leading-snug group-hover:text-[#3F1D0A]">
+                          {d.projet.titre}
+                        </h4>
+                      </div>
                       <div className="shrink-0">
                         <StatutBadge statut={d.statut} />
                       </div>
