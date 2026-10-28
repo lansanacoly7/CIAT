@@ -27,16 +27,16 @@ export function FinancesCard({
   return (
     <section
       aria-labelledby="finances-heading"
-      className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-3 sm:px-4 py-2.5 transition hover:shadow-[0_2px_8px_rgba(60,35,20,0.04)] sm:max-h-[80px] overflow-hidden"
+      className="rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-3.5 sm:px-4 py-3 sm:py-2.5 transition hover:shadow-[0_2px_8px_rgba(60,35,20,0.04)] overflow-hidden"
     >
       <h2 id="finances-heading" className="sr-only">
         Synthèse financière et partenariats
       </h2>
 
-      <div className="overflow-x-auto no-scrollbar -mx-1 px-1 h-full">
-        <div className="grid grid-cols-3 divide-x divide-[rgba(60,35,20,0.08)] h-full items-center min-w-[460px] sm:min-w-0">
+      <div className="h-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(60,35,20,0.08)] gap-3 sm:gap-0 h-full items-center">
           {/* Cellule 1 : Fonds mobilisés */}
-          <div className="px-3 sm:px-4 flex flex-col justify-center">
+          <div className="sm:px-4 flex flex-col justify-center">
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="font-sans text-[20px] sm:text-[24px] font-semibold leading-none tracking-[-0.02em] text-[#21130D] tabular-nums">
                 {formatNumber(totalMillions)} M
@@ -49,7 +49,7 @@ export function FinancesCard({
           </div>
 
           {/* Cellule 2 : Fonds décaissés + fine barre 4px */}
-          <div className="px-3 sm:px-4 flex flex-col justify-center">
+          <div className="pt-2 sm:pt-0 sm:px-4 flex flex-col justify-center">
             <div className="flex items-baseline justify-between gap-2 flex-wrap">
               <div className="flex items-baseline gap-1.5">
                 <span className="font-sans text-[20px] sm:text-[24px] font-semibold leading-none tracking-[-0.02em] text-[#21130D] tabular-nums">
@@ -72,7 +72,7 @@ export function FinancesCard({
           </div>
 
           {/* Cellule 3 : Partenariats actifs */}
-          <div className="px-3 sm:px-4 flex items-center justify-between">
+          <div className="pt-2 sm:pt-0 sm:px-4 flex items-center justify-between">
             <div className="flex flex-col justify-center">
               <div className="flex items-baseline gap-1.5">
                 <span className="font-sans text-[20px] sm:text-[24px] font-semibold leading-none tracking-[-0.02em] text-[#21130D] tabular-nums">
@@ -88,7 +88,7 @@ export function FinancesCard({
               <button
                 type="button"
                 onClick={() => onNavigateTab("financements")}
-                className="text-[12px] font-medium text-[#C99A68] hover:text-[#21130D] transition hidden sm:inline-flex items-center gap-0.5"
+                className="text-[12px] font-medium text-[#C99A68] hover:text-[#21130D] transition inline-flex items-center gap-0.5 min-h-[36px] min-w-[36px]"
               >
                 <span>Détails</span>
                 <span aria-hidden="true">&rarr;</span>

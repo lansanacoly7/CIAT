@@ -92,30 +92,30 @@ export function EntonnoirCard({ indicateurs, onFilterStatut }: EntonnoirCardProp
         Entonnoir de maturation des projets
       </h2>
 
-      {/* Grille horizontale de 5 colonnes avec pastilles de conversion intercalées */}
-      <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
-        <div className="flex items-center justify-between gap-1 sm:gap-2 min-w-[520px] sm:min-w-full">
+      {/* Grille horizontale de 5 colonnes adaptative (sans débordement horizontal) */}
+      <div className="w-full">
+        <div className="flex items-center justify-between gap-1 sm:gap-2 w-full">
           {steps.map((step, index) => {
             const ratioPercent = Math.min(100, Math.max(8, (step.count / baseCount) * 100));
             const conv = index < 4 ? conversionRates[index] : null;
 
             return (
-              <div key={step.id} className="flex-1 shrink-0 flex items-center min-w-[95px] sm:min-w-0">
+              <div key={step.id} className="flex-1 min-w-0 flex items-center">
               {/* Colonne cliquable */}
               <button
                 type="button"
                 onClick={() => onFilterStatut?.(step.statut)}
                 title={step.description}
-                className="group flex-1 flex flex-col justify-between text-left p-1.5 sm:p-2 rounded-lg transition hover:bg-[#FBF8F3] focus:outline-hidden focus:ring-1 focus:ring-[#C99A68]"
+                className="group flex-1 flex flex-col justify-between text-left p-1 sm:p-2 rounded-lg transition hover:bg-[#FBF8F3] focus:outline-hidden focus:ring-1 focus:ring-[#C99A68] min-w-0"
               >
-                {/* Ligne 1 : Libellé 12 px nowrap */}
-                <span className="text-[12px] font-medium text-[#5A4B42] whitespace-nowrap group-hover:text-[#21130D]">
+                {/* Ligne 1 : Libellé compact */}
+                <span className="text-[10px] sm:text-[12px] font-medium text-[#5A4B42] truncate group-hover:text-[#21130D]">
                   {step.label}
                 </span>
 
-                {/* Ligne 2 : Valeur 28 px sans-serif font-600 tabular-nums */}
-                <div className="my-1 flex items-baseline">
-                  <span className="font-sans text-[24px] sm:text-[28px] font-semibold leading-none tracking-[-0.02em] text-[#21130D] tabular-nums">
+                {/* Ligne 2 : Valeur proportionnelle */}
+                <div className="my-0.5 sm:my-1 flex items-baseline">
+                  <span className="font-sans text-[18px] sm:text-[28px] font-semibold leading-none tracking-[-0.02em] text-[#21130D] tabular-nums">
                     {formatNumber(step.count)}
                   </span>
                 </div>

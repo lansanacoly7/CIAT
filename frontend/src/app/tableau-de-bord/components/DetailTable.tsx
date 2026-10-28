@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useSyncExternalStore } from "react";
+import { useMemo, useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUpDown,
@@ -59,12 +59,58 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   // État de la modale d'historique des fonds
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<HistoryFilterType>("all");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
 
-  // Fermeture par touche Échap
+  // Focus trap et restauration du focus
+  useEffect(() => {
+    if (isHistoryModalOpen) {
+      lastFocusedElementRef.current = document.activeElement as HTMLElement;
+      const timer = setTimeout(() => {
+        const closeBtn = modalRef.current?.querySelector<HTMLElement>("#close-history-modal-btn");
+        if (closeBtn) {
+          closeBtn.focus();
+        } else {
+          const focusables = modalRef.current?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusables && focusables.length > 0) focusables[0].focus();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    } else if (lastFocusedElementRef.current) {
+      lastFocusedElementRef.current.focus();
+    }
+  }, [isHistoryModalOpen]);
+
+  // Fermeture par touche Échap et piégeage strict du focus (Tab / Shift+Tab)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isHistoryModalOpen) {
+      if (!isHistoryModalOpen) return;
+      if (e.key === "Escape") {
         setIsHistoryModalOpen(false);
+        return;
+      }
+      if (e.key === "Tab" && modalRef.current) {
+        const focusables = Array.from(
+          modalRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((el) => el.offsetParent !== null);
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !modalRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !modalRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -81,6 +127,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       };
     }
   }, [isHistoryModalOpen]);
+
 
   // Statistiques synthétiques au sommet du Registre
   const stats = useMemo(() => {
@@ -336,13 +383,13 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
   return (
     <div className="space-y-5">
-      {/* 1. Bandeau de 4 KPI décisionnels cliquables ouvrant l'historique des fonds */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* 1. Bandeau de 4 KPI décisionnels cliquables ouvrant l'historique des fonds (1 colonne sur mobile) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* KPI 1 : Engagements totaux -> Ouvre l'historique global */}
         <button
           type="button"
           onClick={() => handleOpenHistory("all")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20"
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20 min-h-[44px]"
           title="Cliquer pour consulter l'historique chronologique de tous les engagements"
         >
           <div className="flex items-center justify-between text-[#8C6D4F] w-full">
@@ -369,7 +416,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         <button
           type="button"
           onClick={() => handleOpenHistory("decaisse")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#2E7D32] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#2E7D32]/20"
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#2E7D32] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#2E7D32]/20 min-h-[44px]"
           title="Cliquer pour consulter l'historique des décaissements effectifs"
         >
           <div className="flex items-center justify-between text-[#8C6D4F] w-full">
@@ -401,7 +448,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         <button
           type="button"
           onClick={() => handleOpenHistory("all")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20"
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20 min-h-[44px]"
           title="Cliquer pour consulter l'historique complet des dossiers"
         >
           <div className="flex items-center justify-between text-[#8C6D4F] w-full">
@@ -428,7 +475,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         <button
           type="button"
           onClick={() => handleOpenHistory("accorde")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#4A6B82] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#4A6B82]/20"
+          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#4A6B82] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#4A6B82]/20 min-h-[44px]"
           title="Cliquer pour consulter l'historique des accords et guichets"
         >
           <div className="flex items-center justify-between text-[#8C6D4F] w-full">
@@ -453,11 +500,11 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       </div>
 
       {/* 2. Cadre principal du Registre : Barre d'outils + Tableau + Pagination */}
-      <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs space-y-4">
+      <div className="rounded-2xl border border-[#EFE4D6] bg-white p-3.5 sm:p-5 shadow-2xs space-y-4">
         {/* Barre d'outils du tableau : Recherche + Filtres Statut Rapides + PageSize */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE4D6] pb-4">
           {/* Recherche avec bouton de réinitialisation rapide */}
-          <div className="relative min-w-[260px] flex-1 max-w-sm">
+          <div className="relative w-full sm:min-w-[260px] sm:flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#8C5E2D]" />
             <input
               type="text"
@@ -468,7 +515,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
               }}
               aria-label="Rechercher par projet, porteur ou guichet"
               placeholder="Rechercher un projet, porteur, guichet..."
-              className="w-full h-9 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] pl-9 pr-8 text-xs font-medium text-[#21130D] placeholder:text-[#6B5646] transition focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/10"
+              className="w-full h-10 sm:h-9 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] pl-9 pr-8 text-xs font-medium text-[#21130D] placeholder:text-[#6B5646] transition focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/10"
             />
             {searchTerm && (
               <button
@@ -477,7 +524,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                   setSearchTerm("");
                   setCurrentPage(1);
                 }}
-                className="absolute right-2.5 top-2.5 text-[#6B5646] hover:text-[#21130D]"
+                className="absolute right-2.5 top-2.5 text-[#6B5646] hover:text-[#21130D] min-h-[32px] min-w-[32px] flex items-center justify-center"
                 aria-label="Effacer la recherche"
               >
                 <X className="h-4 w-4" />
@@ -486,7 +533,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
           </div>
 
           {/* Filtres rapides statut avec compteurs */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
             {[
               { key: "all", label: "Tous", count: statusCounts.all },
               { key: "decaisse", label: "Décaissés", count: statusCounts.decaisse },
@@ -503,7 +550,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                     setSelectedStatut(pill.key);
                     setCurrentPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 sm:py-1.5 text-xs transition-all min-h-[38px] sm:min-h-0 ${
                     isActive
                       ? "bg-[#21130D] text-white shadow-xs font-semibold"
                       : "border border-[#EFE4D6] bg-[#FAF7F2] text-[#6B5646] hover:bg-white hover:text-[#21130D] font-medium"
@@ -534,7 +581,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
                 setCurrentPage(1);
               }}
               aria-label="Nombre de lignes par page"
-              className="h-8 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-xs font-semibold text-[#21130D] focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden"
+              className="h-9 sm:h-8 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-xs font-semibold text-[#21130D] focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -543,8 +590,86 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
           </div>
         </div>
 
-        {/* Table avec mise en page stricte : table-layout: fixed, largeurs proportionnelles, min-w-[820px] avec défilement fluide */}
-        <div className="relative overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
+        {/* ── VUE CARTES EMPILÉES SUR MOBILE (< 640px) ── */}
+        <div className="block sm:hidden space-y-3">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 animate-pulse" />
+            ))
+          ) : paginatedData.length === 0 ? (
+            <div className="py-10 text-center text-xs text-[#6B5646] rounded-xl border border-dashed border-[#EFE4D6] p-4">
+              <FileText className="h-8 w-8 text-[#8C5E2D]/40 mx-auto mb-2" />
+              <p className="font-semibold text-[#21130D]">Aucun enregistrement ne correspond aux critères</p>
+              <p className="text-[11px] text-[#8C6D4F] mt-0.5">Modifiez votre recherche ou réinitialisez les filtres.</p>
+            </div>
+          ) : (
+            paginatedData.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-xl border border-[#EFE4D6] bg-white p-3.5 shadow-2xs space-y-2.5 transition hover:border-[#8C5E2D]/40"
+              >
+                {/* Ligne 1 : Titre + Domaine */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5 flex-1 min-w-0">
+                    <h4 className="text-[13.5px] font-semibold text-[#21130D] leading-snug line-clamp-2">
+                      {row.projet_titre || "Projet CIAT"}
+                    </h4>
+                    <div className="text-[11px] text-[#6B5646] truncate">
+                      {row.porteur_nom || "Porteur non renseigné"}
+                      {row.cohorte && (
+                        <span className="ml-1.5 rounded-md border border-[#EFE4D6] bg-[#FAF7F2] px-1.5 py-0.2 text-[10px] font-semibold text-[#8C5E2D]">
+                          {row.cohorte}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2 py-0.5 text-[10px] font-medium text-[#612D10]">
+                    {getDomaineShortLabel(row.domaine)}
+                  </span>
+                </div>
+
+                {/* Ligne 2 : Source & Date */}
+                <div className="flex items-center justify-between text-[11px] text-[#6B5646] border-t border-[#EFE4D6]/60 pt-2">
+                  <span className="truncate max-w-[190px] font-medium text-[#612D10]">
+                    {row.source || "Fonds CIAT"}
+                  </span>
+                  <span className="font-mono tabular-nums text-[#8C6D4F]">
+                    {formatDate(row.date)}
+                  </span>
+                </div>
+
+                {/* Ligne 3 : Statut badge + Montant mis en valeur */}
+                <div className="flex items-center justify-between pt-1">
+                  <div>{getStatusBadge(row.statut, row.statut_display)}</div>
+                  <div className="text-right">
+                    <span className="font-sans text-[15px] font-bold text-[#21130D] tabular-nums">
+                      {formatNumber(Number(row.montant) || 0)}
+                    </span>
+                    <span className="ml-1 text-[11px] font-normal text-[#8C6D4F]">FCFA</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Total filtré mobile */}
+          {filteredData.length > 0 && (
+            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-3 text-xs flex items-center justify-between">
+              <span className="font-semibold text-[#612D10] text-[11px] uppercase tracking-wider">
+                Total filtré ({filteredData.length} dos.)
+              </span>
+              <div className="text-right">
+                <span className="font-sans text-base font-black text-[#612D10] tabular-nums">
+                  {formatNumber(totalAmount)}
+                </span>
+                <span className="ml-1 text-xs font-semibold text-[#8C5E2D]">FCFA</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── VUE TABLEAU TABLE-FIXED SUR ÉCRAN >= 640px (DESKTOP / TABLETTE) ── */}
+        <div className="hidden sm:block relative overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
           <table className="w-full text-left text-xs table-fixed min-w-[820px]">
             <colgroup>
               <col className="w-[30%]" />
@@ -845,13 +970,13 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
         </div>
       </div>
 
-      {/* 3. MODALE D'HISTORIQUE — SPLIT LAYOUT VIA REACT PORTAL (100% centrée au viewport) */}
+      {/* 3. MODALE D'HISTORIQUE — SPLIT LAYOUT VIA REACT PORTAL (Plein écran sur mobile, 100% centrée au viewport) */}
       {mounted && isHistoryModalOpen && typeof document !== "undefined" && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="history-modal-title"
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 md:p-6"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-0 sm:p-5 md:p-6"
           style={{
             position: "fixed",
             top: 0,
@@ -877,43 +1002,42 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             aria-hidden="true"
           />
 
-          {/* Carte modale centrée avec hauteur définie pour le layout split */}
+          {/* Carte modale centrée (plein écran sur mobile 390px, centrée sur desktop) */}
           <div
-            className="relative z-10 flex flex-col w-full max-w-6xl rounded-2xl border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
+            ref={modalRef}
+            className="relative z-10 flex flex-col w-full h-[100dvh] sm:h-[min(88vh,820px)] sm:max-w-6xl rounded-none sm:rounded-2xl border-0 sm:border border-[#EFE4D6] bg-white shadow-2xl overflow-hidden"
             style={{
               margin: "auto",
-              height: "min(88vh, 820px)",
-              minHeight: "480px",
-              maxHeight: "88vh",
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* En-tête de la modale */}
-            <div className="flex items-start justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] px-5 py-3.5 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#8C5E2D] shadow-xs">
+            <div className="flex items-center justify-between border-b border-[#EFE4D6] bg-[#FAF7F2] px-4 sm:px-5 py-3 sm:py-3.5 shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#8C5E2D] shadow-xs">
                   <History className="h-5 w-5" aria-hidden="true" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3
                     id="history-modal-title"
-                    className="text-base font-bold text-[#21130D] tracking-tight"
+                    className="text-sm sm:text-base font-bold text-[#21130D] tracking-tight truncate"
                   >
                     Historique chronologique des fonds
                   </h3>
-                  <p className="mt-0.5 text-[11px] text-[#6B5646]">
-                    Grand livre des versements, décaissements et protocoles financiers
+                  <p className="text-[10px] sm:text-[11px] text-[#6B5646] truncate">
+                    Grand livre des versements et décaissements
                   </p>
                 </div>
               </div>
 
               <button
+                id="close-history-modal-btn"
                 type="button"
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D] transition-colors cursor-pointer"
+                className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white text-[#6B5646] hover:bg-[#FAF7F2] hover:text-[#21130D] transition-colors cursor-pointer shrink-0"
                 aria-label="Fermer la modale"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -1191,15 +1315,15 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             </div>
 
             {/* Pied de la modale */}
-            <div className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2] px-5 py-3 text-xs text-[#6B5646] shrink-0">
-              <span>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#EFE4D6] bg-[#FAF7F2] px-4 sm:px-5 py-3 text-xs text-[#6B5646] shrink-0">
+              <span className="text-[11px] sm:text-xs">
                 Total : <strong className="text-[#21130D]">{historyTimelineData.length} opérations</strong> répertoriées au grand livre
               </span>
 
               <button
                 type="button"
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="rounded-lg bg-[#21130D] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3D2314] active:scale-95 transition-all cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] rounded-xl bg-[#21130D] px-5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-[#3D2314] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
               >
                 Fermer l&apos;historique
               </button>
