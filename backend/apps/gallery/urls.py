@@ -9,6 +9,8 @@ from .views import (
     FicheRefuserView,
     FicheSoumettreView,
     FicheValiderView,
+    ManifestationInteretCreateView,
+    ManifestationInteretListView,
     StatistiquesGalleryView,
 )
 
@@ -18,7 +20,10 @@ urlpatterns = [
     path("fiches/<int:pk>/valider/", FicheValiderView.as_view(), name="gallery-fiche-valider"),
     path("fiches/<int:pk>/refuser/", FicheRefuserView.as_view(), name="gallery-fiche-refuser"),
     path("fiches/<slug:slug>/", FicheDetailView.as_view(), name="gallery-fiche-detail"),
+    path("fiches/<slug:slug>/interet/", ManifestationInteretCreateView.as_view(), name="gallery-fiche-interet"),
     path("fiches/<slug:slug>/qr/", FicheQRCodeView.as_view(), name="gallery-fiche-qr"),
     path("fiches/<slug:slug>/fiche/", FichePDFView.as_view(), name="gallery-fiche-pdf"),
+    path("interets/", ManifestationInteretListView.as_view(), name="gallery-interets"),
     path("statistiques/", StatistiquesGalleryView.as_view(), name="gallery-statistiques"),
 ]
+
