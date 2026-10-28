@@ -11,6 +11,8 @@
 | `GET /health/` | `{ status: "ok", database: "connected" }` (public, supervision, HTTP 503 si base indisponible) |
 | `POST /auth/token/` | `{ email, password }` → `{ access, refresh }` |
 | `POST /auth/token/refresh/` | `{ refresh }` → `{ access }` |
+| `POST /auth/mot-de-passe/oublie/` | `{ email }` → `{ detail }` (public, HTTP 200 systématique anti-énumération, envoi email avec lien signé valable 1h) |
+| `POST /auth/mot-de-passe/reinitialiser/` | `{ jeton, mot_de_passe }` → `{ detail }` (public, vérification jeton signé 1h, validateurs Django, invalidation après usage) |
 | `POST /auth/register/` | Crée un porteur de projet |
 | `GET/PATCH /auth/me/` | `{ id, email, first_name, last_name, role, telephone, genre, organisation }` |
 | `DELETE /auth/me/` | Suppression ou anonymisation du compte avec confirmation par mot de passe `{ password }` → `204` |

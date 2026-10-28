@@ -1,4 +1,10 @@
 import json
+from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core import signing
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
 from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -16,10 +22,11 @@ from .permissions import HasRole, IsEquipeCIAT, ReadOnlyOrRole
 
 from .serializers import (
     CohorteSerializer, DomaineSerializer, JournalAuditSerializer,
+    MotDePasseOublieSerializer, MotDePasseReinitialiserSerializer,
     NotificationSerializer, ProjetSerializer, RegisterSerializer,
     UserRoleUpdateSerializer, UserSerializer,
 )
-from .services import tracer_changement_role
+from .services import enregistrer_audit, tracer_changement_role
 from .throttling import AuthRateThrottle
 
 
@@ -80,6 +87,172 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
     throttle_classes = [AuthRateThrottle]
+
+
+@extend_schema(
+    summary="Demande de réinitialisation de mot de passe (Public)",
+    description=(
+        "Envoie un lien contenant un jeton sécurisé à usage unique expiré au bout de 1 heure. "
+        "Pour des raisons strictes de sécurité (anti-énumération de comptes), cette route renvoie "
+        "toujours un statut 200 avec le même message, que l'adresse email existe ou non."
+    ),
+    request=MotDePasseOublieSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="Demande prise en compte (message générique systématique)."
+        ),
+        400: OpenApiResponse(description="Format d'adresse email invalide."),
+    },
+)
+class MotDePasseOublieView(APIView):
+    """POST /api/auth/mot-de-passe/oublie/ : Demande de réinitialisation sécurisée."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
+
+    def post(self, request):
+        serializer = MotDePasseOublieSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"].strip().lower()
+
+        # Message générique systématique pour contrer toute tentative d'énumération de comptes
+        message_reponse = (
+            "Si cette adresse email correspond à un compte actif sur la plateforme, "
+            "un lien de réinitialisation valable 1 heure vous a été envoyé par email."
+        )
+
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user:
+            # Génération du jeton sécurisé signé avec horodatage
+            inner_token = default_token_generator.make_token(user)
+            jeton = signing.dumps(
+                {"uid": user.pk, "tok": inner_token},
+                salt="ciat.password_reset",
+            )
+
+            site_url = getattr(settings, "SITE_URL", "http://localhost:3000").rstrip("/")
+            lien_reinitialisation = f"{site_url}/reinitialiser-mot-de-passe?jeton={jeton}"
+
+            sujet = "[CIAT] Réinitialisation de votre mot de passe"
+            corps = (
+                f"Bonjour {user.get_full_name() or user.email},\n\n"
+                f"Une demande de réinitialisation de mot de passe a été initiée pour votre compte "
+                f"sur la plateforme du Centre d'Innovation, d'Application et de Transfert (CIAT).\n\n"
+                f"Pour définir un nouveau mot de passe, veuillez cliquer sur le lien suivant (valable 1 heure) :\n"
+                f"{lien_reinitialisation}\n\n"
+                f"Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email en toute sécurité : "
+                f"votre mot de passe actuel reste inchangé.\n\n"
+                f"Cordialement,\n"
+                f"L'équipe du CIAT"
+            )
+
+            from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "CIAT <contact@ciat.sn>")
+            try:
+                send_mail(
+                    subject=sujet,
+                    message=corps,
+                    from_email=from_email,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
+
+            enregistrer_audit(
+                acteur=None,
+                action="demande_reinitialisation_mdp",
+                objet=f"Utilisateur {user.email}",
+                avant=None,
+                apres={"email": user.email},
+            )
+
+        return Response({"detail": message_reponse}, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    summary="Définition d'un nouveau mot de passe via jeton sécurisé (Public)",
+    description=(
+        "Valide le jeton à usage unique (durée de validité : 1 heure), vérifie les contraintes "
+        "de robustesse du nouveau mot de passe selon la politique de sécurité du CIAT, "
+        "et invalide immédiatement le jeton pour prévenir toute réutilisation."
+    ),
+    request=MotDePasseReinitialiserSerializer,
+    responses={
+        200: OpenApiResponse(description="Mot de passe modifié avec succès."),
+        400: OpenApiResponse(description="Jeton expiré, déjà utilisé ou mot de passe non conforme."),
+    },
+)
+class MotDePasseReinitialiserView(APIView):
+    """POST /api/auth/mot-de-passe/reinitialiser/ : Réinitialisation effective du mot de passe."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
+
+    def post(self, request):
+        serializer = MotDePasseReinitialiserSerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+        jeton = serializer.validated_data["jeton"].strip()
+        nouveau_mdp = serializer.validated_data["mot_de_passe"]
+
+        # 1. Validation de la signature et de la durée d'expiration (1 heure = 3600 secondes)
+        try:
+            payload = signing.loads(jeton, salt="ciat.password_reset", max_age=3600)
+        except signing.SignatureExpired:
+            return Response(
+                {"detail": "Le jeton de réinitialisation a expiré (durée de validité : 1 heure). Veuillez effectuer une nouvelle demande."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except signing.BadSignature:
+            return Response(
+                {"detail": "Le jeton de réinitialisation est invalide ou corrompu."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not isinstance(payload, dict) or "uid" not in payload or "tok" not in payload:
+            return Response(
+                {"detail": "Structure de jeton non reconnue."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.filter(pk=payload["uid"], is_active=True).first()
+        if not user:
+            return Response(
+                {"detail": "Compte utilisateur introuvable ou désactivé."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2. Vérification que le jeton n'a pas déjà été consommé (invalidation automatique)
+        if not default_token_generator.check_token(user, payload["tok"]):
+            return Response(
+                {"detail": "Ce jeton a déjà été utilisé ou n'est plus valide. Veuillez renouveler votre demande."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 3. Validation de la robustesse du mot de passe selon les règles Django
+        try:
+            validate_password(nouveau_mdp, user=user)
+        except DjangoValidationError as err:
+            return Response(
+                {"detail": list(err.messages)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 4. Modification atomique du mot de passe (invalide automatiquement tout usage futur du token)
+        user.set_password(nouveau_mdp)
+        user.save(update_fields=["password"])
+
+        enregistrer_audit(
+            acteur=user,
+            action="reinitialisation_mdp_succes",
+            objet=f"Utilisateur {user.email}",
+            avant=None,
+            apres={"email": user.email, "statut": "succes"},
+        )
+
+        return Response(
+            {"detail": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez désormais vous connecter."},
+            status=status.HTTP_200_OK,
+        )
 
 
 @extend_schema_view(
