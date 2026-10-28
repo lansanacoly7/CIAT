@@ -27,7 +27,7 @@ interface KpiItem {
   delta?: { value: string; isPositive: boolean };
   isSpecialTaux?: boolean;
   tauxValue?: number;
-  borderLeftClass?: string;
+  borderBottomClass?: string;
   onClick?: () => void;
 }
 
@@ -87,7 +87,7 @@ export function KpiGrid({
           previousIndicateurs?.idees_recues,
           "+12%"
         ),
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#8C5E2D]",
         onClick: () => scrollToSection("charts-heading"),
       },
       {
@@ -101,7 +101,7 @@ export function KpiGrid({
           previousIndicateurs?.dossiers_deposes,
           "+8%"
         ),
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#612D10]",
         onClick: () => {
           if (onFilterStatut) onFilterStatut("depose");
           scrollToSection("registre-table");
@@ -118,7 +118,7 @@ export function KpiGrid({
           previousIndicateurs?.projets_selectionnes,
           "+15%"
         ),
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#2E7D32]",
         onClick: () => {
           if (onFilterStatut) onFilterStatut("selectionne");
           scrollToSection("registre-table");
@@ -135,7 +135,7 @@ export function KpiGrid({
           previousIndicateurs?.projets_incubes,
           "+5%"
         ),
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#8C5E2D]",
         onClick: () => {
           if (onFilterStatut) onFilterStatut("incube");
           scrollToSection("registre-table");
@@ -152,7 +152,7 @@ export function KpiGrid({
           previousIndicateurs?.prototypes,
           "+10%"
         ),
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#C99A68]",
         onClick: () => {
           if (onFilterStatut) onFilterStatut("prototype");
           scrollToSection("registre-table");
@@ -167,7 +167,7 @@ export function KpiGrid({
         isSpecialTaux: true,
         tauxValue: indicateurs.taux_selection || 0,
         delta: { value: "+3,2%", isPositive: true },
-        borderLeftClass: "border-l-[#B85D43]",
+        borderBottomClass: "border-b-[#B85D43]",
         onClick: () => scrollToSection("charts-heading"),
       },
       {
@@ -178,7 +178,7 @@ export function KpiGrid({
         subtext: "Subventions & guichets partenaires",
         icon: Coins,
         delta: { value: "+24%", isPositive: true },
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#8C5E2D]",
         onClick: () => {
           if (onNavigateTab) onNavigateTab("financements");
         },
@@ -190,7 +190,7 @@ export function KpiGrid({
         subtext: "Conventions & accords en cours",
         icon: Handshake,
         delta: { value: "+18%", isPositive: true },
-        borderLeftClass: "border-l-[#8C5E2D]",
+        borderBottomClass: "border-b-[#4A6B82]",
         onClick: () => {
           if (onNavigateTab) onNavigateTab("financements");
         },
@@ -211,7 +211,7 @@ export function KpiGrid({
         Indicateurs clés de performance CIAT
       </h2>
 
-      {/* Grille de 8 cartes individuelles selon le design officiel */}
+      {/* Grille de 8 cartes individuelles selon le design officiel avec border-bottom */}
       <div
         data-testid="kpi-cards-container"
         className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
@@ -222,8 +222,8 @@ export function KpiGrid({
           return (
             <div
               key={card.id}
-              className={`relative flex flex-col justify-between rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 shadow-[0_2px_8px_rgba(60,35,20,0.04)] transition-all hover:shadow-[0_4px_16px_rgba(60,35,20,0.08)] border-l-[5px] ${
-                card.borderLeftClass || "border-l-[#8C5E2D]"
+              className={`relative flex flex-col justify-between rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 shadow-[0_2px_8px_rgba(60,35,20,0.04)] transition-all hover:shadow-[0_4px_16px_rgba(60,35,20,0.08)] border-b-[4px] ${
+                card.borderBottomClass || "border-b-[#8C5E2D]"
               } overflow-hidden`}
             >
               {/* Ligne 1 : Icône circulaire beige + Titre (gauche) | Voir détails > (droite) */}

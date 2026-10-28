@@ -17,6 +17,7 @@ import type {
 import { getMockAnalyticsData } from "./mockData";
 import { CompactHeader } from "./components/CompactHeader";
 import { StickyFiltersBar } from "./components/StickyFiltersBar";
+import { KpiGrid } from "./components/KpiGrid";
 import { EntonnoirCard } from "./components/EntonnoirCard";
 import { FinancesCard } from "./components/FinancesCard";
 import { ATraiterCard } from "./components/ATraiterCard";
@@ -58,6 +59,7 @@ export function DashboardContent() {
     useState<PartenariatsFinancementsStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
+  const [kpiViewMode, setKpiViewMode] = useState<"entonnoir" | "cartes">("entonnoir");
   // Synchronisation de l'onglet actif avec le paramètre d'URL ?vue=
   const validTabs: DashboardTab[] = ["vue-d-ensemble", "projets", "financements", "registre"];
   const rawVue = searchParams.get("vue") as DashboardTab | null;
@@ -400,25 +402,76 @@ export function DashboardContent() {
                  ========================================================================= */}
               {activeTab === "vue-d-ensemble" && (
                 <div className="space-y-4">
-                  {/* ENTONNOIR (1 seule carte, 5 colonnes, hauteur <= 120 px) */}
-                  <EntonnoirCard
-                    indicateurs={data.indicateurs}
-                    onFilterStatut={(statut) => {
-                      updateFilters({ ...filters, statut });
-                    }}
-                  />
+                  {/* Barre de contrôle du mode d'affichage des KPI */}
+                  <div className="flex items-center justify-between">
+                    <h2 id="kpi-heading" className="text-[14px] font-semibold text-[#21130D]">
+                      Indicateurs Clés de Performance
+                    </h2>
+                    <div className="inline-flex items-center rounded-lg bg-[rgba(60,35,20,0.06)] p-0.5 text-[11px] font-medium text-[#7A6B63]">
+                      <button
+                        type="button"
+                        id="btn-mode-cartes"
+                        onClick={() => setKpiViewMode("cartes")}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
+                          kpiViewMode === "cartes"
+                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                            : "hover:text-[#21130D]"
+                        }`}
+                      >
+                        8 Cartes KPI
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-mode-entonnoir"
+                        onClick={() => setKpiViewMode("entonnoir")}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${
+                          kpiViewMode === "entonnoir"
+                            ? "bg-white text-[#21130D] shadow-xs font-semibold"
+                            : "hover:text-[#21130D]"
+                        }`}
+                      >
+                        Entonnoir & Synthèse
+                      </button>
+                    </div>
+                  </div>
 
-                  {/* FINANCES (1 seule carte, 3 cellules séparées par des filets, hauteur <= 80 px) */}
-                  <FinancesCard
-                    totalFinance={financementsStats?.total_finance ?? 472000000}
-                    totalDecaisse={financementsStats?.financements_decaisses ?? 402000000}
-                    partenariatsActifs={
-                      financementsStats?.nombre_partenariats_actifs ?? 33
-                    }
-                    onNavigateTab={(tab) => {
-                      handleTabChange(tab);
-                    }}
-                  />
+                  {kpiViewMode === "cartes" ? (
+                    <KpiGrid
+                      indicateurs={data.indicateurs}
+                      totalFinance={financementsStats?.total_finance ?? 472000000}
+                      partenariatsActifs={
+                        financementsStats?.nombre_partenariats_actifs ?? 33
+                      }
+                      onFilterStatut={(statut) => {
+                        updateFilters({ ...filters, statut });
+                      }}
+                      onNavigateTab={(tab) => {
+                        handleTabChange(tab);
+                      }}
+                    />
+                  ) : (
+                    <>
+                      {/* ENTONNOIR (1 seule carte, 5 colonnes, hauteur <= 120 px) */}
+                      <EntonnoirCard
+                        indicateurs={data.indicateurs}
+                        onFilterStatut={(statut) => {
+                          updateFilters({ ...filters, statut });
+                        }}
+                      />
+
+                      {/* FINANCES (1 seule carte, 3 cellules séparées par des filets, hauteur <= 80 px) */}
+                      <FinancesCard
+                        totalFinance={financementsStats?.total_finance ?? 472000000}
+                        totalDecaisse={financementsStats?.financements_decaisses ?? 402000000}
+                        partenariatsActifs={
+                          financementsStats?.nombre_partenariats_actifs ?? 33
+                        }
+                        onNavigateTab={(tab) => {
+                          handleTabChange(tab);
+                        }}
+                      />
+                    </>
+                  )}
 
                   {/* À TRAITER (1 seule carte, 3 lignes de 48 px) */}
                   <ATraiterCard

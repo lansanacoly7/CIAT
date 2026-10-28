@@ -7,7 +7,7 @@ export function KpiSkeletonGrid() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={`kpi-skeleton-${i}`}
-          className="relative flex flex-col justify-between rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 border-l-[5px] border-l-[rgba(60,35,20,0.15)] shadow-xs animate-pulse overflow-hidden min-h-[148px]"
+          className="relative flex flex-col justify-between rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 border-b-[4px] border-b-[rgba(60,35,20,0.15)] shadow-xs animate-pulse overflow-hidden min-h-[148px]"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
