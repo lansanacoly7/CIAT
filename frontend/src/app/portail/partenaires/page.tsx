@@ -12,6 +12,34 @@ const TYPE_CONFIG = {
   financier: { label: "Financier & Amorçage", tone: "succes" as const },
 };
 
+function PartenaireLogo({ src, alt, sigle }: { src?: string; alt: string; sigle?: string }) {
+  const [loadError, setLoadError] = useState(false);
+
+  if (!src || loadError) {
+    return (
+      <span className="text-xs font-black tracking-wider text-beige">
+        {sigle || "PARTENAIRE"}
+      </span>
+    );
+  }
+
+  return (
+    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-bordure bg-white p-1 shadow-2xs">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        width={56}
+        height={56}
+        onError={() => setLoadError(true)}
+        className="h-full w-full object-contain"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  );
+}
+
 export default function PartenairesPage() {
   const [items, setItems] = useState<Partenaire[]>([]);
   const [filterType, setFilterType] = useState<string>("tous");

@@ -7,7 +7,7 @@ Vérifie :
 4. L'idempotence stricte (un second appel ne modifie rien).
 """
 from django.core.files.storage import default_storage
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from apps.core.demo_images import (
     generer_image_actualite,
@@ -20,28 +20,30 @@ from apps.gallery.models import FicheInnovation
 from apps.portal.models import Actualite, Partenaire
 
 
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class TestDemoImages(TestCase):
     """Vérification des exigences de la T3 (images locales, légères, souveraines, idempotentes)."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             email="porteur_test@ciat.sn",
             password="testpassword",
             first_name="Cheikh",
             last_name="Fall",
         )
-        self.domaine = Domaine.objects.create(
+        cls.domaine = Domaine.objects.create(
             nom="Technologies de l'Information et IA",
         )
-        self.cohorte = Cohorte.objects.create(
+        cls.cohorte = Cohorte.objects.create(
             nom="Cohorte Test 2026",
             annee=2026,
         )
-        self.projet = Projet.objects.create(
+        cls.projet = Projet.objects.create(
             titre="Système IoT de Surveillance des Récoltes",
-            porteur=self.user,
-            domaine=self.domaine,
-            cohorte=self.cohorte,
+            porteur=cls.user,
+            domaine=cls.domaine,
+            cohorte=cls.cohorte,
             statut=Projet.Statut.PROTOTYPE,
             probleme="Pertes post-récolte importantes.",
             solution="Capteurs d'humidité et température connectés.",

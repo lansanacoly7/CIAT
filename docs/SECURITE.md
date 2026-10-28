@@ -247,3 +247,193 @@ L'inspection automatisée par `MatriceDroitsAPITests` a vérifié :
 3. **Le confinement des méthodes** : Les verbes HTTP non supportés renvoient explicitement 405 Method Not Allowed.
 4. **La résilience aux entrées malveillantes** : Aucune entrée mal formée ou tentative d'injection SQL ne provoque d'erreur 500 Internal Server Error.
 
+
+---
+
+## 9. Audit de sécurité de fin de projet (Phase 6 — Pathé)
+
+> **Contexte :** Réalisé dans le cadre de la Phase 6 (suite — Tâche T4), cet audit de sécurité finalise les vérifications préalables à la livraison pour Lansana (responsable sécurité et déploiement). Il couvre :
+> 1. L'audit automatisé des vulnérabilités des dépendances (front-end et back-end) ;
+> 2. La détection de fuites de secrets dans l'historique git et l'arbre de travail ;
+> 3. L'inspection des en-têtes HTTP de sécurité, des cookies et du cloisonnement CORS/CSRF ;
+> 4. La checklist comparative des paramètres d'environnement (Développement vs Production).
+
+---
+
+### 9.1 Audit des dépendances logicielles (T4.a)
+
+#### A. Front-end (Next.js / Node.js)
+- **Commande exécutée :**
+  ```bash
+  cd frontend && npm audit --omit=dev
+  ```
+- **Résultat réel obtenu :**
+  ```text
+  found 0 vulnerabilities
+  ```
+- **Statut :** **Conforme (100% sain)**. L'arbre de dépendances de production du front-end ne comporte aucune vulnérabilité connue.
+
+#### B. Back-end (Python / Django)
+- **Commande exécutée :**
+  ```bash
+  python -m pip_audit -r backend/requirements.txt
+  ```
+- **Résultat réel obtenu (73 avis répertoriés sur 4 paquets dans l'environnement local) :**
+
+| Paquet | Version locale installée | Identifiants d'avis (exemples) | Version minimale de correction | Statut & Action |
+| :--- | :---: | :--- | :---: | :--- |
+| `djangorestframework` | `3.15.2` | `PYSEC-2026-3827`, `CVE-2026-114138` | `3.17.2` / `3.18.2` | **Consignée** pour Lansana (Dockerfile de production). Borne ouverte `>=3.15` dans `requirements.txt`. |
+| `djangorestframework-simplejwt` | `5.3.1` | `PYSEC-2026-1305` | `5.5.1` | **Consignée** pour Lansana (Dockerfile de production). Borne ouverte `>=5.3` dans `requirements.txt`. |
+| `python-dotenv` | `1.2.1` | `PYSEC-2026-2270` | `1.2.2` | **Corrigée** par Pathé : mise à jour vers `1.2.4` et borne rehaussée à `python-dotenv>=1.2.2` dans `requirements.txt`. |
+| `pillow` | `10.4.0` | `PYSEC-2026-2249`, `CVE-2026-112895` | `12.3.0` / `13.0.0` | **Consignée** pour Lansana (Dockerfile de production). Borne ouverte `>=10.4` dans `requirements.txt`. |
+
+- **Paquets 100% conformes et sans vulnérabilité (10 paquets) :**
+  - `Django==5.2.18` (0 vulnérabilité)
+  - `django-cors-headers==4.9.0` (0 vulnérabilité)
+  - `django-filter==24.3` (0 vulnérabilité)
+  - `drf-spectacular==0.29.0` (0 vulnérabilité)
+  - `dj-database-url==3.1.2` (0 vulnérabilité)
+  - `psycopg==3.3.6` (0 vulnérabilité)
+  - `httpx==0.28.1` (0 vulnérabilité)
+  - `python-docx==1.2.0` (0 vulnérabilité)
+  - `reportlab==4.5.1` (0 vulnérabilité)
+  - `openpyxl==3.1.5` (0 vulnérabilité)
+
+---
+
+### 9.2 Audit des secrets et de l'historique Git (T4.b)
+
+#### A. Commandes de scan exécutées
+```bash
+# 1. Scan de l'arbre de travail pour les patterns sensibles
+git grep -n -I -i -E "api[_-]?key"
+git grep -n -I -i -E "secret[_-]?key"
+git grep -n -I -i -E "BEGIN.*PRIVATE KEY"
+git grep -n -I -E "eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}"
+git grep -n -I -i -E "password\s*=\s*['"][^'"]+['"]"
+
+# 2. Scan de l'historique complet des commits (diffs)
+git log -G "(api_key|SECRET_KEY|PRIVATE KEY|AI_PROVIDER_CONFIG)" --oneline
+
+# 3. Contrôle des fichiers d'environnement sous gestion de configuration
+git ls-files "*.env*"
+```
+
+#### B. Résultats bruts et inventaire
+- **Clés d'API réelles :** **0 clé exposée**. Les 12 occurrences trouvées correspondent exclusivement à la documentation d'obtention des clés gratuites (`README.md`), aux clés d'environnement `os.getenv("GROQ_API_KEY")` et `os.getenv("GEMINI_API_KEY")`, ou au modèle d'exemple `backend/.env.example`.
+- **Clés privées RSA / PEM :** **0 clé** dans l'arbre et dans l'historique git.
+- **Jetons JWT :** **0 jeton** hardcodé.
+- **Fichiers `.env` tracés :** Seul `backend/.env.example` est suivi par Git. Aucun fichier `.env` ou `.env.local` contenant des secrets n'a jamais été commité dans le dépôt.
+
+#### C. Analyse des faux positifs documentés
+| Occurrences constatées | Fichier(s) concerné(s) | Statut | Justification technique |
+| :--- | :--- | :---: | :--- |
+| `MOT_DE_PASSE = "Ciat2026!"` | `backend/apps/core/management/commands/seed_demo.py` | **Faux positif** | Jeu de données de démonstration et de soutenance, explicitement documenté comme tel. Aucun compte réel de production. |
+| `password="password123"`, `password="Password123!"` | `backend/apps/*/tests/*.py` | **Faux positif** | Fixtures de tests unitaires et d'intégration exécutées en base de données éphémère (`test_ciat`). |
+| `PGPASSWORD="${PGPASSWORD:-ciat}"` | `scripts/sauvegarde_bd.sh`, `scripts/restauration_bd.sh` | **Faux positif** | Valeur de repli par défaut pour les conteneurs Docker de développement local. En production, `PGPASSWORD` est surchargé par les secrets de déploiement. |
+
+---
+
+### 9.3 Vérification des en-têtes HTTP de sécurité et de CORS (T4.c)
+
+#### A. Contrôle en direct des en-têtes renvoyés par Django
+- **Commande d'évaluation :**
+  ```bash
+  python scratch/check_security_headers.py
+  ```
+- **Résultats obtenus :**
+
+| En-tête HTTP | Valeur observée en Dev (`DEBUG=True`) | Valeur observée en Production (`DEBUG=False`) | Rôle de sécurité |
+| :--- | :---: | :---: | :--- |
+| `X-Content-Type-Options` | `nosniff` | `nosniff` | Empêche le reniflement de type MIME par le navigateur. |
+| `X-Frame-Options` | `DENY` | `DENY` | Immunise la plateforme contre les attaques par détournement de clic (Clickjacking). |
+| `Referrer-Policy` | `same-origin` | `same-origin` | Ne transmet l'en-tête Referer qu'aux requêtes de même origine. |
+| `Cross-Origin-Opener-Policy` | `same-origin` | `same-origin` | Isole le contexte de navigation de fenêtres tierces malveillantes. |
+| `Strict-Transport-Security` (HSTS) | *Non émis en HTTP local* | `max-age=31536000; includeSubDomains; preload` | Impose la communication exclusive en HTTPS pendant au moins 1 an. |
+| `Location` (Redirection HTTPS) | *Non applicable* | `HTTP 301 Moved Permanently` | Redirection automatique de tout trafic HTTP vers HTTPS (`SECURE_SSL_REDIRECT=True`). |
+
+#### B. Cloisonnement CORS et CSRF
+- **Origine autorisée (`http://localhost:3000`) :**
+  - Réponse HTTP `200 OK` avec `Access-Control-Allow-Origin: http://localhost:3000`.
+  - Méthodes explicitement restreintes : `DELETE, GET, OPTIONS, PATCH, POST, PUT`.
+  - En-têtes autorisés : `accept, authorization, content-type, user-agent, x-csrftoken, x-requested-with`.
+- **Origine malveillante / non autorisée (`http://malicious-site.com`) :**
+  - Rejet formel : aucun en-tête `Access-Control-Allow-Origin` n'est retourné par le middleware CORS.
+- **Gestion des cookies et CSRF :**
+  - En production, `SESSION_COOKIE_SECURE = True` et `CSRF_COOKIE_SECURE = True` interdisent l'émission de cookies hors connexion chiffrée SSL/TLS.
+  - Architecture d'API REST 100% Stateless via jetons JWT dans le header `Authorization: Bearer <token>`, immunisant structurellement l'API contre les attaques de type Cross-Site Request Forgery.
+
+---
+
+### 9.4 Checklist de basculement vers la production (T4.d)
+
+| Paramètre | Valeur en Développement | Valeur obligatoire en Production | Mécanisme de validation / Contrôle |
+| :--- | :---: | :---: | :--- |
+| `DEBUG` | `True` (`DJANGO_DEBUG=1`) | `False` (`DJANGO_DEBUG=0`) | Si `DEBUG=False` et que la clé secrète est faible ou absente, Django lève immédiatement `ImproperlyConfigured`. |
+| `SECRET_KEY` | `dev-only-change-me` | Clé cryptographique forte (50+ car.) | Provenance exclusive de `DJANGO_SECRET_KEY` injectée par les secrets CI/CD. |
+| `ALLOWED_HOSTS` | `localhost, 127.0.0.1` | Noms de domaine qualifiés (ex: `plateforme.ciat.sn`) | Provenance exclusive de `DJANGO_ALLOWED_HOSTS`. Les jokers `*` sont formellement proscrits. |
+| `SECURE_SSL_REDIRECT` | `False` | `True` | Redirige automatiquement toutes les requêtes HTTP en HTTPS (301). |
+| `SECURE_HSTS_SECONDS` | `0` | `31536000` (1 an minimum) | Associé à `includeSubDomains=True` et `preload=True`. |
+| `SESSION_COOKIE_SECURE` | `False` | `True` | Empêche la transmission de cookies de session sur un canal non chiffré. |
+| `CSRF_COOKIE_SECURE` | `False` | `True` | Empêche la transmission du cookie CSRF sur un canal non chiffré. |
+| `CORS_ALLOWED_ORIGINS` | `localhost:3000`, `localhost:3001` | Domaines frontend de production | Provenance de `CORS_ALLOWED_ORIGINS` sans joker `*`. |
+| `DATABASE_URL` | SQLite locale (`db.sqlite3`) | PostgreSQL 16 (`postgresql://...`) | Connexion gérée par `dj-database-url` avec `conn_max_age=600`. |
+| `CACHES` / Rate Limiting | `LocMemCache` | Redis (`redis://redis:6379/1`) | Partage des compteurs de rate limiting (5 req/min auth, 20 ai, 60 anon, 300 user) entre workers multi-processus. |
+| `EMAIL_BACKEND` | Console (`console.EmailBackend`) | SMTP TLS (`smtp.EmailBackend`) | Variables `EMAIL_HOST`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=1`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`. |
+| `STATIC_ROOT` / `MEDIA_ROOT` | Servis par runserver | Nginx + Collectstatic + S3/MinIO | Fichiers statiques pré-compilés et stockage sécurisé des pièces jointes d'incubation. |
+
+---
+
+### 9.5 Registre des anomalies de l'audit Phase 6 et plan d'actions
+
+| Réf | Composant concerné | Gravité | Responsable | Description de l'anomalie constatée | Traitement effectué / Statut |
+| :---: | :--- | :---: | :---: | :--- | :---: |
+| **ANO-SEC-08** | `backend/requirements.txt` (`python-dotenv`) | **Basse** | Pathé | La version installée `python-dotenv 1.2.1` présentait l'avis `PYSEC-2026-2270`. | **Corrigée** : paquet mis à niveau en local vers `1.2.4` et borne rehaussée à `python-dotenv>=1.2.2` dans `requirements.txt`. |
+| **ANO-SEC-09** | `backend/config/settings.py` (En-têtes) | **Moyenne** | Pathé | Les directives `SECURE_CONTENT_TYPE_NOSNIFF` et `X_FRAME_OPTIONS` n'étaient définies que sous le bloc `if not DEBUG:`, omettant ces protections en mode local. | **Corrigée** : directives remontées au niveau global dans `settings.py` pour garantir la défense en profondeur dans tous les modes d'exécution. |
+| **ANO-SEC-10** | `backend/requirements.txt` (Pillow, DRF, SimpleJWT) | **Moyenne** | Lansana | Avis répertoriés sur des versions mineures de paquets (`Pillow 10.4.0`, `DRF 3.15.2`, `SimpleJWT 5.3.1`). | **Consignée** : Les bornes dans `requirements.txt` étant déjà ouvertes (`>=`), Lansana appliquera les versions cibles lors de la génération des images Docker de production. |
+
+---
+
+## 10. Revue de sécurité des nouvelles routes (Phase 10 — Tâche T1 & T2)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Conduire une revue d'attaquant exhaustive sur l'ensemble des routes ajoutées en phases 7, 8 et 10 (audit, notifications, calendrier, manifestations d'intérêt, données personnelles, santé, administration, réinitialisation de mot de passe).
+- **Vérifications systématiques exécutées dans `apps/core/tests/test_droits.py` :**
+  1. Accès anonyme sans jeton (attendu : `HTTP 401 Unauthorized` ou `200` pour routes publiques).
+  2. Accès avec jeton JWT expiré ou à signature falsifiée (attendu : `HTTP 401 Unauthorized`).
+  3. Escalade de privilèges horizontale (IDOR : accès aux objets d'un pair du même rôle).
+  4. Escalade de privilèges verticale (tentative d'accès par un rôle inférieur non habilité).
+  5. Falsification des paramètres query (`?projet=`, `?acteur=`, `?destinataire=`, `?fiche=`, `?user=`) tentant d'élargir le périmètre autorisé.
+  6. Divulgation d'informations sensibles (fuite de hash de mots de passe, tokens JWT, clés API, emails ou numéros de téléphone de tiers dans les corps de réponse ou métadonnées).
+
+### 10.1 Matrice d'évaluation des nouvelles routes
+
+| Route | Méthode | Rôles autorisés | Attaque IDOR testée | Filtres falsifiés testés | Jeton expiré / altéré | Statut Sécurité |
+| :--- | :---: | :---: | :--- | :--- | :---: | :---: |
+| `/api/audit/` | GET | `admin`, `coordonnateur` | Impossible (accès réservé à l'équipe) | `?acteur=`, `?action=` (filtrage strict sans contournement) | Rejet 401 | **Conforme** |
+| `/api/notifications/` | GET | Tout utilisateur connecté | Étanche (filtré sur `destinataire=request.user`) | `?destinataire=autre`, `?user=autre` (totalement ignorés) | Rejet 401 | **Conforme** |
+| `/api/notifications/{id}/lue/` | POST | Propriétaire de la notification | IDOR rejeté (`HTTP 404 Not Found` si tiers) | Non applicable | Rejet 401 | **Conforme** |
+| `/api/notifications/tout-lire/` | POST | Tout utilisateur connecté | Étanche (n'impacte que `destinataire=request.user`) | Non applicable | Rejet 401 | **Conforme** |
+| `/api/gallery/interets/` | GET | `porteur` (ses fiches), `admin`, `coordonnateur` | Étanche (porteur cantonné à ses propres innovations) | `?fiche=autre_fiche` (renvoie 0 résultat, zéro fuite) | Rejet 401 | **Conforme** |
+| `/api/gallery/fiches/{slug}/interet/` | POST | Public (`AllowAny`) | Rejet 404 si fiche non publiée (brouillon/refusée) | Anti-doublon (409 si même email dans l'heure) + Throttle | N/A (Public) | **Conforme** |
+| `/api/auth/me/export/` | GET | Tout utilisateur connecté | Étanche (exporte exclusivement `request.user`) | `?user=autre`, `?id=autre` (ignorés) | Rejet 401 | **Conforme** |
+| `/api/auth/me/` | DELETE | Tout utilisateur connecté | Étanche (supprime/anonymise uniquement `request.user`) | Mot de passe actuel requis (400 si absent/faux) | Rejet 401 | **Conforme** |
+| `/api/incubator/calendrier/` | GET | `porteur`, `mentor`, `admin`, `coordonnateur` | Étanche (porteur: ses projets ; mentor: assignés) | `?projet=autre_projet` (ignoré, n'affiche rien du tiers) | Rejet 401 | **Conforme** |
+| `/api/health/` | GET | Public (`AllowAny`) | N/A (aucun ID d'objet) | Zéro paramètre sensible | N/A (Public) | **Conforme** |
+| `/admin/` | GET | Comptes staff uniquement (`is_staff=True`) | Rejet catégorique (redirection 302 vers login Django) | Non applicable | Redirection | **Conforme** |
+| `/api/auth/mot-de-passe/oublie/` | POST | Public (`AllowAny`) | Anti-énumération absolue (200 systématique avec même message) | Rate limiting strict (5 req/min) | N/A (Public) | **Conforme** |
+| `/api/auth/mot-de-passe/reinitialiser/` | POST | Public (`AllowAny`) | Jeton signé 1h (400 si expiré, rejoué ou trafiqué) | Validateurs Django stricts | N/A (Jeton) | **Conforme** |
+
+---
+
+### 10.2 Registre des risques et mesures de durcissement appliquées
+
+| Réf | Cible / Risque | Gravité initiale | Description de la vulnérabilité potentielle | Mesure corrective / Preuve de robustesse | Statut |
+| :---: | :--- | :---: | :--- | :--- | :---: |
+| **SEC-10-01** | Énumération d'utilisateurs (`/api/auth/mot-de-passe/oublie/`) | **Élevée** | Divulgation de l'existence d'un compte si une erreur 404 est renvoyée sur email inconnu. | Réponse générique HTTP 200 systématique (`detail`: "Si cette adresse email correspond à un compte actif..."). Zéro divergence temporelle ou sémantique. | **Corrigée & Testée** |
+| **SEC-10-02** | Rejeu de jeton de réinitialisation (`/api/auth/mot-de-passe/reinitialiser/`) | **Haute** | Réutilisation d'un même lien de réinitialisation intercepté dans les 60 minutes. | Utilisation du `default_token_generator` Django dont la clé intègre le hash du mot de passe de l'utilisateur : dès que le mot de passe est modifié, le jeton devient immédiatement et définitivement invalide (rejet HTTP 400). | **Corrigée & Testée** |
+| **SEC-10-03** | Falsification / Altération de jeton | **Haute** | Manipulation de l'identifiant utilisateur (`uid`) dans le jeton signé. | Empreinte cryptographique `django.core.signing` avec sel dédié `ciat.password_reset` : toute altération de la charge utile lève `BadSignature` rejeté en 400. | **Corrigée & Testée** |
+| **SEC-10-04** | IDOR sur le journal d'audit et les notifications | **Moyenne** | Tentative de consultation ou de modification de statut de notification par un tiers via requête forgée. | Requêtes de mutation assujetties au filtre d'intégrité `destinataire=request.user` renvoyant 404 (dissimulation par étanchéité). `JournalAudit` verrouillé par `IsEquipeCIAT`. | **Corrigée & Testée** |
+| **SEC-10-05** | Fuite de données personnelles de porteurs via la galerie | **Moyenne** | Un porteur tente d'obtenir les messages d'investisseurs d'un concurrent via `/api/gallery/interets/?fiche=X`. | La vue pré-filtre en amont `fiche__projet__porteur=user` : toute tentative de cibler une fiche tierce retourne une liste vide `[]`. | **Corrigée & Testée** |
+| **SEC-10-06** | Accès non autorisé à l'administration Django | **Critique** | Accès d'un porteur ou mentor à `/admin/` via token API. | L'administration Django est étanche et adossée au middleware de session `is_staff=True` : tout utilisateur non staff est redirigé en 302 vers `/admin/login/`. | **Vérifiée & Testée** |
+

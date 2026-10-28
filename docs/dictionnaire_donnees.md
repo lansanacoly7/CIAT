@@ -238,8 +238,8 @@ erDiagram
 | Champ | Type Django | Contraintes | Description |
 |---|---|---|---|
 | `id` | `BigAutoField` | PK, Not Null | Identifiant unique. |
-| `dossier` | `OneToOneField(Dossier)`| CASCADE, Not Null | Dossier statué (unicité stricte). |
-| `decision` | `CharField(20)` | `accepte` ou `refuse` | Verdict officiel du jury d'incubation. |
+| `dossier` | `OneToOneField(Dossier)`| PROTECT, Not Null | Dossier statué (protégé contre la suppression accidentelle). |
+| `decision` | `CharField(20)` | `accepte` ou `refuse` | Verdict officiel du jury d'incubation (validé par `CheckConstraint`). |
 | `motif` | `TextField` | Not Null | Argumentaire et synthèse explicative des délibérations. |
 | `decide_par` | `ForeignKey(User)` | PROTECT, Not Null | Coordonnateur ayant consigné la décision. |
 
@@ -248,9 +248,9 @@ erDiagram
 | Modèle | Champs clés | Description métier |
 |---|---|---|
 | `AffectationMentor` | `projet` (1-1), `mentor` (FK User), `affecte_par` (FK User) | Affectation exclusive d'un tuteur expert au projet incubé. |
-| `Objectif` | `projet` (FK), `libelle`, `echeance`, `statut` (`a_faire`, `en_cours`, `atteint`) | Axe stratégique défini lors du cadrage d'incubation. |
-| `Jalon` | `projet` (FK), `titre`, `echeance`, `statut` (`a_faire`, `en_cours`, `fait`), `en_retard` (prop) | Étape opérationnelle cadencée. `en_retard=True` si date dépassée et non fait. |
-| `PreuveJalon` | `jalon` (FK), `fichier`, `nom`, `depose_par` (FK User) | Livrable, photo de prototype ou document justifiant l'achèvement du jalon. |
+| `Objectif` | `projet` (FK), `libelle`, `echeance`, `statut` (`a_faire`, `en_cours`, `atteint`) | Axe stratégique défini lors du cadrage d'incubation. Statut verrouillé par `CheckConstraint`. |
+| `Jalon` | `projet` (FK), `titre`, `echeance`, `statut` (`a_faire`, `en_cours`, `fait`), `en_retard` (prop) | Étape opérationnelle cadencée. `en_retard=True` si date dépassée. Statut verrouillé par `CheckConstraint`. |
+| `PreuveJalon` | `jalon` (FK PROTECT), `fichier`, `nom`, `depose_par` (FK User) | Livrable justifiant l'achèvement du jalon (protégé contre la suppression en cascade du jalon). |
 | `CommentaireJalon`| `jalon` (FK), `auteur` (FK User), `texte`, `cree_le` | Discussion et alertes échangées entre le porteur et son mentor. |
 | `SuiviProjet` | `projet` (FK), `echeance` (`3_mois`, `6_mois`), `bilan`, `indicateurs` (JSON) | Bilan périodique rédigé par le mentor ou le coordonnateur (unicité projet/échéance). |
 
@@ -382,3 +382,56 @@ erDiagram
 | **Galerie (`apps.gallery`)** | `FicheInnovation` | 1 | Valorisation publique, QR codes dynamiques et statistiques. |
 | **Analytics (`apps.analytics`)** | `Partenariat`, `Financement` | 2 | Suivi des partenariats et des financements mobilisés, agrégations décisionnelles. |
 | **TOTAL** | **34 Modèles** | **34 Tables** | **Architecture modulaire, cohérente et scalable.** |
+
+---
+
+## 10. Matrice des Contraintes d'Intégrité et Protections en Base (Phase 11 — T3)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Garantir que l'intégrité relationnelle et les règles métier critiques sont verrouillées au niveau le plus profond de l'architecture (**le moteur de base de données PostgreSQL / SQLite**), empêchant formellement toute corruption par script, contournement d'API ou insertion directe.
+
+### A. Protections contre les suppressions accidentelles (`on_delete=models.PROTECT`)
+
+| Modèle Enfant | Relation Protégée | Modèle Parent | Justification métier et protection |
+|---|---|---|---|
+| `incubator.Decision` | `dossier` | `incubator.Dossier` | **Immutabilité des arbitrages de sélection** : Un dossier de candidature ayant fait l'objet d'une décision motivée du jury ne peut pas être supprimé. L'historique et la traçabilité des refus et acceptations sont inaltérables. |
+| `incubator.PreuveJalon` | `jalon` | `incubator.Jalon` | **Préservation des preuves de livrables** : Un jalon ne peut pas être supprimé s'il comporte des fichiers de preuve déposés par le porteur ou validés par le mentor. |
+| `incubator.Evaluation` | `evaluateur` | `core.User` | Un compte membre de comité ne peut pas être supprimé s'il a émis des notes d'évaluation. |
+| `incubator.Decision` | `decide_par` | `core.User` | Le compte coordonnateur signataire d'une décision est protégé contre toute suppression. |
+| `core.Projet` | `porteur` | `core.User` | Un compte porteur de projet est protégé contre la suppression tant que ses projets existent. |
+| `core.Projet` | `domaine` | `core.Domaine` | Un pôle technologique ne peut pas être supprimé s'il contient des projets rattachés. |
+
+---
+
+### B. Contraintes de validation au niveau de la base (`CheckConstraint`)
+
+| Modèle | Nom de la Contrainte | Règle SQL Vérifiée | Invariant Métier Garanti |
+|---|---|---|---|
+| `core.Cohorte` | `check_cohorte_dates_coherentes` | `date_debut IS NULL OR date_fin IS NULL OR date_debut <= date_fin` | La date de démarrage d'une cohorte ne peut pas être postérieure à son démo-day ou évaluation finale. |
+| `core.User` | `check_user_role_valide` | `role IN ('administrateur', 'coordonnateur', 'mentor', 'membre_comite', 'porteur', 'visiteur')` | Prévention d'injection de rôles fantaisistes ou non habilités par le RBAC. |
+| `core.User` | `check_user_genre_valide` | `genre IN ('', 'F', 'H', 'A')` | Strict respect des codes canoniques de parité (rejet de libellés longs non standardisés). |
+| `core.Projet` | `check_projet_statut_valide` | `statut IN ('idee', 'depose', 'selectionne', 'incube', 'prototype', 'termine', 'rejete')` | Conformité absolue au cycle de vie d'innovation CIAT. |
+| `incubator.Dossier` | `check_dossier_statut_valide` | `statut IN ('brouillon', 'soumis', 'complet', 'en_evaluation', 'accepte', 'refuse')` | Verrouillage des états d'instruction de candidature. |
+| `incubator.Decision` | `check_decision_type_valide` | `decision IN ('accepte', 'refuse')` | Les décisions du jury sont strictement binaires. |
+| `incubator.Critere` | `check_critere_poids_positif` | `poids > 0` | Le coefficient de pondération d'un critère doit être strictement positif. |
+| `incubator.Critere` | `check_critere_note_max_positive` | `note_max > 0` | Le barème d'un critère d'évaluation doit être strictement positif. |
+| `incubator.Note` | `check_note_valeur_entre_0_et_20` | `note >= 0 AND note <= 20` | Aucune note ne peut être négative ou supérieure à 20 (standardisation nationale). |
+| `incubator.Jalon` | `check_jalon_statut_valide` | `statut IN ('a_faire', 'en_cours', 'fait')` | Respect strict des statuts de jalon d'incubation. |
+| `incubator.Objectif` | `check_objectif_statut_valide` | `statut IN ('a_faire', 'en_cours', 'atteint')` | Respect strict des statuts d'objectifs opérationnels. |
+| `analytics.Financement` | `check_financement_montant_positif` | `montant > 0` | Les subventions et financements mobilisés doivent être strictement positifs. |
+| `analytics.Financement` | `check_financement_statut_valide` | `statut IN ('en_cours', 'accorde', 'decaisse', 'refuse')` | États de décaissement et d'octroi des fonds. |
+| `analytics.Partenariat` | `check_partenariat_statut_valide` | `statut IN ('en_discussion', 'signe', 'actif', 'clos')` | États du cycle de vie partenarial. |
+| `analytics.Partenariat` | `check_partenariat_type_valide` | `type IN ('technique', 'financier', 'commercial', 'academique', 'institutionnel', 'autre')` | Typologie contractuelle de convention. |
+| `portal.Evenement` | `check_evenement_dates_coherentes` | `fin IS NULL OR debut <= fin` | La date de fin d'un atelier ou hackathon ne peut pas précéder son début. |
+| `gallery.FicheInnovation`| `check_fiche_statut_valide` | `statut IN ('brouillon', 'en_validation', 'publie', 'refuse')` | Workflow de validation des publications de la galerie. |
+| `documents.Document` | `check_document_statut_valide` | `statut IN ('brouillon', 'valide', 'publie')` | Workflow documentaire et archivage immuable. |
+
+---
+
+### C. Nouveaux index relationnels composites optimisés
+
+| Modèle | Champs Indexés | Nom Index | Rôle SQL & Performance |
+|---|---|---|---|
+| `core.Projet` | `(domaine, statut)` | `idx_projet_domaine_statut` | Accélération des filtres combinés par domaine et état d'avancement sur l'annuaire public et le tableau de bord. |
+| `core.Projet` | `(cohorte, statut)` | `idx_projet_cohorte_statut` | Accélération des tris et regroupements analytiques par promotion annuelle d'incubation. |
+

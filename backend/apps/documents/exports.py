@@ -8,6 +8,7 @@ Charte graphique CIAT / ISEP :
 - Pagination et mentions du statut et de la version
 """
 import io
+
 from docx import Document as DocxDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, RGBColor
@@ -20,7 +21,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.pdfgen import canvas
 from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
-
 
 # Couleurs CIAT
 COULEUR_BRUN_HEX = "#612D10"

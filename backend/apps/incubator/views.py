@@ -1,15 +1,17 @@
 """Vues DRF pour le module P2 - Gestion de l'incubateur."""
+import calendar
 import datetime
 import io
+import re
+
+import openpyxl
 from django.db import IntegrityError, transaction
-from django.db.models import Avg
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-import openpyxl
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import generics, permissions, renderers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,26 +19,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.models import Projet, Role, User
-from apps.core.permissions import HasRole, IsEquipeCIAT
+from apps.core.permissions import HasRole
+from apps.core.services import tracer_affectation_mentor, tracer_decision_dossier
+
 from .emails import (
     envoyer_email_confirmation_soumission,
     envoyer_email_decision_dossier,
 )
 from .models import (
     AffectationMentor,
-    CommentaireJalon,
-    Critere,
-    Decision,
     Dossier,
-    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
     Objectif,
     Piece,
-    PreuveJalon,
     StatutDossier,
     StatutJalon,
+    StatutObjectif,
     SuiviProjet,
 )
 from .serializers import (
@@ -48,6 +48,7 @@ from .serializers import (
     EvaluationCreateSerializer,
     EvaluationSerializer,
     GrilleSerializer,
+    IncubateurCalendrierItemSerializer,
     JalonSerializer,
     MentorUserSerializer,
     ObjectifSerializer,
@@ -75,6 +76,12 @@ class DossierListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Restreint la visibilité des dossiers selon le principe du moindre privilège (RBAC).
+
+        Sécurité et confidentialité :
+        - Porteur : cloisonné strictement aux dossiers de ses propres projets.
+        - Équipe (Admin, Coordonnateur, Comité, Mentor) : vue consolidée sur l'ensemble des dossiers.
+        """
         user = self.request.user
         qs = Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
         if user.role == Role.PORTEUR:
@@ -84,6 +91,7 @@ class DossierListCreateView(generics.ListCreateAPIView):
         return qs.none()
 
     def perform_create(self, serializer):
+        """Vérifie l'habilitation du rôle avant d'instancier un dossier de candidature."""
         user = self.request.user
         if user.role not in (Role.PORTEUR, Role.ADMIN, Role.COORDONNATEUR):
             raise PermissionDenied("Votre rôle ne vous permet pas de créer un dossier de candidature.")
@@ -97,15 +105,18 @@ class DossierDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Définit le jeu de données optimisé avec pré-chargement des pièces et du porteur."""
         return Dossier.objects.select_related("projet", "projet__porteur").prefetch_related("pieces")
 
     def get_object(self):
+        """Vérifie les droits d'accès au niveau de l'objet (Object-level permission check)."""
         obj = super().get_object()
         if not can_access_dossier(self.request.user, obj):
             raise PermissionDenied("Vous n'avez pas accès à ce dossier de candidature.")
         return obj
 
     def perform_update(self, serializer):
+        """Garantit l'immutabilité d'un dossier soumis pour empêcher toute altération a posteriori."""
         dossier = self.get_object()
         user = self.request.user
 
@@ -126,6 +137,7 @@ class PieceCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
+        """Réceptionne et valide une pièce jointe avant soumission définitive du dossier."""
         dossier = get_object_or_404(Dossier, pk=pk)
 
         # Contrôle strict : seul le porteur propriétaire ou l'équipe CIAT peut déposer des pièces
@@ -147,6 +159,7 @@ class PieceDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk, piece_id):
+        """Supprime une pièce jointe tant que le dossier est encore à l'état de brouillon."""
         dossier = get_object_or_404(Dossier, pk=pk)
 
         # Contrôle strict : seul le porteur propriétaire ou l'équipe CIAT peut supprimer des pièces
@@ -167,6 +180,7 @@ class DossierSoumettreView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
+        """Valide la complétude à 100 %, verrouille le dossier et déclenche l'accusé de réception."""
         with transaction.atomic():
             dossier = get_object_or_404(
                 Dossier.objects.select_for_update().select_related("projet"), pk=pk
@@ -203,6 +217,7 @@ class GrilleActuelleView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        """Fournit la grille d'évaluation active et ses critères de notation pondérés."""
         grille = Grille.objects.filter(active=True).prefetch_related("criteres").first()
         if not grille:
             return Response(
@@ -219,6 +234,7 @@ class DossierEvaluationListCreateView(APIView):
     permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR, Role.COMITE, Role.MENTOR)]
 
     def get(self, request, pk):
+        """Restitue les évaluations multicritères et calcule le score moyen collégial."""
         dossier = get_object_or_404(Dossier, pk=pk)
         evaluations = (
             Evaluation.objects.filter(dossier=dossier)
@@ -238,6 +254,7 @@ class DossierEvaluationListCreateView(APIView):
         )
 
     def post(self, request, pk):
+        """Enregistre la notation d'un membre du comité sous verrou transactionnel (select_for_update)."""
         if request.user.role not in (Role.ADMIN, Role.COORDONNATEUR, Role.COMITE):
             raise PermissionDenied("Seuls les membres du comité peuvent évaluer un dossier.")
 
@@ -260,6 +277,7 @@ class DossierDecisionView(APIView):
     permission_classes = [HasRole(Role.ADMIN, Role.COORDONNATEUR)]
 
     def post(self, request, pk):
+        """Enregistre la décision motivée du jury et bascule de façon atomique le statut du projet."""
         with transaction.atomic():
             dossier = get_object_or_404(
                 Dossier.objects.select_for_update().select_related("projet"), pk=pk
@@ -272,6 +290,7 @@ class DossierDecisionView(APIView):
             decision = serializer.save()
 
         envoyer_email_decision_dossier(decision)
+        tracer_decision_dossier(request.user, decision)
         return Response(DecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
 
 
@@ -287,11 +306,13 @@ class ProjetMentorView(APIView):
     """Affectation ou consultation du mentor d'un projet."""
 
     def get_permissions(self):
+        """Autorise la lecture aux utilisateurs authentifiés et réserve l'affectation à l'équipe dirigeante."""
         if self.request.method == "GET":
             return [permissions.IsAuthenticated()]
         return [HasRole(Role.ADMIN, Role.COORDONNATEUR)()]
 
     def get(self, request, pk):
+        """Consulte le mentor assigné avec contrôle strict d'anonymat (tiers non autorisés rejetés)."""
         projet = get_object_or_404(Projet, pk=pk)
         affectation = AffectationMentor.objects.filter(projet=projet).select_related("mentor").first()
         user = request.user
@@ -308,13 +329,16 @@ class ProjetMentorView(APIView):
         return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
+        """Affecte un mentor au projet incubé et notifie les parties prenantes."""
         projet = get_object_or_404(Projet, pk=pk)
+        mentor_precedent = getattr(getattr(projet, "affectation_mentor", None), "mentor", None)
         serializer = AffectationMentorSerializer(
             data=request.data,
             context={"request": request, "projet": projet},
         )
         serializer.is_valid(raise_exception=True)
         affectation = serializer.save()
+        tracer_affectation_mentor(request.user, affectation, mentor_precedent)
         return Response(AffectationMentorSerializer(affectation).data, status=status.HTTP_200_OK)
 
 
@@ -342,12 +366,14 @@ class ProjetObjectifListCreateView(APIView):
         raise PermissionDenied("Vous n'avez pas accès aux objectifs de ce projet.")
 
     def get(self, request, pk):
+        """Récupère l'ensemble des objectifs fixés pour le projet incubé."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=False)
         objectifs = Objectif.objects.filter(projet=projet).select_related("cree_par")
         return Response(ObjectifSerializer(objectifs, many=True).data)
 
     def post(self, request, pk):
+        """Définit un nouvel objectif d'accompagnement (réservé au mentor et à l'équipe CIAT)."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=True)
         serializer = ObjectifSerializer(
@@ -365,6 +391,7 @@ class ObjectifDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, pk):
+        """Met à jour le statut ou le libellé d'un objectif opérationnel."""
         objectif = get_object_or_404(Objectif.objects.select_related("projet__affectation_mentor"), pk=pk)
         user = request.user
         projet = objectif.projet
@@ -403,6 +430,7 @@ class ProjetJalonListCreateView(APIView):
         raise PermissionDenied("Vous n'avez pas accès aux jalons de ce projet.")
 
     def get(self, request, pk):
+        """Liste les jalons d'un projet avec leurs preuves et commentaires associés."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=False)
         jalons = (
@@ -413,6 +441,7 @@ class ProjetJalonListCreateView(APIView):
         return Response(JalonSerializer(jalons, many=True).data)
 
     def post(self, request, pk):
+        """Crée un nouveau jalon avec échéance et livrable attendu."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=True)
         serializer = JalonSerializer(
@@ -430,6 +459,7 @@ class JalonDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, pk):
+        """Actualise l'état d'un jalon (à faire, en cours, fait) avec historisation."""
         jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
         user = request.user
         is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
@@ -450,6 +480,7 @@ class JalonPreuveCreateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, pk):
+        """Téléverse un fichier de preuve justifiant la complétion d'un jalon."""
         jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
         user = request.user
         is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
@@ -473,6 +504,7 @@ class JalonCommentaireCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
+        """Enregistre un retour ou une consigne d'accompagnement sur le jalon."""
         jalon = get_object_or_404(Jalon.objects.select_related("projet__affectation_mentor"), pk=pk)
         user = request.user
         is_mentor = hasattr(jalon.projet, "affectation_mentor") and jalon.projet.affectation_mentor.mentor_id == user.id
@@ -496,6 +528,7 @@ class AlerteJalonListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        """Retourne la liste des jalons dépassés filtrés selon le périmètre d'habilitation."""
         user = request.user
         today = timezone.now().date()
         base_qs = Jalon.objects.filter(echeance__lt=today).exclude(statut=StatutJalon.FAIT).select_related("projet")
@@ -537,12 +570,14 @@ class ProjetSuiviListCreateView(APIView):
         raise PermissionDenied("Vous n'avez pas accès aux bilans de suivi de ce projet.")
 
     def get(self, request, pk):
+        """Restitue les bilans d'étape à 3 et 6 mois du projet."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=False)
         suivis = SuiviProjet.objects.filter(projet=projet).select_related("redige_par")
         return Response(SuiviProjetSerializer(suivis, many=True).data)
 
     def post(self, request, pk):
+        """Enregistre le bilan semestriel formalisé par l'équipe d'accompagnement."""
         projet = get_object_or_404(Projet, pk=pk)
         self._check_access(request.user, projet, write=True)
         serializer = SuiviProjetSerializer(
@@ -928,5 +963,111 @@ class ProjetCompteRenduExportView(APIView):
         return response
 
 
+class IncubateurCalendrierView(APIView):
+    """Calendrier mensuel des jalons et objectifs d'accompagnement de l'incubateur."""
 
+    permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        summary="Calendrier des jalons et objectifs du mois",
+        description=(
+            "Renvoie pour l'utilisateur connecté les jalons et objectifs du mois spécifié "
+            "sous la forme [{ date, type, titre, projet, statut, en_retard }], triés par date. "
+            "Les porteurs voient leurs projets, les mentors ceux qui leur sont affectés, "
+            "et l'équipe CIAT voit l'ensemble des projets de l'incubateur."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="mois",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Mois d'échéance au format AAAA-MM (ex: 2026-10)",
+            ),
+        ],
+        responses={
+            200: IncubateurCalendrierItemSerializer(many=True),
+            400: OpenApiResponse(description="Paramètre mois manquant ou format invalide"),
+            401: OpenApiResponse(description="Authentification requise"),
+        },
+    )
+    def get(self, request):
+        user = request.user
+        mois = request.query_params.get("mois")
+
+        if not mois:
+            return Response(
+                {"detail": "Le paramètre 'mois' est obligatoire (format AAAA-MM)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not re.match(r"^\d{4}-(?:0[1-9]|1[0-2])$", mois):
+            return Response(
+                {
+                    "detail": "Le paramètre 'mois' est invalide. Format attendu : AAAA-MM (ex: 2026-10)."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        year, month = map(int, mois.split("-"))
+        _, last_day = calendar.monthrange(year, month)
+        date_debut = datetime.date(year, month, 1)
+        date_fin = datetime.date(year, month, last_day)
+        today = timezone.now().date()
+
+        # Périmètre selon les droits de l'utilisateur
+        if user.is_equipe or user.is_staff or user.is_superuser:
+            jalons_base = Jalon.objects.all()
+            objectifs_base = Objectif.objects.all()
+        elif user.role == Role.MENTOR:
+            jalons_base = Jalon.objects.filter(projet__affectation_mentor__mentor=user)
+            objectifs_base = Objectif.objects.filter(projet__affectation_mentor__mentor=user)
+        elif user.role == Role.PORTEUR:
+            jalons_base = Jalon.objects.filter(projet__porteur=user)
+            objectifs_base = Objectif.objects.filter(projet__porteur=user)
+        else:
+            return Response([], status=status.HTTP_200_OK)
+
+        jalons = (
+            jalons_base.filter(echeance__range=(date_debut, date_fin))
+            .select_related("projet")
+            .order_by("echeance", "cree_le")
+        )
+        objectifs = (
+            objectifs_base.filter(echeance__range=(date_debut, date_fin))
+            .select_related("projet")
+            .order_by("echeance", "cree_le")
+        )
+
+        evenements = []
+        for j in jalons:
+            evenements.append(
+                {
+                    "date": j.echeance.isoformat(),
+                    "type": "jalon",
+                    "titre": j.titre,
+                    "projet": j.projet.titre,
+                    "statut": j.statut,
+                    "en_retard": j.en_retard,
+                }
+            )
+
+        for obj in objectifs:
+            en_retard_obj = bool(
+                obj.statut != StatutObjectif.ATTEINT and obj.echeance < today
+            )
+            evenements.append(
+                {
+                    "date": obj.echeance.isoformat(),
+                    "type": "objectif",
+                    "titre": obj.libelle,
+                    "projet": obj.projet.titre,
+                    "statut": obj.statut,
+                    "en_retard": en_retard_obj,
+                }
+            )
+
+        # Tri chronologique par date
+        evenements.sort(key=lambda x: (x["date"], x["type"], x["titre"]))
+
+        return Response(evenements, status=status.HTTP_200_OK)

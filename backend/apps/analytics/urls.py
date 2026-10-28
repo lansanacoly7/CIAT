@@ -13,6 +13,7 @@ Points d'entrée de l'API /api/analytics/ :
 - /api/analytics/partenariats-financements/stats/
 """
 from django.urls import path
+
 from .views import (
     AnalyticsExportView,
     EvolutionView,

@@ -8,10 +8,12 @@ Règle métier stricte :
 """
 from django.core.exceptions import ValidationError
 from django.db import models
+
 from apps.core.models import Projet
 
 
 class TypePartenariat(models.TextChoices):
+    """Typologie des conventions de partenariat signées avec le CIAT (R&D, commercial, académique)."""
     TECHNIQUE = "technique", "Technique & R&D"
     FINANCIER = "financier", "Financier & Investissement"
     COMMERCIAL = "commercial", "Commercial & Marché"
@@ -21,6 +23,7 @@ class TypePartenariat(models.TextChoices):
 
 
 class StatutPartenariat(models.TextChoices):
+    """État contractuel de l'accord de partenariat (de la discussion initiale à la clôture)."""
     EN_DISCUSSION = "en_discussion", "En discussion"
     SIGNE = "signe", "Signé"
     ACTIF = "actif", "Actif"
@@ -64,8 +67,19 @@ class Partenariat(models.Model):
         ordering = ["-date_debut", "partenaire"]
         verbose_name = "Partenariat"
         verbose_name_plural = "Partenariats"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutPartenariat.choices]),
+                name="check_partenariat_statut_valide",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(type__in=[c[0] for c in TypePartenariat.choices]),
+                name="check_partenariat_type_valide",
+            ),
+        ]
 
     def clean(self):
+        """Vérifie la règle d'éligibilité : seuls les projets retenus ou incubés peuvent avoir un partenariat."""
         super().clean()
         if self.projet_id:
             statuts_interdits = [Projet.Statut.IDEE, Projet.Statut.DEPOSE]
@@ -75,14 +89,17 @@ class Partenariat(models.Model):
                 )
 
     def save(self, *args, **kwargs):
+        """Exécute les validations métier clean() avant persistance."""
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
+        """Représentation lisible du partenariat avec son partenaire et projet associé."""
         return f"{self.partenaire} — {self.projet.titre} ({self.get_statut_display()})"
 
 
 class StatutFinancement(models.TextChoices):
+    """Étape de mobilisation des fonds (instruction, accord de principe, décaissement effectif)."""
     EN_INSTRUCTION = "en_cours", "En cours d'instruction"
     ACCORDE = "accorde", "Accordé"
     DECAISSE = "decaisse", "Décaissé"
@@ -126,8 +143,19 @@ class Financement(models.Model):
         ordering = ["-date", "-montant"]
         verbose_name = "Financement"
         verbose_name_plural = "Financements"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(montant__gt=0),
+                name="check_financement_montant_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutFinancement.choices]),
+                name="check_financement_statut_valide",
+            ),
+        ]
 
     def clean(self):
+        """Valide que le montant est strictement positif et que le projet n'est pas au stade embryonnaire."""
         super().clean()
         if self.projet_id:
             statuts_interdits = [Projet.Statut.IDEE, Projet.Statut.DEPOSE]
@@ -139,8 +167,10 @@ class Financement(models.Model):
             raise ValidationError("Le montant du financement doit être supérieur à zéro.")
 
     def save(self, *args, **kwargs):
+        """Force la validation métier intégrale avant enregistrement en base."""
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
+        """Libellé affichant la source, le montant en FCFA et le projet bénéficiaire."""
         return f"{self.source} : {self.montant:,.0f} FCFA — {self.projet.titre} ({self.get_statut_display()})"

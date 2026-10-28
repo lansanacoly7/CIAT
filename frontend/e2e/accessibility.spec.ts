@@ -11,14 +11,17 @@ const SCREENS: ScreenAudit[] = [
   { name: "Accueil", url: "/", authenticated: false },
   { name: "Galerie des innovations", url: "/galerie", authenticated: false },
   { name: "Connexion", url: "/connexion", authenticated: false },
-  { name: "Tableau de bord décisionnel", url: "/tableau-de-bord", authenticated: true },
+  { name: "Tableau de bord décisionnel (Vue d'ensemble)", url: "/tableau-de-bord", authenticated: true },
+  { name: "Tableau de bord (Vue Projets)", url: "/tableau-de-bord?vue=projets", authenticated: true },
+  { name: "Tableau de bord (Vue Financements)", url: "/tableau-de-bord?vue=financements", authenticated: true },
+  { name: "Tableau de bord (Vue Registre)", url: "/tableau-de-bord?vue=registre", authenticated: true },
   { name: "Générateur de documents", url: "/documents", authenticated: true },
   { name: "Gestion de l'incubateur", url: "/incubateur", authenticated: true },
   { name: "Assistant IA", url: "/assistant", authenticated: true },
   { name: "Référentiel méthodologique", url: "/tableau-de-bord/methodologie", authenticated: true },
 ];
 
-test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 écrans)", () => {
+test.describe("Phase 9 — Audit d'accessibilité mesuré avec Axe-core (11 écrans et vues)", () => {
   let authenticatedContext: BrowserContext;
   let authPage: Page;
 
@@ -63,15 +66,8 @@ test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
         .analyze();
 
-interface AxeViolation {
-  id: string;
-  impact?: string | null;
-  description: string;
-  nodes: Array<{ target: unknown; html: string; failureSummary?: string }>;
-}
-
-      const criticalViolations = (results.violations as AxeViolation[]).filter(
-        (v) => v.impact === "critical" || v.impact === "serious"
+      const criticalViolations = results.violations.filter(
+        (v: { impact?: string | null }) => v.impact === "critical" || v.impact === "serious"
       );
 
       console.log(
@@ -98,7 +94,11 @@ interface AxeViolation {
         expect(
           criticalViolations,
           `Violations critiques ou sérieuses détectées sur ${screen.name} (${screen.url}) : ${JSON.stringify(
-            criticalViolations.map((v) => ({ id: v.id, impact: v.impact, desc: v.description })),
+            criticalViolations.map((v: { id: string; impact?: string | null; description: string }) => ({
+              id: v.id,
+              impact: v.impact,
+              desc: v.description,
+            })),
             null,
             2
           )}`

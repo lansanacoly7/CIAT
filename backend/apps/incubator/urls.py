@@ -10,6 +10,7 @@ from .views import (
     DossierListCreateView,
     DossierSoumettreView,
     GrilleActuelleView,
+    IncubateurCalendrierView,
     JalonCommentaireCreateView,
     JalonDetailView,
     JalonPreuveCreateView,
@@ -27,6 +28,8 @@ from .views import (
 app_name = "incubator"
 
 urlpatterns = [
+    # Calendrier mensuel (jalons et objectifs)
+    path("calendrier/", IncubateurCalendrierView.as_view(), name="incubateur-calendrier"),
     # Mentors et affectation
     path("mentors/", MentorListView.as_view(), name="mentor-list"),
     path("projets/<int:pk>/mentor/", ProjetMentorView.as_view(), name="projet-mentor"),

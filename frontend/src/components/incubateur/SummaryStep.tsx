@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, FileText, Info, Pencil } from "lucide-react";
 import { telechargerAccuseReception, suiviErrorMessage, type Dossier } from "@/lib/incubator";
 import type { Domaine, ProjectInfo } from "./ProjectInfoStep";
 
@@ -14,20 +15,33 @@ export const PIECE_LABELS: Record<string, string> = {
 
 const label = (type: string) => PIECE_LABELS[type] ?? type;
 
-function Section({ title, onEdit, children }: { title: string; onEdit: () => void; children: ReactNode }) {
+function SectionCard({
+  title,
+  count,
+  onEdit,
+  children,
+}: {
+  title: string;
+  count?: number;
+  onEdit: () => void;
+  children: ReactNode;
+}) {
   return (
-    <section className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-sm sm:p-5">
-      <div className="mb-3 flex items-center justify-between gap-2 border-b border-[#EFE4D6] pb-2">
-        <h3 className="font-[family-name:var(--font-title)] text-base font-bold text-[#612D10]">{title}</h3>
+    <section className="rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-[#EFE4D6]/70">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#A35926]" />
+          <h3 className="font-[family-name:var(--font-title)] text-sm sm:text-base font-bold text-[#612D10] tracking-wide uppercase">
+            {title} {typeof count === "number" && <span className="font-normal text-[#8C6D4F]">({count})</span>}
+          </h3>
+        </div>
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-[#612D10] px-4 text-sm font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#EFE4D6] bg-white px-3 py-1.5 text-xs font-semibold text-[#612D10] transition-colors hover:border-[#C99A68] hover:bg-[#FAF7F2]"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.768-6.768a2 2 0 112.828 2.828L11.828 15.83a4 4 0 01-1.414.943L7 18l1.226-3.414A4 4 0 019 13z" />
-          </svg>
-          Modifier
+          <Pencil className="h-3.5 w-3.5 text-[#A35926]" aria-hidden="true" />
+          <span>Modifier</span>
         </button>
       </div>
       {children}
@@ -35,12 +49,12 @@ function Section({ title, onEdit, children }: { title: string; onEdit: () => voi
   );
 }
 
-function Row({ name, value }: { name: string; value?: string }) {
+function DataRow({ name, value }: { name: string; value?: string }) {
   return (
-    <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-4">
-      <dt className="text-sm font-medium text-[#6b5646]">{name}</dt>
-      <dd className="whitespace-pre-line text-sm leading-relaxed text-[#24140D] sm:col-span-2">
-        {value?.trim() || <span className="italic text-[#6b5646]">Non renseigné</span>}
+    <div className="py-2.5 sm:grid sm:grid-cols-3 sm:gap-4 border-b border-[#EFE4D6]/40 last:border-b-0">
+      <dt className="text-xs sm:text-sm font-semibold text-[#6b5646]">{name}</dt>
+      <dd className="mt-1 whitespace-pre-line text-xs sm:text-sm leading-relaxed text-[#24140D] sm:col-span-2 sm:mt-0 font-medium">
+        {value?.trim() || <span className="italic font-normal text-[#8C6D4F]">Non renseigné</span>}
       </dd>
     </div>
   );
@@ -91,156 +105,238 @@ export default function SummaryStep({
     }
   }
 
+  // ÉCRAN DE CONFIRMATION DE SUCCÈS APRÈS SOUMISSION
   if (submitted) {
     return (
-      <div role="status" className="rounded-xl border border-[#2E7D32]/40 bg-[#2E7D32]/5 p-6 text-center sm:p-10">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#2E7D32] text-white">
-          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+      <div role="status" className="rounded-2xl border border-[#2E7D32]/40 bg-white p-6 text-center sm:p-10 shadow-sm space-y-4">
+        <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#2E7D32]/10 text-[#2E7D32]">
+          <CheckCircle2 className="h-8 w-8 stroke-[2.2]" aria-hidden="true" />
         </div>
-        <h2 className="text-xl font-bold text-[#2E7D32]">Dossier transmis avec succès</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-[#24140D]">
-          Votre dossier « {info.titre} » a bien été transmis à l&apos;équipe du CIAT. Il sera examiné par le comité de
-          sélection ; vous serez informé de la suite.
+        <h2 className="font-[family-name:var(--font-title)] text-xl sm:text-2xl font-bold text-[#2E7D32]">
+          Dossier transmis avec succès
+        </h2>
+        <p className="mx-auto max-w-lg text-xs sm:text-sm text-[#24140D] leading-relaxed">
+          Votre dossier « <span className="font-bold text-[#612D10]">{info.titre || "Projet CIAT"}</span> » a bien été transmis à l&apos;équipe du CIAT.
+          Il sera examiné par le comité de sélection ; vous serez informé de la suite de son instruction.
         </p>
 
         {accuseError && (
-          <div role="alert" className="mx-auto mt-4 max-w-md rounded-lg border border-[#DC2626]/30 bg-[#DC2626]/5 p-3 text-xs text-[#DC2626]">
+          <div role="alert" className="mx-auto max-w-md rounded-xl border border-[#DC2626]/30 bg-[#DC2626]/5 p-3 text-xs text-[#DC2626]">
             {accuseError}
           </div>
         )}
 
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="pt-4 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/incubateur/projets"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer"
+          >
+            <span>Accéder au suivi de mes projets</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
           <button
             type="button"
             onClick={handleTelechargerAccuse}
             disabled={downloadingAccuse}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-white transition-colors hover:bg-[#3F1D0A] disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#612D10] bg-white px-6 text-xs sm:text-sm font-bold text-[#612D10] transition-all hover:bg-[#F2E5D5] hover:border-[#3F1D0A] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer disabled:opacity-60"
           >
             {downloadingAccuse ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
             ) : (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
+              <Download className="h-4 w-4" aria-hidden="true" />
             )}
             <span>Télécharger mon accusé de réception</span>
           </button>
           <Link
             href="/compte"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg border-[1.5px] border-[#612D10] px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-semibold text-[#6b5646] transition-all hover:border-[#A35926] hover:bg-[#F2E5D5] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
             Voir mon compte
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#EFE4D6] bg-white px-6 font-[family-name:var(--font-title)] font-semibold text-[#6b5646] hover:bg-[#FAF7F2]"
-          >
-            Retour à l&apos;accueil
           </Link>
         </div>
       </div>
     );
   }
 
+  // ÉCRAN PRINCIPAL DE RÉCAPITULATIF (ÉTAPE 3)
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[#612D10]">Vérifiez votre dossier</h2>
-        <p className="mt-1 text-sm text-[#6b5646]">
-          Relisez les informations ci-dessous. Une fois soumis, le dossier n&apos;est plus modifiable.
+    <div className="space-y-6">
+      {/* En-tête de l'étape */}
+      <div className="border-b border-[#EFE4D6]/70 pb-3.5">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#A35926]">
+            Dossier de candidature
+          </span>
+          <span className="text-xs text-[#8C6D4F]">· Étape 3 sur 3</span>
+        </div>
+        <h2 className="font-[family-name:var(--font-title)] text-xl sm:text-2xl font-bold tracking-tight text-[#24140D]">
+          Vérifiez votre dossier
+        </h2>
+        <p className="text-xs sm:text-sm text-[#6b5646] mt-0.5">
+          Relisez attentivement les éléments saisis avant l&apos;envoi officiel. Une fois soumis, le dossier ne sera plus modifiable.
         </p>
       </div>
 
-      <Section title="Informations du projet" onEdit={() => onEdit(0)}>
-        <dl className="divide-y divide-[#EFE4D6]">
-          <Row name="Titre" value={info.titre} />
-          <Row name="Domaine" value={domaines.find((d) => d.id === info.domaine)?.nom} />
-          <Row name="Problème" value={info.probleme} />
-          <Row name="Solution" value={info.solution} />
-          <Row name="Résumé" value={info.resume} />
-        </dl>
-      </Section>
-
-      <Section title={`Pièces justificatives (${dossier.pieces.length})`} onEdit={() => onEdit(1)}>
-        {dossier.pieces.length === 0 ? (
-          <p className="text-sm italic text-[#6b5646]">Aucune pièce téléversée.</p>
-        ) : (
-          <ul className="divide-y divide-[#EFE4D6]">
-            {dossier.pieces.map((p) => (
-              <li key={p.id} className="flex flex-col py-2 text-sm sm:flex-row sm:justify-between sm:gap-4">
-                <span className="font-medium text-[#24140D]">{label(p.type)}</span>
-                <span className="break-all text-[#6b5646]">{p.nom}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <div
-        className={`rounded-xl border p-4 ${
-          incomplete ? "border-[#DC2626]/40 bg-[#DC2626]/5" : "border-[#2E7D32]/40 bg-[#2E7D32]/5"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <p className={`font-semibold ${incomplete ? "text-[#DC2626]" : "text-[#2E7D32]"}`}>
-            {incomplete ? "Dossier incomplet : soumission impossible pour le moment" : "Dossier complet : prêt à être soumis"}
-          </p>
-          <span className="font-[family-name:var(--font-title)] text-lg font-extrabold text-[#612D10]">{dossier.completude}%</span>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#EFE4D6]">
-          <div
-            className={`h-full rounded-full transition-all ${incomplete ? "bg-[#C99A68]" : "bg-[#2E7D32]"}`}
-            style={{ width: `${dossier.completude}%` }}
-          />
-        </div>
-        {incomplete && (
-          <div id="soumission-aide" className="mt-3 text-sm text-[#24140D]">
-            {missing.length > 0 ? (
-              <>
-                <p>Pièces obligatoires manquantes :</p>
-                <ul className="mt-1 list-inside list-disc">
-                  {missing.map((m) => (
-                    <li key={m}>{label(m)}</li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <p>Le dossier doit atteindre 100 % de complétude pour être soumis.</p>
-            )}
-            <button type="button" onClick={() => onEdit(1)} className="mt-2 min-h-11 font-semibold text-[#612D10] underline">
-              Ajouter les pièces manquantes
-            </button>
-          </div>
-        )}
-      </div>
-
       {error && (
-        <div role="alert" className="rounded-lg border border-[#DC2626]/40 bg-[#DC2626]/5 px-3 py-2 text-sm text-[#DC2626]">
+        <div role="alert" className="rounded-xl border border-[#DC2626]/40 bg-[#DC2626]/5 px-4 py-3 text-xs sm:text-sm text-[#DC2626]">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col-reverse gap-3 border-t border-[#EFE4D6] pt-5 sm:flex-row sm:justify-between">
-        <button
-          type="button"
-          onClick={() => onEdit(1)}
-          disabled={submitting}
-          className="min-h-12 rounded-lg border-[1.5px] border-[#612D10] bg-white px-6 font-[family-name:var(--font-title)] font-semibold text-[#612D10] hover:bg-[#FAF7F2] disabled:opacity-50"
-        >
-          Retour aux pièces
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={incomplete || submitting}
-          aria-describedby={incomplete ? "soumission-aide" : undefined}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#612D10] px-8 font-[family-name:var(--font-title)] font-semibold text-white transition-colors hover:bg-[#3F1D0A] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {submitting && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
-          {submitting ? "Envoi en cours…" : "Soumettre définitivement"}
-        </button>
+      {/* DISPOSITION EN DEUX COLONNES (8 COLS CONTENU + 4 COLS STATUT/COMPLÉTUDE) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* COLONNE GAUCHE (8 colonnes) : LES DEUX SECTIONS MÉTIER */}
+        <div className="lg:col-span-8 space-y-5">
+          
+          {/* SECTION 1 : INFORMATIONS DU PROJET */}
+          <SectionCard title="Informations du projet" onEdit={() => onEdit(0)}>
+            <dl className="divide-y divide-[#EFE4D6]/40 text-xs sm:text-sm">
+              <DataRow name="Titre du projet" value={info.titre} />
+              <DataRow name="Domaine d'activité" value={domaines.find((d) => d.id === info.domaine)?.nom} />
+              <DataRow name="Problème identifié" value={info.probleme} />
+              <DataRow name="Solution proposée" value={info.solution} />
+              <DataRow name="Résumé court" value={info.resume} />
+            </dl>
+          </SectionCard>
+
+          {/* SECTION 2 : PIÈCES JUSTIFICATIVES */}
+          <SectionCard title="Pièces justificatives" count={dossier.pieces.length} onEdit={() => onEdit(1)}>
+            {dossier.pieces.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#EFE4D6] bg-[#FAF7F2]/60 p-5 text-center">
+                <p className="text-xs sm:text-sm italic text-[#6b5646]">
+                  Aucune pièce téléversée.
+                </p>
+                <p className="text-[11px] text-[#8C6D4F] mt-1">
+                  Les 3 documents obligatoires doivent être déposés pour activer la soumission finale.
+                </p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-[#EFE4D6]/50">
+                {dossier.pieces.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between py-2.5 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                      <FileText className="h-4 w-4 text-[#A35926] shrink-0" aria-hidden="true" />
+                      <span className="font-semibold text-[#24140D] truncate">{label(p.type)}</span>
+                    </div>
+                    <span className="text-xs text-[#6b5646] font-mono shrink-0 truncate max-w-[200px]">{p.nom}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+
+          {/* BARRE D'ACTIONS INFÉRIEURE */}
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => onEdit(1)}
+              disabled={submitting}
+              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-6 text-xs sm:text-sm font-bold text-[#612D10] shadow-2xs transition-all hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs active:scale-[0.98] cursor-pointer disabled:opacity-50"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <span>Retour aux pièces</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={incomplete || submitting}
+              aria-describedby={incomplete ? "soumission-aide" : undefined}
+              className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#612D10] px-8 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A] hover:scale-[1.02] hover:shadow-md active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C99A68] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting && <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+              <span>{submitting ? "Envoi en cours…" : "Soumettre définitivement"}</span>
+              <ArrowRight className="h-4 w-4 stroke-[2]" aria-hidden="true" />
+            </button>
+          </div>
+
+        </div>
+
+        {/* COLONNE DROITE (4 colonnes) : PANNEAU DE COMPLÉTUDE & AVERTISSEMENT */}
+        <div className="lg:col-span-4 space-y-4">
+          
+          {/* Panneau de complétude & Alerte */}
+          <div
+            className={`rounded-2xl border p-5 sm:p-6 shadow-sm space-y-4 bg-white transition-all ${
+              incomplete ? "border-[#DC2626]/30" : "border-[#2E7D32]/30"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className={`text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                  incomplete ? "bg-[#DC2626]/10 text-[#DC2626]" : "bg-[#2E7D32]/10 text-[#2E7D32]"
+                }`}
+              >
+                {incomplete ? "Dossier incomplet" : "Dossier complet"}
+              </span>
+              <span className="font-[family-name:var(--font-title)] text-lg font-extrabold text-[#612D10]">
+                {dossier.completude}%
+              </span>
+            </div>
+
+            {/* Jauge de progression */}
+            <div className="h-2 w-full rounded-full bg-[#EFE4D6] overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  incomplete ? "bg-[#DC2626]" : "bg-[#2E7D32]"
+                }`}
+                style={{ width: `${dossier.completude}%` }}
+              />
+            </div>
+
+            {incomplete ? (
+              <div id="soumission-aide" className="space-y-3">
+                <p className="text-xs font-bold text-[#24140D]">
+                  Soumission impossible pour le moment
+                </p>
+                {missing.length > 0 ? (
+                  <div>
+                    <p className="text-[11px] text-[#6b5646]">Pièces obligatoires manquantes :</p>
+                    <ul className="mt-2 space-y-1.5 text-xs text-[#24140D]">
+                      {missing.map((m) => (
+                        <li key={m} className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626] shrink-0" />
+                          <span>{label(m)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#6b5646]">Le dossier doit atteindre 100 % de complétude pour être soumis.</p>
+                )}
+
+                <div className="pt-2 border-t border-[#EFE4D6]/70">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(1)}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#612D10] hover:bg-[#3F1D0A] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.01]"
+                  >
+                    <span>Ajouter les pièces manquantes</span>
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-[#2E7D32]">Prêt à être soumis</p>
+                <p className="text-xs text-[#6b5646] leading-relaxed">
+                  Toutes les pièces obligatoires ont été validées. Vous pouvez cliquer sur « Soumettre définitivement ».
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Avis de verrouillage CIAT */}
+          <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/80 p-4 text-xs text-[#6b5646] flex items-start gap-2.5 shadow-xs">
+            <Info className="h-4 w-4 text-[#A35926] shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="leading-relaxed">
+              <strong className="text-[#24140D]">Rappel :</strong> Une fois soumis, votre dossier sera verrouillé pour analyse par le comité d&apos;incubation du CIAT.
+            </p>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

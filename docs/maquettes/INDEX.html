@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revue Officielle — Maquettes Espace Candidat & Porteur CIAT (Maimouna)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brun-profond: #21130D;
+      --brun-cuivre: #7A3E1D;
+      --ocre: #C99A68;
+      --creme-bg: #FAF7F2;
+      --carte-bg: #FFFFFF;
+      --bordure: #EFE4D6;
+      --texte-principal: #24140D;
+      --texte-secondaire: #6A5345;
+      --badge-porteur: #EFE6DC;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--creme-bg);
+      color: var(--texte-principal);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+    header {
+      background: linear-gradient(135deg, #2E1605 0%, #1A0D04 100%);
+      color: white;
+      padding: 40px 24px;
+      border-bottom: 4px solid var(--ocre);
+    }
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(201, 154, 104, 0.2);
+      border: 1px solid var(--ocre);
+      color: #F5D7B5;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #E2D3C4;
+      font-size: 15px;
+      max-width: 800px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .meta-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .meta-label { font-size: 11px; text-transform: uppercase; color: #C99A68; font-weight: 700; }
+    .meta-val { font-size: 14px; font-weight: 600; color: #FFFFFF; margin-top: 2px; }
+
+    main {
+      max-width: 1400px;
+      margin: 40px auto 0;
+      padding: 0 24px;
+    }
+
+    .notice-box {
+      background: #FFFFFF;
+      border: 1px solid #D6C2AF;
+      border-left: 5px solid var(--brun-cuivre);
+      border-radius: 12px;
+      padding: 18px 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 2px 8px rgba(33, 19, 13, 0.04);
+    }
+    .notice-title { font-weight: 700; color: var(--brun-cuivre); margin-bottom: 4px; font-size: 15px; }
+    .notice-desc { font-size: 14px; color: var(--texte-secondaire); }
+
+    .screen-block {
+      background: var(--carte-bg);
+      border: 1px solid var(--bordure);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 48px;
+      box-shadow: 0 4px 16px rgba(33, 19, 13, 0.04);
+    }
+    .screen-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--bordure);
+    }
+    .screen-title-area { display: flex; align-items: center; gap: 14px; }
+    .screen-num {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #2E1605;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .screen-title { font-size: 20px; font-weight: 800; color: var(--texte-principal); }
+    .screen-route { font-family: monospace; font-size: 13px; color: var(--brun-cuivre); background: #F5EFE6; padding: 4px 10px; border-radius: 6px; }
+    .screen-desc { font-size: 14px; color: var(--texte-secondaire); margin-bottom: 24px; max-width: 900px; }
+
+    .captures-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .captures-row { grid-template-columns: 1fr; }
+    }
+    .preview-card {
+      background: #FDFBF8;
+      border: 1px solid var(--bordure);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .preview-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brun-cuivre);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-label a {
+      color: #92532B;
+      text-decoration: none;
+      font-size: 11px;
+    }
+    .preview-label a:hover { text-decoration: underline; }
+    .img-wrap {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #E5D5C4;
+      background: white;
+    }
+    .img-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.2s;
+    }
+    .mobile-img-wrap {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-content">
+      <div class="badge-status">
+        ✓ Synchronisé avec origin/test & dev-maimouna (Commit 9047cbb)
+      </div>
+      <h1>Revue des 6 Écrans — Espace Candidat & Porteur de Projet</h1>
+      <p class="subtitle">
+        Validation visuelle officielle des pages développées par Maimouna Sall pour le CIAT. Toutes les captures sont certifiées conformes au rôle <strong>Porteur de projet</strong> (session <code>porteur@ciat.sn</code>).
+      </p>
+
+      <div class="meta-grid">
+        <div class="meta-card">
+          <div class="meta-label">Compte Utilisateur Test</div>
+          <div class="meta-val">porteur@ciat.sn (Rôle Porteur)</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Projet Porté en Démo</div>
+          <div class="meta-val">ID 67 — Projet Pilote CIAT</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Sidebar Actif</div>
+          <div class="meta-val">Espace Candidat (4 rubriques exclusives)</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Date & Commit</div>
+          <div class="meta-val">27 Octobre 2026 — 9047cbb</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="notice-box">
+      <div class="notice-title">Attestation de conformité du rôle et du parcours</div>
+      <div class="notice-desc">
+        Contrairement à d'anciennes maquettes exploratoires qui mélangeaient des droits d'administration ou de coordination, ces <strong>12 captures actuelles</strong> ont été générées avec le profil strict de candidat : aucun bouton d'évaluation de comité, aucun formulaire réservé au coordonnateur, navigation dédiée à l'Espace Candidat.
+      </div>
+    </div>
+
+    <!-- Écran 1 -->
+    <article class="screen-block" id="screen-1">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">1</div>
+          <div>
+            <h2 class="screen-title">Dépôt de candidature (Incubateur)</h2>
+            <span class="screen-route">/incubateur</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Parcours de soumission d'un projet en 3 étapes (Informations, Pièces justificatives avec téléversement et jauge de complétude, Récapitulatif et validation finale). Guide d'aide contextuelle à droite.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="01_depot_candidature_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="01_depot_candidature_desktop.png" alt="Dépôt de candidature Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="01_depot_candidature_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="01_depot_candidature_mobile.png" alt="Dépôt de candidature Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 2 -->
+    <article class="screen-block" id="screen-2">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">2</div>
+          <div>
+            <h2 class="screen-title">Suivi de mes projets (Vue Porteur)</h2>
+            <span class="screen-route">/incubateur/projets</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Portefeuille personnel du porteur connecté : liste filtrée affichant uniquement ses projets (ici <em>Projet Pilote CIAT</em>, ID 67), statut du dossier et jalons associés.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="02_suivi_projets_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="02_suivi_projets_desktop.png" alt="Suivi des projets Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="02_suivi_projets_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="02_suivi_projets_mobile.png" alt="Suivi des projets Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 3 -->
+    <article class="screen-block" id="screen-3">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">3</div>
+          <div>
+            <h2 class="screen-title">Fiche détaillée du projet & Suivi / Bilans</h2>
+            <span class="screen-route">/incubateur/projets/67</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Cockpit de suivi individuel : objectifs, jalons avec preuve, mentor référent, bilans semestriels et téléchargement des comptes rendus (formats Excel et PDF).
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="03_projet_detail_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="03_projet_detail_desktop.png" alt="Fiche projet Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="03_projet_detail_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="03_projet_detail_mobile.png" alt="Fiche projet Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 4 -->
+    <article class="screen-block" id="screen-4">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">4</div>
+          <div>
+            <h2 class="screen-title">Alertes de retard</h2>
+            <span class="screen-route">/incubateur/alertes</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Centre de notification des jalons dépassés du porteur. Vue épurée avec compteurs de statut (Toutes, À faire, En cours) et tri par urgence.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="04_alertes_retard_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="04_alertes_retard_desktop.png" alt="Alertes retard Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="04_alertes_retard_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="04_alertes_retard_mobile.png" alt="Alertes retard Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 5 -->
+    <article class="screen-block" id="screen-5">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">5</div>
+          <div>
+            <h2 class="screen-title">Mon profil & Compte</h2>
+            <span class="screen-route">/compte</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Gestion des données personnelles (nom, organisation, téléphone, genre), sécurité du compte et récapitulatif des candidatures avec téléchargement de l'accusé de réception.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="05_mon_compte_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="05_mon_compte_desktop.png" alt="Mon compte Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="05_mon_compte_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="05_mon_compte_mobile.png" alt="Mon compte Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Écran 6 -->
+    <article class="screen-block" id="screen-6">
+      <div class="screen-header">
+        <div class="screen-title-area">
+          <div class="screen-num">6</div>
+          <div>
+            <h2 class="screen-title">Assistant IA du CIAT</h2>
+            <span class="screen-route">/assistant</span>
+          </div>
+        </div>
+      </div>
+      <p class="screen-desc">
+        Espace conversationnel avec mode Documents CIAT et Atelier Rédaction. Volet d'historique latéral repliable à droite via un bouton toggle discret et suggestions d'actions directes.
+      </p>
+      <div class="captures-row">
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Desktop — 1440 × 900 px</span>
+            <a href="06_assistant_ia_desktop.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap">
+            <img src="06_assistant_ia_desktop.png" alt="Assistant IA Desktop" loading="lazy">
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-label">
+            <span>Mobile — 390 × 844 px</span>
+            <a href="06_assistant_ia_mobile.png" target="_blank">Ouvrir en plein écran ↗</a>
+          </div>
+          <div class="img-wrap mobile-img-wrap">
+            <img src="06_assistant_ia_mobile.png" alt="Assistant IA Mobile" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+</body>
+</html>

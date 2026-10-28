@@ -9,6 +9,7 @@ Critères d'acceptation :
 - Idempotente : un même jalon ne déclenche pas deux emails le même jour pour un destinataire.
 """
 from datetime import datetime
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 

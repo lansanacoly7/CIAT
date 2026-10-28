@@ -9,6 +9,7 @@ Gère :
   ni l'enregistrement de la décision (bloc try/except protecteur avec traçabilité dans les logs).
 """
 import logging
+
 from django.conf import settings
 from django.core.mail import send_mail
 

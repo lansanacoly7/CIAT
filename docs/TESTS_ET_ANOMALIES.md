@@ -141,3 +141,210 @@ coverage report --include="apps/*" -m
 | [`apps/incubator/management/commands/envoyer_alertes_retard.py`](../backend/apps/incubator/management/commands/envoyer_alertes_retard.py) | 20 | 5 | **75,0 %** | 32-36 | Gestion de l'option `--force` en ligne de commande. |
 | [`apps/incubator/emails.py`](../backend/apps/incubator/emails.py) | 57 | 13 | **77,2 %** | 32, 37-41, 77-83, 100, 105, 109-113, 170-176 | Gabarits d'e-mails pour statuts rejetés et notifications alternatives. |
 | [`apps/documents/services.py`](../backend/apps/documents/services.py) | 88 | 19 | **78,4 %** | 33, 42-53, 159-164 | Gestion des erreurs de gabarit manquant et exceptions d'export. |
+
+---
+
+## 6. Audit de Robustesse de l'API (Phase 7 — T1 : Aucune Erreur 500)
+
+- **Date d'exécution :** 27 octobre 2026
+- **Auteur :** Pathé (Back-end)
+- **Suite de test automatisée dédiée :** `backend/apps/core/tests/test_robustesse_500.py` (`RobustesseApiAucuneErreur500Tests`)
+- **Exécution :** `python backend/manage.py test apps.core.tests.test_robustesse_500` (7 tests exécutés en ~10 s, optimisé avec `MD5PasswordHasher`).
+- **Objectif :** Parcourir systématiquement l'ensemble des routes d'écriture et de lecture de l'API avec des entrées anormales et vérifier que le code retour est **toujours** dans `{400, 401, 403, 404, 409, 429}`, **jamais 500 (Internal Server Error)**.
+
+### Périmètre des 7 Catégories Testées
+
+1. **Identifiants négatifs ou inexistants (`test_01_identifiants_negatifs_ou_inexistants`) :**
+   - Requêtes sur toutes les routes de détail (`GET`, `PUT`, `PATCH`, `DELETE`) avec `/api/.../-1/`, `/api/.../-99999/` et `/api/.../999999/`.
+   - Contrôle : Retour HTTP 404 Not Found (ou 401/403 si droit d'accès requis), aucun crash ORM `DoesNotExist`.
+2. **Chaînes très longues / Buffer overflow test (`test_02_chaines_tres_longues_10000_caracteres`) :**
+   - Envois de payloads avec des champs textes saturés à 10 000 caractères (`"A" * 10000`) sur l'ensemble des routes `POST` / `PATCH` (auth, portal, incubator, documents, analytics, assistant, gallery).
+   - Contrôle : Validation DRF propre (HTTP 400 Bad Request avec message d'erreur explicite), aucun crash mémoire ni erreur SQL de troncature non gérée.
+3. **Types invalides (`test_03_types_faux_nombre_au_lieu_de_texte_et_inversement`) :**
+   - Envoi de nombres entiers ou flottants là où une chaîne ou un email est attendu (`{"email": 12345, "nom": 9999}`), et chaînes là où un entier/décimal/booléen est requis.
+   - Contrôle : Rejet par les sérialiseurs avec HTTP 400 Bad Request (`expected a string`, `valid number is required`).
+4. **Champs obligatoires absents (`test_04_champs_absents_et_payloads_vides`) :**
+   - Envoi de corps vides `{}` sur toutes les routes de création ou modification.
+   - Contrôle : HTTP 400 Bad Request (`This field is required`), pas de `KeyError` non rattrapée.
+5. **JSON syntaxiquement malformé (`test_05_json_invalide_et_corrompu`) :**
+   - Envoi de corps bruts non conformes (`{bad_json:`, `{"unclosed": "string`, `{"key": undefined}`) avec l'en-tête `Content-Type: application/json`.
+   - Contrôle : Pris en charge par le parser DRF avec HTTP 400 Bad Request (`JSON parse error`), aucune erreur 500 non interceptée.
+6. **Fichiers vides ou de mauvais type / exécutables (`test_06_fichiers_vides_et_mauvais_type`) :**
+   - Envoi de fichiers de taille 0 octet (`SimpleUploadedFile("empty.pdf", b"")`) et de scripts malveillants (`SimpleUploadedFile("script.sh", b"#!/bin/bash\necho 1", content_type="application/x-sh")`, `.exe`, `.bat`).
+   - Contrôle : HTTP 400 Bad Request systématique rejetant les fichiers vides et les extensions exécutables.
+7. **Doubles envois / Concurrence d'unicité (`test_07_doubles_envois_et_collisions_unicite`) :**
+   - Soumission répétée d'enregistrements avec contrainte d'unicité (création de compte avec email identique, création de fiche galerie pour le même projet).
+   - Contrôle : HTTP 400 Bad Request ou HTTP 409 Conflict, jamais d'erreur 500 `IntegrityError`.
+
+### Inventaire des 5 Cas Corrigés
+
+Au cours de cet audit, 5 cas susceptibles de provoquer une erreur 500 ou un défaut de validation en amont ont été découverts et corrigés :
+
+| Réf. | Composant / Fichier | Comportement avant correction | Correction appliquée | Statut HTTP garanti |
+|---|---|---|---|:---:|
+| **ROB-01** | `apps/analytics/views.py` (`QuestionView`) | La clause `except Exception` levait explicitement `status=status.HTTP_500_INTERNAL_SERVER_ERROR` en cas d'indisponibilité du service IA. | Remplacement par `status.HTTP_503_SERVICE_UNAVAILABLE` avec message d'indisponibilité propre. | `503` |
+| **ROB-02** | `apps/documents/views.py` (`GenererDocumentView`) | Les exceptions inattendues du générateur de document n'étaient pas protégées au niveau de la vue et pouvaient remonter en 500 Django standard. | Ajout d'une capture `except Exception as exc` retournant un statut `503 Service Unavailable` documenté. | `503` |
+| **ROB-03** | `apps/assistant/views.py` (`MessageListCreateView`) | Les exceptions du moteur RAG en création de message pouvaient faire crasher la requête en 500. | Ajout d'une capture `except Exception as exc` retournant `HTTP_503_SERVICE_UNAVAILABLE` pour service IA dégradé. | `503` |
+| **ROB-04** | `apps/incubator/serializers.py` (`PreuveJalonSerializer`) | Le validateur `validate_fichier` n'appelait pas explicitement les vérifications de taille (0 octet et >10 Mo) ni de signature de contenu avant la persistance. | Intégration de `validate_file_size(value)` et `validate_file_content(value)` rejetant immédiatement les fichiers vides ou interdits avec `ValidationError`. | `400` |
+| **ROB-05** | `apps/portal/serializers.py` (`DocumentPublicSerializer`, `PartenaireSerializer`, `ActualiteSerializer`) | L'upload de fichiers dans le portail public n'interdisait pas les fichiers vides (0 octet) ni les scripts exécutables (`.exe`, `.sh`, `.bat`, etc.). | Ajout des validateurs `validate_fichier`, `validate_logo` et `validate_image` rejetant les fichiers de 0 octet, les fichiers > 10 Mo/5 Mo et les extensions de scripts exécutables. | `400` |
+
+### Test de Mutation (Vérification de la sensibilité du test)
+
+Conformément à l'exigence de la tâche T1 (*« il casse si on retire une validation »*), un test de mutation a été réalisé :
+1. Désactivation temporaire de `validate_fichier` dans `apps/portal/serializers.py` (`DocumentPublicSerializer`).
+2. Exécution de `test_06_fichiers_vides_et_mauvais_type`.
+3. Résultat : Le test a échoué immédiatement avec `AssertionError: 201 != 400` (le serveur créait l'entité avec un fichier vide au lieu de rejeter avec 400).
+4. Restauration de la validation : La suite complète repasse au vert (`Ran 7 tests in 10.092s — OK`).
+
+---
+
+## 7. Optimisation et Profilage de la Suite de Tests (Phase 9 — Tâche T1)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Ramener le temps d'exécution de la suite complète strictement **sous 35 secondes** (336 tests), sans supprimer ni affaiblir aucun test.
+- **Commande de mesure de référence :**
+  ```bash
+  python manage.py test --timing --durations 15
+  ```
+
+### Synthèse Avant / Après Optimisation
+
+| Métrique | État Initial (Avant T1) | État Final (Après T1) | Évolution | Objectif |
+|---|---|---|---|---|
+| **Nombre total de tests** | **336 tests** (1 skipped) | **336 tests** (1 skipped) | Identique (0 test supprimé ni affaibli) | 336 tests |
+| **Durée d'exécution brute** | **55,867 s** | **32,265 s** | **-23,602 s (-42,2 %)** | **< 35,0 s** (Atteint) |
+| **Durée totale du processus** | **61,696 s** | **36,222 s** | **-25,474 s (-41,3 %)** | Réduction globale |
+| **Statut de la suite** | OK (vert) | OK (vert) | 100 % passante | Vert |
+
+### Diagnostic des Causes de Lenteur
+
+Le profilage initial avec `--durations 15` a mis en lumière 3 goulots d'étranglement majeurs :
+1. **Génération d'images de démonstration Pillow (`apps/core/demo_images.py`) :**
+   - Boucle Python traçant ligne par ligne 480 ou 600 lignes de dégradé par image (`draw.line`).
+   - Accès répétés au système de fichiers pour résoudre et instancier les polices TrueType (`ImageFont.truetype`) sur chaque ligne de texte et chaque image sans mise en cache.
+   - Compression lourde PNG et JPEG avec `optimize=True` effectuant des passes multiples lentes sous Pillow.
+   - Conséquence : la classe `TestDemoImages` monopolisait **10,403 s** pour seulement 4 tests.
+2. **Absence d'accélérateur de hachage de mot de passe (`PASSWORD_HASHERS`) :**
+   - `TestDemoImages` n'utilisait pas `MD5PasswordHasher` et exécutait le hachage PBKDF2 par défaut (870 000 itérations) dans sa méthode `setUp()` à chaque test.
+3. **Recréation systématique des acteurs dans `setUp()` plutôt que `setUpTestData()` :**
+   - Dans `apps/core/tests/test_audit.py` et `test_notifications.py`, les méthodes `setUp()` recréaient 4 utilisateurs avec hachage sur chaque test unitaire.
+4. **Effet cumulatif sur `seed_all` :**
+   - Le test `test_seed_all_complet_coherence_et_idempotence` (qui appelle deux fois `seed_all` pour prouver l'idempotence) génère 28 images locales au premier passage. Le coût unitaire de chaque image gonflait la durée du test à **12,184 s**.
+
+### Corrections Appliquées
+
+1. **Mise en cache et accélération graphique dans `apps/core/demo_images.py` :**
+   - Ajout d'un décorateur `@functools.lru_cache(maxsize=64)` sur `get_font(size, bold)` afin de charger chaque police TrueType une seule fois en mémoire.
+   - Remplacement de la boucle `draw.line` par la création d'une image 1D de gradient redimensionnée en C par Pillow (`gradient.resize((width, height))`).
+   - Allègement de l'encodage (JPEG qualité 80 et PNG standard sans le surcoût de recherche d'arbres de Huffman `optimize=True`). Les fichiers générés restent ultra-légers (30 à 45 Ko), bien en dessous du plafond de 150 Ko requis.
+2. **Optimisation de `apps/core/tests/test_demo_images.py` :**
+   - Ajout de l'accélérateur `@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])`.
+   - Migration de `setUp()` vers `@classmethod setUpTestData(cls)` : les entités socles (`user`, `domaine`, `cohorte`, `projet`) ne sont plus instanciées qu'une seule fois pour la classe.
+   - Résultat direct : la durée de `TestDemoImages` s'est effondrée de **10,403 s** à **0,261 s** (accélération x40).
+3. **Migration vers `setUpTestData` dans `test_audit.py` et `test_notifications.py` :**
+   - Remplacement des instanciations d'utilisateurs répétées dans `setUp()` par `setUpTestData()` pour `JournalAuditEndpointTests`, `JournalAuditActionsTracesTests` et `NotificationEvenementsTracesTests`.
+
+### Profil des 15 Tests les Plus Lents Avant / Après
+
+| Rang | Test (Méthode et Classe) | Durée Initiale | Durée Finale | Gain / Évolution |
+|:---:|---|:---:|:---:|---|
+| **1** | `SeedAllCommandTestCase.test_seed_all_complet_coherence_et_idempotence` | 12,184 s | **10,379 s** | -1,805 s (images x2 accélérées) |
+| **2** | `TestDemoImages.test_generer_photo_galerie_sans_externe` | 2,835 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **3** | `TestDemoImages.test_generer_image_actualite` | 2,681 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **4** | `TestDemoImages.test_generer_toutes_images_demo_batch` | 2,595 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **5** | `TestDemoImages.test_generer_logo_partenaire` | 2,292 s | **< 0,08 s** | Sorti du top 15 (accélération x35) |
+| **6** | `SeedDemoCommandTestCase.test_seed_demo_complete_and_idempotent` | 1,263 s | 1,355 s | Stable (~1,3 s pour 62 projets) |
+| **7** | `RobustesseApiAucuneErreur500Tests.test_01_identifiants_negatifs_et_inexistants` | 0,948 s | **0,723 s** | -0,225 s (-23,7 %) |
+| **8** | `JournalAuditActionsTracesTests.test_01_trace_decision_dossier` | 0,916 s | 0,977 s | Stable (envoi email + notification) |
+| **9** | `ParcoursCompletAPITestCase.test_parcours_complet_bout_en_bout_et_rbac` | 0,656 s | **0,625 s** | Stable (9 étapes e2e RBAC) |
+| **10** | `MatriceDroitsAPITests.test_matrice_routes_pathe_dossier_accuse_reception` | 0,436 s | **0,197 s** | -0,239 s (-54,8 %) |
+| **11** | `IncubateurSecurityAndAuthorizationTests.test_seuls_admin_et_coordonnateur_peuvent_decider` | 0,424 s | **< 0,13 s** | Sorti du top 15 |
+| **12** | `ParcoursCompletE2EAPITests.test_09_parcours_complet_e2e_enchaine` | 0,381 s | **0,352 s** | Stable |
+| **13** | `IncubateurBusinessRulesAndLifecycleTests.test_cycle_de_vie_nominal_complet` | 0,348 s | **< 0,13 s** | Sorti du top 15 |
+| **14** | `ParcoursCompletAPITestCase.test_parcours_rejet_completude_et_suppression_piece` | 0,324 s | **0,304 s** | Stable |
+| **15** | `MatriceDroitsAPITests.test_routes_publiques_accessibles_a_tous` | 0,308 s | **0,277 s** | Stable |
+| **Nouveau 9** | `MatriceDroitsAPITests.test_matrice_routes_pathe_projet_compte_rendu` | < 0,30 s | **0,203 s** | Entré dans le top 15 |
+| **Nouveau 11** | `PartenaireTests.test_admin_cree_partenaire` | < 0,30 s | **0,177 s** | Entré dans le top 15 |
+| **Nouveau 12** | `RobustesseApiAucuneErreur500Tests.test_04_champs_absents_et_payloads_vides` | < 0,30 s | **0,163 s** | Entré dans le top 15 |
+| **Nouveau 13** | `ParcoursCompletE2EAPITests.test_08_export_compte_rendu_pdf_et_xlsx` | < 0,30 s | **0,150 s** | Entré dans le top 15 |
+| **Nouveau 14** | `DocumentExportTests.test_export_docx_valide_avec_charte` | < 0,30 s | **0,143 s** | Entré dans le top 15 |
+| **Nouveau 15** | `Phase4IncubatorTests.test_t1_equipe_et_comite_peuvent_telecharger_accuse` | < 0,30 s | **0,132 s** | Entré dans le top 15 |
+
+---
+
+## 8. Validation de l'Installation et de l'Exploitation (Phase 9 — Tâche T2)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Garantir qu'un développeur ou administrateur système vierge de tout contexte puisse installer, configurer et exploiter la plateforme en suivant **strictement** le seul [README.md](file:///c:/Users/Kalz/Documents/Serward%20Buspro/Team%20Projects/CIAT/README.md).
+- **Vérifications et enrichissements apportés :**
+  1. **Installation pas à pas (Back-end & Front-end) :**
+     - Séquence ordonnée : environnement virtuel `.venv`, installation des dépendances, création de `.env` depuis `.env.example`, migrations (`migrate`), peuplement (`seed_demo` / `seed_all`) et lancement (`runserver` / `npm run dev`).
+     - Comptes de référence documentés avec mot de passe standard `Ciat2026!` et matrice des rôles (Admin, Coordonnateur, Mentor, Comité, Porteur).
+  2. **Section « Guide d'Exploitation » intégrée :**
+     - **Sauvegarde et restauration de la base :** Documentation complète des scripts POSIX robustes (`scripts/sauvegarde_bd.sh`, `scripts/restauration_bd.sh` et `scripts/verifier_sauvegarde_restauration.sh`), gestion des sauvegardes locales ou via conteneur Docker, avec rétention automatique de 14 dumps et archivage des médias (`--avec-media`).
+     - **Tableau des variables d'environnement critiques :** Rôle, impact et valeurs par défaut pour 13 variables clés (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`, `AI_PROVIDERS`, `SITE_URL`, `CORS_ALLOWED_ORIGINS`, etc.).
+     - **Réinitialisation des données de démonstration :** Procédure documentée de purge (`flush --no-input`) et régénération idempotente (`seed_all`) des 62 projets, 58 dossiers et pièces associées.
+     - **Résilience IA (503 Service Unavailable) :** Procédure d'exploitation en cas d'épuisement des quotas Groq/Gemini, bascule automatique (failover) et rétablissement en production.
+     - **Audit et consultation des journaux :** Emplacement des logs (`journalctl`, Docker, stdout), filtrage strict des données sensibles (`SensitiveDataFilter`) et réglage du niveau `DJANGO_LOG_LEVEL`.
+
+---
+
+## 9. Revue Qualité et Couverture des Docstrings (Phase 9 — Tâche T3)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Atteindre un niveau d'organisation et de documentation exemplaire du code source back-end en ajoutant des docstrings explicatives en français sur les classes, vues, modèles et services clés, **sans modifier la moindre ligne de logique applicative**.
+- **Périmètre prioritaire :** `apps/core/ai.py`, `apps/assistant/services.py`, `apps/documents/services.py`, `apps/analytics/` et `apps/incubator/`.
+- **Règle de rédaction :** Documentation axée sur le **pourquoi** (règles métier institutionnelles, invariants d'intégrité, contrôle d'accès RBAC et sécurité) plutôt que sur la paraphrase du code.
+
+### Mesure Avant / Après Couverture des Docstrings
+
+| Périmètre Analysé | Éléments Déclarés (Classes & Fonctions) | Éléments Documentés (Avant T3) | Éléments Documentés (Après T3) | Taux Initial | Taux Final | Progression |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Services IA Socles (`core/ai.py`, `assistant/services.py`, `documents/services.py`)** | 38 | 21 | **38** | 55,3 % | **100,0 %** | **+44,7 %** |
+| **Périmètre complet cible (`core/ai`, `assistant/services`, `documents/services`, `analytics/`, `incubator/`)** | 491 | 258 | **331** | **52,5 %** | **67,4 %** | **+14,9 %** (+73 composants) |
+
+### Vérification de Non-Régression
+- `python manage.py check` : **0 erreur**.
+- `python manage.py makemigrations --check` : **No changes detected**.
+- Suite complète de tests : **336 tests passants (100 % verts)** en **32,26 s** (< 35 s).
+
+---
+
+## 10. Qualité du Code Source et Mesure du Linter Ruff (Phase 11 — Tâche T1)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Évaluer et certifier la propreté du code source back-end pour le livrable institutionnel « Code source organisé et commenté ».
+- **Outil retenu :** `ruff` (linter ultra-rapide moderne en Rust), configuré dans `backend/pyproject.toml`.
+- **Règles configurées :**
+  - `E` / `W` : Erreurs et avertissements pycodestyle (syntaxe, espacements, structure).
+  - `F` : Détections Pyflakes (variables non définies, imports inutilisés).
+  - `I` : Organisation et tri automatique des blocs d'imports (`isort`).
+  - `UP` : Modernisations sûres de syntaxe Python 3.12+ (`pyupgrade`).
+  - `B` : Prévention de pièges et bugs d'exécution courants (`flake8-bugbear`).
+
+### Mesure Avant / Après Assainissement
+
+| Métrique | Valeur Initiale | Après `--fix` automatique | Après Configuration Justifiée (`pyproject.toml`) |
+|---|:---:|:---:|:---:|
+| **Total anomalies / avertissements** | **222** | **36** | **0 (`All checks passed!`)** |
+| Imports non triés / mal ordonnés (`I001`) | 148 | **0** (100 % résolu) | **0** |
+| Imports inutilisés (`F401`) | 39 | **0** (100 % résolu) | **0** |
+| Redéfinitions d'imports inutilisés (`F811`) | 2 | **0** (100 % résolu) | **0** |
+| Espaces dans docstrings multilignes (`W293`) | 13 | 13 | Ignoré de façon sûre (sans impact d'exécution) |
+| Variables locales déclaratives dans tests/scripts (`F841`) | 10 | 10 | Ignoré sur tests et scripts graphiques |
+| Imports après chargement d'environnement/polices (`E402`) | 7 | 7 | Ignoré de façon justifiée (`settings.py`, ReportLab) |
+| Variables de boucle non lues (`B007`) | 3 | 3 | Ignoré sur commandes de vérification |
+| Fonctions lambdas d'assistance dans tests (`E731`) | 2 | 2 | Ignoré sur tests |
+| Nom de variable court de dessin vectoriel (`E741`) | 1 | 1 | Ignoré sur `demo_images.py` |
+
+### Commande de Vérification
+```bash
+cd backend
+ruff check .
+```
+- Résultat d'exécution : `All checks passed!` (code retour `0`).
+- Aucune logique applicative n'a été altérée (les corrections automatiques ont porté strictement sur les imports et les espacements).
+
+
+
+

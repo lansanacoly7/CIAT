@@ -6,12 +6,13 @@ Permet l'import direct et la synchronisation avec :
 - Apple Calendar
 - Tout client d'agenda respectant la norme iCalendar RFC 5545
 """
-from datetime import timedelta, timezone as dt_timezone
+from datetime import UTC, timedelta
+
 from django.utils import timezone
 
 
 def _echapper_texte_ics(texte: str) -> str:
-    """Échappe les caractères réservés RFC 5545 (\, ;, ,, sauts de ligne)."""
+    r"""Échappe les caractères réservés RFC 5545 (\, ;, ,, sauts de ligne)."""
     if not texte:
         return ""
     # Remplace d'abord les antislashs pour éviter le double échappement
@@ -26,9 +27,9 @@ def _formater_date_utc(dt) -> str:
     if not dt:
         return ""
     if timezone.is_naive(dt):
-        dt = timezone.make_aware(dt, dt_timezone.utc)
+        dt = timezone.make_aware(dt, UTC)
     else:
-        dt = dt.astimezone(dt_timezone.utc)
+        dt = dt.astimezone(UTC)
     return dt.strftime("%Y%m%dT%H%M%SZ")
 
 

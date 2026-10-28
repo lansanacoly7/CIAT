@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Layers,
   User,
+  Calendar,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -27,6 +28,12 @@ const STAFF_ITEMS = [
     href: "/incubateur",
     titre: "Gestion de l'incubateur",
     icon: Rocket,
+  },
+  {
+    slug: "calendrier",
+    href: "/incubateur/calendrier",
+    titre: "Calendrier incubateur",
+    icon: Calendar,
   },
   {
     slug: "documents",
@@ -75,22 +82,16 @@ const PORTEUR_ITEMS = [
     icon: Layers,
   },
   {
-    slug: "documents",
-    href: "/documents",
-    titre: "Générateur de documents",
-    icon: FileText,
+    slug: "calendrier",
+    href: "/incubateur/calendrier",
+    titre: "Calendrier",
+    icon: Calendar,
   },
   {
     slug: "assistant",
     href: "/assistant",
     titre: "Assistant IA",
     icon: MessageSquare,
-  },
-  {
-    slug: "galerie",
-    href: "/galerie",
-    titre: "Galerie des innovations",
-    icon: Globe,
   },
   {
     slug: "compte",
@@ -191,32 +192,32 @@ export function DashboardSidebar() {
               <Link
                 href="/tableau-de-bord"
                 onClick={onItemClick}
-                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-all ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
                   isDashboardActive
-                    ? "bg-white/10 text-white font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
-                    : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
+                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
+                    : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <Home className="h-4.5 w-4.5 stroke-[1.75]" />
+                <Home className="h-5 w-5 stroke-[1.75]" />
                 <span>Tableau de bord</span>
               </Link>
               <Link
                 href="/tableau-de-bord/methodologie"
                 onClick={onItemClick}
-                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-all ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
                   isMethodologieActive
-                    ? "bg-white/10 text-white font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
-                    : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
+                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
+                    : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <BookOpen className="h-4.5 w-4.5 stroke-[1.75] text-[#ebd9c0]" />
+                <BookOpen className="h-5 w-5 stroke-[1.75] text-[#ebd9c0]" />
                 <span>Méthodologie</span>
               </Link>
             </div>
           )}
 
           {/* 3. Section : ESPACES DE GESTION ou ESPACE CANDIDAT */}
-          <div className="mb-2 mt-5 px-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#cbb7a3]">
+          <div className="mb-2 mt-5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[#cbb7a3]">
             {isPorteur ? "ESPACE CANDIDAT" : "ESPACES DE GESTION"}
           </div>
 
@@ -234,101 +235,98 @@ export function DashboardSidebar() {
                   key={item.slug}
                   href={item.href}
                   onClick={onItemClick}
-                  className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                  className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-white/10 font-semibold text-white shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
-                      : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
+                      ? "bg-[#523624] font-semibold text-white shadow-xs"
+                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <IconComponent
                     className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90 group-hover:text-white"
                   />
-                  <span>{item.titre}</span>
+                  <span className="truncate">{item.titre}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* 4. Séparateur discret */}
-          <div className="mx-4 my-3 border-t border-white/10" />
-
-          {/* 5. Page d'accueil */}
-          <div className="px-3">
-            <Link
-              href="/"
-              onClick={onItemClick}
-              className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                isHomeActive
-                  ? "bg-white/10 font-semibold text-white before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r before:bg-[#C99A68]"
-                  : "text-[#ebd9c0] hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
-              <span>Page d&apos;accueil</span>
-            </Link>
-          </div>
+          {/* 4. Page d'accueil (uniquement pour le staff, le logo CIAT servant de retour pour le porteur) */}
+          {!isPorteur && (
+            <>
+              <div className="mx-4 my-3 border-t border-white/10" />
+              <div className="px-3">
+                <Link
+                  href="/"
+                  onClick={onItemClick}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                    isHomeActive
+                      ? "bg-[#523624] font-semibold text-white"
+                      : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Home className="h-4.5 w-4.5 shrink-0 stroke-[1.5] text-white/90" />
+                  <span>Page d&apos;accueil</span>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Partie basse : Filigrane + Profil Administrateur + Slogan */}
-        <div className="mt-8">
+        {/* Partie basse : Profil Utilisateur & Déconnexion au format compact uniforme */}
+        <div className="mt-8 pb-5 px-3">
           {/* Ligne de séparation */}
-          <div className="mx-4 mb-3 border-t border-white/10" />
+          <div className="mx-1 mb-3 border-t border-white/10" />
 
-          {/* Profil Administrateur avec Déconnexion directe */}
-          <div className="px-3 pb-2">
-            <div className="group flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-2 transition-colors hover:bg-white/10">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] font-bold text-sm shadow-sm">
-                  {user ? userInitial : <User className="h-5 w-5 fill-current" />}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">
-                    {userDisplayName}
+          {/* Deux boutons au format compact parfaitement uniformes */}
+          <div className="space-y-2">
+            {/* 1. Bouton Profil Utilisateur (format compact identique à Déconnexion) */}
+            {user ? (
+              <Link
+                href="/compte"
+                onClick={onItemClick}
+                className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-white/10"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] text-[11px] font-bold" aria-hidden="true">
+                    {userInitial}
                   </div>
-                  <div className="text-[11px] text-[#cbb7a3] truncate">
-                    {roleLabel}
+                  <div className="min-w-0 text-left">
+                    <p className="truncate font-semibold">{userDisplayName}</p>
+                    <p className="text-[10px] text-[#cbb7a3] truncate">({roleLabel})</p>
+                    <span className="sr-only">Mon profil &amp; Compte</span>
                   </div>
                 </div>
-              </div>
-              {user ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onItemClick) onItemClick();
-                    logout();
-                  }}
-                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
-                  title="Déconnexion"
-                  aria-label="Déconnexion"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              ) : (
-                <Link
-                  href="/connexion"
-                  onClick={onItemClick}
-                  className="rounded-lg p-1.5 text-[#ebd9c0] hover:bg-white/20 hover:text-white transition-colors"
-                  title="Se connecter"
-                  aria-label="Se connecter"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-          </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+              </Link>
+            ) : null}
 
-          {/* Slogan officiel CIAT en pied */}
-          <div className="flex items-center gap-2.5 px-5 pb-10 pt-2 text-[10px] text-[#cbb7a3]">
-            <Image
-              src="/images/brand/symbole_blanc.png"
-              alt=""
-              width={20}
-              height={20}
-              className="h-3.5 w-auto object-contain"
-            />
-            <span className="font-semibold text-white">CIAT</span>
-            <span className="text-white/30">|</span>
-            <span className="truncate">Innovation &bull; Incubation &bull; Impact</span>
+            {/* 2. Bouton Déconnexion (format compact) */}
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onItemClick) onItemClick();
+                  logout();
+                }}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[#ebd9c0] shadow-xs transition-all hover:border-[#6B2020] hover:bg-[#3B1414] hover:text-[#FCA5A5] active:scale-[0.99]"
+                title="Déconnexion"
+                aria-label="Déconnexion"
+              >
+                <LogOut className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+                <span>Déconnexion</span>
+              </button>
+            ) : (
+              <Link
+                href="/connexion"
+                onClick={onItemClick}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[#ebd9c0] hover:bg-white/10 hover:text-white transition-colors"
+                title="Se connecter"
+                aria-label="Se connecter"
+              >
+                <User className="h-4 w-4" />
+                <span>Se connecter</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -342,8 +340,19 @@ export function DashboardSidebar() {
       */}
       <aside
         aria-label="Navigation latérale principale"
-        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-[264px] lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#1E110A] lg:text-white lg:shadow-xl lg:overflow-hidden"
+        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#21130d] lg:text-white lg:shadow-xl lg:overflow-hidden"
       >
+        {/* Filigrane emblème CIAT en arrière-plan en bas de la sidebar */}
+        <div className="pointer-events-none absolute -bottom-8 -left-6 z-0 select-none opacity-[0.06]">
+          <Image
+            src="/images/brand/symbole_blanc.png"
+            alt=""
+            width={280}
+            height={280}
+            priority
+          />
+        </div>
+
         {renderSidebarContent()}
       </aside>
 

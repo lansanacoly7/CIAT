@@ -1,25 +1,23 @@
 import datetime
+import io
 from unittest.mock import patch
+
+import openpyxl
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import IntegrityError, connection, transaction
+from django.db import IntegrityError, transaction
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-import io
-import openpyxl
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.incubator.models import (
     AffectationMentor,
-    CommentaireJalon,
     Critere,
-    Decision,
     Dossier,
     EcheanceSuivi,
-    Evaluation,
     Grille,
     Jalon,
     Objectif,
@@ -29,7 +27,6 @@ from apps.incubator.models import (
     StatutJalon,
     StatutObjectif,
     SuiviProjet,
-    TypePiece,
 )
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
