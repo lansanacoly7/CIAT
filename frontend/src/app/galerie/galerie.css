@@ -58,7 +58,8 @@
 .heroCinematic {
   position: relative;
   width: 100%;
-  min-height: 420px;
+  min-height: calc(100vh - 72px);
+  min-height: 80vh;
   background: var(--ciat-night);
   overflow: hidden;
   display: flex;

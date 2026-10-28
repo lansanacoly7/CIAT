@@ -50,7 +50,8 @@
 .pageRoot .hero {
   position: relative;
   width: 100%;
-  min-height: 460px;
+  min-height: calc(100vh - 72px);
+  min-height: 82vh;
   isolation: isolate;
   background: var(--ciat-night);
   color: var(--ciat-white);
@@ -68,8 +69,11 @@
 }
 
 .pageRoot .hero__bg img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
   object-fit: cover;
-  object-position: center 25%;
+  object-position: right 30%;
 }
 
 .pageRoot .hero__overlay {
@@ -77,11 +81,11 @@
   inset: 0;
   z-index: 2;
   background: linear-gradient(
-    95deg,
-    rgba(24, 12, 7, 0.95) 0%,
-    rgba(36, 20, 13, 0.88) 42%,
-    rgba(36, 20, 13, 0.55) 75%,
-    rgba(36, 20, 13, 0.25) 100%
+    90deg,
+    rgba(24, 12, 7, 0.85) 0%,
+    rgba(24, 12, 7, 0.6) 38%,
+    rgba(24, 12, 7, 0.18) 68%,
+    transparent 100%
   );
   pointer-events: none;
 }

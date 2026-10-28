@@ -20,10 +20,11 @@ export default function AppelACandidaturePage() {
         <section className={styles.hero} aria-labelledby="hero-title">
           <div className={styles["hero__bg"]}>
             <Image
-              src="/images/portrait-candidature.jpg"
-              alt="Porteuse de projet, prête à développer une idée innovante au CIAT"
+              src="/images/ciat-hero-appel-engineer.webp"
+              alt="Ingénieure présentant un prototype technologique au comité d'évaluation du CIAT"
               fill
               priority
+              unoptimized
               sizes="100vw"
             />
           </div>
