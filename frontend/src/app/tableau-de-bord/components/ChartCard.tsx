@@ -15,7 +15,7 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { BarChart3, Table2, AlertCircle, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
@@ -91,65 +91,142 @@ export function ChartCard({
           )}
 
           {tableData && tableColumns && (
-            <button
-              type="button"
-              onClick={() => setShowTable(!showTable)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#5A4B42] transition hover:border-[#C99A68] hover:text-[#21130D] active:scale-95"
-              title={
-                showTable
-                  ? "Afficher le graphique"
-                  : "Afficher les données sous forme de tableau"
-              }
-              aria-label={
-                showTable
-                  ? "Afficher le graphique"
-                  : "Afficher les données sous forme de tableau"
-              }
+            <div
+              className="flex items-center rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] p-0.5 shadow-2xs"
+              role="group"
+              aria-label="Mode d'affichage"
             >
-              {showTable ? (
-                <EyeOff className="h-3.5 w-3.5" />
-              ) : (
-                <Table className="h-3.5 w-3.5" />
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowTable(false)}
+                className={`flex h-6.5 items-center gap-1.5 rounded-md px-2.5 text-[11px] transition-all ${
+                  !showTable
+                    ? "bg-[#21130D] text-white shadow-xs font-semibold"
+                    : "text-[#6B5646] hover:text-[#21130D] hover:bg-white/60 font-medium"
+                }`}
+                title="Afficher le graphique"
+                aria-label="Afficher le graphique"
+              >
+                <BarChart3
+                  className={`h-3 w-3 ${
+                    !showTable ? "text-[#C99A68]" : "text-[#6B5646]"
+                  }`}
+                />
+                <span className="hidden sm:inline">Graphique</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowTable(true)}
+                className={`flex h-6.5 items-center gap-1.5 rounded-md px-2.5 text-[11px] transition-all ${
+                  showTable
+                    ? "bg-[#21130D] text-white shadow-xs font-semibold"
+                    : "text-[#6B5646] hover:text-[#21130D] hover:bg-white/60 font-medium"
+                }`}
+                title="Afficher les données en tableau"
+                aria-label="Afficher les données en tableau"
+              >
+                <Table2
+                  className={`h-3 w-3 ${
+                    showTable ? "text-[#C99A68]" : "text-[#6B5646]"
+                  }`}
+                />
+                <span className="hidden sm:inline">Tableau</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Contenu : Graphique OU Table */}
+      {/* Contenu : Graphique OU Table respectant rigoureusement la charte CIAT */}
       <div className="w-full flex-1">
         {showTable && tableData && tableColumns ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3]">
-                  {tableColumns.map((col) => (
-                    <th
-                      key={col.key}
-                      className="px-3 py-2 font-semibold uppercase tracking-[0.06em] text-[#5A4B42]"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[rgba(60,35,20,0.04)]">
-                {tableData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-[#FBF8F3]/50">
-                    {tableColumns.map((col) => (
-                      <td
-                        key={col.key}
-                        className="px-3 py-2 font-sans text-[#21130D] tabular-nums"
-                      >
-                        {typeof row[col.key] === "number"
-                          ? formatNumber(row[col.key] as number)
-                          : row[col.key]}
-                      </td>
-                    ))}
+          <div className="overflow-hidden rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2]">
+                    {tableColumns.map((col, cIdx) => {
+                      const isNumeric = tableData.some(
+                        (row) => typeof row[col.key] === "number"
+                      );
+                      return (
+                        <th
+                          key={col.key}
+                          className={`px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#612D10] ${
+                            isNumeric && cIdx > 0 ? "text-right" : "text-left"
+                          }`}
+                        >
+                          {col.label}
+                        </th>
+                      );
+                    })}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#EFE4D6]/60">
+                  {tableData.map((row, idx) => (
+                    <tr
+                      key={idx}
+                      className="transition-colors hover:bg-[#FAF7F2]/70"
+                    >
+                      {tableColumns.map((col, colIdx) => {
+                        const val = row[col.key];
+                        const isNumeric = typeof val === "number";
+
+                        return (
+                          <td
+                            key={col.key}
+                            className={`px-4 py-2.5 text-xs ${
+                              isNumeric && colIdx > 0 ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {colIdx === 0 ? (
+                              <div className="flex items-center gap-2 truncate">
+                                <span className="w-4 shrink-0 font-mono text-[11px] font-semibold text-[#8C6D4F] tabular-nums">
+                                  {String(idx + 1).padStart(2, "0")}
+                                </span>
+                                <span className="truncate font-medium text-[#21130D]">
+                                  {String(val)}
+                                </span>
+                              </div>
+                            ) : isNumeric ? (
+                              <span className="font-sans font-semibold text-[#21130D] tabular-nums">
+                                {formatNumber(val as number)}
+                              </span>
+                            ) : (
+                              <span className="font-medium text-[#21130D]">
+                                {String(val)}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pied récapitulatif du tableau */}
+            <div className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2]/80 px-4 py-2 text-xs text-[#612D10]">
+              <span className="font-medium text-[#8C6D4F]">
+                Total : {tableData.length} {tableData.length > 1 ? "lignes" : "ligne"}
+              </span>
+              {tableColumns.length > 1 &&
+                typeof tableData[0]?.[tableColumns[tableColumns.length - 1].key] === "number" && (
+                  <span className="font-bold tabular-nums text-[#21130D]">
+                    {formatNumber(
+                      tableData.reduce(
+                        (acc, r) => {
+                          const lastKey = tableColumns[tableColumns.length - 1].key;
+                          return acc + (typeof r[lastKey] === "number" ? (r[lastKey] as number) : 0);
+                        },
+                        0
+                      )
+                    )}{" "}
+                    <span className="font-normal text-[#8C6D4F]">au total</span>
+                  </span>
+                )}
+            </div>
           </div>
         ) : isError ? (
           <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-[#B85D43]/30 bg-[#B85D43]/5 p-6 text-center">

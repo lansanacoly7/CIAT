@@ -357,7 +357,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
         </div>
 
         {activeTab === "financements" ? (
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
             {financements.length === 0 ? (
               <p className="py-8 text-center text-xs text-[#5A4B42]">
                 Aucun financement enregistré dans le périmètre sélectionné.
@@ -365,7 +365,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
             ) : (
               <table className="w-full text-left text-xs table-fixed min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] text-[11px] font-semibold text-[#5A4B42] uppercase tracking-[0.06em]">
+                  <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
                     <th className="py-2.5 px-3 w-[34%]">Projet</th>
                     <th className="py-2.5 px-3 w-[20%]">Source</th>
                     <th className="py-2.5 px-3 w-[16%] text-right">Montant (FCFA)</th>
@@ -400,7 +400,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
             )}
           </div>
         ) : (
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
             {partenariats.length === 0 ? (
               <p className="py-8 text-center text-xs text-[#5A4B42]">
                 Aucun partenariat enregistré dans le périmètre sélectionné.
@@ -408,7 +408,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
             ) : (
               <table className="w-full text-left text-xs table-fixed min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] text-[11px] font-semibold text-[#5A4B42] uppercase tracking-[0.06em]">
+                  <tr className="border-b border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] uppercase tracking-wider">
                     <th className="py-2.5 px-3 w-[34%]">Projet</th>
                     <th className="py-2.5 px-3 w-[22%]">Partenaire</th>
                     <th className="py-2.5 px-3 w-[16%]">Type</th>

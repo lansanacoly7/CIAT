@@ -206,7 +206,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
       </div>
 
       {/* Table avec mise en page stricte : table-layout: fixed, largeurs proportionnelles, min-w-[820px] avec défilement fluide */}
-      <div className="relative overflow-x-auto rounded-xl border border-[rgba(60,35,20,0.06)]">
+      <div className="relative overflow-x-auto rounded-xl border border-[#EFE4D6] bg-white shadow-2xs">
         <table className="w-full text-left text-xs table-fixed min-w-[820px]">
           <colgroup>
             <col className="w-[30%]" />
@@ -216,11 +216,11 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             <col className="w-[12%]" />
             <col className="w-[13%]" />
           </colgroup>
-          <thead className="sticky top-0 z-10 border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] shadow-xs">
+          <thead className="sticky top-0 z-10 border-b border-[#EFE4D6] bg-[#FAF7F2] shadow-xs">
             <tr className="h-11">
               <th
                 onClick={() => handleSort("projet_titre")}
-                className="group/th cursor-pointer px-4 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-4 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Projet</span>
@@ -236,7 +236,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("domaine")}
-                className="group/th cursor-pointer px-3 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Domaine</span>
@@ -252,7 +252,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("source")}
-                className="group/th cursor-pointer px-3 font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-3 font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Source</span>
@@ -268,7 +268,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("date")}
-                className="group/th cursor-pointer px-2 text-center font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Date</span>
@@ -284,7 +284,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("statut")}
-                className="group/th cursor-pointer px-2 text-center font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-2 text-center font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Statut</span>
@@ -300,7 +300,7 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
 
               <th
                 onClick={() => handleSort("montant")}
-                className="group/th cursor-pointer px-3 text-right font-semibold uppercase tracking-[0.06em] text-[#5A4B42] hover:text-[#21130D] whitespace-nowrap text-[12px]"
+                className="group/th cursor-pointer px-3 text-right font-bold uppercase tracking-[0.06em] text-[#612D10] hover:text-[#8C5E2D] whitespace-nowrap text-[11px]"
               >
                 <div className="flex items-center justify-end gap-1">
                   <span>Montant (FCFA)</span>
