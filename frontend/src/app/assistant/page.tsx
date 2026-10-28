@@ -719,7 +719,7 @@ function AssistantApp() {
                     ? "Posez une question sur le parcours, les critères ou les textes du CIAT..."
                     : "Décrivez votre projet ou votre besoin de rédaction..."
                 }
-                className="max-h-32 min-h-[44px] w-full resize-none bg-transparent px-3 py-3 text-sm text-[#24140D] placeholder:text-[#8C6D4F]/70 focus:outline-none disabled:opacity-50"
+                className="max-h-32 min-h-[56px] sm:min-h-[44px] w-full resize-none bg-transparent px-3 py-2 sm:py-2.5 text-xs sm:text-sm leading-snug text-[#24140D] placeholder:text-[#8C6D4F]/70 focus:outline-none disabled:opacity-50"
               />
               <button
                 type="submit"
