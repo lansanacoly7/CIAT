@@ -624,6 +624,24 @@ class Phase9Tests(APITestCase):
         ab.refresh_from_db()
         self.assertEqual(ab.statut, AbonnementLettre.Statut.CONFIRME)
 
+    def test_t1_abonnement_anti_spam_throttle(self):
+        """La limitation de débit stricte bloque les rafales de requêtes (anti-spam)."""
+        from apps.portal.throttling import PortalLettreAnonRateThrottle
+        from rest_framework.test import APIRequestFactory
+        from django.contrib.auth.models import AnonymousUser
+
+        factory = APIRequestFactory()
+        throttle = PortalLettreAnonRateThrottle()
+        throttle.rate = "2/minute"
+        throttle.num_requests, throttle.duration = throttle.parse_rate(throttle.rate)
+        request = factory.post("/api/portal/lettre/abonner/", {"email": "spam@example.com"})
+        request.user = AnonymousUser()
+
+        with override_settings(DISABLE_THROTTLING="0"):
+            self.assertTrue(throttle.allow_request(request, None))
+            self.assertTrue(throttle.allow_request(request, None))
+            self.assertFalse(throttle.allow_request(request, None))
+
     def test_t1_abonnement_validation_email(self):
         """Un format d'email invalide déclenche un code 400 explicite."""
         url = "/api/portal/lettre/abonner/"
