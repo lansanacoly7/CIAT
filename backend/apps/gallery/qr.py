@@ -5,6 +5,7 @@ vers une image PNG à l'aide de Pillow.
 """
 import io
 import logging
+
 from PIL import Image
 
 logger = logging.getLogger(__name__)

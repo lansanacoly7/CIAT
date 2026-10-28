@@ -8,6 +8,7 @@ Règle métier stricte :
 """
 from django.core.exceptions import ValidationError
 from django.db import models
+
 from apps.core.models import Projet
 
 
@@ -66,6 +67,16 @@ class Partenariat(models.Model):
         ordering = ["-date_debut", "partenaire"]
         verbose_name = "Partenariat"
         verbose_name_plural = "Partenariats"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutPartenariat.choices]),
+                name="check_partenariat_statut_valide",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(type__in=[c[0] for c in TypePartenariat.choices]),
+                name="check_partenariat_type_valide",
+            ),
+        ]
 
     def clean(self):
         """Vérifie la règle d'éligibilité : seuls les projets retenus ou incubés peuvent avoir un partenariat."""
@@ -132,6 +143,16 @@ class Financement(models.Model):
         ordering = ["-date", "-montant"]
         verbose_name = "Financement"
         verbose_name_plural = "Financements"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(montant__gt=0),
+                name="check_financement_montant_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutFinancement.choices]),
+                name="check_financement_statut_valide",
+            ),
+        ]
 
     def clean(self):
         """Valide que le montant est strictement positif et que le projet n'est pas au stade embryonnaire."""

@@ -6,9 +6,8 @@ from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.core.ai import AIError, AINotConfigured
 from apps.core.models import Domaine, Projet, Role, User
-from apps.documents.models import Document, ModeleDocument, TypeDocument, VersionDocument
+from apps.documents.models import Document, ModeleDocument
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])

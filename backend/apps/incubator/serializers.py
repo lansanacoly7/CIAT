@@ -4,15 +4,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from apps.core.models import Projet, Role, User
+
 from .models import (
     ALLOWED_PIECE_EXTENSIONS,
     AffectationMentor,
     CommentaireJalon,
     Critere,
     Decision,
-    DecisionType,
     Dossier,
-    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
@@ -21,10 +20,7 @@ from .models import (
     Piece,
     PreuveJalon,
     StatutDossier,
-    StatutJalon,
-    StatutObjectif,
     SuiviProjet,
-    TypePiece,
 )
 
 

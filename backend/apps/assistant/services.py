@@ -39,7 +39,7 @@ STOP_WORDS_FR = {
     "qui", "que", "quoi", "comment", "quel", "quelle", "quels", "quelles",
     "au", "aux", "a", "à", "y", "il", "elle", "ils", "elles", "on", "nous",
     "vous", "se", "sa", "son", "ses", "leur", "leurs", "ne", "pas", "plus",
-    "mon", "ton", "son", "mes", "tes", "ses", "notre", "votre",
+    "mon", "ton", "mes", "tes", "notre", "votre",
     "ciat", "projet", "projets", "document", "documents",
 }
 

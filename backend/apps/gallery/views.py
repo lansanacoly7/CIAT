@@ -1,7 +1,7 @@
 from datetime import timedelta
-from django.db import models
-from django.db.models import Count, F, Q, Sum
+
 from django.conf import settings
+from django.db.models import Count, F, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -19,9 +19,9 @@ from apps.core.services import (
 )
 from apps.core.throttling import GalleryInteretRateThrottle
 
-from .models import FicheInnovation, ManifestationInteret
 from .emails import envoyer_email_manifestation_interet
 from .exports_pdf import generer_fiche_promotionnelle_pdf
+from .models import FicheInnovation, ManifestationInteret
 from .qr import generer_qr_code_png
 from .serializers import (
     FicheInnovationCreateSerializer,
@@ -30,7 +30,6 @@ from .serializers import (
     ManifestationInteretSerializer,
     StatistiquesGallerySerializer,
 )
-
 
 
 def _est_equipe_ciat(user) -> bool:

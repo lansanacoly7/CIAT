@@ -11,7 +11,6 @@ Couvre :
   * Filtres par fiche et par date, pagination
 - Statistiques enrichies (GET /api/gallery/statistiques/) avec compteur d'intérêts
 """
-from datetime import timedelta
 from unittest.mock import patch
 
 from django.core import mail

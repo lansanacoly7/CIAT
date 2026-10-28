@@ -109,6 +109,15 @@ npm run test:e2e
 ```
 *Temps d'exécution mesuré : ~1 min 15 s (75 secondes sur démarrage complet avec migrations et seed_all, 100% autonome sans clé IA externe).*
 
+## Vérifier la qualité du code (Linter Ruff)
+
+L'organisation et la conformité du code source backend (tri des imports, détection d'erreurs de portée, prévention des bugs) sont vérifiées via `ruff` :
+```bash
+cd backend
+ruff check .               # Analyse statique (All checks passed! exigé)
+ruff check --fix .         # Application des corrections automatiques sûres
+```
+
 ---
 
 ## Guide d'Exploitation

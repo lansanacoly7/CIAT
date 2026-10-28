@@ -6,6 +6,7 @@ Tolérance totale aux pannes : une défaillance SMTP ou réseau ne bloque jamais
 la réponse HTTP du serveur.
 """
 import logging
+
 from django.conf import settings
 from django.core.mail import send_mail
 

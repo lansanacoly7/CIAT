@@ -15,14 +15,12 @@ Fournit l'ensemble des endpoints agrégés pour le tableau de bord décisionnel 
 Tous les endpoints acceptent les filtres :
 ?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ&cohorte=&domaine=&statut=
 """
-from datetime import datetime
-import io
 import logging
+from datetime import datetime
 
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -30,6 +28,7 @@ from rest_framework.views import APIView
 
 from apps.core.ai import AIError, AINotConfigured
 from apps.core.models import Projet
+
 from .definitions import CATEGORIES_INDICATEURS, INDICATEURS_DEFINITIONS
 from .models import (
     Financement,

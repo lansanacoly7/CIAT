@@ -7,7 +7,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 
-
 # ==============================================================================
 # T1 — Contenus institutionnels
 # ==============================================================================
@@ -68,6 +67,12 @@ class Evenement(models.Model):
         ordering = ["debut"]
         verbose_name = "Événement"
         verbose_name_plural = "Événements"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(fin__isnull=True) | models.Q(debut__lte=models.F("fin")),
+                name="check_evenement_dates_coherentes",
+            ),
+        ]
 
     def __str__(self):
         return self.titre

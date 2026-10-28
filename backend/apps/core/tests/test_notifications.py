@@ -1,5 +1,6 @@
 """Tests des Notifications dans l'application (Phase 8 - T2)."""
-from datetime import date, timedelta
+from datetime import timedelta
+
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework import status
@@ -9,7 +10,7 @@ from apps.core.models import Domaine, Notification, Projet, Role, User
 from apps.core.services import creer_notification
 from apps.documents.models import Document, TypeDocument
 from apps.gallery.models import FicheInnovation
-from apps.incubator.models import Dossier, Grille, Jalon, Objectif
+from apps.incubator.models import Dossier, Jalon
 from apps.incubator.notifications import envoyer_alertes_jalons_en_retard
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

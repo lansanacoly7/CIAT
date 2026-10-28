@@ -1,5 +1,4 @@
 """Vues API pour le générateur de documents du CIAT (P5) — Phases 1 et 2 (T1, T2, T3)."""
-from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
@@ -30,7 +29,6 @@ from apps.documents.services import (
     ServiceIANonConfigure,
     generer_document,
 )
-
 
 # ==============================================================================
 # Phase 1 — Types, Modèles et Moteur IA (Conservés intacts)

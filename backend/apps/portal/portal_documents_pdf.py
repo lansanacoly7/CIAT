@@ -10,22 +10,15 @@ Chaque document inclut la mention institutionnelle :
 """
 import io
 import logging
-from pathlib import Path
 
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.utils import timezone
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import cm, mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import (
     HRFlowable,
-    KeepTogether,
-    PageBreak,
     Paragraph,
     SimpleDocTemplate,
     Spacer,

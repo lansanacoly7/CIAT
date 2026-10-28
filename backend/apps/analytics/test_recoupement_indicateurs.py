@@ -13,7 +13,7 @@ sur le jeu de données déterministe de `seed_all` et le compare à la réponse 
 9. Cohérence stricte avec les formules de definitions.py, de la page Méthodologie et du rapport
 10. Détection d'erreurs si un calcul est volontairement altéré
 """
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from django.core.management import call_command
@@ -22,16 +22,15 @@ from django.db.models.functions import TruncMonth
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from apps.core.models import Cohorte, Domaine, Projet, Role, User
-from apps.incubator.models import Dossier, StatutDossier
+from apps.analytics.definitions import INDICATEURS_DEFINITIONS
 from apps.analytics.models import (
     Financement,
     Partenariat,
     StatutFinancement,
     StatutPartenariat,
-    TypePartenariat,
 )
-from apps.analytics.definitions import INDICATEURS_DEFINITIONS
+from apps.core.models import Cohorte, Domaine, Projet, Role, User
+from apps.incubator.models import Dossier, StatutDossier
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])

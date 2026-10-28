@@ -3,13 +3,13 @@
 Gère les dossiers de candidature, le dépôt des pièces jointes, la complétude,
 les grilles et évaluations du comité, ainsi que les décisions motivées.
 """
+import os
+import re
+
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
-
-import os
-import re
 from django.utils.text import slugify
 
 from apps.core.models import Projet, Role, User
@@ -143,6 +143,12 @@ class Dossier(models.Model):
         ordering = ["-cree_le"]
         verbose_name = "Dossier de candidature"
         verbose_name_plural = "Dossiers de candidature"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutDossier.choices]),
+                name="check_dossier_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"Dossier {self.id} - {self.projet.titre}"
@@ -270,6 +276,16 @@ class Critere(models.Model):
 
     class Meta:
         ordering = ["ordre", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(poids__gt=0),
+                name="check_critere_poids_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(note_max__gt=0),
+                name="check_critere_note_max_positive",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.libelle} (max {self.note_max}, poids {self.poids})"
@@ -331,7 +347,11 @@ class Note(models.Model):
             models.UniqueConstraint(
                 fields=["evaluation", "critere"],
                 name="unique_note_par_critere",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(note__gte=0, note__lte=20),
+                name="check_note_valeur_entre_0_et_20",
+            ),
         ]
 
     def __str__(self):
@@ -348,7 +368,7 @@ class Decision(models.Model):
     """Décision finale prise sur un dossier de candidature."""
 
     dossier = models.OneToOneField(
-        Dossier, on_delete=models.CASCADE, related_name="decision"
+        Dossier, on_delete=models.PROTECT, related_name="decision"
     )
     decision = models.CharField(max_length=20, choices=DecisionType.choices)
     motif = models.TextField()
@@ -359,6 +379,12 @@ class Decision(models.Model):
 
     class Meta:
         ordering = ["-cree_le"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(decision__in=[c[0] for c in DecisionType.choices]),
+                name="check_decision_type_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"Décision {self.decision} pour {self.dossier}"
@@ -438,6 +464,12 @@ class Objectif(models.Model):
         ordering = ["echeance", "cree_le"]
         verbose_name = "Objectif de projet"
         verbose_name_plural = "Objectifs de projets"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutObjectif.choices]),
+                name="check_objectif_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.projet.titre} - {self.libelle} ({self.statut})"
@@ -474,6 +506,12 @@ class Jalon(models.Model):
         ordering = ["echeance", "cree_le"]
         verbose_name = "Jalon de projet"
         verbose_name_plural = "Jalons de projets"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutJalon.choices]),
+                name="check_jalon_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.projet.titre} - {self.titre} ({self.statut})"
@@ -488,7 +526,7 @@ class PreuveJalon(models.Model):
     """Fichier de preuve déposé pour justifier l'avancement d'un jalon."""
 
     jalon = models.ForeignKey(
-        Jalon, on_delete=models.CASCADE, related_name="preuves"
+        Jalon, on_delete=models.PROTECT, related_name="preuves"
     )
     fichier = models.FileField(
         upload_to=preuve_upload_path,
@@ -576,6 +614,5 @@ class SuiviProjet(models.Model):
 
 
 # Import du modèle d'idempotence des alertes de retard (Phase 4 Pathé)
-from .notifications import AlerteJalonEnvoyee  # noqa: E402
 
 

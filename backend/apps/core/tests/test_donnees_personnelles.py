@@ -16,6 +16,7 @@ Couvre :
    - Code 404 sur conversation inexistante
 """
 import json
+
 from django.core.cache import cache
 from django.test import override_settings
 from rest_framework import status

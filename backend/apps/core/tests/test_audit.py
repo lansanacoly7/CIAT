@@ -1,5 +1,4 @@
 """Tests du Journal d'Audit des actions sensibles (Phase 8 - T1)."""
-from datetime import date
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework import status
@@ -9,11 +8,10 @@ from apps.core.models import Domaine, JournalAudit, Projet, Role, User
 from apps.core.services import (
     enregistrer_audit,
     nettoyer_donnees_sensibles,
-    tracer_changement_role,
 )
 from apps.documents.models import Document, TypeDocument
 from apps.gallery.models import FicheInnovation
-from apps.incubator.models import Dossier, Grille
+from apps.incubator.models import Dossier
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 

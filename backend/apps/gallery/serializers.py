@@ -6,7 +6,6 @@ from apps.core.models import Projet
 from .models import FicheInnovation, ManifestationInteret
 
 
-
 class MediaItemSerializer(serializers.Serializer):
     """Validation d'un élément média associé à une fiche."""
 

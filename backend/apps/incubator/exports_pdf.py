@@ -9,6 +9,7 @@ Conforme à la charte graphique officielle du CIAT / ISEP Diamniadio :
 - Numérotation dynamique des pages (Page X sur Y)
 """
 import io
+
 from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -341,7 +342,7 @@ def generer_compte_rendu_pdf(projet) -> io.BytesIO:
     3. Jalons et réalisations
     4. Bilans de suivi périodique (3 et 6 mois)
     """
-    from apps.incubator.models import Objectif, Jalon, SuiviProjet
+    from apps.incubator.models import Jalon, Objectif, SuiviProjet
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
