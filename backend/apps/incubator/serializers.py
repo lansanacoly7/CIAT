@@ -4,15 +4,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from apps.core.models import Projet, Role, User
+
 from .models import (
     ALLOWED_PIECE_EXTENSIONS,
     AffectationMentor,
     CommentaireJalon,
     Critere,
     Decision,
-    DecisionType,
     Dossier,
-    EcheanceSuivi,
     Evaluation,
     Grille,
     Jalon,
@@ -21,10 +20,7 @@ from .models import (
     Piece,
     PreuveJalon,
     StatutDossier,
-    StatutJalon,
-    StatutObjectif,
     SuiviProjet,
-    TypePiece,
 )
 
 
@@ -37,6 +33,7 @@ class ProjetSimpleSerializer(serializers.ModelSerializer):
 
 
 class PieceSerializer(serializers.ModelSerializer):
+    """Sérialiseur et validateur de pièces jointes (fichiers PDF/documents autorisés avec scan de taille)."""
     nom = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
@@ -60,6 +57,7 @@ class PieceSerializer(serializers.ModelSerializer):
 
 
 class DossierSerializer(serializers.ModelSerializer):
+    """Sérialiseur complet du dossier de candidature avec calcul dynamique de complétude et pièces manquantes."""
     projet = ProjetSimpleSerializer(read_only=True)
     projet_id = serializers.PrimaryKeyRelatedField(
         queryset=Projet.objects.all(), source="projet", write_only=True, required=False
@@ -142,12 +140,14 @@ class DossierSerializer(serializers.ModelSerializer):
 
 
 class CritereSerializer(serializers.ModelSerializer):
+    """Sérialiseur d'un critère individuel d'évaluation avec son barème et sa pondération."""
     class Meta:
         model = Critere
         fields = ["id", "libelle", "poids", "note_max", "ordre"]
 
 
 class GrilleSerializer(serializers.ModelSerializer):
+    """Sérialiseur de la grille officielle d'évaluation du comité incluant ses critères ordonnés."""
     criteres = CritereSerializer(many=True, read_only=True)
 
     class Meta:
@@ -156,6 +156,7 @@ class GrilleSerializer(serializers.ModelSerializer):
 
 
 class NoteInputSerializer(serializers.Serializer):
+    """Validateur en entrée des notes saisies par le jury (respect du plafond note_max)."""
     critere = serializers.PrimaryKeyRelatedField(queryset=Critere.objects.all())
     note = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=0)
 
@@ -170,6 +171,7 @@ class NoteInputSerializer(serializers.Serializer):
 
 
 class NoteSerializer(serializers.ModelSerializer):
+    """Sérialiseur de consultation d'une note attribuée avec les détails du critère associé."""
     critere_libelle = serializers.CharField(source="critere.libelle", read_only=True)
     critere_poids = serializers.IntegerField(source="critere.poids", read_only=True)
     critere_note_max = serializers.IntegerField(source="critere.note_max", read_only=True)
@@ -180,6 +182,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class EvaluationSerializer(serializers.ModelSerializer):
+    """Sérialiseur de restitution d'une évaluation complète incluant le score pondéré sur 100."""
     evaluateur_nom = serializers.SerializerMethodField()
     notes = NoteSerializer(many=True, read_only=True)
     score = serializers.FloatField(read_only=True)
@@ -200,10 +203,12 @@ class EvaluationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "dossier", "evaluateur", "score", "cree_le", "modifie_le"]
 
     def get_evaluateur_nom(self, obj):
+        """Restitue le nom complet ou email de l'évaluateur membre du jury."""
         return obj.evaluateur.get_full_name() or obj.evaluateur.email
 
 
 class EvaluationCreateSerializer(serializers.Serializer):
+    """Validateur et orchestrateur transactionnel de la saisie d'une évaluation par un juré."""
     notes = NoteInputSerializer(many=True)
     avis = serializers.CharField(required=False, allow_blank=True)
 
@@ -290,6 +295,7 @@ class EvaluationCreateSerializer(serializers.Serializer):
 
 
 class DecisionSerializer(serializers.ModelSerializer):
+    """Sérialiseur de la délibération finale du jury (accepté/refusé) avec motif obligatoire et immuabilité."""
     decide_par_nom = serializers.SerializerMethodField()
 
     class Meta:
@@ -306,6 +312,7 @@ class DecisionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "dossier", "decide_par", "cree_le"]
 
     def get_decide_par_nom(self, obj):
+        """Restitue l'identité du membre de direction ayant acté la décision."""
         return obj.decide_par.get_full_name() or obj.decide_par.email
 
     def validate_motif(self, value):
@@ -366,6 +373,7 @@ class MentorUserSerializer(serializers.ModelSerializer):
 
 
 class AffectationMentorSerializer(serializers.ModelSerializer):
+    """Sérialiseur gérant l'assignation d'un mentor à un projet incubé."""
     mentor_details = MentorUserSerializer(source="mentor", read_only=True)
     mentor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
@@ -445,6 +453,12 @@ class PreuveJalonSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"Format de fichier '.{ext}' non autorisé. Extensions acceptées : {', '.join(ALLOWED_PIECE_EXTENSIONS)}."
             )
+        from .models import validate_file_content, validate_file_size
+        try:
+            validate_file_size(file)
+            validate_file_content(file)
+        except Exception as e:
+            raise serializers.ValidationError(getattr(e, "message", str(e)))
         return file
 
     def create(self, validated_data):
@@ -602,3 +616,17 @@ class SuiviProjetSerializer(serializers.ModelSerializer):
         return SuiviProjet.objects.create(projet=projet, redige_par=user, **validated_data)
 
 
+class IncubateurCalendrierItemSerializer(serializers.Serializer):
+    """Élément du calendrier d'incubation (jalon ou objectif)."""
+
+    date = serializers.DateField(help_text="Date d'échéance au format ISO AAAA-MM-JJ")
+    type = serializers.ChoiceField(
+        choices=["jalon", "objectif"],
+        help_text="Type d'élément (jalon ou objectif)",
+    )
+    titre = serializers.CharField(help_text="Intitulé du jalon ou de l'objectif")
+    projet = serializers.CharField(help_text="Titre du projet associé")
+    statut = serializers.CharField(help_text="Statut d'avancement")
+    en_retard = serializers.BooleanField(
+        help_text="Indicateur d'échéance dépassée non validée"
+    )

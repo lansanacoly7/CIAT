@@ -1,0 +1,5464 @@
+openapi: 3.0.3
+info:
+  title: API Plateforme CIAT
+  version: 0.1.0
+  description: API unique de la plateforme du Centre d'Innovation, d'Application et
+    de Transfert.
+paths:
+  /api/analytics/evolution/:
+    get:
+      operationId: analytics_evolution_retrieve
+      description: Restitue l'évolution mensuelle des dépôts de projets pour analyser
+        la saisonnalité.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/export/:
+    get:
+      operationId: analytics_export_retrieve
+      description: Génère et télécharge le rapport consolidé du tableau de bord au
+        format Excel ou PDF institutionnel.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/financements/:
+    get:
+      operationId: analytics_financements_retrieve
+      description: Liste les financements accordés et décaissés avec traçabilité des
+        guichets d'origine.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/indicateurs/:
+    get:
+      operationId: analytics_indicateurs_retrieve
+      description: |-
+        Calcule les indicateurs globaux du pipeline en une seule requête SQL performante.
+
+        Règles d'intégrité métier :
+        - Recoupement : croise les projets déclarés avec les dossiers formels d'incubation.
+        - Taux de sélection : calculé rigoureusement sur le ratio des projets retenus par rapport
+          aux dossiers déposés éligibles.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/indicateurs/definitions/:
+    get:
+      operationId: analytics_indicateurs_definitions_retrieve
+      description: |-
+        GET /api/analytics/indicateurs/definitions/
+
+        Fournit le dictionnaire complet et standardisé de tous les indicateurs
+        décisionnels affichés sur le tableau de bord CIAT (P3) :
+        - code & nom
+        - catégorie
+        - définition exacte
+        - formule de calcul mathématique et logique
+        - période de référence et filtres supportés
+        - source des données (modèles et tables SQL)
+        - limites méthodologiques (ex: dossiers déposés vs idées reçues)
+        - guide d'interprétation et seuils d'analyse
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/par-cohorte/:
+    get:
+      operationId: analytics_par_cohorte_retrieve
+      description: Compare la performance et le passage à l'échelle (prototypes) entre
+        promotions annuelles.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/par-domaine/:
+    get:
+      operationId: analytics_par_domaine_retrieve
+      description: Agrège le volume de projets par filière technologique pour guider
+        l'affectation des ressources.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/par-genre/:
+    get:
+      operationId: analytics_par_genre_retrieve
+      description: Mesure la parité femmes/hommes des porteurs de projets selon les
+        engagements institutionnels.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/partenariats/:
+    get:
+      operationId: analytics_partenariats_retrieve
+      description: Liste les conventions et partenariats rattachés aux projets selon
+        les filtres actifs.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/partenariats-financements/stats/:
+    get:
+      operationId: analytics_partenariats_financements_stats_retrieve
+      description: Calcule les agrégats financiers globaux (montant mobilisé vs décaissé)
+        et le taux de partenariats actifs.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/analytics/question/:
+    post:
+      operationId: analytics_question_create
+      description: Traite une question décisionnelle en langage naturel avec limitation
+        de débit et capture d'erreur 503.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/assistant/conversations/:
+    get:
+      operationId: assistant_conversations_list
+      description: Gestion des conversations privées de l'utilisateur avec l'assistant
+        IA.
+      summary: Lister mes conversations avec l'assistant
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+          description: ''
+    post:
+      operationId: assistant_conversations_create
+      description: Gestion des conversations privées de l'utilisateur avec l'assistant
+        IA.
+      summary: Créer une nouvelle conversation
+      tags:
+      - assistant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+  /api/assistant/conversations/{id}/:
+    get:
+      operationId: assistant_conversations_retrieve
+      description: Consultation et suppression d'une conversation privée avec l'assistant
+        IA.
+      summary: Détail d'une conversation
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    delete:
+      operationId: assistant_conversations_destroy
+      description: Consultation et suppression d'une conversation privée avec l'assistant
+        IA.
+      summary: Supprimer une conversation privée (Droit à l'effacement RGPD)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/assistant/conversations/{id}/messages/:
+    get:
+      operationId: assistant_conversations_messages_list
+      description: Lecture de l'historique et soumission d'une question à l'assistant
+        IA.
+      summary: Lister les messages d'une conversation
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageAssistant'
+          description: ''
+    post:
+      operationId: assistant_conversations_messages_create
+      description: Lecture de l'historique et soumission d'une question à l'assistant
+        IA.
+      summary: Envoyer un message et obtenir la réponse de l'assistant
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreerMessageInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreerMessageInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreerMessageInput'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageAssistant'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/assistant/indexation/:
+    post:
+      operationId: assistant_indexation_create
+      description: Endpoint administratif permettant de découper et indexer les documents
+        publics.
+      summary: Réindexer les documents publics du portail pour l'assistant
+      tags:
+      - assistant
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/audit/:
+    get:
+      operationId: audit_list
+      description: Consultation en lecture seule du journal d'audit, filtrable par
+        acteur, action et date.
+      summary: Journal d'audit des actions sensibles
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - audit
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJournalAuditList'
+          description: ''
+        '403':
+          description: Accès réservé à l'équipe CIAT
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      summary: Consulter mon profil utilisateur
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: auth_me_update
+      summary: Modifier l'ensemble de mon profil
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      summary: Modifier partiellement mon profil
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: auth_me_destroy
+      description: Exige le mot de passe actuel pour confirmation. Supprime les conversations
+        privées de l'assistant et anonymise les données personnelles en conservant
+        l'intégrité des projets.
+      summary: Supprimer ou anonymiser mon compte (Droit à l'effacement RGPD)
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/me/export/:
+    get:
+      operationId: auth_me_export_retrieve
+      description: Télécharge un fichier JSON structuré reprenant profil, projets,
+        dossiers, documents, conversations assistant et interactions.
+      summary: Exporter l'ensemble de mes données personnelles en JSON (Portabilité
+        RGPD)
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+                description: Fichier JSON exporté
+          description: ''
+  /api/auth/mot-de-passe/oublie/:
+    post:
+      operationId: auth_mot_de_passe_oublie_create
+      description: Envoie un lien contenant un jeton sécurisé à usage unique expiré
+        au bout de 1 heure. Pour des raisons strictes de sécurité (anti-énumération
+        de comptes), cette route renvoie toujours un statut 200 avec le même message,
+        que l'adresse email existe ou non.
+      summary: Demande de réinitialisation de mot de passe (Public)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MotDePasseOublie'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MotDePasseOublie'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MotDePasseOublie'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Demande prise en compte (message générique systématique).
+        '400':
+          description: Format d'adresse email invalide.
+  /api/auth/mot-de-passe/reinitialiser/:
+    post:
+      operationId: auth_mot_de_passe_reinitialiser_create
+      description: 'Valide le jeton à usage unique (durée de validité : 1 heure),
+        vérifie les contraintes de robustesse du nouveau mot de passe selon la politique
+        de sécurité du CIAT, et invalide immédiatement le jeton pour prévenir toute
+        réutilisation.'
+      summary: Définition d'un nouveau mot de passe via jeton sécurisé (Public)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MotDePasseReinitialiser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MotDePasseReinitialiser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MotDePasseReinitialiser'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Mot de passe modifié avec succès.
+        '400':
+          description: Jeton expiré, déjà utilisé ou mot de passe non conforme.
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: Obtention du JWT protégé par limitation de débit anti force-brute.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/cohortes/:
+    get:
+      operationId: cohortes_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - cohortes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cohorte'
+          description: ''
+    post:
+      operationId: cohortes_create
+      tags:
+      - cohortes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohorte'
+          description: ''
+  /api/cohortes/{id}/:
+    get:
+      operationId: cohortes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        required: true
+      tags:
+      - cohortes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohorte'
+          description: ''
+    put:
+      operationId: cohortes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        required: true
+      tags:
+      - cohortes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Cohorte'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohorte'
+          description: ''
+    patch:
+      operationId: cohortes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        required: true
+      tags:
+      - cohortes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCohorte'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCohorte'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCohorte'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohorte'
+          description: ''
+    delete:
+      operationId: cohortes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Cohorte d'incubation.
+        required: true
+      tags:
+      - cohortes
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/documents/:
+    get:
+      operationId: documents_retrieve
+      description: 'GET /api/documents/ : Liste mes documents (l''équipe CIAT voit
+        tous les documents).'
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/:
+    get:
+      operationId: documents_retrieve_2
+      description: |-
+        GET /api/documents/{id}/ : Détail avec sections de la version courante.
+
+        PATCH /api/documents/{id}/ : Crée une nouvelle version avec les sections modifiées.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: documents_partial_update
+      description: |-
+        GET /api/documents/{id}/ : Détail avec sections de la version courante.
+
+        PATCH /api/documents/{id}/ : Crée une nouvelle version avec les sections modifiées.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/brouillon/:
+    post:
+      operationId: documents_brouillon_create
+      description: |-
+        POST /api/documents/{id}/brouillon/ : Coordonnateur ou Administrateur.
+
+        Repasse un document au statut 'brouillon' pour permettre de nouvelles modifications.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/export/:
+    get:
+      operationId: documents_export_retrieve
+      description: |-
+        GET /api/documents/{id}/export/?format=docx ou ?format=pdf :
+
+        Exporte le document au format Word ou PDF mis en forme selon la charte graphique CIAT.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/publier/:
+    post:
+      operationId: documents_publier_create
+      description: |-
+        POST /api/documents/{id}/publier/ : Administrateur uniquement.
+
+        Passe un document de 'valide' à 'publie'.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/valider/:
+    post:
+      operationId: documents_valider_create
+      description: |-
+        POST /api/documents/{id}/valider/ : Coordonnateur ou Administrateur.
+
+        Passe un document de 'brouillon' à 'valide'.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/versions/:
+    get:
+      operationId: documents_versions_retrieve
+      description: 'GET /api/documents/{id}/versions/ : Historique des versions d''un
+        document.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/{id}/versions/{numero}/:
+    get:
+      operationId: documents_versions_retrieve_2
+      description: 'GET /api/documents/{id}/versions/{numero}/ : Détail d''une version
+        spécifique.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: numero
+        schema:
+          type: integer
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/generer/:
+    post:
+      operationId: documents_generer_create
+      description: Génération assistée par IA d'un document structuré conforme à la
+        charte CIAT.
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/modeles/:
+    get:
+      operationId: documents_modeles_retrieve
+      description: Liste des modèles de documents, filtrable par type (?type=id_ou_code).
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/documents/types/:
+    get:
+      operationId: documents_types_retrieve
+      description: Liste des types de documents disponibles (appel, convention, fiche,
+        PV...).
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/domaines/:
+    get:
+      operationId: domaines_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - domaines
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Domaine'
+          description: ''
+    post:
+      operationId: domaines_create
+      tags:
+      - domaines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domaine'
+          description: ''
+  /api/domaines/{id}/:
+    get:
+      operationId: domaines_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        required: true
+      tags:
+      - domaines
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domaine'
+          description: ''
+    put:
+      operationId: domaines_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        required: true
+      tags:
+      - domaines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Domaine'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domaine'
+          description: ''
+    patch:
+      operationId: domaines_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        required: true
+      tags:
+      - domaines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDomaine'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDomaine'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDomaine'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domaine'
+          description: ''
+    delete:
+      operationId: domaines_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Domaine d'intervention.
+        required: true
+      tags:
+      - domaines
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gallery/fiches/:
+    get:
+      operationId: gallery_fiches_list
+      description: Consultation publique des fiches publiées et création par un porteur.
+      summary: Lister les fiches d'innovation publiées (Public)
+      parameters:
+      - in: query
+        name: avancement
+        schema:
+          type: string
+        description: Niveau d'avancement du projet
+      - in: query
+        name: cohorte
+        schema:
+          type: string
+        description: ID, année ou nom de la cohorte
+      - in: query
+        name: domaine
+        schema:
+          type: string
+        description: ID, slug ou nom du domaine
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Recherche textuelle libre
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+    post:
+      operationId: gallery_fiches_create
+      description: Consultation publique des fiches publiées et création par un porteur.
+      summary: Créer une fiche d'innovation pour son projet (Porteur)
+      tags:
+      - gallery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FicheInnovationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FicheInnovationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FicheInnovationCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{id}/refuser/:
+    post:
+      operationId: gallery_fiches_refuser_create
+      description: 'Workflow : refuse une fiche en la passant au statut ''refuse''.'
+      summary: Refuser une fiche d'innovation (Coordonnateur ou Administrateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{id}/soumettre/:
+    post:
+      operationId: gallery_fiches_soumettre_create
+      description: 'Workflow : passe une fiche de ''brouillon'' à ''en_validation''.'
+      summary: Soumettre une fiche d'innovation pour validation (Porteur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{id}/valider/:
+    post:
+      operationId: gallery_fiches_valider_create
+      description: 'Workflow : valide une fiche en la passant au statut ''publie''.'
+      summary: Valider et publier une fiche d'innovation (Coordonnateur ou Administrateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{slug}/:
+    get:
+      operationId: gallery_fiches_retrieve
+      description: Consultation publique du détail d'une fiche publiée avec incrémentation
+        du compteur de vues.
+      summary: Détail d'une fiche d'innovation publiée (Public)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FicheInnovation'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{slug}/fiche/:
+    get:
+      operationId: gallery_fiches_fiche_retrieve
+      description: Génère un document PDF officiel d'une page A4 aux couleurs du CIAT,
+        comprenant le titre, le problème, la solution innovante, l'équipe et le QR
+        code officiel.
+      summary: Télécharger la fiche promotionnelle PDF d'une innovation publiée (Public)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{slug}/interet/:
+    post:
+      operationId: gallery_fiches_interet_create
+      description: Enregistrement d'une manifestation d'intérêt d'un partenaire ou
+        investisseur.
+      summary: Manifester son intérêt pour une fiche d'innovation (Public)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - gallery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManifestationInteretCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestationInteret'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/fiches/{slug}/qr/:
+    get:
+      operationId: gallery_fiches_qr_retrieve
+      description: Renvoie une image PNG du QR code menant à la fiche d'innovation.
+      summary: Obtenir le QR code PNG d'une fiche publiée (Public)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/interets/:
+    get:
+      operationId: gallery_interets_list
+      description: Consultation sécurisée des manifestations d'intérêt avec filtres
+        et pagination.
+      summary: Lister les manifestations d'intérêt (Porteurs et Équipe CIAT)
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Date exacte (AAAA-MM-JJ)
+      - in: query
+        name: date_debut
+        schema:
+          type: string
+        description: Date de début (AAAA-MM-JJ)
+      - in: query
+        name: date_fin
+        schema:
+          type: string
+        description: Date de fin (AAAA-MM-JJ)
+      - in: query
+        name: fiche
+        schema:
+          type: string
+        description: Slug ou ID de la fiche
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManifestationInteret'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gallery/statistiques/:
+    get:
+      operationId: gallery_statistiques_retrieve
+      description: 'Statistiques de consultation : total des vues, total des intérêts
+        et répartition par fiche.'
+      summary: Consulter les statistiques des fiches (Équipe CIAT)
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatistiquesGallery'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Route publique sans authentification ni donnée sensible renvoyant
+        l'état de fonctionnement de l'API et de la connexion à la base de données.
+      summary: État de santé de l'API et de la base de données
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  database:
+                    type: string
+                    example: connected
+          description: L'API et la base de données sont opérationnelles.
+        '503':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: degraded
+                  database:
+                    type: string
+                    example: disconnected
+          description: La base de données ne répond pas ou est dégradée.
+  /api/incubator/alertes/:
+    get:
+      operationId: incubator_alertes_retrieve
+      description: Retourne la liste des jalons dépassés filtrés selon le périmètre
+        d'habilitation.
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/calendrier/:
+    get:
+      operationId: incubator_calendrier_list
+      description: Renvoie pour l'utilisateur connecté les jalons et objectifs du
+        mois spécifié sous la forme [{ date, type, titre, projet, statut, en_retard
+        }], triés par date. Les porteurs voient leurs projets, les mentors ceux qui
+        leur sont affectés, et l'équipe CIAT voit l'ensemble des projets de l'incubateur.
+      summary: Calendrier des jalons et objectifs du mois
+      parameters:
+      - in: query
+        name: mois
+        schema:
+          type: string
+        description: 'Mois d''échéance au format AAAA-MM (ex: 2026-10)'
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncubateurCalendrierItem'
+          description: ''
+        '400':
+          description: Paramètre mois manquant ou format invalide
+        '401':
+          description: Authentification requise
+  /api/incubator/dossiers/:
+    get:
+      operationId: incubator_dossiers_list
+      description: Liste les dossiers selon le rôle de l'utilisateur et permet au
+        porteur autorisé d'en créer un.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDossierList'
+          description: ''
+    post:
+      operationId: incubator_dossiers_create
+      description: Liste les dossiers selon le rôle de l'utilisateur et permet au
+        porteur autorisé d'en créer un.
+      tags:
+      - incubator
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dossier'
+          description: ''
+  /api/incubator/dossiers/{id}/:
+    get:
+      operationId: incubator_dossiers_retrieve
+      description: Consultation et modification sécurisée d'un dossier.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dossier'
+          description: ''
+    put:
+      operationId: incubator_dossiers_update
+      description: Consultation et modification sécurisée d'un dossier.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dossier'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dossier'
+          description: ''
+    patch:
+      operationId: incubator_dossiers_partial_update
+      description: Consultation et modification sécurisée d'un dossier.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDossier'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDossier'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDossier'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dossier'
+          description: ''
+  /api/incubator/dossiers/{id}/accuse/:
+    get:
+      operationId: incubator_dossiers_accuse_retrieve
+      description: Génère et télécharge l'accusé de réception officiel en PDF pour
+        un dossier de candidature soumis. Accessible au porteur du projet, à l'équipe
+        CIAT et aux membres du comité de sélection.
+      summary: Télécharger l'accusé de réception officiel en PDF
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - pdf
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Incubateur — Exports & Documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Fichier PDF officiel de l'accusé de réception (application/pdf)
+        '400':
+          description: Dossier en brouillon (l'accusé de réception n'est disponible
+            qu'après soumission)
+        '403':
+          description: Accès interdit pour cet utilisateur
+        '404':
+          description: Dossier de candidature non trouvé
+  /api/incubator/dossiers/{id}/decision/:
+    post:
+      operationId: incubator_dossiers_decision_create
+      description: Enregistre la décision motivée du jury et bascule de façon atomique
+        le statut du projet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/dossiers/{id}/evaluations/:
+    get:
+      operationId: incubator_dossiers_evaluations_retrieve
+      description: Restitue les évaluations multicritères et calcule le score moyen
+        collégial.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: incubator_dossiers_evaluations_create
+      description: Enregistre la notation d'un membre du comité sous verrou transactionnel
+        (select_for_update).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/dossiers/{id}/pieces/:
+    post:
+      operationId: incubator_dossiers_pieces_create
+      description: Réceptionne et valide une pièce jointe avant soumission définitive
+        du dossier.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/dossiers/{id}/pieces/{piece_id}/:
+    delete:
+      operationId: incubator_dossiers_pieces_destroy
+      description: Supprime une pièce jointe tant que le dossier est encore à l'état
+        de brouillon.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: piece_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/incubator/dossiers/{id}/soumettre/:
+    post:
+      operationId: incubator_dossiers_soumettre_create
+      description: Valide la complétude à 100 %, verrouille le dossier et déclenche
+        l'accusé de réception.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/grilles/actuelle/:
+    get:
+      operationId: incubator_grilles_actuelle_retrieve
+      description: Fournit la grille d'évaluation active et ses critères de notation
+        pondérés.
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/jalons/{id}/:
+    patch:
+      operationId: incubator_jalons_partial_update
+      description: Actualise l'état d'un jalon (à faire, en cours, fait) avec historisation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/jalons/{id}/commentaires/:
+    post:
+      operationId: incubator_jalons_commentaires_create
+      description: Enregistre un retour ou une consigne d'accompagnement sur le jalon.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/jalons/{id}/preuves/:
+    post:
+      operationId: incubator_jalons_preuves_create
+      description: Téléverse un fichier de preuve justifiant la complétion d'un jalon.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/mentors/:
+    get:
+      operationId: incubator_mentors_list
+      description: Liste de tous les mentors disponibles.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMentorUserList'
+          description: ''
+  /api/incubator/objectifs/{id}/:
+    patch:
+      operationId: incubator_objectifs_partial_update
+      description: Met à jour le statut ou le libellé d'un objectif opérationnel.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/projets/{id}/compte-rendu/:
+    get:
+      operationId: incubator_projets_compte_rendu_retrieve
+      description: 'Génération et téléchargement du compte rendu complet d''un projet
+        incubé reprenant les 4 blocs essentiels : Projet & Identité, Objectifs d''incubation,
+        Jalons clés et Bilans de suivi périodique. Formats supportés : ''xlsx'' (défaut)
+        ou ''pdf''.'
+      summary: Exporter le compte rendu d'un projet incubé (Excel ou PDF)
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - pdf
+          - xlsx
+        description: 'Format d''export souhaité : ''xlsx'' (Excel, par défaut) ou
+          ''pdf'' (PDF officiel)'
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Incubateur — Exports & Documents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Fichier binaire du compte rendu (.xlsx ou .pdf)
+        '400':
+          description: Format non supporté (seuls 'xlsx' et 'pdf' sont autorisés)
+        '403':
+          description: Accès interdit (réservé au porteur du projet, à son mentor
+            et à l'équipe CIAT)
+        '404':
+          description: Projet d'incubation non trouvé
+  /api/incubator/projets/{id}/jalons/:
+    get:
+      operationId: incubator_projets_jalons_retrieve
+      description: Liste les jalons d'un projet avec leurs preuves et commentaires
+        associés.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: incubator_projets_jalons_create
+      description: Crée un nouveau jalon avec échéance et livrable attendu.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/projets/{id}/mentor/:
+    get:
+      operationId: incubator_projets_mentor_retrieve
+      description: Consulte le mentor assigné avec contrôle strict d'anonymat (tiers
+        non autorisés rejetés).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: incubator_projets_mentor_create
+      description: Affecte un mentor au projet incubé et notifie les parties prenantes.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/projets/{id}/objectifs/:
+    get:
+      operationId: incubator_projets_objectifs_retrieve
+      description: Récupère l'ensemble des objectifs fixés pour le projet incubé.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: incubator_projets_objectifs_create
+      description: Définit un nouvel objectif d'accompagnement (réservé au mentor
+        et à l'équipe CIAT).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/incubator/projets/{id}/suivis/:
+    get:
+      operationId: incubator_projets_suivis_retrieve
+      description: Restitue les bilans d'étape à 3 et 6 mois du projet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: incubator_projets_suivis_create
+      description: Enregistre le bilan semestriel formalisé par l'équipe d'accompagnement.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - incubator
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      description: Renvoie les notifications de l'utilisateur connecté avec filtre
+        optionnel ?non_lues=1.
+      summary: Liste des notifications de l'utilisateur
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/notifications/{id}/lue/:
+    post:
+      operationId: notifications_lue_create
+      description: Passe la notification spécifiée au statut lu pour l'utilisateur
+        connecté.
+      summary: Marquer une notification comme lue
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+        '404':
+          description: Notification introuvable
+  /api/notifications/tout-lire/:
+    post:
+      operationId: notifications_tout_lire_create
+      description: Marque l'intégralité des notifications non lues de l'utilisateur
+        connecté comme lues.
+      summary: Marquer toutes les notifications comme lues
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Notifications marquées comme lues
+  /api/portal/actualites/:
+    get:
+      operationId: portal_actualites_list
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Lister les actualités publiques
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActualiteList'
+          description: ''
+    post:
+      operationId: portal_actualites_create
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Créer une actualité (Admin / Coordonnateur)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actualite'
+          description: ''
+  /api/portal/actualites/{id}/:
+    get:
+      operationId: portal_actualites_retrieve
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Détail d'une actualité
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actualite'
+          description: ''
+    put:
+      operationId: portal_actualites_update
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Modifier une actualité (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Actualite'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actualite'
+          description: ''
+    patch:
+      operationId: portal_actualites_partial_update
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Modifier partiellement une actualité
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedActualite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedActualite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedActualite'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actualite'
+          description: ''
+    delete:
+      operationId: portal_actualites_destroy
+      description: |-
+        Actualités du CIAT.
+
+        Lecture publique. Création, modification et suppression réservées aux
+        administrateurs et coordonnateurs.
+      summary: Supprimer une actualité (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Actualité.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/portal/appels/:
+    get:
+      operationId: portal_appels_list
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Lister les appels à projets
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      - in: query
+        name: statut
+        schema:
+          type: string
+        description: Filtrer par statut ('ouvert' ou 'clos')
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAppelProjetList'
+          description: ''
+    post:
+      operationId: portal_appels_create
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Créer un appel à projets (Admin / Coordonnateur)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppelProjet'
+          description: ''
+  /api/portal/appels/{id}/:
+    get:
+      operationId: portal_appels_retrieve
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Détail d'un appel à projets
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppelProjet'
+          description: ''
+    put:
+      operationId: portal_appels_update
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Modifier un appel à projets (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppelProjet'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppelProjet'
+          description: ''
+    patch:
+      operationId: portal_appels_partial_update
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Modifier partiellement un appel
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppelProjet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppelProjet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppelProjet'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppelProjet'
+          description: ''
+    delete:
+      operationId: portal_appels_destroy
+      description: |-
+        Appels à projets du CIAT.
+
+        Le champ `statut` est calculé dynamiquement selon la date limite ('ouvert' ou 'clos').
+      summary: Supprimer un appel à projets (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Appel à projets.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/portal/contact/:
+    get:
+      operationId: portal_contact_list
+      description: Formulaire de contact public et consultation par l'équipe CIAT.
+      summary: Consulter les messages de contact (Équipe CIAT uniquement)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMessageContactList'
+          description: ''
+    post:
+      operationId: portal_contact_create
+      description: Formulaire de contact public et consultation par l'équipe CIAT.
+      summary: Envoyer un message de contact (Public, avec anti-spam)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageContact'
+          description: ''
+  /api/portal/contact/{id}/:
+    get:
+      operationId: portal_contact_retrieve
+      description: Formulaire de contact public et consultation par l'équipe CIAT.
+      summary: Détail d'un message de contact (Équipe CIAT uniquement)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageContact'
+          description: ''
+    put:
+      operationId: portal_contact_update
+      description: Formulaire de contact public et consultation par l'équipe CIAT.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageContact'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageContact'
+          description: ''
+    patch:
+      operationId: portal_contact_partial_update
+      description: Formulaire de contact public et consultation par l'équipe CIAT.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Message de
+          contact.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMessageContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMessageContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMessageContact'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageContact'
+          description: ''
+  /api/portal/documents/:
+    get:
+      operationId: portal_documents_list
+      description: Documents publics (guides, chartes, rapports).
+      summary: Lister les documents publics téléchargeables
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentPublicList'
+          description: ''
+    post:
+      operationId: portal_documents_create
+      description: Documents publics (guides, chartes, rapports).
+      summary: Ajouter un document public (Admin / Coordonnateur)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPublic'
+          description: ''
+  /api/portal/documents/{id}/:
+    get:
+      operationId: portal_documents_retrieve
+      description: Documents publics (guides, chartes, rapports).
+      summary: Détail d'un document public
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPublic'
+          description: ''
+    put:
+      operationId: portal_documents_update
+      description: Documents publics (guides, chartes, rapports).
+      summary: Modifier un document (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentPublic'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPublic'
+          description: ''
+    patch:
+      operationId: portal_documents_partial_update
+      description: Documents publics (guides, chartes, rapports).
+      summary: Modifier partiellement un document
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentPublic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentPublic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentPublic'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPublic'
+          description: ''
+    delete:
+      operationId: portal_documents_destroy
+      description: Documents publics (guides, chartes, rapports).
+      summary: Supprimer un document (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Document
+          public.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/portal/evenements/:
+    get:
+      operationId: portal_evenements_list
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Lister les événements publics
+      parameters:
+      - in: query
+        name: a_venir
+        schema:
+          type: integer
+        description: Filtrer uniquement les événements à venir (1 ou true)
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEvenementList'
+          description: ''
+    post:
+      operationId: portal_evenements_create
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Créer un événement (Admin / Coordonnateur)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evenement'
+          description: ''
+  /api/portal/evenements/{id}/:
+    get:
+      operationId: portal_evenements_retrieve
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Détail d'un événement
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evenement'
+          description: ''
+    put:
+      operationId: portal_evenements_update
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Modifier un événement (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Evenement'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evenement'
+          description: ''
+    patch:
+      operationId: portal_evenements_partial_update
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Modifier partiellement un événement
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEvenement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEvenement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEvenement'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evenement'
+          description: ''
+    delete:
+      operationId: portal_evenements_destroy
+      description: |-
+        Événements organisés par le CIAT.
+
+        Supporte le filtre `?a_venir=1` pour récupérer uniquement les événements futurs.
+      summary: Supprimer un événement (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Événement.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/portal/evenements/calendrier.ics:
+    get:
+      operationId: portal_evenements_calendrier.ics_retrieve
+      description: Génère un flux d'agenda iCalendar conforme RFC 5545 contenant les
+        événements officiels du CIAT, directement importable dans Google Agenda, Outlook
+        ou Apple Calendar.
+      summary: Flux calendrier iCalendar (.ics) des événements du CIAT
+      parameters:
+      - in: query
+        name: a_venir
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+        description: Filtrer uniquement les événements à venir (1 pour oui, 0 ou absent
+          pour tous)
+      tags:
+      - Portail — Événements
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Flux d'événements iCalendar (text/calendar)
+  /api/portal/partenaires/:
+    get:
+      operationId: portal_partenaires_list
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Lister les partenaires (sans pagination)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Partenaire'
+          description: ''
+    post:
+      operationId: portal_partenaires_create
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Ajouter un partenaire (Admin / Coordonnateur)
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partenaire'
+          description: ''
+  /api/portal/partenaires/{id}/:
+    get:
+      operationId: portal_partenaires_retrieve
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Détail d'un partenaire
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partenaire'
+          description: ''
+    put:
+      operationId: portal_partenaires_update
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Modifier un partenaire (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Partenaire'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partenaire'
+          description: ''
+    patch:
+      operationId: portal_partenaires_partial_update
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Modifier partiellement un partenaire
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPartenaire'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPartenaire'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPartenaire'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partenaire'
+          description: ''
+    delete:
+      operationId: portal_partenaires_destroy
+      description: |-
+        Partenaires du CIAT.
+
+        Lecture publique sans pagination, modification réservée à l'équipe.
+      summary: Supprimer un partenaire (Admin / Coordonnateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Partenaire.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/portal/projets-incubes/:
+    get:
+      operationId: portal_projets_incubes_list
+      description: Ne renvoie que les projets aux statuts `incube`, `prototype` ou
+        `termine`. Aucune donnée personnelle exposée.
+      summary: Annuaire public des projets incubés
+      parameters:
+      - in: query
+        name: cohorte
+        schema:
+          type: string
+        description: Filtre par nom ou ID de cohorte
+      - in: query
+        name: domaine
+        schema:
+          type: string
+        description: Filtre par nom, slug ou ID de domaine
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Recherche plein texte dans le titre et le résumé
+      - in: query
+        name: statut
+        schema:
+          type: string
+        description: Filtre par statut (incube, prototype, termine)
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjetIncubeList'
+          description: ''
+  /api/portal/projets-incubes/{id}/:
+    get:
+      operationId: portal_projets_incubes_retrieve
+      description: |-
+        Annuaire public des projets incubés.
+
+        Seuls les projets aux statuts `incube`, `prototype` ou `termine` sont exposés.
+      summary: Détail public d'un projet incubé
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        required: true
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjetIncube'
+          description: ''
+  /api/portal/statistiques/:
+    get:
+      operationId: portal_statistiques_retrieve
+      description: |-
+        GET /api/portal/statistiques/ : Réservé à l'équipe CIAT.
+
+        Renvoie le total des vues du portail ainsi que le détail des vues par
+        actualité et par projet incubé.
+        Format : {
+            "total_vues": int,
+            "actualites": [{"slug": str, "titre": str, "vues": int}],
+            "projets": [{"id": int, "titre": str, "vues": int}]
+        }
+      tags:
+      - portal
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/projets/:
+    get:
+      operationId: projets_list
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      parameters:
+      - in: query
+        name: cohorte
+        schema:
+          type: integer
+      - in: query
+        name: domaine
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      - in: query
+        name: statut
+        schema:
+          type: string
+          title: Statut du projet
+          enum:
+          - depose
+          - idee
+          - incube
+          - prototype
+          - rejete
+          - selectionne
+          - termine
+        description: |-
+          * `idee` - Idée
+          * `depose` - Dossier déposé
+          * `selectionne` - Sélectionné
+          * `incube` - En incubation
+          * `prototype` - Prototype
+          * `termine` - Incubation terminée
+          * `rejete` - Non retenu
+      tags:
+      - projets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjetList'
+          description: ''
+    post:
+      operationId: projets_create
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      tags:
+      - projets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Projet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Projet'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projet'
+          description: ''
+  /api/projets/{id}/:
+    get:
+      operationId: projets_retrieve
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        required: true
+      tags:
+      - projets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projet'
+          description: ''
+    put:
+      operationId: projets_update
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        required: true
+      tags:
+      - projets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Projet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Projet'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projet'
+          description: ''
+    patch:
+      operationId: projets_partial_update
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        required: true
+      tags:
+      - projets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjet'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjet'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projet'
+          description: ''
+    delete:
+      operationId: projets_destroy
+      description: Un porteur voit et modifie ses projets. L'équipe CIAT, le comité
+        et les mentors les voient tous.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) Projet.
+        required: true
+      tags:
+      - projets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/{id}/role/:
+    patch:
+      operationId: users_role_partial_update
+      description: Permet à un administrateur de modifier le rôle d'un utilisateur.
+      summary: Modifier le rôle d'un utilisateur (Administrateur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '403':
+          description: Accès réservé aux administrateurs
+components:
+  schemas:
+    Actualite:
+      type: object
+      description: 'Format : { id, titre, slug, resume, contenu, image, publie_le
+        }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        resume:
+          type: string
+        contenu:
+          type: string
+        image:
+          type: string
+          format: uri
+          nullable: true
+        publie:
+          type: boolean
+          description: Seules les actualités publiées sont visibles du public.
+        vues:
+          type: integer
+          readOnly: true
+          description: Nombre de consultations de l'actualité.
+        publie_le:
+          type: string
+          format: date-time
+      required:
+      - contenu
+      - id
+      - titre
+      - vues
+    AppelProjet:
+      type: object
+      description: 'Format : { id, titre, description, date_limite, statut: "ouvert"|"clos",
+        pieces_demandees }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        date_limite:
+          type: string
+          format: date-time
+        statut:
+          type: string
+          readOnly: true
+        pieces_demandees: {}
+      required:
+      - date_limite
+      - description
+      - id
+      - statut
+      - titre
+    BlankEnum:
+      enum:
+      - ''
+    Cohorte:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          title: Nom de la cohorte
+          maxLength: 120
+        annee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Année
+        date_debut:
+          type: string
+          format: date
+          nullable: true
+          title: Date de début
+        date_fin:
+          type: string
+          format: date
+          nullable: true
+          title: Date de fin
+      required:
+      - annee
+      - id
+      - nom
+    Conversation:
+      type: object
+      description: Sérialiseur d'une conversation (liste et création).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          default: Nouvelle conversation
+          maxLength: 200
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cree_le
+      - id
+    CreerMessageInput:
+      type: object
+      description: Données d'entrée pour poser une question à l'assistant.
+      properties:
+        contenu:
+          type: string
+          description: Question ou consigne posée à l'assistant
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: documents
+          description: |-
+            Mode d'échange : 'documents' (recherche stricte) ou 'atelier' (rédaction)
+
+            * `documents` - Recherche dans les documents
+            * `atelier` - Atelier de rédaction
+      required:
+      - contenu
+    DocumentPublic:
+      type: object
+      description: 'Format : { id, titre, categorie, fichier }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        categorie:
+          type: string
+          description: 'Ex: Rapports, Charte, Guides, Formulaires'
+          maxLength: 100
+        fichier:
+          type: string
+          format: uri
+      required:
+      - categorie
+      - fichier
+      - id
+      - titre
+    Domaine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          title: Nom du domaine
+          maxLength: 120
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - nom
+      - slug
+    Dossier:
+      type: object
+      description: Sérialiseur complet du dossier de candidature avec calcul dynamique
+        de complétude et pièces manquantes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        projet:
+          allOf:
+          - $ref: '#/components/schemas/ProjetSimple'
+          readOnly: true
+        projet_id:
+          type: integer
+          writeOnly: true
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/DossierStatutEnum'
+          readOnly: true
+        completude:
+          type: integer
+          readOnly: true
+        pieces:
+          type: array
+          items:
+            $ref: '#/components/schemas/Piece'
+          readOnly: true
+        pieces_manquantes:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        soumis_le:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+        modifie_le:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completude
+      - cree_le
+      - id
+      - modifie_le
+      - pieces
+      - pieces_manquantes
+      - projet
+      - soumis_le
+      - statut
+    DossierStatutEnum:
+      enum:
+      - brouillon
+      - soumis
+      - complet
+      - en_evaluation
+      - accepte
+      - refuse
+      type: string
+      description: |-
+        * `brouillon` - Brouillon
+        * `soumis` - Soumis
+        * `complet` - Complet
+        * `en_evaluation` - En évaluation
+        * `accepte` - Accepté
+        * `refuse` - Refusé
+    Evenement:
+      type: object
+      description: 'Format : { id, titre, description, lieu, debut, fin, lien_inscription
+        }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        lieu:
+          type: string
+          maxLength: 200
+        debut:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+          nullable: true
+        lien_inscription:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+      required:
+      - debut
+      - description
+      - id
+      - lieu
+      - titre
+    FicheInnovation:
+      type: object
+      description: |-
+        Sérialiseur de consultation d'une fiche d'innovation.
+
+        Ne renvoie STRICTEMENT aucune donnée personnelle ou confidentielle
+        (pas d'email, pas de téléphone du porteur).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        projet:
+          type: integer
+          description: Identifiant du projet associé
+        titre:
+          type: string
+          title: Titre de la fiche
+          maxLength: 200
+        probleme:
+          type: string
+          title: Problème adressé
+        solution:
+          type: string
+          title: Solution innovante
+        equipe:
+          type: string
+          title: Présentation de l'équipe
+          description: Présentation de l'équipe (noms et compétences, sans données
+            privées)
+        avancement:
+          type: string
+          title: Niveau d'avancement
+          description: 'Ex : Idée, Prototype, MVP, Pilote, Déploiement'
+          maxLength: 100
+        medias:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/Statut934Enum'
+          readOnly: true
+          title: Statut du workflow
+        vues:
+          type: integer
+          readOnly: true
+          title: Nombre de consultations
+      required:
+      - avancement
+      - equipe
+      - id
+      - probleme
+      - projet
+      - slug
+      - solution
+      - statut
+      - titre
+      - vues
+    FicheInnovationCreate:
+      type: object
+      description: Sérialiseur pour la création d'une fiche par un porteur pour son
+        projet.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        projet:
+          type: integer
+          description: Identifiant du projet associé
+        titre:
+          type: string
+          title: Titre de la fiche
+          maxLength: 200
+        probleme:
+          type: string
+          title: Problème adressé
+        solution:
+          type: string
+          title: Solution innovante
+        equipe:
+          type: string
+          title: Présentation de l'équipe
+          description: Présentation de l'équipe (noms et compétences, sans données
+            privées)
+        avancement:
+          type: string
+          title: Niveau d'avancement
+          description: 'Ex : Idée, Prototype, MVP, Pilote, Déploiement'
+          maxLength: 100
+        medias:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/Statut934Enum'
+          readOnly: true
+          title: Statut du workflow
+        vues:
+          type: integer
+          readOnly: true
+          title: Nombre de consultations
+      required:
+      - avancement
+      - equipe
+      - id
+      - probleme
+      - projet
+      - slug
+      - solution
+      - statut
+      - titre
+      - vues
+    FicheStatistiqueItem:
+      type: object
+      description: Statistiques de consultation et d'intérêt par fiche.
+      properties:
+        slug:
+          type: string
+        titre:
+          type: string
+        vues:
+          type: integer
+        interets:
+          type: integer
+          default: 0
+      required:
+      - slug
+      - titre
+      - vues
+    GenreEnum:
+      enum:
+      - F
+      - H
+      - A
+      type: string
+      description: |-
+        * `F` - Femme
+        * `H` - Homme
+        * `A` - Autre / non précisé
+    IncubateurCalendrierItem:
+      type: object
+      description: Élément du calendrier d'incubation (jalon ou objectif).
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date d'échéance au format ISO AAAA-MM-JJ
+        type:
+          allOf:
+          - $ref: '#/components/schemas/IncubateurCalendrierItemTypeEnum'
+          description: |-
+            Type d'élément (jalon ou objectif)
+
+            * `jalon` - jalon
+            * `objectif` - objectif
+        titre:
+          type: string
+          description: Intitulé du jalon ou de l'objectif
+        projet:
+          type: string
+          description: Titre du projet associé
+        statut:
+          type: string
+          description: Statut d'avancement
+        en_retard:
+          type: boolean
+          description: Indicateur d'échéance dépassée non validée
+      required:
+      - date
+      - en_retard
+      - projet
+      - statut
+      - titre
+      - type
+    IncubateurCalendrierItemTypeEnum:
+      enum:
+      - jalon
+      - objectif
+      type: string
+      description: |-
+        * `jalon` - jalon
+        * `objectif` - objectif
+    JournalAudit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        acteur:
+          type: integer
+          readOnly: true
+          nullable: true
+        acteur_nom:
+          type: string
+          readOnly: true
+        acteur_email:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+        objet:
+          type: string
+          readOnly: true
+        objet_concerne:
+          type: string
+          readOnly: true
+        avant:
+          readOnly: true
+        apres:
+          readOnly: true
+        date:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - acteur
+      - acteur_email
+      - acteur_nom
+      - action
+      - apres
+      - avant
+      - date
+      - id
+      - objet
+      - objet_concerne
+    ManifestationInteret:
+      type: object
+      description: Sérialiseur de consultation d'une manifestation d'intérêt.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fiche:
+          type: integer
+          readOnly: true
+          title: Fiche d'innovation
+        fiche_slug:
+          type: string
+          readOnly: true
+        fiche_titre:
+          type: string
+          readOnly: true
+        nom:
+          type: string
+          readOnly: true
+          title: Nom complet
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adresse email
+        organisation:
+          type: string
+          readOnly: true
+          title: Organisation ou entreprise
+        message:
+          type: string
+          readOnly: true
+          title: Message ou objet de l'intérêt
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'enregistrement
+      required:
+      - cree_le
+      - email
+      - fiche
+      - fiche_slug
+      - fiche_titre
+      - id
+      - message
+      - nom
+      - organisation
+    ManifestationInteretCreate:
+      type: object
+      description: Sérialiseur pour soumettre une manifestation d'intérêt (Public).
+      properties:
+        nom:
+          type: string
+          maxLength: 150
+          minLength: 2
+        email:
+          type: string
+          format: email
+        organisation:
+          type: string
+          default: ''
+          maxLength: 200
+        message:
+          type: string
+          maxLength: 5000
+          minLength: 10
+      required:
+      - email
+      - message
+      - nom
+    MentorUser:
+      type: object
+      description: Représentation publique d'un mentor pour affectation.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        nom_complet:
+          type: string
+          readOnly: true
+        telephone:
+          type: string
+          maxLength: 30
+        organisation:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - id
+      - nom_complet
+    MessageAssistant:
+      type: object
+      description: Sérialiseur d'un message (utilisateur ou assistant) avec sources
+        et avertissement.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/MessageAssistantRoleEnum'
+          readOnly: true
+          title: Rôle
+        contenu:
+          type: string
+          title: Contenu du message
+        sources:
+          readOnly: true
+          description: 'Sources documentaires citées : [{''document_id'', ''titre'',
+            ''extrait''}]'
+        avertissement_ia:
+          type: string
+          readOnly: true
+          description: Mention légale obligatoire rappelant l'utilisation de l'intelligence
+            artificielle
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avertissement_ia
+      - contenu
+      - cree_le
+      - id
+      - role
+      - sources
+    MessageAssistantRoleEnum:
+      enum:
+      - user
+      - assistant
+      type: string
+      description: |-
+        * `user` - Utilisateur
+        * `assistant` - Assistant
+    MessageContact:
+      type: object
+      description: 'Format : { nom, email, sujet, message }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        sujet:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cree_le
+      - email
+      - id
+      - message
+      - nom
+      - sujet
+    ModeEnum:
+      enum:
+      - documents
+      - atelier
+      type: string
+      description: |-
+        * `documents` - Recherche dans les documents
+        * `atelier` - Atelier de rédaction
+    MotDePasseOublie:
+      type: object
+      description: Validation de la demande de réinitialisation de mot de passe (email
+        uniquement).
+      properties:
+        email:
+          type: string
+          format: email
+          description: Adresse email du compte utilisateur pour lequel réinitialiser
+            le mot de passe
+      required:
+      - email
+    MotDePasseReinitialiser:
+      type: object
+      description: Validation de la saisie d'un nouveau mot de passe avec jeton sécurisé.
+      properties:
+        jeton:
+          type: string
+          description: Jeton sécurisé à usage unique transmis dans le lien de réinitialisation
+        mot_de_passe:
+          type: string
+          writeOnly: true
+          description: Nouveau mot de passe conforme aux règles de robustesse du CIAT
+      required:
+      - jeton
+      - mot_de_passe
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          readOnly: true
+        type_libelle:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        lien:
+          type: string
+          readOnly: true
+        lue:
+          type: boolean
+        date:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date
+      - id
+      - lien
+      - message
+      - type
+      - type_libelle
+    NotificationTypeEnum:
+      enum:
+      - decision_dossier
+      - jalon_retard
+      - document_valide
+      - document_publie
+      - fiche_validee
+      - fiche_refusee
+      - mentor_affecte
+      - autre
+      type: string
+      description: |-
+        * `decision_dossier` - Décision sur le dossier
+        * `jalon_retard` - Jalon en retard
+        * `document_valide` - Document validé
+        * `document_publie` - Document publié
+        * `fiche_validee` - Fiche validée
+        * `fiche_refusee` - Fiche refusée
+        * `mentor_affecte` - Nouveau mentor affecté
+        * `autre` - Autre notification
+    PaginatedActualiteList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Actualite'
+    PaginatedAppelProjetList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppelProjet'
+    PaginatedDocumentPublicList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentPublic'
+    PaginatedDossierList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dossier'
+    PaginatedEvenementList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evenement'
+    PaginatedJournalAuditList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalAudit'
+    PaginatedMentorUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorUser'
+    PaginatedMessageContactList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageContact'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedProjetIncubeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjetIncube'
+    PaginatedProjetList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Projet'
+    Partenaire:
+      type: object
+      description: 'Format : { id, nom, logo, site_web, description }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          maxLength: 150
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        site_web:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 300
+          - type: string
+            maxLength: 0
+        description:
+          type: string
+      required:
+      - id
+      - nom
+    PatchedActualite:
+      type: object
+      description: 'Format : { id, titre, slug, resume, contenu, image, publie_le
+        }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        resume:
+          type: string
+        contenu:
+          type: string
+        image:
+          type: string
+          format: uri
+          nullable: true
+        publie:
+          type: boolean
+          description: Seules les actualités publiées sont visibles du public.
+        vues:
+          type: integer
+          readOnly: true
+          description: Nombre de consultations de l'actualité.
+        publie_le:
+          type: string
+          format: date-time
+    PatchedAppelProjet:
+      type: object
+      description: 'Format : { id, titre, description, date_limite, statut: "ouvert"|"clos",
+        pieces_demandees }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        date_limite:
+          type: string
+          format: date-time
+        statut:
+          type: string
+          readOnly: true
+        pieces_demandees: {}
+    PatchedCohorte:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          title: Nom de la cohorte
+          maxLength: 120
+        annee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Année
+        date_debut:
+          type: string
+          format: date
+          nullable: true
+          title: Date de début
+        date_fin:
+          type: string
+          format: date
+          nullable: true
+          title: Date de fin
+    PatchedDocumentPublic:
+      type: object
+      description: 'Format : { id, titre, categorie, fichier }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        categorie:
+          type: string
+          description: 'Ex: Rapports, Charte, Guides, Formulaires'
+          maxLength: 100
+        fichier:
+          type: string
+          format: uri
+    PatchedDomaine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          title: Nom du domaine
+          maxLength: 120
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+    PatchedDossier:
+      type: object
+      description: Sérialiseur complet du dossier de candidature avec calcul dynamique
+        de complétude et pièces manquantes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        projet:
+          allOf:
+          - $ref: '#/components/schemas/ProjetSimple'
+          readOnly: true
+        projet_id:
+          type: integer
+          writeOnly: true
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/DossierStatutEnum'
+          readOnly: true
+        completude:
+          type: integer
+          readOnly: true
+        pieces:
+          type: array
+          items:
+            $ref: '#/components/schemas/Piece'
+          readOnly: true
+        pieces_manquantes:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        soumis_le:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+        modifie_le:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedEvenement:
+      type: object
+      description: 'Format : { id, titre, description, lieu, debut, fin, lien_inscription
+        }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        lieu:
+          type: string
+          maxLength: 200
+        debut:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+          nullable: true
+        lien_inscription:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+    PatchedMessageContact:
+      type: object
+      description: 'Format : { nom, email, sujet, message }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        sujet:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedPartenaire:
+      type: object
+      description: 'Format : { id, nom, logo, site_web, description }'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          maxLength: 150
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        site_web:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 300
+          - type: string
+            maxLength: 0
+        description:
+          type: string
+    PatchedProjet:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          title: Titre du projet
+          maxLength: 200
+        resume:
+          type: string
+          title: Résumé
+        probleme:
+          type: string
+          title: Problème adressé
+        solution:
+          type: string
+          title: Solution innovante
+        domaine:
+          type: integer
+        domaine_nom:
+          type: string
+          readOnly: true
+        cohorte:
+          type: integer
+          nullable: true
+        cohorte_nom:
+          type: string
+          readOnly: true
+        porteur:
+          type: integer
+          readOnly: true
+          title: Porteur de projet
+        porteur_nom:
+          type: string
+          readOnly: true
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/StatutF4cEnum'
+          title: Statut du projet
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        modifie_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière modification
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role2bbEnum'
+          readOnly: true
+        telephone:
+          type: string
+          maxLength: 30
+        genre:
+          oneOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        organisation:
+          type: string
+          maxLength: 150
+    PatchedUserRoleUpdate:
+      type: object
+      description: Validation de la mise à jour du rôle utilisateur par l'administrateur.
+      properties:
+        role:
+          $ref: '#/components/schemas/Role2bbEnum'
+    Piece:
+      type: object
+      description: Sérialiseur et validateur de pièces jointes (fichiers PDF/documents
+        autorisés avec scan de taille).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/PieceTypeEnum'
+        nom:
+          type: string
+        fichier:
+          type: string
+          format: uri
+          pattern: (?:pdf|doc|docx|xls|xlsx|png|jpg|jpeg|webp)$
+        depose_le:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - depose_le
+      - fichier
+      - id
+      - type
+    PieceTypeEnum:
+      enum:
+      - fiche_projet
+      - presentation_equipe
+      - budget_previsionnel
+      - autre
+      type: string
+      description: |-
+        * `fiche_projet` - Fiche de projet
+        * `presentation_equipe` - Présentation de l'équipe
+        * `budget_previsionnel` - Budget prévisionnel
+        * `autre` - Autre pièce
+    Projet:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          title: Titre du projet
+          maxLength: 200
+        resume:
+          type: string
+          title: Résumé
+        probleme:
+          type: string
+          title: Problème adressé
+        solution:
+          type: string
+          title: Solution innovante
+        domaine:
+          type: integer
+        domaine_nom:
+          type: string
+          readOnly: true
+        cohorte:
+          type: integer
+          nullable: true
+        cohorte_nom:
+          type: string
+          readOnly: true
+        porteur:
+          type: integer
+          readOnly: true
+          title: Porteur de projet
+        porteur_nom:
+          type: string
+          readOnly: true
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/StatutF4cEnum'
+          title: Statut du projet
+        cree_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        modifie_le:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière modification
+      required:
+      - cohorte_nom
+      - cree_le
+      - domaine
+      - domaine_nom
+      - id
+      - modifie_le
+      - porteur
+      - porteur_nom
+      - titre
+    ProjetIncube:
+      type: object
+      description: |-
+        Format : { id, titre, resume, domaine_nom, cohorte_nom, statut }
+
+        Ne renvoie que les champs autorisés au contrat d'API public.
+        Aucune donnée personnelle (email, porteur, budget, notes) n'est exposée.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          readOnly: true
+          title: Titre du projet
+        resume:
+          type: string
+          readOnly: true
+          title: Résumé
+        domaine_nom:
+          type: string
+          readOnly: true
+        cohorte_nom:
+          type: string
+          readOnly: true
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/StatutF4cEnum'
+          readOnly: true
+          title: Statut du projet
+        vues:
+          type: integer
+          readOnly: true
+          title: Nombre de consultations
+          description: Nombre de consultations de la fiche projet.
+      required:
+      - cohorte_nom
+      - domaine_nom
+      - id
+      - resume
+      - statut
+      - titre
+      - vues
+    ProjetSimple:
+      type: object
+      description: Représentation allégée du projet dans le dossier.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          title: Titre du projet
+          maxLength: 200
+      required:
+      - id
+      - titre
+    Register:
+      type: object
+      description: 'Inscription publique : le compte créé est toujours un porteur
+        de projet.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        telephone:
+          type: string
+          maxLength: 30
+        genre:
+          oneOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        organisation:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - id
+      - password
+    Role2bbEnum:
+      enum:
+      - administrateur
+      - coordonnateur
+      - mentor
+      - membre_comite
+      - porteur
+      - visiteur
+      type: string
+      description: |-
+        * `administrateur` - Administrateur
+        * `coordonnateur` - Coordonnateur
+        * `mentor` - Mentor
+        * `membre_comite` - Membre du comité
+        * `porteur` - Porteur de projet
+        * `visiteur` - Visiteur
+    StatistiquesGallery:
+      type: object
+      description: 'Format : { total_vues, total_interets, par_fiche: [{ slug, titre,
+        vues, interets }] }'
+      properties:
+        total_vues:
+          type: integer
+        total_interets:
+          type: integer
+          default: 0
+        par_fiche:
+          type: array
+          items:
+            $ref: '#/components/schemas/FicheStatistiqueItem'
+      required:
+      - par_fiche
+      - total_vues
+    Statut934Enum:
+      enum:
+      - brouillon
+      - en_validation
+      - publie
+      - refuse
+      type: string
+      description: |-
+        * `brouillon` - Brouillon
+        * `en_validation` - En validation
+        * `publie` - Publié
+        * `refuse` - Refusé
+    StatutF4cEnum:
+      enum:
+      - idee
+      - depose
+      - selectionne
+      - incube
+      - prototype
+      - termine
+      - rejete
+      type: string
+      description: |-
+        * `idee` - Idée
+        * `depose` - Dossier déposé
+        * `selectionne` - Sélectionné
+        * `incube` - En incubation
+        * `prototype` - Prototype
+        * `termine` - Incubation terminée
+        * `rejete` - Non retenu
+    TokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - password
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role2bbEnum'
+          readOnly: true
+        telephone:
+          type: string
+          maxLength: 30
+        genre:
+          oneOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        organisation:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - id
+      - role
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

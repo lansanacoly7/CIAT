@@ -1,8 +1,10 @@
 """Tests unitaires pour la commande de seed des données de démonstration."""
 from datetime import timedelta
+
+from django.contrib.auth import authenticate
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from django.contrib.auth import authenticate
+
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
 
 

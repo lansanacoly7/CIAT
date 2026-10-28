@@ -9,7 +9,7 @@ Conforme à la charte graphique officielle du CIAT / ISEP Diamniadio :
 """
 import html
 import io
-from typing import Optional
+
 from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -36,7 +36,7 @@ COULEUR_BORDURE = colors.HexColor("#D8D0C5")
 COULEUR_GRIS = colors.HexColor("#666666")
 
 
-def esc(texte: Optional[str]) -> str:
+def esc(texte: str | None) -> str:
     """Échappe les caractères spéciaux pour le moteur XML interne de ReportLab."""
     if not texte:
         return ""

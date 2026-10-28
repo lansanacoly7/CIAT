@@ -1,5 +1,6 @@
 """Tests de compatibilité entre moteurs de bases de données (PostgreSQL vs SQLite) — CIAT Phase 5 (T1)."""
 import unittest
+
 from django.db import connection
 from django.test import TestCase
 

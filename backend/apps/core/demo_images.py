@@ -10,10 +10,10 @@ Règles strictes :
 - Strictement idempotent : ne régénère pas une image déjà présente.
 - Léger : toutes les images restent largement sous 150 Ko.
 """
-from datetime import datetime
+import functools
 import io
 import logging
-from pathlib import Path
+from datetime import datetime
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -33,6 +33,7 @@ VERT_CIAT = (46, 125, 50)     # #2E7D32 (succès / vert espoir)
 BLANC = (255, 255, 255)
 
 
+@functools.lru_cache(maxsize=64)
 def get_font(size: int, bold: bool = False):
     """Charge une police TrueType système avec repli robuste cross-platform."""
     names = (
@@ -79,7 +80,7 @@ def generer_image_actualite(actualite, force: bool = False) -> bool:
     Renvoie True si une nouvelle image a été générée, False si déjà existante.
     """
     filename = f"actualites/{actualite.slug}.jpg"
-    
+
     # Contrôle d'idempotence : ne pas écraser si l'image est déjà enregistrée et présente
     if not force and actualite.image and actualite.image.name:
         try:
@@ -89,16 +90,17 @@ def generer_image_actualite(actualite, force: bool = False) -> bool:
             pass
 
     width, height = 800, 480
-    img = Image.new("RGB", (width, height), color=BRUN_NUIT)
+    gradient = Image.new("RGB", (1, height))
+    gradient.putdata([
+        (
+            int(BRUN_NUIT[0] + (BRUN_CIAT[0] - BRUN_NUIT[0]) * (y / height)),
+            int(BRUN_NUIT[1] + (BRUN_CIAT[1] - BRUN_NUIT[1]) * (y / height)),
+            int(BRUN_NUIT[2] + (BRUN_CIAT[2] - BRUN_NUIT[2]) * (y / height)),
+        )
+        for y in range(height)
+    ])
+    img = gradient.resize((width, height))
     draw = ImageDraw.Draw(img)
-
-    # Dégradé vertical élégant du Brun Nuit au Brun CIAT
-    for y in range(height):
-        ratio = y / height
-        r = int(BRUN_NUIT[0] + (BRUN_CIAT[0] - BRUN_NUIT[0]) * ratio)
-        g = int(BRUN_NUIT[1] + (BRUN_CIAT[1] - BRUN_NUIT[1]) * ratio)
-        b = int(BRUN_NUIT[2] + (BRUN_CIAT[2] - BRUN_NUIT[2]) * ratio)
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
 
     # Cadre doré institutionnel
     draw.rectangle([(16, 16), (width - 16, height - 16)], outline=OCRE_DORE, width=2)
@@ -143,7 +145,7 @@ def generer_image_actualite(actualite, force: bool = False) -> bool:
     )
 
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=85, optimize=True)
+    img.save(buf, format="JPEG", quality=80)
     content_file = ContentFile(buf.getvalue(), name=f"{actualite.slug}.jpg")
 
     actualite.image.save(f"{actualite.slug}.jpg", content_file, save=False)
@@ -218,7 +220,7 @@ def generer_logo_partenaire(partenaire, force: bool = False) -> bool:
         y_text += 18
 
     buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
+    img.save(buf, format="PNG")
     content_file = ContentFile(buf.getvalue(), name=f"logo_{slug}.png")
 
     partenaire.logo.save(f"logo_{slug}.png", content_file, save=True)
@@ -246,16 +248,17 @@ def generer_photo_galerie(fiche, force: bool = False) -> bool:
 
     if force or not deja_present:
         width, height = 800, 600
-        img = Image.new("RGB", (width, height), color=BRUN_NUIT)
+        gradient = Image.new("RGB", (1, height))
+        gradient.putdata([
+            (
+                int(BRUN_NUIT[0] + (BRUN_CIAT[0] - BRUN_NUIT[0]) * (y / height)),
+                int(BRUN_NUIT[1] + (BRUN_CIAT[1] - BRUN_NUIT[1]) * (y / height)),
+                int(BRUN_NUIT[2] + (BRUN_CIAT[2] - BRUN_NUIT[2]) * (y / height)),
+            )
+            for y in range(height)
+        ])
+        img = gradient.resize((width, height))
         draw = ImageDraw.Draw(img)
-
-        # Dégradé diagonal sombre et contrasté
-        for y in range(height):
-            ratio = y / height
-            r = int(BRUN_NUIT[0] + (BRUN_CIAT[0] - BRUN_NUIT[0]) * ratio)
-            g = int(BRUN_NUIT[1] + (BRUN_CIAT[1] - BRUN_NUIT[1]) * ratio)
-            b = int(BRUN_NUIT[2] + (BRUN_CIAT[2] - BRUN_NUIT[2]) * ratio)
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
 
         # Cadre or avec coins biseautés
         draw.rectangle([(20, 20), (width - 20, height - 20)], outline=OCRE_DORE, width=2)
@@ -314,7 +317,7 @@ def generer_photo_galerie(fiche, force: bool = False) -> bool:
         )
 
         buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=85, optimize=True)
+        img.save(buf, format="JPEG", quality=80)
         content_file = ContentFile(buf.getvalue(), name=f"fiche_{slug}.jpg")
 
         # Sauvegarde dans default_storage
@@ -345,8 +348,8 @@ def generer_photo_galerie(fiche, force: bool = False) -> bool:
 
 def generer_toutes_images_demo(stdout=None, force: bool = False) -> dict:
     """Génère l'ensemble des images de démonstration pour le portail et la galerie."""
-    from apps.portal.models import Actualite, Partenaire
     from apps.gallery.models import FicheInnovation
+    from apps.portal.models import Actualite, Partenaire
 
     def write(msg):
         if stdout:

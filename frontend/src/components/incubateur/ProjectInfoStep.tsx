@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from "react";
 import { ArrowRight, Check, ChevronDown, RotateCcw } from "lucide-react";
 

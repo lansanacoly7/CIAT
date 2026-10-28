@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import Cohorte, Domaine, Projet, Role, User
+from .models import Cohorte, Domaine, JournalAudit, Notification, Projet, Role, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -69,3 +69,69 @@ class ProjetSerializer(serializers.ModelSerializer):
             attrs.pop("statut", None)
             attrs.pop("cohorte", None)
         return attrs
+
+
+class JournalAuditSerializer(serializers.ModelSerializer):
+    acteur_nom = serializers.CharField(source="acteur.get_full_name", read_only=True, default=None)
+    acteur_email = serializers.CharField(source="acteur.email", read_only=True, default=None)
+    objet_concerne = serializers.CharField(source="objet", read_only=True)
+
+    class Meta:
+        model = JournalAudit
+        fields = [
+            "id",
+            "acteur",
+            "acteur_nom",
+            "acteur_email",
+            "action",
+            "objet",
+            "objet_concerne",
+            "avant",
+            "apres",
+            "date",
+        ]
+        read_only_fields = fields
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    type_libelle = serializers.CharField(source="get_type_display", read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "type",
+            "type_libelle",
+            "message",
+            "lien",
+            "lue",
+            "date",
+        ]
+        read_only_fields = ["id", "type", "type_libelle", "message", "lien", "date"]
+
+
+class UserRoleUpdateSerializer(serializers.Serializer):
+    """Validation de la mise à jour du rôle utilisateur par l'administrateur."""
+    role = serializers.ChoiceField(choices=Role.choices)
+
+
+class MotDePasseOublieSerializer(serializers.Serializer):
+    """Validation de la demande de réinitialisation de mot de passe (email uniquement)."""
+    email = serializers.EmailField(
+        required=True,
+        help_text="Adresse email du compte utilisateur pour lequel réinitialiser le mot de passe",
+    )
+
+
+class MotDePasseReinitialiserSerializer(serializers.Serializer):
+    """Validation de la saisie d'un nouveau mot de passe avec jeton sécurisé."""
+    jeton = serializers.CharField(
+        required=True,
+        help_text="Jeton sécurisé à usage unique transmis dans le lien de réinitialisation",
+    )
+    mot_de_passe = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="Nouveau mot de passe conforme aux règles de robustesse du CIAT",
+    )
+

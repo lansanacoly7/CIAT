@@ -19,7 +19,9 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-./backups}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BACKUP_DIR="${BACKUP_DIR:-$REPO_ROOT/backups}"
 BACKUP_KEEP="${BACKUP_KEEP:-14}"
 USE_DOCKER="${USE_DOCKER:-0}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -210,12 +212,20 @@ echo "=> Dump validé et écrit avec succès (${FILE_SIZE})."
 
 # Sauvegarde des médias si demandée
 if [ "$AVEC_MEDIA" = true ]; then
-    MEDIA_DIR="backend/media"
+    MEDIA_DIR="$REPO_ROOT/backend/media"
     MEDIA_ARCHIVE="${TARGET_FILE%.dump}_media.tar.gz"
+    MANIFEST_FILE="${TARGET_FILE%.dump}_media.sha256"
     if [ -d "$MEDIA_DIR" ]; then
-        echo "=> Sauvegarde des fichiers médias (backend/media)..."
-        tar -czf "$MEDIA_ARCHIVE" -C "$(dirname "$MEDIA_DIR")" "$(basename "$MEDIA_DIR")"
-        echo "=> Archive médias créée : ${MEDIA_ARCHIVE}"
+        echo "=> Sauvegarde des fichiers médias ($MEDIA_DIR)..."
+        # Génération du manifeste d'empreintes SHA-256
+        (cd "$REPO_ROOT/backend" && (find media -type f -exec sha256sum {} + 2>/dev/null || find media -type f -exec shasum -a 256 {} + 2>/dev/null || true)) > "$MANIFEST_FILE" 2>/dev/null || true
+        tar -czf "$MEDIA_ARCHIVE" -C "$REPO_ROOT/backend" media
+        FILE_COUNT=$(tar -tzf "$MEDIA_ARCHIVE" | grep -v '/$' | wc -l)
+        MEDIA_SIZE=$(du -h "$MEDIA_ARCHIVE" | cut -f1)
+        echo "=> Archive médias créée : ${MEDIA_ARCHIVE} (${FILE_COUNT} fichiers, ${MEDIA_SIZE})"
+        if [ -s "$MANIFEST_FILE" ]; then
+            echo "=> Empreintes SHA-256 consignées : ${MANIFEST_FILE}"
+        fi
     else
         echo "[AVERTISSEMENT] Répertoire backend/media introuvable. Aucun média sauvegardé."
     fi

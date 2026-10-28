@@ -9,13 +9,13 @@ Vérifie :
 4. Combinaison dynamique des filtres (?debut=&fin=&cohorte=&domaine=&statut=)
 5. Robustesse aux cas limites (base vide, 0 division)
 """
-from datetime import date, timedelta
-from decimal import Decimal
 import io
 import json
+from datetime import date, timedelta
+from decimal import Decimal
 from unittest.mock import patch
-import openpyxl
 
+import openpyxl
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -23,7 +23,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.analytics.models import (
     Financement,
     Partenariat,
@@ -31,6 +30,7 @@ from apps.analytics.models import (
     StatutPartenariat,
     TypePartenariat,
 )
+from apps.core.models import Cohorte, Domaine, Projet, Role, User
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
@@ -1204,27 +1204,37 @@ class DataQualityControlCommandTests(TestCase):
 
     def test_detecte_incoherences_temporelles(self):
         """Détecte les cohortes à dates inversées et les financements antérieurs au projet."""
+        from django.db import connection
+
         from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
 
-        # Cohorte avec date_fin antérieure à date_debut
-        Cohorte.objects.create(
-            nom="Cohorte Inverse",
-            annee=2025,
-            date_debut=date(2025, 12, 1),
-            date_fin=date(2025, 1, 1),
-        )
+        # Cohorte avec date_fin antérieure à date_debut (désactivation CHECK temporaire pour simuler données corrompues)
+        if connection.vendor == "sqlite":
+            with connection.cursor() as cur:
+                cur.execute("PRAGMA ignore_check_constraints = ON;")
+        try:
+            Cohorte.objects.create(
+                nom="Cohorte Inverse",
+                annee=2025,
+                date_debut=date(2025, 12, 1),
+                date_fin=date(2025, 1, 1),
+            )
 
-        # Financement antérieur à la création du projet
-        # projet.cree_le est la date actuelle, on met 2020
-        f = Financement(
-            projet=self.projet,
-            source="DER/FJ",
-            montant=Decimal("5000000"),
-            date=date(2020, 1, 1),
-            statut=StatutFinancement.DECAISSE,
-        )
-        # save direct sans full_clean pour bypasser la validation modèle et tester la commande d'audit
-        super(Financement, f).save()
+            # Financement antérieur à la création du projet
+            # projet.cree_le est la date actuelle, on met 2020
+            f = Financement(
+                projet=self.projet,
+                source="DER/FJ",
+                montant=Decimal("5000000"),
+                date=date(2020, 1, 1),
+                statut=StatutFinancement.DECAISSE,
+            )
+            # save direct sans full_clean pour bypasser la validation modèle et tester la commande d'audit
+            super(Financement, f).save()
+        finally:
+            if connection.vendor == "sqlite":
+                with connection.cursor() as cur:
+                    cur.execute("PRAGMA ignore_check_constraints = OFF;")
 
         rapport = executer_audit_qualite()
         codes = [a["code"] for a in rapport["anomalies"]]
@@ -1261,6 +1271,8 @@ class DataQualityControlCommandTests(TestCase):
 
     def test_detecte_valeurs_hors_plage(self):
         """Détecte les financements à montant non positif et les cohortes hors plage."""
+        from django.db import connection
+
         from apps.analytics.management.commands.controle_qualite_donnees import executer_audit_qualite
 
         # Cohorte hors plage
@@ -1271,15 +1283,23 @@ class DataQualityControlCommandTests(TestCase):
             date_fin=date(2050, 12, 31),
         )
 
-        # Financement à 0 FCFA (save direct)
-        f_invalide = Financement(
-            projet=self.projet,
-            source="Donateur",
-            montant=Decimal("0"),
-            date=date(2026, 6, 1),
-            statut=StatutFinancement.ACCORDE,
-        )
-        super(Financement, f_invalide).save()
+        # Financement à 0 FCFA (save direct avec CHECK ignoré pour tester l'audit)
+        if connection.vendor == "sqlite":
+            with connection.cursor() as cur:
+                cur.execute("PRAGMA ignore_check_constraints = ON;")
+        try:
+            f_invalide = Financement(
+                projet=self.projet,
+                source="Donateur",
+                montant=Decimal("0"),
+                date=date(2026, 6, 1),
+                statut=StatutFinancement.ACCORDE,
+            )
+            super(Financement, f_invalide).save()
+        finally:
+            if connection.vendor == "sqlite":
+                with connection.cursor() as cur:
+                    cur.execute("PRAGMA ignore_check_constraints = OFF;")
 
         rapport = executer_audit_qualite()
         codes = [a["code"] for a in rapport["anomalies"]]
@@ -1448,6 +1468,35 @@ class AnalyticsDataConsistencyTests(TestCase):
         self.assertEqual(res_dom.status_code, 200)
         total_domaines = sum(d["total"] for d in res_dom.data)
         self.assertEqual(total_domaines, 62)
+
+    def test_points_attention_a_traiter_deterministes(self):
+        """Vérification déterministe des 3 alertes 'À traiter' (8 retards, 2 conventions, 5 dossiers).
+        
+        Requêtes déterministes vérifiées :
+        1. Jalons en retard : Jalon.objects.filter(echeance__lt=today).exclude(statut='fait') == 8
+        2. Conventions en attente : Partenariat.objects.filter(statut='en_discussion') == 2
+        3. Dossiers à évaluer : Dossier.objects.filter(statut__in=['soumis', 'en_evaluation']) == 5
+        """
+        from django.utils import timezone
+
+        from apps.analytics.models import Partenariat, StatutPartenariat
+        from apps.incubator.models import Dossier, Jalon
+
+        today = timezone.now().date()
+        retards_count = Jalon.objects.filter(echeance__lt=today).exclude(statut="fait").count()
+        conventions_count = Partenariat.objects.filter(statut=StatutPartenariat.EN_DISCUSSION).count()
+        dossiers_count = Dossier.objects.filter(statut__in=["soumis", "en_evaluation"]).count()
+
+        self.assertEqual(retards_count, 8, "Le nombre de jalons en retard doit être exactement de 8.")
+        self.assertEqual(conventions_count, 2, "Le nombre d'accords en discussion doit être exactement de 2.")
+        self.assertEqual(dossiers_count, 5, "Le nombre de dossiers à évaluer doit être exactement de 5.")
+
+
+# Import des tests de recoupement exhaustifs de la Phase 8 (T1) et Phase 9 (T1)
+from .test_recoupement_indicateurs import RecoupementIndicateursTests
+from .test_exports_fideles import ExportsFidelesFiltresTests
+
+__all__ = ["RecoupementIndicateursTests", "ExportsFidelesFiltresTests"]
 
 
 

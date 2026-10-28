@@ -16,6 +16,7 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import PropertyMock, patch
 
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -24,20 +25,11 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.core.models import Cohorte, Domaine, Projet, Role, User
-from apps.documents.models import Document, ModeleDocument, TypeDocument, VersionDocument
+from apps.documents.models import Document, ModeleDocument
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import (
-    AffectationMentor,
-    CommentaireJalon,
-    Critere,
-    Decision,
     Dossier,
-    Evaluation,
     Grille,
-    Jalon,
-    Note,
-    Objectif,
-    Piece,
     StatutDossier,
     StatutJalon,
 )
@@ -48,6 +40,7 @@ class ParcoursCompletAPITestCase(TestCase):
     """Vérifie le parcours complet de bout en bout et les droits RBAC associés."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
         # 1. Données de base indispensables

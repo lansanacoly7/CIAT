@@ -39,7 +39,7 @@ STOP_WORDS_FR = {
     "qui", "que", "quoi", "comment", "quel", "quelle", "quels", "quelles",
     "au", "aux", "a", "à", "y", "il", "elle", "ils", "elles", "on", "nous",
     "vous", "se", "sa", "son", "ses", "leur", "leurs", "ne", "pas", "plus",
-    "mon", "ton", "son", "mes", "tes", "ses", "notre", "votre",
+    "mon", "ton", "mes", "tes", "notre", "votre",
     "ciat", "projet", "projets", "document", "documents",
 }
 
@@ -83,7 +83,14 @@ def normaliser_chaine(texte: str) -> str:
 # ==============================================================================
 
 def extraire_texte_docx(donnees: bytes) -> str:
-    """Extrait le texte d'un document Word .docx via zipfile et ElementTree."""
+    """Extrait le contenu textuel d'un document Word .docx sans exécutable externe.
+
+    Justification métier et sécurité :
+    - Traitement en bac à sable (sandbox) : exploite le format standard OpenXML (archive ZIP)
+      avec ElementTree en mémoire, éliminant tout appel système dangereux ou dépendance lourde.
+    - Robustesse : extrait séquentiellement les balises de paragraphes (<w:p>) et de texte (<w:t>)
+      pour préserver la structure naturelle des documents institutionnels du CIAT.
+    """
     try:
         with zipfile.ZipFile(io.BytesIO(donnees)) as z:
             if "word/document.xml" not in z.namelist():
@@ -103,7 +110,14 @@ def extraire_texte_docx(donnees: bytes) -> str:
 
 
 def extraire_texte_pdf(donnees: bytes) -> str:
-    """Extrait le texte d'un PDF via pypdf ou décodage standard des flux textuels."""
+    """Extrait le texte d'un document PDF de façon souveraine et locale.
+
+    Règle de sécurité et résilience :
+    - Tolérance aux pannes : combine pypdf et un parseur de flux compressés zlib
+      afin d'extraire le texte même lorsque le fichier est généré par des moteurs
+      PDF variés (ReportLab, LaTeX, scanners OCR pré-traités).
+    - Souveraineté : aucun appel d'API OCR externe payant ou non souverain.
+    """
     try:
         import pypdf  # type: ignore
 
@@ -161,7 +175,14 @@ def extraire_texte_pdf(donnees: bytes) -> str:
 
 
 def extraire_texte_fichier(fichier) -> str:
-    """Extrait tout le texte accessible d'un fichier (File ou FieldFile)."""
+    """Extrait le texte d'un fichier téléversé avec détection par signature magique.
+
+    Sécurité et intégrité :
+    - Détection binaire : ne se fie pas uniquement à l'extension du nom de fichier, mais
+      vérifie les signatures magiques (PK\x03\x04 pour docx, %PDF- pour les PDF) pour
+      empêcher les erreurs de décodage binaire ou les fichiers malicieux masqués.
+    - Protection du curseur : repositionne systématiquement le curseur avec seek(0).
+    """
     if not fichier:
         return ""
 
@@ -202,7 +223,13 @@ def extraire_texte_fichier(fichier) -> str:
 # ==============================================================================
 
 def decouper_en_passages(texte: str, max_mots: int = 250, recouvrement: int = 40) -> list[str]:
-    """Découpe un texte en passages d'environ `max_mots` mots avec chevauchement."""
+    """Découpe un texte documentaire en fragments fenêtrés avec chevauchement.
+
+    Règle d'ingénierie RAG :
+    - Le recouvrement (overlap de 40 mots) évite de scinder une phrase ou une condition
+      réglementaire clé à la frontière de deux blocs, garantissant que le LLM dispose
+      du contexte complet pour formuler sa réponse factuelle.
+    """
     if not texte:
         return []
 
@@ -228,7 +255,13 @@ def decouper_en_passages(texte: str, max_mots: int = 250, recouvrement: int = 40
 
 
 def indexer_documents_publics() -> dict:
-    """Réindexe l'ensemble des documents publics enregistrés dans la plateforme."""
+    """Indexe les documents publics du portail dans la base de recherche locale.
+
+    Règle d'étanchéité et confidentialité :
+    - Périmètre strictement public : n'indexe que les documents de DocumentPublic
+      (chartes, règlements, appels d'offres), interdisant formellement l'indexation
+      des dossiers privés, projets en cours ou données personnelles des incubés.
+    """
     PassageDocument.objects.all().delete()
 
     documents = DocumentPublic.objects.all()
@@ -354,7 +387,19 @@ def traiter_message_assistant(
     contenu_utilisateur: str,
     mode: str = "documents",
 ) -> MessageAssistant:
-    """Traite la question de l'utilisateur, interroge l'IA et persiste la réponse."""
+    """Traite la requête utilisateur selon le mode métier actif (Documents ou Atelier).
+
+    Garanties de sécurité et anti-hallucination :
+    1. Mode « Documents » (RAG strict) :
+       - Interroge exclusivement les extraits documentaires publics authentifiés du CIAT.
+       - Exige une réponse en JSON structuré avec la liste ordonnée des passages réellement
+         utilisés. Seuls les passages vérifiés côté serveur sont restitués comme sources.
+       - Mécanisme de 2 tentatives avec capture explicite pour éviter tout blocage en 500.
+    2. Mode « Atelier » (Assistance rédactionnelle) :
+       - Accompagne les porteurs dans la structuration de pitchs, SWOT et fiches projets.
+       - Règle anti-invention : obligation stricte pour le modèle d'insérer des marqueurs
+         « [À COMPLÉTER : ...] » dès qu'un chiffre, nom ou résultat n'a pas été fourni.
+    """
     verifier_service_ia()
 
     # Enregistrement du message utilisateur

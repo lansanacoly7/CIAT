@@ -41,6 +41,14 @@ Conformément aux exigences du profil Data Analyst et aux directives de la Phase
 2. **Taux de sélection de 84.5% :** Le ratio `Projets sélectionnés (49) / Dossiers déposés (58)` s'établit à **84.5%**. Cette sélectivité reflète un pré-sourcing ciblé et un alignement étroit entre les profils des candidats et les axes prioritaires du centre.
 3. **Efficacité de passage au prototype (46.9% des sélectionnés, 60.5% des incubés) :** Déjà 23 prototypes fonctionnels sont achevés et validés. Comme analysé ci-après, ce chiffre reflète fidèlement la maturité échelonnée par promotion.
 
+![Figure 3 — Évolution mensuelle des dépôts de dossiers](figures/fig3_evolution_mensuelle.png)
+
+**Interprétation (Fig. 3) :** L'évolution mensuelle révèle deux pics de dépôt marqués : un premier en octobre–novembre 2024 (ouverture de la Cohorte 2025) et un second en mars 2026 (lancement de la Cohorte 2026), conformément au calendrier académique de l'ISEP. Les mois inter-cohortes affichent un flux résiduel stable de 2 à 4 dossiers, témoignant d'une activité d'instruction continue plutôt que purement saisonnière. Ce profil multi-pics est caractéristique des incubateurs intégrés à un établissement à cycles semestriels.
+
+**Recommandation :** Planifier les ressources humaines du comité de sélection (jury, coordinateurs) en anticipant ces deux fenêtres de forte charge (octobre et mars) pour réduire les délais d'instruction.
+
+*(Données fictives de démonstration issues de seed_all)*
+
 ---
 
 ### 2.2. Répartition Sectorielle par Domaine d'Innovation
@@ -65,6 +73,14 @@ Les 62 projets se déploient à travers les 7 domaines d'intervention prioritair
   - L'**Agriculture & Transformation** arrive en seconde position avec **80 000 000 FCFA** (machines agroalimentaires, serres connectées).
   - Le secteur **Énergie** affiche en revanche un sous-financement relatif (**35 000 000 FCFA**, 5 financements), constituant un axe d'amélioration stratégique.
 
+![Figure 1 — Répartition des projets par domaine](figures/fig1_repartition_domaine.png)
+
+**Interprétation (Fig. 1) :** Le diagramme en secteurs confirme la distribution quasi-uniforme des 62 projets entre les 7 domaines prioritaires du CIAT : chaque filière représente entre 12.9% et 14.5% du portefeuille. Cette égalité de représentation sectorielle reflète une politique de sélection délibérément multidisciplinaire, évitant toute surconcentration sectorielle susceptible de créer des goulets d'étranglement dans les équipements partagés du fablab. Toutefois, la différence de financement entre secteurs (de 35M FCFA pour l'Énergie à 95M FCFA pour le Biomédical) indique que l'équilibre en volume de projets ne se traduit pas automatiquement en équilibre de ressources.
+
+**Recommandation :** Mettre en place un tableau de bord de l'intensité capitalistique par domaine afin de détecter précocement les secteurs sous-financés et d'activer des guichets spécifiques avant la prochaine session de sélection.
+
+*(Données fictives de démonstration issues de seed_all)*
+
 ---
 
 ### 2.3. Maturité et Cycle de Vie par Cohorte
@@ -82,6 +98,14 @@ L'analyse longitudinale met en lumière la progression séquentielle des promoti
 * **Cohorte 2025 (Le vivier opérationnel) :** Forte de 32 projets et 28 sélections, cette cohorte compte actuellement 26 projets en phase intensive d'atelier et 2 premiers prototypes déjà finalisés.
 * **Cohorte 2026 (Le pipeline émergent) :** 9 projets enregistrés en attente des délibérations du comité de sélection, marquant le flux continu d'alimentation du hub.
 
+![Figure 4 — Comparaison des promotions par cohorte](figures/fig4_comparaison_cohortes.png)
+
+**Interprétation (Fig. 4) :** Le graphique en barres groupées illustre la progression séquentielle des trois cohortes : la Cohorte 2024 (21 projets, 100% prototype) représente le modèle d'excellence à cycle complet ; la Cohorte 2025 (32 projets, 28 sélectionnés, 2 prototypes) est en pleine phase d'intensification ; la Cohorte 2026 (9 projets) est en attente de délibération. L'effet de pyramide inversée — plus de projets en entrée que de prototypes validés — est sain et témoigne d'un pipeline fonctionnel, à condition que les ressources de mentorat et d'équipement scalent avec la taille de la Cohorte 2025.
+
+**Recommandation :** Allouer dès maintenant des créneaux lablab supplémentaires à la Cohorte 2025 pour éviter un goulot d'étranglement lors du passage en phase prototype prévu au second semestre 2026.
+
+*(Données fictives de démonstration issues de seed_all)*
+
 ---
 
 ### 2.4. Inclusivité et Parité de Genre
@@ -96,6 +120,14 @@ L'analyse longitudinale met en lumière la progression séquentielle des promoti
 #### Interprétation :
 * Avec **46.8% de projets dirigés par des femmes**, le CIAT réalise une performance exemplaire en matière d'inclusivité, surpassant nettement les moyennes continentales dans les incubateurs technologiques (~20% à 25%).
 * Cette parité est observée dans des filières traditionnellement masculines (fabrication mécanique, photovoltaïque et génie logiciel), validant la politique d'ouverture de l'ISEP.
+
+![Figure 2 — Répartition des porteurs par genre](figures/fig2_repartition_genre.png)
+
+**Interprétation (Fig. 2) :** Le graphique en anneau révèle une parité remarquable : 46.8% des projets sont portés par des femmes (29/62), contre une moyenne africaine estimée entre 20% et 25% pour les incubateurs technologiques. Cet écart de +20 points de pourcentage par rapport à la moyenne continentale constitue un indicateur d'impact social fort, résultat direct de la politique d'admission non discriminatoire de l'ISEP et des programmes de bourses ciblées. Aucun projet n'est classé « genre non précisé », attestant de la qualité de la collecte de données à l'inscription.
+
+**Recommandation :** Capitaliser sur cette performance de parité dans les communications institutionnelles et les dossiers de financement (bailleurs AFD, GIZ, ONU Femmes) pour accéder à des guichets de financement conditionnés à l'inclusion genre.
+
+*(Données fictives de démonstration issues de seed_all)*
 
 ---
 
@@ -139,6 +171,14 @@ Le module d'incubation assure le suivi de **147 jalons contractuels** :
 #### Réseau de Partenariats :
 * **48 conventions enregistrées**, dont **33 partenariats actifs** (68.8%).
 * Typologie : Technique & R&D (12), Commercial & Marché (12), Financier (11), Institutionnel (9), Académique (4).
+
+![Figure 5 — Financements mobilisés par guichet](figures/fig5_financements_sources.png)
+
+**Interprétation (Fig. 5) :** Le graphique en barres horizontales classe les 9 guichets de financement par montant engagé : la BNDE (120M FCFA) et Orange Fab (108M FCFA) représentent ensemble 48% des 472M FCFA totaux, plaçant le CIAT dans une situation de dépendance bilatérale concentrée. Les 7 autres guichets se répartissent les 52% restants, avec des montants individuels compris entre 15M et 75M FCFA. Le taux global de décaissement de 85.2% (402M/472M) est excellent, confirmant la fiabilité des engagements des bailleurs partenaires.
+
+**Recommandation :** Diversifier le portefeuille de financement en sollicitant activement 2 à 3 nouveaux guichets non encore mobilisés (FONSIS, BOAD Fonds Vert, Banque Islamique de Développement) afin de réduire le risque de concentration et d'atteindre une répartition équilibrée, aucun guichet ne dépassant 20% du total.
+
+*(Données fictives de démonstration issues de seed_all)*
 
 ---
 

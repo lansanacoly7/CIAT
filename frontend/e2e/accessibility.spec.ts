@@ -11,14 +11,17 @@ const SCREENS: ScreenAudit[] = [
   { name: "Accueil", url: "/", authenticated: false },
   { name: "Galerie des innovations", url: "/galerie", authenticated: false },
   { name: "Connexion", url: "/connexion", authenticated: false },
-  { name: "Tableau de bord décisionnel", url: "/tableau-de-bord", authenticated: true },
+  { name: "Tableau de bord décisionnel (Vue d'ensemble)", url: "/tableau-de-bord", authenticated: true },
+  { name: "Tableau de bord (Vue Projets)", url: "/tableau-de-bord?vue=projets", authenticated: true },
+  { name: "Tableau de bord (Vue Financements)", url: "/tableau-de-bord?vue=financements", authenticated: true },
+  { name: "Tableau de bord (Vue Registre)", url: "/tableau-de-bord?vue=registre", authenticated: true },
   { name: "Générateur de documents", url: "/documents", authenticated: true },
   { name: "Gestion de l'incubateur", url: "/incubateur", authenticated: true },
   { name: "Assistant IA", url: "/assistant", authenticated: true },
   { name: "Référentiel méthodologique", url: "/tableau-de-bord/methodologie", authenticated: true },
 ];
 
-test.describe("Phase 5 — T1 : Audit d'accessibilité mesuré avec Axe-core (8 écrans)", () => {
+test.describe("Phase 9 — Audit d'accessibilité mesuré avec Axe-core (11 écrans et vues)", () => {
   let authenticatedContext: BrowserContext;
   let authPage: Page;
 

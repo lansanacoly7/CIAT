@@ -1,7 +1,5 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import { Calendar, Filter, RotateCcw } from "lucide-react";
+import { Calendar, ChevronDown, Filter, HelpCircle, RotateCcw } from "lucide-react";
 import type { DashboardFilters } from "../types";
 
 interface StickyFiltersBarProps {
@@ -183,6 +181,18 @@ export function StickyFiltersBar({
   isFiltered,
 }: StickyFiltersBarProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [draftDebut, setDraftDebut] = useState<string | undefined>(filters.debut);
+  const [draftFin, setDraftFin] = useState<string | undefined>(filters.fin);
+  const [prevDebut, setPrevDebut] = useState(filters.debut);
+  const [prevFin, setPrevFin] = useState(filters.fin);
+
+  if (filters.debut !== prevDebut || filters.fin !== prevFin) {
+    setPrevDebut(filters.debut);
+    setPrevFin(filters.fin);
+    setDraftDebut(filters.debut);
+    setDraftFin(filters.fin);
+  }
 
   // Compteur des filtres appliqués
   const activeCount = useMemo(() => {
@@ -202,6 +212,8 @@ export function StickyFiltersBar({
     const todayStr = `${yyyy}-${mm}-${dd}`;
 
     if (preset === "all") {
+      setDraftDebut(undefined);
+      setDraftFin(undefined);
       onChange({ ...filters, debut: undefined, fin: undefined });
     } else if (preset === "30d") {
       const past = new Date();
@@ -209,6 +221,8 @@ export function StickyFiltersBar({
       const pastStr = `${past.getFullYear()}-${String(
         past.getMonth() + 1
       ).padStart(2, "0")}-${String(past.getDate()).padStart(2, "0")}`;
+      setDraftDebut(pastStr);
+      setDraftFin(todayStr);
       onChange({ ...filters, debut: pastStr, fin: todayStr });
     } else if (preset === "quarter") {
       const past = new Date();
@@ -216,9 +230,13 @@ export function StickyFiltersBar({
       const pastStr = `${past.getFullYear()}-${String(
         past.getMonth() + 1
       ).padStart(2, "0")}-${String(past.getDate()).padStart(2, "0")}`;
+      setDraftDebut(pastStr);
+      setDraftFin(todayStr);
       onChange({ ...filters, debut: pastStr, fin: todayStr });
     } else if (preset === "year") {
       const yearStart = `${yyyy}-01-01`;
+      setDraftDebut(yearStart);
+      setDraftFin(todayStr);
       onChange({ ...filters, debut: yearStart, fin: todayStr });
     }
     setIsCalendarOpen(false);
@@ -227,9 +245,174 @@ export function StickyFiltersBar({
   return (
     <div className="sticky top-2 z-30 mx-auto max-w-7xl transition-all">
       <div className="rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white/95 px-3 py-2 sm:px-4 sm:py-2.5 shadow-[0_4px_20px_rgba(60,35,20,0.06)] backdrop-blur-md">
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
+        
+        {/* ── BARRE MOBILE (390 px) AVEC PANNEAU REPLIABLE ── */}
+        <div className="flex sm:hidden items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
+              <Filter className="h-4 w-4 text-[#C99A68]" />
+              <span>Filtres</span>
+            </span>
+            {activeCount > 0 && (
+              <span className="rounded-full bg-[#C99A68] px-2 py-0.5 text-[10px] font-bold text-white">
+                {activeCount} actif{activeCount > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={onReset}
+                className="inline-flex min-h-[44px] items-center gap-1 text-xs text-[#B85D43] font-semibold px-2 py-1"
+                aria-label="Réinitialiser les filtres"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Effacer</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              id="mobile-filters-toggle-btn"
+              onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-[#FAF7F2] px-3.5 py-2 text-xs font-bold text-[#21130D] shadow-xs active:scale-95 transition-all cursor-pointer"
+              aria-expanded={isMobilePanelOpen}
+              aria-controls="mobile-filters-panel"
+            >
+              <span>{isMobilePanelOpen ? "Fermer" : "Filtrer"}</span>
+              <ChevronDown className={`h-4 w-4 text-[#8C5E2D] transition-transform duration-200 ${isMobilePanelOpen ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Panneau repliable mobile */}
+        {isMobilePanelOpen && (
+          <div id="mobile-filters-panel" className="block sm:hidden mt-3 pt-3 border-t border-[rgba(60,35,20,0.08)] space-y-3">
+            <div className="grid grid-cols-1 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#5A4B42] uppercase tracking-wider mb-1">
+                  Cohorte
+                </label>
+                <select
+                  value={filters.cohorte || ""}
+                  onChange={(e) =>
+                    onChange({
+                      ...filters,
+                      cohorte: e.target.value || undefined,
+                    })
+                  }
+                  aria-label="Filtrer par cohorte"
+                  className="w-full h-10 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-3 text-xs font-medium text-[#21130D] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                >
+                  <option value="">Toutes les cohortes</option>
+                  {COHORTES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#5A4B42] uppercase tracking-wider mb-1">
+                  Domaine
+                </label>
+                <select
+                  value={filters.domaine || ""}
+                  onChange={(e) =>
+                    onChange({
+                      ...filters,
+                      domaine: e.target.value || undefined,
+                    })
+                  }
+                  aria-label="Filtrer par domaine"
+                  className="w-full h-10 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-3 text-xs font-medium text-[#21130D] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                >
+                  <option value="">Tous les domaines</option>
+                  {DOMAINES.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#5A4B42] uppercase tracking-wider mb-1">
+                  Statut
+                </label>
+                <select
+                  value={filters.statut || ""}
+                  onChange={(e) =>
+                    onChange({
+                      ...filters,
+                      statut: e.target.value || undefined,
+                    })
+                  }
+                  aria-label="Filtrer par statut"
+                  className="w-full h-10 rounded-xl border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-3 text-xs font-medium text-[#21130D] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                >
+                  <option value="">Tous les statuts</option>
+                  {STATUTS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#5A4B42] uppercase tracking-wider mb-1">
+                  Période
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                  {PRESETS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => handlePreset(p.value)}
+                      className="rounded-lg bg-[#FAF7F2] border border-[#EFE4D6] px-2.5 py-2 text-center text-[11px] font-medium text-[#21130D] active:bg-[#C99A68]/20"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <FrenchDateInput
+                    id="mobile-date-debut"
+                    label="Du :"
+                    value={filters.debut}
+                    onChange={(iso) => onChange({ ...filters, debut: iso })}
+                  />
+                  <FrenchDateInput
+                    id="mobile-date-fin"
+                    label="Au :"
+                    value={filters.fin}
+                    onChange={(iso) => onChange({ ...filters, fin: iso })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-2 border-t border-[rgba(60,35,20,0.06)]">
+              <button
+                type="button"
+                onClick={() => setIsMobilePanelOpen(false)}
+                className="w-full min-h-[44px] rounded-xl bg-[#21130D] px-4 py-2.5 text-xs font-semibold text-white shadow-xs"
+              >
+                Appliquer et fermer
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── BARRE DESKTOP (sm:flex) ── */}
+        <div className="hidden sm:flex flex-wrap items-center justify-between gap-2.5">
           {/* Groupe des sélecteurs en pilule */}
           <div className="flex flex-wrap items-center gap-2">
+
             <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
               <Filter className="h-3.5 w-3.5 text-[#C99A68]" />
               <span className="hidden sm:inline">Filtres :</span>
@@ -344,36 +527,29 @@ export function StickyFiltersBar({
                     <FrenchDateInput
                       id="date-debut-input"
                       label="Du (date de début) :"
-                      value={filters.debut}
-                      onChange={(iso) =>
-                        onChange({
-                          ...filters,
-                          debut: iso,
-                        })
-                      }
+                      value={draftDebut}
+                      onChange={(iso) => setDraftDebut(iso)}
                     />
                     <FrenchDateInput
                       id="date-fin-input"
                       label="Au (date de fin) :"
-                      value={filters.fin}
-                      onChange={(iso) =>
-                        onChange({
-                          ...filters,
-                          fin: iso,
-                        })
-                      }
+                      value={draftFin}
+                      onChange={(iso) => setDraftFin(iso)}
                     />
                   </div>
                   <div className="mt-3 flex items-center justify-between border-t border-[rgba(60,35,20,0.06)] pt-2.5">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        setDraftDebut(undefined);
+                        setDraftFin(undefined);
                         onChange({
                           ...filters,
                           debut: undefined,
                           fin: undefined,
-                        })
-                      }
+                        });
+                        setIsCalendarOpen(false);
+                      }}
                       className="text-[11px] font-medium text-[#5A4B42] hover:text-[#B85D43] transition"
                     >
                       Effacer la période
@@ -381,7 +557,14 @@ export function StickyFiltersBar({
                     <button
                       type="button"
                       id="apply-period-button"
-                      onClick={() => setIsCalendarOpen(false)}
+                      onClick={() => {
+                        onChange({
+                          ...filters,
+                          debut: draftDebut,
+                          fin: draftFin,
+                        });
+                        setIsCalendarOpen(false);
+                      }}
                       className="rounded-lg bg-[#21130D] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#3D2314] active:scale-95"
                     >
                       Appliquer
@@ -411,8 +594,20 @@ export function StickyFiltersBar({
               </div>
             )}
 
-            <div className="hidden lg:block text-[11px] italic text-[#5A4B42]">
-              S&apos;applique aux sections Projets et Financements
+            <div className="relative group flex items-center">
+              <button
+                type="button"
+                aria-label="Périmètre d'application des filtres"
+                className="p-1 text-[#5A4B42] hover:text-[#21130D] rounded-full transition focus:outline-hidden"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+              <div
+                role="tooltip"
+                className="absolute right-0 top-full mt-1.5 hidden w-64 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-2.5 text-[11px] leading-relaxed text-[#5A4B42] shadow-[0_4px_16px_rgba(60,35,20,0.08)] group-hover:block group-focus-within:block z-50 pointer-events-none"
+              >
+                Ces filtres s&apos;appliquent à l&apos;ensemble des 4 onglets : Vue d&apos;ensemble, Projets, Financements et Registre.
+              </div>
             </div>
           </div>
         </div>

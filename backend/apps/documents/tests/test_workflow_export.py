@@ -14,8 +14,9 @@ Vérifie l'ensemble des critères d'acceptation :
   - Sécurité : accès refusé à un tiers non autorisé (403).
 """
 import io
-from docx import Document as DocxDocument
+
 from django.test import TestCase, override_settings
+from docx import Document as DocxDocument
 from rest_framework import status
 from rest_framework.test import APIClient
 

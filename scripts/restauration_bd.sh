@@ -18,7 +18,9 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-./backups}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BACKUP_DIR="${BACKUP_DIR:-$REPO_ROOT/backups}"
 USE_DOCKER="${USE_DOCKER:-0}"
 TARGET_FILE=""
 ASSUME_YES=false
@@ -243,12 +245,25 @@ fi
 
 # Restauration des médias associés si présents
 MEDIA_ARCHIVE="${TARGET_FILE%.dump}_media.tar.gz"
+MANIFEST_FILE="${TARGET_FILE%.dump}_media.sha256"
+
 if [ "$AVEC_MEDIA" = true ] || [ -f "$MEDIA_ARCHIVE" ]; then
     if [ -f "$MEDIA_ARCHIVE" ]; then
         echo "=> Restauration de l'archive médias (${MEDIA_ARCHIVE})..."
-        mkdir -p backend/media
-        tar -xzf "$MEDIA_ARCHIVE" -C backend/
-        echo "=> Médias restaurés dans backend/media."
+        mkdir -p "$REPO_ROOT/backend"
+        tar -xzf "$MEDIA_ARCHIVE" -C "$REPO_ROOT/backend"
+        RESTORED_COUNT=$(find "$REPO_ROOT/backend/media" -type f 2>/dev/null | wc -l || echo "0")
+        echo "=> ${RESTORED_COUNT} fichiers médias restaurés dans backend/media."
+
+        # Vérification des empreintes SHA-256 si le manifeste existe
+        if [ -f "$MANIFEST_FILE" ] && [ -s "$MANIFEST_FILE" ]; then
+            echo "=> Contrôle d'intégrité SHA-256 des fichiers restaurés..."
+            if (cd "$REPO_ROOT/backend" && (sha256sum -c "$MANIFEST_FILE" >/dev/null 2>&1 || shasum -a 256 -c "$MANIFEST_FILE" >/dev/null 2>&1)); then
+                echo "=> [VÉRIFIÉ] Toutes les empreintes SHA-256 des fichiers médias correspondent à 100% !"
+            else
+                echo "[AVERTISSEMENT] Divergence d'empreinte détectée sur certains fichiers médias."
+            fi
+        fi
     else
         if [ "$AVEC_MEDIA" = true ]; then
             echo "[AVERTISSEMENT] Archive médias '${MEDIA_ARCHIVE}' introuvable."

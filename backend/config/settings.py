@@ -151,7 +151,9 @@ REST_FRAMEWORK = {
         "user": os.getenv("THROTTLE_RATE_USER", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "300/min"),
         "ai": os.getenv("THROTTLE_RATE_AI", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "20/min"),
         "auth": os.getenv("THROTTLE_RATE_AUTH", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "5/min"),
+        "gallery_interet": os.getenv("THROTTLE_RATE_GALLERY_INTERET", "100000/min" if os.getenv("DISABLE_THROTTLING", "0") == "1" else "15/min"),
     },
+    "EXCEPTION_HANDLER": "apps.core.logging.custom_exception_handler",
 }
 
 REDIS_URL = os.getenv("REDIS_URL", "")
@@ -225,3 +227,57 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "CIAT Démonstration <contact@ciat-demo.example>"
 )
+
+# ==============================================================================
+# Configuration de la journalisation (Phase 7 T2 Pathé)
+# ==============================================================================
+DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+DJANGO_LOG_FORMAT = os.getenv(
+    "DJANGO_LOG_FORMAT",
+    "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s",
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "sensitive_data_filter": {
+            "()": "apps.core.logging.SensitiveDataFilter",
+        },
+    },
+    "formatters": {
+        "standard": {
+            "format": DJANGO_LOG_FORMAT,
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "filters": ["sensitive_data_filter"],
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": DJANGO_LOG_LEVEL,
+    },
+}
+

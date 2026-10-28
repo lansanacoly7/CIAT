@@ -15,7 +15,6 @@ from .models import (
     Partenaire,
 )
 
-
 # ==============================================================================
 # T1 — Contenus institutionnels
 # ==============================================================================
@@ -39,6 +38,14 @@ class ActualiteSerializer(serializers.ModelSerializer):
             "publie_le",
         ]
         read_only_fields = ["id", "vues"]
+
+    def validate_image(self, value):
+        if value:
+            if value.size == 0:
+                raise serializers.ValidationError("Le fichier image est vide (0 octet).")
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Le fichier image ne doit pas dépasser 5 Mo.")
+        return value
 
 
 class EvenementSerializer(serializers.ModelSerializer):
@@ -92,7 +99,13 @@ class PartenaireSerializer(serializers.ModelSerializer):
             "site_web",
             "description",
         ]
-        read_only_fields = ["id"]
+    def validate_logo(self, value):
+        if value:
+            if value.size == 0:
+                raise serializers.ValidationError("Le fichier image est vide (0 octet).")
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Le fichier image ne doit pas dépasser 5 Mo.")
+        return value
 
 
 class DocumentPublicSerializer(serializers.ModelSerializer):
@@ -107,6 +120,16 @@ class DocumentPublicSerializer(serializers.ModelSerializer):
             "fichier",
         ]
         read_only_fields = ["id"]
+
+    def validate_fichier(self, value):
+        if not value or value.size == 0:
+            raise serializers.ValidationError("Le fichier est vide (0 octet).")
+        if value.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError("Le fichier ne doit pas dépasser 10 Mo.")
+        ext = value.name.split(".")[-1].lower() if "." in value.name else ""
+        if ext in ("exe", "bat", "sh", "cmd", "py", "php", "js", "bin"):
+            raise serializers.ValidationError(f"Les fichiers exécutables ou scripts (.{ext}) sont interdits.")
+        return value
 
 
 class MessageContactSerializer(serializers.ModelSerializer):

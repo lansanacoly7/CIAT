@@ -3,13 +3,13 @@
 Gère les dossiers de candidature, le dépôt des pièces jointes, la complétude,
 les grilles et évaluations du comité, ainsi que les décisions motivées.
 """
+import os
+import re
+
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
-
-import os
-import re
 from django.utils.text import slugify
 
 from apps.core.models import Projet, Role, User
@@ -25,17 +25,35 @@ def sanitize_filename(filename):
 
 
 def piece_upload_path(instance, filename):
+    """Génère le chemin sécurisé de stockage d'une pièce de candidature.
+
+    Sécurité et isolation :
+    - Évite toute collision ou écrasement en compartimentant par identifiant de dossier.
+    - Neutralise les attaques par traversée de répertoire (path traversal) via sanitize_filename.
+    """
     clean_file = sanitize_filename(filename)
     return f"incubator/pieces/{instance.dossier_id}/{clean_file}"
 
 
 def preuve_upload_path(instance, filename):
+    """Génère le chemin sécurisé de stockage des preuves d'achèvement de jalon.
+
+    Sécurité et isolation :
+    - Compartimente les livrables techniques par identifiant de projet incubé.
+    - Assure la traçabilité des pièces justificatives fournies aux mentors.
+    """
     clean_file = sanitize_filename(filename)
     return f"incubator/preuves/{instance.jalon.projet_id}/{clean_file}"
 
 
 
 def validate_file_size(value):
+    """Vérifie que la taille du fichier téléversé respecte les seuils autorisés.
+
+    Sécurité et intégrité :
+    - Rejette formellement les fichiers vides (0 octet) pour éviter les enregistrements fantômes.
+    - Plafonne la taille à 10 Mo pour protéger le serveur contre les attaques par déni de service (DoS).
+    """
     max_size = 10 * 1024 * 1024  # 10 Mo
     if value.size == 0:
         raise ValidationError("Le fichier est vide (0 octet).")
@@ -75,6 +93,13 @@ ALLOWED_PIECE_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "
 
 
 class StatutDossier(models.TextChoices):
+    """États du cycle de vie d'un dossier de candidature à l'incubation CIAT.
+
+    Transitions métier :
+    - brouillon -> soumis (conditionné à 100 % de complétude).
+    - soumis -> en_evaluation (dès la première notation du comité).
+    - en_evaluation -> accepte ou refuse (décision motivée collégiale).
+    """
     BROUILLON = "brouillon", "Brouillon"
     SOUMIS = "soumis", "Soumis"
     COMPLET = "complet", "Complet"
@@ -84,6 +109,7 @@ class StatutDossier(models.TextChoices):
 
 
 class TypePiece(models.TextChoices):
+    """Typologie réglementaire des pièces justificatives de candidature."""
     FICHE_PROJET = "fiche_projet", "Fiche de projet"
     PRESENTATION_EQUIPE = "presentation_equipe", "Présentation de l'équipe"
     BUDGET_PREVISIONNEL = "budget_previsionnel", "Budget prévisionnel"
@@ -117,6 +143,12 @@ class Dossier(models.Model):
         ordering = ["-cree_le"]
         verbose_name = "Dossier de candidature"
         verbose_name_plural = "Dossiers de candidature"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutDossier.choices]),
+                name="check_dossier_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"Dossier {self.id} - {self.projet.titre}"
@@ -139,6 +171,7 @@ class Dossier(models.Model):
 
     @property
     def est_complet(self):
+        """Indique si l'ensemble des 3 pièces obligatoires (projet, équipe, budget) a été déposé."""
         return len(self.pieces_manquantes) == 0
 
     def soumettre(self):
@@ -243,6 +276,16 @@ class Critere(models.Model):
 
     class Meta:
         ordering = ["ordre", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(poids__gt=0),
+                name="check_critere_poids_positif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(note_max__gt=0),
+                name="check_critere_note_max_positive",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.libelle} (max {self.note_max}, poids {self.poids})"
@@ -304,7 +347,11 @@ class Note(models.Model):
             models.UniqueConstraint(
                 fields=["evaluation", "critere"],
                 name="unique_note_par_critere",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(note__gte=0, note__lte=20),
+                name="check_note_valeur_entre_0_et_20",
+            ),
         ]
 
     def __str__(self):
@@ -312,6 +359,7 @@ class Note(models.Model):
 
 
 class DecisionType(models.TextChoices):
+    """Résultat officiel de la délibération du jury de sélection."""
     ACCEPTE = "accepte", "Accepté"
     REFUSE = "refuse", "Refusé"
 
@@ -320,7 +368,7 @@ class Decision(models.Model):
     """Décision finale prise sur un dossier de candidature."""
 
     dossier = models.OneToOneField(
-        Dossier, on_delete=models.CASCADE, related_name="decision"
+        Dossier, on_delete=models.PROTECT, related_name="decision"
     )
     decision = models.CharField(max_length=20, choices=DecisionType.choices)
     motif = models.TextField()
@@ -331,6 +379,12 @@ class Decision(models.Model):
 
     class Meta:
         ordering = ["-cree_le"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(decision__in=[c[0] for c in DecisionType.choices]),
+                name="check_decision_type_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"Décision {self.decision} pour {self.dossier}"
@@ -380,6 +434,7 @@ class AffectationMentor(models.Model):
 
 
 class StatutObjectif(models.TextChoices):
+    """Avancement d'un objectif opérationnel fixé dans la feuille de route d'incubation."""
     A_FAIRE = "a_faire", "À faire"
     EN_COURS = "en_cours", "En cours"
     ATTEINT = "atteint", "Atteint"
@@ -409,12 +464,19 @@ class Objectif(models.Model):
         ordering = ["echeance", "cree_le"]
         verbose_name = "Objectif de projet"
         verbose_name_plural = "Objectifs de projets"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutObjectif.choices]),
+                name="check_objectif_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.projet.titre} - {self.libelle} ({self.statut})"
 
 
 class StatutJalon(models.TextChoices):
+    """État d'achèvement d'un jalon critique d'étape (prototypage, tests terrain, modèle éco)."""
     A_FAIRE = "a_faire", "À faire"
     EN_COURS = "en_cours", "En cours"
     FAIT = "fait", "Fait"
@@ -444,6 +506,12 @@ class Jalon(models.Model):
         ordering = ["echeance", "cree_le"]
         verbose_name = "Jalon de projet"
         verbose_name_plural = "Jalons de projets"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(statut__in=[c[0] for c in StatutJalon.choices]),
+                name="check_jalon_statut_valide",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.projet.titre} - {self.titre} ({self.statut})"
@@ -458,7 +526,7 @@ class PreuveJalon(models.Model):
     """Fichier de preuve déposé pour justifier l'avancement d'un jalon."""
 
     jalon = models.ForeignKey(
-        Jalon, on_delete=models.CASCADE, related_name="preuves"
+        Jalon, on_delete=models.PROTECT, related_name="preuves"
     )
     fichier = models.FileField(
         upload_to=preuve_upload_path,
@@ -510,6 +578,7 @@ class CommentaireJalon(models.Model):
 
 
 class EcheanceSuivi(models.TextChoices):
+    """Échéances officielles des bilans périodiques d'incubation."""
     TROIS_MOIS = "3_mois", "3 mois"
     SIX_MOIS = "6_mois", "6 mois"
 
@@ -545,6 +614,5 @@ class SuiviProjet(models.Model):
 
 
 # Import du modèle d'idempotence des alertes de retard (Phase 4 Pathé)
-from .notifications import AlerteJalonEnvoyee  # noqa: E402
 
 

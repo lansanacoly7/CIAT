@@ -54,6 +54,46 @@ class ConversationListCreateView(APIView):
 
 @extend_schema_view(
     get=extend_schema(
+        summary="Détail d'une conversation",
+        responses={200: ConversationSerializer, 403: dict, 404: dict},
+    ),
+    delete=extend_schema(
+        summary="Supprimer une conversation privée (Droit à l'effacement RGPD)",
+        responses={204: None, 403: dict, 404: dict},
+    ),
+)
+class ConversationDetailView(APIView):
+    """Consultation et suppression d'une conversation privée avec l'assistant IA."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        conversation = get_object_or_404(Conversation, pk=pk)
+        if conversation.utilisateur != request.user and not (
+            request.user.is_staff or getattr(request.user, "role", None) == Role.ADMIN
+        ):
+            return Response(
+                {"detail": "Vous ne pouvez pas consulter la conversation d'un autre utilisateur."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return Response(ConversationSerializer(conversation).data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        conversation = get_object_or_404(Conversation, pk=pk)
+        if conversation.utilisateur != request.user and not (
+            request.user.is_staff or getattr(request.user, "role", None) == Role.ADMIN
+        ):
+            return Response(
+                {"detail": "Vous ne pouvez pas supprimer la conversation d'un autre utilisateur."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        conversation.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+@extend_schema_view(
+    get=extend_schema(
         summary="Lister les messages d'une conversation",
         responses={200: MessageAssistantSerializer(many=True)},
     ),
@@ -122,6 +162,14 @@ class MessageListCreateView(APIView):
             return Response(
                 {
                     "detail": "Le service IA est temporairement indisponible. Veuillez réessayer plus tard.",
+                    "erreur": str(exc),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except Exception as exc:
+            return Response(
+                {
+                    "detail": "Une erreur inattendue est survenue lors du traitement du message par le service IA.",
                     "erreur": str(exc),
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,

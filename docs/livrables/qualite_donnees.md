@@ -4,7 +4,7 @@
 > **Livrable :** Phase 3 — Tâche T1 (Data Analyst)  
 > **Auteur :** Groupe de six apprenants : Lansana Coly, Pape Alioune Sène, Maimouna Sall, El Hadji Massogui Diop, Ibrahima Khalilou Diallo, Pathé Fall (Référent qualité : Pape Alioune Sène)  
 > **Outil :** `python manage.py controle_qualite_donnees` (`backend/apps/analytics/management/commands/controle_qualite_donnees.py`)  
-> **Statut :** Validé — 0 anomalie sur le jeu officiel `seed_all` (62 projets, 47 utilisateurs, 58 dossiers, 147 jalons, 50 financements, 48 partenariats)
+> **Statut :** Validé — 0 anomalie sur le jeu officiel `seed_all` (63 projets, 47 utilisateurs, 59 dossiers, 147 jalons, 50 financements, 48 partenariats)
 
 ---
 
@@ -115,32 +115,36 @@ python manage.py controle_qualite_donnees --strict
 
 ## 5. Preuve de Conformité sur le Jeu de Référence (`seed_all`)
 
-Exécution réelle constatée en date du 26 octobre 2026 :
+Exécution réelle constatée en date du 28 octobre 2026 :
 
 ```text
 ================================================================================
   CIAT — CONTRÔLE DE LA QUALITÉ DES DONNÉES (AUDIT AUTOMATISÉ)
-  Horodatage : 2026-10-26T20:41:45.494845
+  Horodatage : 2026-10-28T01:33:36.690376
 ================================================================================
 
 [+] PERIMETRE DE LA BASE AUDITEE :
-  - Projets : 62 | Utilisateurs : 47 | Cohortes : 3
-  - Dossiers : 58 | Décisions : 53 | Jalons : 147
+  - Projets : 63 | Utilisateurs : 47 | Cohortes : 3
+  - Dossiers : 59 | Décisions : 53 | Jalons : 147
   - Fiches Galerie : 23 | Financements : 50 | Partenariats : 48
-  - Évaluations : 109 | Notes : 545
+  - Évaluations : 110 | Notes : 550
 
 --------------------------------------------------------------------------------
 [+] RESULTATS PAR CATEGORIE DE CONTROLE :
 --------------------------------------------------------------------------------
 
 1. Valeurs manquantes et complétude : [OK] - 0 anomalie détectée
+
 2. Unicité et détection de doublons : [OK] - 0 anomalie détectée
+
 3. Incohérences temporelles et chronologie : [OK] - 0 anomalie détectée
+
 4. Statuts incompatibles inter-modules : [OK] - 0 anomalie détectée
+
 5. Valeurs hors plage et bornes numériques : [OK] - 0 anomalie détectée
 
 ================================================================================
-[SUCCES] Base 100% conforme. 0 anomalie detectee sur 62 projets et l'ensemble des modules.
+[SUCCES] Base 100% conforme. 0 anomalie detectee sur 63 projets et l'ensemble des modules.
 ================================================================================
 ```
 

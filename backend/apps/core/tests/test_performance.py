@@ -5,6 +5,7 @@ indépendamment du nombre d'éléments en base de données, grâce à l'utilisat
 select_related, prefetch_related, et d'index optimisés.
 """
 import datetime
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -15,7 +16,7 @@ from apps.core.models import Cohorte, Domaine, Projet, Role, User
 from apps.documents.models import Document, ModeleDocument, TypeDocument
 from apps.gallery.models import FicheInnovation
 from apps.incubator.models import Dossier, Jalon, Piece, StatutDossier, StatutJalon, TypePiece
-from apps.portal.models import Actualite, AppelProjet
+from apps.portal.models import Actualite
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 

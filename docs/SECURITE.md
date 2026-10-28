@@ -391,3 +391,49 @@ git ls-files "*.env*"
 | **ANO-SEC-08** | `backend/requirements.txt` (`python-dotenv`) | **Basse** | Pathé | La version installée `python-dotenv 1.2.1` présentait l'avis `PYSEC-2026-2270`. | **Corrigée** : paquet mis à niveau en local vers `1.2.4` et borne rehaussée à `python-dotenv>=1.2.2` dans `requirements.txt`. |
 | **ANO-SEC-09** | `backend/config/settings.py` (En-têtes) | **Moyenne** | Pathé | Les directives `SECURE_CONTENT_TYPE_NOSNIFF` et `X_FRAME_OPTIONS` n'étaient définies que sous le bloc `if not DEBUG:`, omettant ces protections en mode local. | **Corrigée** : directives remontées au niveau global dans `settings.py` pour garantir la défense en profondeur dans tous les modes d'exécution. |
 | **ANO-SEC-10** | `backend/requirements.txt` (Pillow, DRF, SimpleJWT) | **Moyenne** | Lansana | Avis répertoriés sur des versions mineures de paquets (`Pillow 10.4.0`, `DRF 3.15.2`, `SimpleJWT 5.3.1`). | **Consignée** : Les bornes dans `requirements.txt` étant déjà ouvertes (`>=`), Lansana appliquera les versions cibles lors de la génération des images Docker de production. |
+
+---
+
+## 10. Revue de sécurité des nouvelles routes (Phase 10 — Tâche T1 & T2)
+
+- **Auteur :** Ibrahima (Back-end)
+- **Objectif :** Conduire une revue d'attaquant exhaustive sur l'ensemble des routes ajoutées en phases 7, 8 et 10 (audit, notifications, calendrier, manifestations d'intérêt, données personnelles, santé, administration, réinitialisation de mot de passe).
+- **Vérifications systématiques exécutées dans `apps/core/tests/test_droits.py` :**
+  1. Accès anonyme sans jeton (attendu : `HTTP 401 Unauthorized` ou `200` pour routes publiques).
+  2. Accès avec jeton JWT expiré ou à signature falsifiée (attendu : `HTTP 401 Unauthorized`).
+  3. Escalade de privilèges horizontale (IDOR : accès aux objets d'un pair du même rôle).
+  4. Escalade de privilèges verticale (tentative d'accès par un rôle inférieur non habilité).
+  5. Falsification des paramètres query (`?projet=`, `?acteur=`, `?destinataire=`, `?fiche=`, `?user=`) tentant d'élargir le périmètre autorisé.
+  6. Divulgation d'informations sensibles (fuite de hash de mots de passe, tokens JWT, clés API, emails ou numéros de téléphone de tiers dans les corps de réponse ou métadonnées).
+
+### 10.1 Matrice d'évaluation des nouvelles routes
+
+| Route | Méthode | Rôles autorisés | Attaque IDOR testée | Filtres falsifiés testés | Jeton expiré / altéré | Statut Sécurité |
+| :--- | :---: | :---: | :--- | :--- | :---: | :---: |
+| `/api/audit/` | GET | `admin`, `coordonnateur` | Impossible (accès réservé à l'équipe) | `?acteur=`, `?action=` (filtrage strict sans contournement) | Rejet 401 | **Conforme** |
+| `/api/notifications/` | GET | Tout utilisateur connecté | Étanche (filtré sur `destinataire=request.user`) | `?destinataire=autre`, `?user=autre` (totalement ignorés) | Rejet 401 | **Conforme** |
+| `/api/notifications/{id}/lue/` | POST | Propriétaire de la notification | IDOR rejeté (`HTTP 404 Not Found` si tiers) | Non applicable | Rejet 401 | **Conforme** |
+| `/api/notifications/tout-lire/` | POST | Tout utilisateur connecté | Étanche (n'impacte que `destinataire=request.user`) | Non applicable | Rejet 401 | **Conforme** |
+| `/api/gallery/interets/` | GET | `porteur` (ses fiches), `admin`, `coordonnateur` | Étanche (porteur cantonné à ses propres innovations) | `?fiche=autre_fiche` (renvoie 0 résultat, zéro fuite) | Rejet 401 | **Conforme** |
+| `/api/gallery/fiches/{slug}/interet/` | POST | Public (`AllowAny`) | Rejet 404 si fiche non publiée (brouillon/refusée) | Anti-doublon (409 si même email dans l'heure) + Throttle | N/A (Public) | **Conforme** |
+| `/api/auth/me/export/` | GET | Tout utilisateur connecté | Étanche (exporte exclusivement `request.user`) | `?user=autre`, `?id=autre` (ignorés) | Rejet 401 | **Conforme** |
+| `/api/auth/me/` | DELETE | Tout utilisateur connecté | Étanche (supprime/anonymise uniquement `request.user`) | Mot de passe actuel requis (400 si absent/faux) | Rejet 401 | **Conforme** |
+| `/api/incubator/calendrier/` | GET | `porteur`, `mentor`, `admin`, `coordonnateur` | Étanche (porteur: ses projets ; mentor: assignés) | `?projet=autre_projet` (ignoré, n'affiche rien du tiers) | Rejet 401 | **Conforme** |
+| `/api/health/` | GET | Public (`AllowAny`) | N/A (aucun ID d'objet) | Zéro paramètre sensible | N/A (Public) | **Conforme** |
+| `/admin/` | GET | Comptes staff uniquement (`is_staff=True`) | Rejet catégorique (redirection 302 vers login Django) | Non applicable | Redirection | **Conforme** |
+| `/api/auth/mot-de-passe/oublie/` | POST | Public (`AllowAny`) | Anti-énumération absolue (200 systématique avec même message) | Rate limiting strict (5 req/min) | N/A (Public) | **Conforme** |
+| `/api/auth/mot-de-passe/reinitialiser/` | POST | Public (`AllowAny`) | Jeton signé 1h (400 si expiré, rejoué ou trafiqué) | Validateurs Django stricts | N/A (Jeton) | **Conforme** |
+
+---
+
+### 10.2 Registre des risques et mesures de durcissement appliquées
+
+| Réf | Cible / Risque | Gravité initiale | Description de la vulnérabilité potentielle | Mesure corrective / Preuve de robustesse | Statut |
+| :---: | :--- | :---: | :--- | :--- | :---: |
+| **SEC-10-01** | Énumération d'utilisateurs (`/api/auth/mot-de-passe/oublie/`) | **Élevée** | Divulgation de l'existence d'un compte si une erreur 404 est renvoyée sur email inconnu. | Réponse générique HTTP 200 systématique (`detail`: "Si cette adresse email correspond à un compte actif..."). Zéro divergence temporelle ou sémantique. | **Corrigée & Testée** |
+| **SEC-10-02** | Rejeu de jeton de réinitialisation (`/api/auth/mot-de-passe/reinitialiser/`) | **Haute** | Réutilisation d'un même lien de réinitialisation intercepté dans les 60 minutes. | Utilisation du `default_token_generator` Django dont la clé intègre le hash du mot de passe de l'utilisateur : dès que le mot de passe est modifié, le jeton devient immédiatement et définitivement invalide (rejet HTTP 400). | **Corrigée & Testée** |
+| **SEC-10-03** | Falsification / Altération de jeton | **Haute** | Manipulation de l'identifiant utilisateur (`uid`) dans le jeton signé. | Empreinte cryptographique `django.core.signing` avec sel dédié `ciat.password_reset` : toute altération de la charge utile lève `BadSignature` rejeté en 400. | **Corrigée & Testée** |
+| **SEC-10-04** | IDOR sur le journal d'audit et les notifications | **Moyenne** | Tentative de consultation ou de modification de statut de notification par un tiers via requête forgée. | Requêtes de mutation assujetties au filtre d'intégrité `destinataire=request.user` renvoyant 404 (dissimulation par étanchéité). `JournalAudit` verrouillé par `IsEquipeCIAT`. | **Corrigée & Testée** |
+| **SEC-10-05** | Fuite de données personnelles de porteurs via la galerie | **Moyenne** | Un porteur tente d'obtenir les messages d'investisseurs d'un concurrent via `/api/gallery/interets/?fiche=X`. | La vue pré-filtre en amont `fiche__projet__porteur=user` : toute tentative de cibler une fiche tierce retourne une liste vide `[]`. | **Corrigée & Testée** |
+| **SEC-10-06** | Accès non autorisé à l'administration Django | **Critique** | Accès d'un porteur ou mentor à `/admin/` via token API. | L'administration Django est étanche et adossée au middleware de session `is_staff=True` : tout utilisateur non staff est redirigé en 302 vers `/admin/login/`. | **Vérifiée & Testée** |
+

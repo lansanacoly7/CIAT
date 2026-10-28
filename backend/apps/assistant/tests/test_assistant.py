@@ -21,7 +21,7 @@ from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.assistant.models import Conversation, MessageAssistant, PassageDocument
+from apps.assistant.models import Conversation, PassageDocument
 from apps.assistant.services import (
     MESSAGE_REFUS_DOCUMENTS,
     decouper_en_passages,
@@ -237,7 +237,7 @@ class AssistantAPITestCase(TestCase):
             categorie="Présentation",
             fichier=SimpleUploadedFile(
                 "implantation.txt",
-                "Le siège du CIAT est situé à Diamniadio, pôle technologique sénégalais.".encode("utf-8"),
+                "Le siège du CIAT est situé à Diamniadio, pôle technologique sénégalais.".encode(),
                 content_type="text/plain",
             ),
         )
