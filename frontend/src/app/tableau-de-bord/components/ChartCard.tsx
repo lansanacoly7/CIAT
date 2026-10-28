@@ -15,7 +15,7 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw, Users, Sparkles, CheckCircle2 } from "lucide-react";
+import { Table, EyeOff, BarChart3, AlertCircle, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
 import type {
   EvolutionItem,
   ParCohorteItem,
@@ -444,7 +444,7 @@ export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
 export function GenreChart({ data }: { data: ParGenreItem[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const { total, femmes, hommes, autre, pctFemmes, pctHommes, pieData } = useMemo(() => {
+  const { total, pctFemmes, pieData } = useMemo(() => {
     let f = 0;
     let h = 0;
     let a = 0;

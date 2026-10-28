@@ -18,7 +18,7 @@ function formatDate(dateStr: string) {
   }
 }
 
-function ActuCardImage({ src, alt }: { src?: string | null; alt: string }) {
+function ActuCardImage({ src, alt }: { src?: string; alt: string }) {
   const [loadError, setLoadError] = useState(false);
 
   if (!src || loadError) {
@@ -145,7 +145,7 @@ export default function ActualitesPage() {
             <Card key={actu.id} className="flex h-full flex-col justify-between overflow-hidden">
               <div>
                 <div className="-mx-6 -mt-6 mb-4 h-44 aspect-16/10 overflow-hidden border-b border-bordure bg-ivoire relative">
-                  <ActuCardImage src={actu.image} alt={actu.titre} />
+                  <ActuCardImage src={actu.image ?? undefined} alt={actu.titre} />
                 </div>
                 <div className="flex items-center justify-between text-xs text-texte-doux">
                   <span>{formatDate(actu.publie_le)}</span>
