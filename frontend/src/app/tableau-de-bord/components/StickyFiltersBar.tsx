@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Calendar, ChevronDown, Filter, HelpCircle, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, Calendar, ChevronDown, Filter, HelpCircle, RotateCcw } from "lucide-react";
 import type { DashboardFilters } from "../types";
 
 interface StickyFiltersBarProps {
@@ -396,11 +397,19 @@ export function StickyFiltersBar({
               </div>
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-2 border-t border-[rgba(60,35,20,0.06)]">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-[rgba(60,35,20,0.06)]">
+              <Link
+                href="/tableau-de-bord/methodologie"
+                onClick={() => setIsMobilePanelOpen(false)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-white px-3 py-2 text-xs font-medium text-[#612D10]"
+              >
+                <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
+                <span>Guide méthodologique</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setIsMobilePanelOpen(false)}
-                className="w-full min-h-[44px] rounded-xl bg-[#21130D] px-4 py-2.5 text-xs font-semibold text-white shadow-xs"
+                className="w-full sm:w-auto min-h-[44px] rounded-xl bg-[#21130D] px-4 py-2.5 text-xs font-semibold text-white shadow-xs"
               >
                 Appliquer et fermer
               </button>
@@ -593,6 +602,15 @@ export function StickyFiltersBar({
                 </button>
               </div>
             )}
+
+            <Link
+              href="/tableau-de-bord/methodologie"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#8C5E2D] hover:bg-[#FAF7F2] hover:text-[#612D10] transition"
+              title="Consulter le référentiel méthodologique et les formules de calcul"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
+              <span className="hidden lg:inline">Méthodologie</span>
+            </Link>
 
             <div className="relative group flex items-center">
               <button

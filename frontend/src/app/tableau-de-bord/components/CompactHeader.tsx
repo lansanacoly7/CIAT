@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Download,
   FileSpreadsheet,
@@ -8,14 +9,15 @@ import {
   Image as ImageIcon,
   Printer,
   RefreshCw,
-  Sparkles,
+  MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { DashboardFilters } from "../types";
 
 interface CompactHeaderProps {
   lastUpdated?: string;
-  isLive: boolean;
+  isLive?: boolean;
   isLoading: boolean;
   onRefresh: () => void;
   onOpenAiDrawer: () => void;
@@ -25,8 +27,6 @@ interface CompactHeaderProps {
 }
 
 export function CompactHeader({
-  lastUpdated = "en direct",
-  isLive,
   isLoading,
   onRefresh,
   onOpenAiDrawer,
@@ -208,29 +208,6 @@ export function CompactHeader({
 
       {/* Actions et contrôles à droite */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Badge Données en direct avec point vert pulsant */}
-        <div
-          className="flex items-center gap-2 rounded-full border border-[rgba(60,35,20,0.08)] bg-white px-3 py-1 text-xs text-[#3D2314] shadow-[0_1px_2px_rgba(60,35,20,0.04)]"
-          title={`Données connectées (${lastUpdated})`}
-        >
-          <span className="relative flex h-2 w-2">
-            {isLive && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            )}
-            <span
-              className={`relative inline-flex h-2 w-2 rounded-full ${
-                isLive ? "bg-emerald-500" : "bg-amber-500"
-              }`}
-            />
-          </span>
-          <span className="hidden sm:inline font-medium">
-            {isLive ? "Données en direct" : "Données simulées"}
-          </span>
-          <span className="text-[11px] text-[#5A4B42] hidden lg:inline">
-            · {lastUpdated}
-          </span>
-        </div>
-
         {/* Bouton Actualiser */}
         <button
           type="button"
@@ -245,6 +222,16 @@ export function CompactHeader({
           />
         </button>
 
+        {/* Accès direct au guide méthodologique */}
+        <Link
+          href="/tableau-de-bord/methodologie"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-[#5A4B42] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:text-[#21130D] active:scale-95"
+          title="Consulter le référentiel méthodologique et les formules de calcul"
+        >
+          <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
+          <span className="hidden md:inline">Méthodologie</span>
+        </Link>
+
         {/* Bouton Poser une question (Tiroir IA) */}
         <button
           type="button"
@@ -253,8 +240,9 @@ export function CompactHeader({
           className="inline-flex items-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-white px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-[#21130D] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:border-[#C99A68] active:scale-95"
           title="Poser une question en langage naturel"
         >
-          <Sparkles className="h-3.5 w-3.5 text-[#C99A68]" />
+          <MessageSquare className="h-3.5 w-3.5 text-[#C99A68]" />
           <span className="hidden sm:inline">Poser une question</span>
+          <span className="sm:hidden font-medium">Question</span>
         </button>
 
         {/* Menu Exporter Unique */}

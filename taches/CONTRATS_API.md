@@ -87,6 +87,7 @@ Accès : coordonnateur, administrateur, membre du comité. Tous les endpoints ac
 |---|---|
 | `GET /indicateurs/` | `{ idees_recues, dossiers_deposes, projets_selectionnes, projets_incubes, prototypes, taux_selection }` |
 | `GET /indicateurs/definitions/` | Définitions méthodologiques des indicateurs décisionnels |
+| `GET /constats/` | `{ constats: [{ id, titre, texte, chiffres, regle, limite }], total_constats, seuils }` — 3 à 5 constats par règles transparentes sans IA |
 | `GET /par-domaine/` | `[{ domaine, total }]` |
 | `GET /par-cohorte/` | `[{ cohorte, total, selectionnes, prototypes }]` |
 | `GET /par-genre/` | `[{ genre, total }]` |

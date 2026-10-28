@@ -90,8 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
 
+    const handleExpired = () => {
+      if (isMounted) setUser(null);
+    };
+    window.addEventListener("ciat:auth:expired", handleExpired);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("ciat:auth:expired", handleExpired);
     };
   }, []);
 

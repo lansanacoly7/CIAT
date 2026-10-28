@@ -134,3 +134,35 @@ export interface FinancementItem {
   cree_le: string;
 }
 
+export interface ConstatCalcul {
+  id: string;
+  titre: string;
+  texte: string;
+  chiffres: Record<string, unknown>;
+  regle: string;
+  limite: string;
+}
+
+export interface ConstatsResponse {
+  constats: ConstatCalcul[];
+  total_constats: number;
+  seuils: Record<string, number>;
+}
+
+export interface ProjetPortfolioItem {
+  id: number;
+  titre: string;
+  resume: string;
+  probleme?: string;
+  solution?: string;
+  domaine: number | null;
+  domaine_nom?: string;
+  cohorte: number | null;
+  cohorte_nom?: string;
+  porteur?: number | null;
+  porteur_nom?: string;
+  statut: string;
+  cree_le: string;
+}
+
+
