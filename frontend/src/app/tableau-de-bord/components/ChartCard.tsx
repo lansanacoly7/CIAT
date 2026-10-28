@@ -356,109 +356,82 @@ export function EvolutionChart({ data }: { data: EvolutionItem[] }) {
   );
 }
 
-const DOMAINE_COLORS: Record<string, string> = {
-  agriculture: "#2E7D32", // Vert émeraude
-  mecanique: "#612D10",   // Chocolat CIAT
-  pharmacie: "#8C5E2D",   // Cuivre CIAT
-  services: "#4A6B82",    // Bleu ardoise
-  tic: "#A35926",         // Terracotta
-  energies: "#C99A68",    // Ambre doré
-  education: "#B85D43",   // Brique cuite
-};
-
-function getDomaineColor(domaine: string, index: number): string {
-  const norm = domaine.toLowerCase();
-  for (const [key, color] of Object.entries(DOMAINE_COLORS)) {
-    if (norm.includes(key)) return color;
-  }
-  const fallbackColors = ["#8C5E2D", "#612D10", "#2E7D32", "#4A6B82", "#A35926", "#C99A68", "#B85D43"];
-  return fallbackColors[index % fallbackColors.length];
-}
-
-// 2. Projets par domaine : Liste aérée et hiérarchisée (barres généreuses de 12 px, badges, accents de filière)
+// 2. Projets par domaine : Liste épurée et harmonieuse respectant strictement la charte CIAT
 export function DomaineChart({ data }: { data: ParDomaineItem[] }) {
   const sortedData = useMemo(() => {
     const totalGlobal = data.reduce((acc, d) => acc + d.total, 0);
     const maxVal = Math.max(...data.map((d) => d.total), 1);
     return [...data]
       .sort((a, b) => b.total - a.total)
-      .map((d, idx) => {
+      .map((d) => {
         const shortName = getDomaineShortLabel(d.domaine);
         const fullName = getDomaineFullName(d.domaine);
         const percent =
           totalGlobal > 0 ? Math.round((d.total / totalGlobal) * 100) : 0;
         const barRatio = Math.round((d.total / maxVal) * 100);
-        const color = getDomaineColor(d.domaine, idx);
         return {
           ...d,
           shortDomaine: shortName,
           fullDomaine: fullName,
           percent,
           barRatio,
-          color,
         };
       });
   }, [data]);
 
   return (
-    <div className="w-full space-y-4 py-2">
+    <div className="w-full space-y-4 py-1">
       <div className="space-y-3.5">
         {sortedData.map((item, idx) => (
           <div
             key={item.domaine}
-            className="group rounded-xl p-2 transition-all hover:bg-[#FAF7F2] hover:shadow-2xs"
+            className="group space-y-1.5 rounded-lg p-1.5 transition-colors hover:bg-[#FAF7F2]"
           >
-            {/* Ligne En-tête : Rang, Nom et Effectif */}
-            <div className="mb-2 flex items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2.5 truncate">
-                <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white shadow-2xs"
-                  style={{ backgroundColor: item.color }}
-                >
+            {/* Ligne En-tête : Rang discret, Nom CIAT et Effectif */}
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 truncate">
+                <span className="w-4 shrink-0 font-mono text-[11px] font-semibold text-[#8C6D4F] tabular-nums">
                   {String(idx + 1).padStart(2, "0")}
                 </span>
                 <span
                   title={item.fullDomaine}
-                  className="truncate text-[13px] font-semibold text-[#21130D] group-hover:text-[#612D10]"
+                  className="truncate text-[13px] font-medium text-[#21130D] transition-colors group-hover:text-[#8C5E2D]"
                 >
                   {item.shortDomaine}
                 </span>
               </div>
-              <div className="flex shrink-0 items-center gap-2 text-[12px] tabular-nums font-sans">
+              <div className="flex shrink-0 items-baseline gap-1.5 text-xs tabular-nums font-sans">
                 <span className="font-bold text-[#21130D]">
-                  {formatNumber(item.total)}{" "}
-                  <span className="text-[11px] font-normal text-[#6B5646]">projets</span>
+                  {formatNumber(item.total)}
                 </span>
-                <span className="rounded-md border border-[#EFE4D6] bg-white px-1.5 py-0.5 text-[11px] font-semibold text-[#612D10] shadow-2xs">
-                  {item.percent} %
+                <span className="text-[11px] text-[#6B5646]">projets</span>
+                <span className="ml-1 text-[11px] font-medium text-[#8C6D4F]">
+                  ({item.percent} %)
                 </span>
               </div>
             </div>
 
-            {/* Barre généreuse de 12 px avec transition fluide */}
-            <div className="h-3 w-full overflow-hidden rounded-full bg-[rgba(60,35,20,0.06)] p-[1px]">
+            {/* Barre généreuse de 10 px aux couleurs officielles CIAT (Cuivre #8C5E2D) */}
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#EFE4D6]/70">
               <div
-                className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
-                style={{
-                  width: `${item.barRatio}%`,
-                  backgroundColor: item.color,
-                }}
+                className="h-full rounded-full bg-[#8C5E2D] transition-all duration-700 ease-out group-hover:bg-[#612D10]"
+                style={{ width: `${item.barRatio}%` }}
               />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Bandeau de synthèse filière dominante */}
+      {/* Bandeau de synthèse filière dominante aux couleurs sobres CIAT */}
       {sortedData.length > 0 && (
-        <div className="mt-2 flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-4 py-3 text-xs text-[#612D10]">
-          <span className="flex items-center gap-2 font-medium">
-            <Sparkles className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
+        <div className="mt-2 flex items-center justify-between rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3.5 py-2.5 text-xs text-[#21130D]">
+          <span className="flex items-center gap-2 font-medium text-[#612D10]">
+            <Sparkles className="h-3.5 w-3.5 text-[#8C5E2D]" aria-hidden="true" />
             <span>
-              Filière dominante : <strong className="font-bold text-[#21130D]">{sortedData[0]?.shortDomaine}</strong>
+              Filière dominante : <strong className="font-semibold text-[#21130D]">{sortedData[0]?.shortDomaine}</strong>
             </span>
           </span>
-          <span className="font-bold tabular-nums text-[#A35926]">
+          <span className="font-semibold tabular-nums text-[#8C5E2D]">
             {sortedData[0]?.total} projets ({sortedData[0]?.percent} %)
           </span>
         </div>
