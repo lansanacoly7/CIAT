@@ -111,13 +111,19 @@ class AnalyticsConstatsTests(TestCase):
         # Création de 12 porteurs (5 femmes et 7 hommes)
         porteurs_f = [
             User.objects.create_user(
-                email=f"femme{i}@ciat.sn", password="pwd", role=Role.PORTEUR, genre="F"
+                email=f"femme{i}@ciat.sn",
+                password="pwd",
+                role=Role.PORTEUR,
+                genre=User.Genre.FEMME,
             )
             for i in range(5)
         ]
         porteurs_h = [
             User.objects.create_user(
-                email=f"homme{i}@ciat.sn", password="pwd", role=Role.PORTEUR, genre="M"
+                email=f"homme{i}@ciat.sn",
+                password="pwd",
+                role=Role.PORTEUR,
+                genre=User.Genre.HOMME,
             )
             for i in range(7)
         ]

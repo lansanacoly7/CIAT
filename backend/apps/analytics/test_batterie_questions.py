@@ -48,7 +48,7 @@ class AnalyticsBatterieAttaquesTests(TestCase):
             email="fatou.diop@porteur.ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
-            genre="F",
+            genre=User.Genre.FEMME,
             first_name="Fatou",
             last_name="Diop",
         )
@@ -56,7 +56,7 @@ class AnalyticsBatterieAttaquesTests(TestCase):
             email="moussa.ba@porteur.ciat.sn",
             password="Password123!",
             role=Role.PORTEUR,
-            genre="M",
+            genre=User.Genre.HOMME,
             first_name="Moussa",
             last_name="Ba",
         )
