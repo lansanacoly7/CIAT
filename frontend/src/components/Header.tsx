@@ -21,7 +21,7 @@ const NAV_LINKS = [
   { href: "/galerie", label: "Galerie" },
   { href: "/portail/domaines", label: "7 Domaines" },
   { href: "/portail/appels", label: "Appels" },
-  { href: "/contact", label: "Contact" },
+  { href: "/portail/contact", label: "Contact" },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
@@ -37,7 +37,7 @@ function isActiveRoute(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
   if (href === "/portail/ciat") return pathname === "/portail/ciat" || pathname === "/ciat";
   if (href === "/portail/incubateur") return pathname === "/portail/incubateur";
-  if (href === "/contact") return pathname === "/portail/contact" || pathname === "/contact";
+  if (href === "/portail/contact") return pathname === "/portail/contact" || pathname === "/contact";
   if (href === "/galerie") return pathname.startsWith("/galerie");
   if (href === "/portail/domaines") return pathname.startsWith("/portail/domaines");
   if (href === "/portail/appels") return pathname.startsWith("/portail/appels");

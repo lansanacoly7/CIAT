@@ -293,7 +293,7 @@ function FicheDetailContent({
     <div className="bg-[#FAF8F5] min-h-screen py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Fil d'Ariane */}
-        <nav aria-label="Fil d'ariane" className="mb-6 flex items-center gap-2 text-xs text-texte-doux">
+        <nav aria-label="Fil d'Ariane" className="mb-6 flex flex-wrap items-center gap-2 text-xs text-texte-doux">
           <Link href="/" className="hover:text-brun transition">Accueil</Link>
           <span>/</span>
           <Link href="/galerie" className="hover:text-brun transition">Galerie des innovations</Link>

@@ -1276,19 +1276,30 @@
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 640px) {
   .ciat360-layout {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 
   .ciat360-wheel {
     grid-column: 1;
     grid-row: 1;
     width: min(84vw, 290px);
+    margin: 0 auto;
   }
 
-  .ciat360-modules-left { grid-row: 2; }
-  .ciat360-modules-right { grid-row: 3; }
+  .ciat360-modules-left {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .ciat360-modules-right {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+  }
 
   .news-grid,
   .benefits {
@@ -1303,4 +1314,5 @@
   .hero-buttons a {
     width: 100%;
   }
+}
 }

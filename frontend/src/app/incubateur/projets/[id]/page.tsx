@@ -161,7 +161,15 @@ function Suivi() {
       {/* 1. LIEN RETOUR & PASSERELLE ASSISTANT IA */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+          <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
+            <Link href="/" className="hover:text-[#612D10] hover:underline transition-colors">
+              Accueil
+            </Link>
+            <span className="text-[#C99A68]/60">/</span>
+            <Link href="/incubateur" className="hover:text-[#612D10] hover:underline transition-colors">
+              Incubateur
+            </Link>
+            <span className="text-[#C99A68]/60">/</span>
             <Link
               href="/incubateur/projets"
               className="hover:text-[#612D10] hover:underline transition-colors"
@@ -172,7 +180,7 @@ function Suivi() {
             <span className="text-[#612D10] font-bold truncate max-w-[220px] sm:max-w-md">
               {projet?.titre || "Détail du projet"}
             </span>
-          </div>
+          </nav>
 
           <Link
             href="/assistant"

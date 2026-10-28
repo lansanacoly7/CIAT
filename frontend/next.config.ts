@@ -14,6 +14,35 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/domaines",
+        destination: "/portail/domaines",
+        permanent: true,
+      },
+      {
+        source: "/ciat",
+        destination: "/portail/ciat",
+        permanent: true,
+      },
+      {
+        source: "/contact",
+        destination: "/portail/contact",
+        permanent: true,
+      },
+      {
+        source: "/actualites",
+        destination: "/portail/actualites",
+        permanent: true,
+      },
+      {
+        source: "/partenaires",
+        destination: "/portail/partenaires",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
