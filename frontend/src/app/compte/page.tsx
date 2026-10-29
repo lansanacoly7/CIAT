@@ -825,7 +825,8 @@ function Compte() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8 space-y-6">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#FAF7F2]">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
       
       {/* EN-TÊTE DE LA PAGE */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#EFE4D6]">
@@ -881,6 +882,7 @@ function Compte() {
         )}
       </div>
 
+      </div>
     </div>
   );
 }

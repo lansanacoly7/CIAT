@@ -307,8 +307,8 @@ function CalendrierVue() {
   }, [year, month]);
 
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#FAF7F2]">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
         {/* Fil d'Ariane harmonisé */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
           <Link
