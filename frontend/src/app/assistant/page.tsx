@@ -131,8 +131,8 @@ function AssistantApp() {
   const [error, setError] = useState<string | null>(null);
   const isDemo = isDemoMode();
 
-  // Volet historique repliable (à gauche, visible par défaut sur grand écran)
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  // Volet historique repliable (fermé par défaut pour une concentration maximale sur le chat)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Accordéon des sources par message ID
@@ -442,8 +442,8 @@ function AssistantApp() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Sélecteur de mode compact */}
-            <div className="flex items-center rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-1">
+            {/* Sélecteur de mode compact épuré */}
+            <div className="flex items-center rounded-xl border border-[#EFE4D6] bg-white p-1 shadow-2xs">
               {MODES.map(({ id, Icon }) => (
                 <button
                   key={id}
@@ -451,8 +451,8 @@ function AssistantApp() {
                   onClick={() => setMode(id)}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                     mode === id
-                      ? "bg-[#7A3E1D] text-white shadow-xs"
-                      : "text-[#5C3D2E] hover:text-[#24140D]"
+                      ? "bg-[#181513] text-white shadow-xs"
+                      : "text-[#6B5646] hover:text-[#24140D] hover:bg-gray-50"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -462,7 +462,7 @@ function AssistantApp() {
             </div>
             <Link
               href="/incubateur/projets"
-              className="hidden md:flex h-9 items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-semibold text-[#612D10] hover:border-[#C99A68] hover:bg-[#FAF7F2] transition-colors"
+              className="hidden md:flex h-9 items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-semibold text-[#612D10] hover:border-[#C99A68] hover:bg-gray-50 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Mes projets
@@ -486,38 +486,33 @@ function AssistantApp() {
               />
             )}
 
-            {/* HERO D'ACCUEIL ÉPURÉ SANS RÉPÉTITION */}
+            {/* HERO D'ACCUEIL MINIMALISTE ET ÉPURÉ */}
             {isEmpty && (
-              <section className="pt-6 sm:pt-12 pb-4 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF4ED] border border-[#E8DACB] px-3.5 py-1 text-[11px] font-bold text-[#7A3E1D]">
-                  <Sparkles className="h-3.5 w-3.5 text-[#C99A68]" />
-                  Assistant Méthodologique CIAT
-                </span>
-                <h2 className="mt-4 font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#24140D]">
-                  Comment puis-je vous accompagner aujourd&apos;hui ?
-                </h2>
-                <p className="mx-auto mt-2 max-w-lg text-xs sm:text-sm leading-relaxed text-[#6B5646]">
-                  {mode === "documents"
-                    ? "Posez vos questions sur la réglementation, les filières, l'éligibilité et le parcours d'incubation."
-                    : "Obtenez un appui à la rédaction pour formuler le problème, la solution et la proposition de valeur de votre projet."}
-                </p>
+              <section className="pt-8 sm:pt-16 pb-6 text-center space-y-4">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-[#EFE4D6] shadow-xs">
+                  <Sparkles className="h-6 w-6 text-[#A35926]" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#24140D]">
+                    Assistant IA du CIAT
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#8C6D58] max-w-md mx-auto">
+                    {mode === "documents"
+                      ? "Interrogez l'IA sur la réglementation, les filières et les critères du CIAT."
+                      : "Obtenez une aide méthodologique pour structurer et rédiger votre projet."}
+                  </p>
+                </div>
 
-                {/* Suggestions directes en cartes interactives épurées */}
-                <div className="mt-8 grid gap-3 sm:grid-cols-3 text-left">
+                {/* Suggestions en pilules fluides et élégantes */}
+                <div className="pt-4 flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
                   {currentSuggestions.map((item) => (
                     <button
                       key={item.titre}
                       type="button"
                       onClick={() => handleSuggestionClick(item.prompt)}
-                      className="group flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FCFBF9] p-4 text-left transition-all hover:border-[#C99A68] hover:bg-white hover:shadow-xs active:scale-[0.99] cursor-pointer"
+                      className="rounded-xl border border-[#EFE4D6] bg-white px-4 py-2 text-xs font-semibold text-[#24140D] shadow-2xs hover:border-[#C99A68] hover:bg-[#FAF4ED] transition-all active:scale-[0.98] cursor-pointer"
                     >
-                      <span className="text-xs font-bold text-[#24140D] group-hover:text-[#7A3E1D] transition-colors leading-snug">
-                        {item.titre}
-                      </span>
-                      <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#8C6D58] group-hover:text-[#7A3E1D]">
-                        <span>Poser cette question</span>
-                        <ArrowUp className="h-3 w-3 rotate-45 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      </span>
+                      {item.titre}
                     </button>
                   ))}
                 </div>
@@ -549,10 +544,10 @@ function AssistantApp() {
                     className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                   >
                     <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-bold ${
                         isUser
-                          ? "bg-[#F0E7DB] text-[#612D10] border border-[#E8DACB]"
-                          : "bg-[#612D10] text-[#C99A68]"
+                          ? "bg-[#612D10] text-white shadow-2xs"
+                          : "bg-white border border-[#EFE4D6] text-[#A35926] shadow-2xs"
                       }`}
                     >
                       {isUser ? "Moi" : <Sparkles className="h-4 w-4" />}
@@ -563,7 +558,7 @@ function AssistantApp() {
                         className={`rounded-2xl p-4 sm:p-5 ${
                           isUser
                             ? "rounded-tr-md bg-[#612D10] text-white shadow-xs"
-                            : "rounded-tl-md border border-[#EFE4D6] border-l-[3px] border-l-[#C99A68] bg-white text-[#24140D] shadow-2xs"
+                            : "rounded-tl-md border border-[#EFE4D6] bg-white text-[#24140D] shadow-2xs"
                         }`}
                       >
                         <div className="whitespace-pre-line text-sm leading-relaxed">{msg.contenu}</div>
@@ -652,10 +647,10 @@ function AssistantApp() {
             {/* Réflexion en cours */}
             {sending && (
               <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#612D10] text-[#C99A68]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-[#EFE4D6] text-[#A35926] shadow-2xs">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <div className="rounded-2xl rounded-tl-md border border-[#EFE4D6] border-l-[3px] border-l-[#C99A68] bg-white p-4 shadow-2xs">
+                <div className="rounded-2xl rounded-tl-md border border-[#EFE4D6] bg-white p-4 shadow-2xs">
                   <div className="flex items-center gap-2.5 text-xs font-semibold text-[#24140D]">
                     <Loader2 className="h-4 w-4 animate-spin text-[#A35926]" />
                     <span>
