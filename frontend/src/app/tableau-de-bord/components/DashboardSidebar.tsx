@@ -194,7 +194,7 @@ export function DashboardSidebar() {
                 onClick={onItemClick}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
                   isDashboardActive
-                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm"
+                    ? "bg-[#612D10] font-semibold text-white shadow-xs border border-[#C99A68]/40"
                     : "text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -206,7 +206,7 @@ export function DashboardSidebar() {
                 onClick={onItemClick}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
                   isMethodologieActive
-                    ? "border border-[#6b4830] bg-[#523624] text-white shadow-sm font-semibold"
+                    ? "bg-[#612D10] font-semibold text-white shadow-xs border border-[#C99A68]/40"
                     : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -237,7 +237,7 @@ export function DashboardSidebar() {
                   onClick={onItemClick}
                   className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-[#7A3E1D] font-semibold text-white shadow-xs"
+                      ? "bg-[#612D10] font-semibold text-white shadow-xs border border-[#C99A68]/40"
                       : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -258,7 +258,7 @@ export function DashboardSidebar() {
               onClick={onItemClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                 isHomeActive
-                  ? "bg-[#7A3E1D] font-semibold text-white"
+                  ? "bg-[#612D10] font-semibold text-white shadow-xs border border-[#C99A68]/40"
                   : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -280,7 +280,11 @@ export function DashboardSidebar() {
               <Link
                 href="/compte"
                 onClick={onItemClick}
-                className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-white/10"
+                className={`group flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-xs font-medium shadow-xs transition-colors ${
+                  pathname === "/compte"
+                    ? "bg-[#612D10] font-semibold text-white border border-[#C99A68]/40"
+                    : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
+                }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#21130d] text-[11px] font-bold" aria-hidden="true">
