@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   Bell,
   Camera,
   Check,
-  ChevronRight,
-  Download,
   FolderOpen,
   Info,
   KeyRound,
@@ -17,19 +15,12 @@ import {
   Save,
   ShieldCheck,
   Trash2,
-  Undo2,
   User as UserIcon,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth, type Role, type User } from "@/context/AuthContext";
-import { ApiErrorBanner, Badge } from "@/components/ui";
-import DeleteProjectModal, {
-  peutSupprimerOuRetirer,
-  type ProjetASupprimer,
-} from "@/components/incubateur/DeleteProjectModal";
 import { api, ApiError } from "@/lib/api";
-import { fetchAll } from "@/lib/paginate";
-import { STATUT_LABELS, suiviErrorMessage, telechargerAccuseReception, type Dossier } from "@/lib/incubator";
+import { suiviErrorMessage } from "@/lib/incubator";
 
 const ROLE_LABELS: Record<Role, string> = {
   porteur: "Porteur de projet",
@@ -57,42 +48,6 @@ const FIELD_NAMES: Record<string, string> = {
   organisation: "Organisation",
   genre: "Genre",
 };
-
-
-interface ProjetCompte {
-  id: number;
-  titre: string;
-  domaine_nom?: string;
-  statut: string;
-  cree_le: string;
-}
-
-const PROJET_STATUTS: Record<string, string> = {
-  idee: "Idée",
-  depose: "Dossier déposé",
-  selectionne: "Sélectionné",
-  incube: "En incubation",
-  prototype: "Prototype",
-  termine: "Incubation terminée",
-  rejete: "Non retenu",
-  retire: "Candidature retirée",
-};
-
-const DOSSIER_TONES = {
-  brouillon: "neutre",
-  soumis: "alerte",
-  complet: "succes",
-  en_evaluation: "info",
-  accepte: "succes",
-  refuse: "erreur",
-} as const;
-
-const dateFr = (iso: string) =>
-  new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-
-function dossierStatutLabel(statut: string) {
-  return STATUT_LABELS[statut as keyof typeof STATUT_LABELS]?.label ?? "Statut non reconnu";
-}
 
 function ProfilSection({ user }: { user: User }) {
   const { refreshUser } = useAuth();
@@ -596,230 +551,6 @@ function ProfilSection({ user }: { user: User }) {
   );
 }
 
-function MesProjets() {
-  const [data, setData] = useState<{ projets: ProjetCompte[]; dossiers: Dossier[] } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
-  const [downloadingAccuseId, setDownloadingAccuseId] = useState<number | null>(null);
-  const [accuseError, setAccuseError] = useState<{ id: number; message: string } | null>(null);
-  const [aSupprimer, setASupprimer] = useState<ProjetASupprimer | null>(null);
-
-  async function handleTelechargerAccuse(dossierId: number) {
-    setDownloadingAccuseId(dossierId);
-    setAccuseError(null);
-    try {
-      const blob = await telechargerAccuseReception(dossierId);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `accuse_reception_dossier_${dossierId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-    } catch (err) {
-      setAccuseError({
-        id: dossierId,
-        message: suiviErrorMessage(err, "Impossible de télécharger l'accusé de réception. Veuillez réessayer."),
-      });
-    } finally {
-      setDownloadingAccuseId(null);
-    }
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchAll<ProjetCompte>("/projets/"), fetchAll<Dossier>("/incubator/dossiers/")])
-      .then(([projets, dossiers]) => {
-        if (cancelled) return;
-        setData({ projets, dossiers });
-        setError(null);
-      })
-      .catch((err) => !cancelled && setError(suiviErrorMessage(err, "Impossible de charger vos projets et dossiers.")));
-    return () => {
-      cancelled = true;
-    };
-  }, [tick]);
-
-  if (error) return <ApiErrorBanner message={error} onRetry={() => setTick((t) => t + 1)} className="!mb-0" />;
-  if (!data)
-    return (
-      <div className="flex justify-center py-10" role="status" aria-label="Chargement">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#C99A68] border-t-[#612D10]" />
-      </div>
-    );
-
-  const { projets, dossiers } = data;
-  if (projets.length === 0 && dossiers.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-[#E2D4C3] bg-white p-8 sm:p-10 text-center space-y-4">
-        <div className="mx-auto h-14 w-14 rounded-2xl bg-[#FAF4ED] text-[#A35926] flex items-center justify-center">
-          <FolderOpen className="h-7 w-7" aria-hidden="true" />
-        </div>
-        <div>
-          <h4 className="font-[family-name:var(--font-title)] text-base font-bold text-[#24140D]">
-            Aucun projet ni dossier pour le moment
-          </h4>
-          <p className="text-xs sm:text-sm text-[#6b5646] mt-1">
-            Vous n&apos;avez pas encore de projet ni de dossier de candidature enregistré.
-          </p>
-        </div>
-        <Link
-          href="/incubateur"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#612D10] px-6 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-[#3F1D0A]"
-        >
-          Déposer un dossier
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      
-      {/* Sous-section A : Mes projets */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-[#A35926]">
-          Mes projets ({projets.length})
-        </h4>
-        {projets.length === 0 ? (
-          <p className="text-xs text-[#6b5646] p-4 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40">
-            Aucun projet enregistré.
-          </p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {projets.map((p) => (
-              <div
-                key={p.id}
-                className="flex flex-col justify-between gap-3 p-4 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 hover:border-[#C99A68] hover:bg-white transition-all shadow-xs"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-[family-name:var(--font-title)] font-bold text-[#612D10] text-sm">
-                      {p.titre}
-                    </p>
-                    <Badge>{PROJET_STATUTS[p.statut] ?? p.statut}</Badge>
-                  </div>
-                  <p className="text-xs text-[#6b5646] mt-1">
-                    {p.domaine_nom ? `${p.domaine_nom} · ` : ""}Créé le {dateFr(p.cree_le)}
-                  </p>
-                </div>
-                <div className="pt-2 border-t border-[#EFE4D6]/60 flex items-center justify-between gap-2">
-                  {peutSupprimerOuRetirer(p.statut) ? (
-                    <button
-                      type="button"
-                      onClick={() => setASupprimer({ id: p.id, titre: p.titre, statut: p.statut })}
-                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-[#8C6D4F] transition-colors hover:bg-[#FEE2E2] hover:text-[#DC2626]"
-                    >
-                      {p.statut === "depose" ? <Undo2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
-                      <span>{p.statut === "depose" ? "Retirer ma candidature" : "Supprimer"}</span>
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                  <Link
-                    href={`/incubateur/projets/${p.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#612D10] hover:text-[#A35926] transition-colors"
-                  >
-                    <span>Suivi</span>
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Sous-section B : Mes dossiers de candidature */}
-      <div className="space-y-3 pt-2">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-[#A35926]">
-          Mes dossiers de candidature ({dossiers.length})
-        </h4>
-        {dossiers.length === 0 ? (
-          <p className="text-xs text-[#6b5646] p-4 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40">
-            Aucun dossier déposé.{" "}
-            <Link href="/incubateur" className="font-bold text-[#612D10] underline">
-              Déposer un dossier
-            </Link>
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {dossiers.map((d) => (
-              <div
-                key={d.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border border-[#EFE4D6] bg-white shadow-xs hover:border-[#C99A68] transition-all"
-              >
-                <div>
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <p className="font-[family-name:var(--font-title)] font-bold text-[#24140D] text-sm">
-                      Dossier n°{d.id} — {d.projet.titre}
-                    </p>
-                    <Badge tone={DOSSIER_TONES[d.statut as keyof typeof DOSSIER_TONES] ?? "neutre"}>
-                      {dossierStatutLabel(d.statut)}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-[#6b5646] mt-1 flex items-center gap-2">
-                    <span>{d.soumis_le ? `Soumis le ${dateFr(d.soumis_le)}` : "Non soumis"}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-[#612D10]">Complétude {d.completude}%</span>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  {/* Bouton officiel de téléchargement de l'accusé PDF (présent pour dossier soumis) */}
-                  {Boolean(d.soumis_le) && (
-                    <button
-                      type="button"
-                      onClick={() => handleTelechargerAccuse(d.id)}
-                      disabled={downloadingAccuseId === d.id}
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[#612D10] bg-white px-3.5 text-xs font-bold text-[#612D10] transition-colors hover:bg-[#FAF7F2] shadow-xs disabled:opacity-50"
-                    >
-                      {downloadingAccuseId === d.id ? (
-                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#612D10]/40 border-t-[#612D10]" />
-                      ) : (
-                        <Download className="h-3.5 w-3.5 text-[#A35926]" aria-hidden="true" />
-                      )}
-                      <span>Accusé (PDF)</span>
-                    </button>
-                  )}
-
-                  <Link
-                    href={d.statut === "brouillon" ? "/incubateur" : `/incubateur/projets/${d.projet.id}`}
-                    className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#612D10] px-4 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#3F1D0A]"
-                  >
-                    <span>{d.statut === "brouillon" ? "Reprendre" : "Voir le suivi"}</span>
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                  </Link>
-                </div>
-
-                {accuseError?.id === d.id && (
-                  <p role="alert" className="mt-2 text-xs text-[#DC2626]">
-                    {accuseError.message}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {aSupprimer && (
-        <DeleteProjectModal
-          projet={aSupprimer}
-          onClose={() => setASupprimer(null)}
-          onDone={() => {
-            setASupprimer(null);
-            setData(null);
-            setTick((t) => t + 1);
-          }}
-        />
-      )}
-
-    </div>
-  );
-}
-
 function Compte() {
   const { user } = useAuth();
   if (!user) return null;
@@ -863,23 +594,6 @@ function Compte() {
       <div className="space-y-6">
         {/* Profil & Sécurité */}
         <ProfilSection user={user} />
-
-        {/* Projets et Dossiers pour le rôle Porteur */}
-        {user.role === "porteur" && (
-          <div className="rounded-2xl border border-[#EFE4D6] bg-white p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EFE4D6]">
-              <div>
-                <h3 className="font-[family-name:var(--font-title)] text-base sm:text-lg font-bold text-[#24140D]">
-                  Mes projets et dossiers de candidature
-                </h3>
-                <p className="text-xs text-[#6b5646]">
-                  Retrouvez l&apos;historique de vos candidatures et téléchargez vos justificatifs officiels.
-                </p>
-              </div>
-            </div>
-            <MesProjets />
-          </div>
-        )}
       </div>
 
       </div>

@@ -76,7 +76,7 @@ function ListeProjets() {
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-white">
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
         
         {/* Fil d'Ariane discret */}
         <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs font-medium text-[#8C6D58]">
@@ -168,48 +168,48 @@ function ListeProjets() {
                   Projets actifs ({projets.length})
                 </h2>
               </div>
-              <ul className="space-y-4">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {projets.map((p) => (
                   <li
                     key={p.id}
-                    className="group rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-2xs hover:border-[#C99A68] hover:shadow-xs transition-all space-y-4"
+                    className="group rounded-2xl border border-[#EFE4D6] bg-white p-5 shadow-2xs hover:border-[#C99A68] hover:shadow-xs transition-all flex flex-col justify-between gap-4"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="space-y-1 min-w-0">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
                         <Link
                           href={`/incubateur/projets/${p.id}`}
-                          className="font-[family-name:var(--font-title)] text-lg font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors block truncate"
+                          className="font-[family-name:var(--font-title)] text-base font-bold text-[#24140D] group-hover:text-[#612D10] transition-colors line-clamp-1"
                         >
                           {p.titre}
                         </Link>
-                        {p.domaine_nom && (
-                          <p className="text-xs font-medium text-[#8C6D4F]">
-                            {p.domaine_nom}
-                          </p>
-                        )}
+                        <Badge className="shrink-0">
+                          {STATUTS[p.statut] ?? p.statut}
+                        </Badge>
                       </div>
-                      <Badge className="self-start sm:self-center shrink-0">
-                        {STATUTS[p.statut] ?? p.statut}
-                      </Badge>
+                      {p.domaine_nom && (
+                        <p className="text-xs font-medium text-[#8C6D4F]">
+                          {p.domaine_nom}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#EFE4D6]/60">
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#EFE4D6]/60">
                       <Link
                         href={`/incubateur/projets/${p.id}`}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-[#612D10] hover:text-[#A35926] transition-colors"
                       >
-                        <span>Consulter le suivi et les jalons</span>
-                        <ChevronRight className="h-4 w-4" />
+                        <span>Suivi</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </Link>
 
                       {user?.role === "porteur" && peutSupprimerOuRetirer(p.statut) && (
                         <button
                           type="button"
                           onClick={() => setASupprimer({ id: p.id, titre: p.titre, statut: p.statut })}
-                          className="inline-flex cursor-pointer items-center gap-1.5 self-end sm:self-auto rounded-lg px-2.5 py-1 text-[11px] font-semibold text-[#8C6D4F] transition-colors hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-[#8C6D4F] transition-colors hover:bg-[#FEE2E2] hover:text-[#DC2626]"
                         >
                           {p.statut === "depose" ? <Undo2 className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
-                          <span>{p.statut === "depose" ? "Retirer la candidature" : "Supprimer"}</span>
+                          <span>{p.statut === "depose" ? "Retirer ma candidature" : "Supprimer"}</span>
                         </button>
                       )}
                     </div>

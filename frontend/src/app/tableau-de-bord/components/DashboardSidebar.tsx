@@ -237,7 +237,7 @@ export function DashboardSidebar() {
                   onClick={onItemClick}
                   className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-[#7A3E1D] font-semibold text-white shadow-xs"
+                      ? "bg-black/25 font-semibold text-white shadow-xs border border-white/10"
                       : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -258,7 +258,7 @@ export function DashboardSidebar() {
               onClick={onItemClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                 isHomeActive
-                  ? "bg-[#7A3E1D] font-semibold text-white"
+                  ? "bg-black/25 font-semibold text-white border border-white/10"
                   : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -336,7 +336,7 @@ export function DashboardSidebar() {
       */}
       <aside
         aria-label="Navigation latérale principale"
-        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#26201C] lg:bg-[#181513] lg:text-white lg:shadow-xl lg:overflow-hidden scrollbar-none"
+        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#4A220C] lg:bg-[#612D10] lg:text-white lg:shadow-xl lg:overflow-hidden scrollbar-none"
       >
         {renderSidebarContent()}
       </aside>
@@ -387,7 +387,7 @@ export function DashboardSidebar() {
             className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={closeMobile}
           />
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-[#181513] pb-4 pt-5 shadow-2xl scrollbar-none">
+          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-[#612D10] pb-4 pt-5 shadow-2xl scrollbar-none">
             <div className="absolute right-0 top-0 -mr-12 pt-2">
               <button
                 type="button"

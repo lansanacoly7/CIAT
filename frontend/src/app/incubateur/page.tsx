@@ -198,7 +198,7 @@ function DepotDossier() {
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-white">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
         
         {/* Navigation & fil d'Ariane */}
         <div className="flex items-center justify-between">
