@@ -102,7 +102,7 @@ export function KpiGrid({
   ];
 
   return (
-    <section aria-labelledby="kpi-grid-heading" data-testid="kpi-grid" className="space-y-3">
+    <section aria-labelledby="kpi-grid-heading" data-testid="kpi-grid" className="space-y-2">
       <h2 id="kpi-grid-heading" className="sr-only">
         Indicateurs clés de performance
       </h2>
@@ -110,7 +110,7 @@ export function KpiGrid({
       {/* Rangée unique de 4 KPI décisionnels */}
       <div
         data-testid="kpi-cards-container"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-2.5"
       >
         {cards.map((card) => {
           const Icon = card.icon;
@@ -119,43 +119,37 @@ export function KpiGrid({
             <div
               key={card.id}
               onClick={card.onClick}
-              className="group flex flex-col justify-between rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-3.5 sm:p-4 shadow-2xs transition hover:border-[#C99A68] hover:shadow-xs cursor-pointer"
+              title={card.subtext}
+              className="group flex flex-col rounded-lg border border-[rgba(60,35,20,0.10)] bg-white px-3 py-2.5 transition hover:border-[#C99A68] cursor-pointer"
             >
               {/* Ligne 1 : Icône + Label + Voir détails */}
               <div className="flex items-center justify-between gap-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF7F2] text-[#21130D]">
-                    <Icon className="h-4 w-4 text-[#8C5E2D]" />
-                  </div>
-                  <span className="truncate text-xs font-semibold text-[#5A4B42]">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-[#8C5E2D]" />
+                  <span className="truncate text-[11px] font-medium text-[#5A4B42]">
                     {card.label}
                   </span>
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 text-[#5A4B42] opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                <ChevronRight className="h-3 w-3 text-[#5A4B42] opacity-0 group-hover:opacity-70 transition-opacity shrink-0" />
               </div>
 
               {/* Ligne 2 : Valeur + Unité + Delta */}
-              <div className="mt-3 flex items-baseline justify-between gap-2 flex-wrap">
+              <div className="mt-1.5 flex items-baseline justify-between gap-2 flex-wrap">
                 <div className="flex items-baseline gap-1">
-                  <span className="font-sans text-2xl sm:text-[28px] font-bold text-[#21130D] tabular-nums leading-none">
+                  <span className="font-sans text-lg sm:text-xl font-semibold text-[#21130D] tabular-nums leading-none">
                     {card.value}
                   </span>
                   {card.unit && (
-                    <span className="text-xs font-semibold text-[#5A4B42]">
+                    <span className="text-[11px] font-medium text-[#5A4B42]">
                       {card.unit}
                     </span>
                   )}
                 </div>
 
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-[#FAF7F2] px-1.5 py-0.5 text-[10px] font-semibold text-[#8C5E2D] tabular-nums">
-                  <ArrowUpRight className="h-3 w-3" />
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-[#8C5E2D] tabular-nums">
+                  <ArrowUpRight className="h-2.5 w-2.5" />
                   <span>{card.delta}</span>
                 </span>
-              </div>
-
-              {/* Ligne 3 : Sous-texte court */}
-              <div className="mt-1 text-[11px] text-[#7A6B63] truncate">
-                {card.subtext}
               </div>
             </div>
           );
@@ -163,7 +157,7 @@ export function KpiGrid({
       </div>
 
       {/* Petite barre de conversion discrète sous les KPI */}
-      <div className="hidden sm:flex items-center justify-between gap-2 rounded-lg bg-[#FAF7F2]/80 border border-[rgba(60,35,20,0.06)] px-3 py-1.5 text-[11px] text-[#5A4B42]">
+      <div className="hidden sm:flex items-center justify-between gap-2 border-t border-[rgba(60,35,20,0.06)] px-1 pt-1.5 text-[11px] text-[#5A4B42]">
         <div className="flex items-center gap-2 font-medium">
           <span className="text-[#8C5E2D] font-semibold">Tunnel de conversion :</span>
           <span>{formatNumber(indicateurs.idees_recues)} idées</span>

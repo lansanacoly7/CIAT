@@ -348,7 +348,7 @@ export function DashboardContent() {
   return (
     <div
       id="dashboard-root"
-      className="min-h-screen bg-[#FBF8F3] text-[#21130D]"
+      className="min-h-screen bg-white text-[#21130D]"
     >
       {/* =========================================================================
           1. EN-TÊTE COMPACT (UNE LIGNE, 64 PX)

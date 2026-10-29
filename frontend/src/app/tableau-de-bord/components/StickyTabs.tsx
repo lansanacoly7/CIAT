@@ -20,7 +20,7 @@ export function StickyTabs({ activeTab, onChange }: StickyTabsProps) {
   return (
     <nav
       aria-label="Navigation des vues du tableau de bord"
-      className="border-b border-[rgba(60,35,20,0.08)] bg-[#FBF8F3] pt-1"
+      className="border-b border-[rgba(60,35,20,0.08)] bg-white pt-1"
     >
       <div className="flex items-center gap-2 sm:gap-6 overflow-x-auto no-scrollbar">
         {TABS.map((tab) => {
