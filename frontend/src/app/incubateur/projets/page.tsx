@@ -75,12 +75,12 @@ function ListeProjets() {
   }, [tick]);
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#FAF7F2]">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-white">
       <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
         
         {/* Fil d'Ariane discret */}
         <nav aria-label="Fil d'Ariane" className="flex items-center gap-1.5 text-xs font-medium text-[#8C6D58]">
-          <Link href="/incubateur" className="hover:text-[#612D10] transition-colors">
+          <Link href="/incubateur" className="hover:text-[#7A3E1D] transition-colors">
             Espace Candidat
           </Link>
           <span className="text-[#C99A68]/60">/</span>

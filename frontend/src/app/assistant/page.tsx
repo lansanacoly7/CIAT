@@ -406,7 +406,7 @@ function AssistantApp() {
   );
 
   return (
-    <div className="flex h-[calc(100dvh-56px)] lg:h-screen min-h-0 lg:min-h-[640px] bg-[#FAF7F2] overflow-hidden">
+    <div className="flex h-[calc(100dvh-56px)] lg:h-screen min-h-0 lg:min-h-[640px] bg-white overflow-hidden">
       {/* 1. HISTORIQUE (À GAUCHE, REPLIABLE) */}
       <aside
         className={`hidden lg:flex flex-col transition-all duration-300 ease-in-out border-r border-[#EFE4D6] bg-white ${
@@ -451,7 +451,7 @@ function AssistantApp() {
                   onClick={() => setMode(id)}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                     mode === id
-                      ? "bg-[#612D10] text-white shadow-xs"
+                      ? "bg-[#7A3E1D] text-white shadow-xs"
                       : "text-[#5C3D2E] hover:text-[#24140D]"
                   }`}
                 >
@@ -486,64 +486,38 @@ function AssistantApp() {
               />
             )}
 
-            {/* HERO D'ACCUEIL */}
+            {/* HERO D'ACCUEIL ÉPURÉ SANS RÉPÉTITION */}
             {isEmpty && (
-              <section className="pt-4 sm:pt-8 pb-2 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C99A68] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1F130B]">
-                  <Sparkles className="h-3 w-3" />
-                  Référent méthodologique CIAT
+              <section className="pt-6 sm:pt-12 pb-4 text-center">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF4ED] border border-[#E8DACB] px-3.5 py-1 text-[11px] font-bold text-[#7A3E1D]">
+                  <Sparkles className="h-3.5 w-3.5 text-[#C99A68]" />
+                  Assistant Méthodologique CIAT
                 </span>
-                <h2 className="mt-4 font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-bold text-[#24140D]">
-                  Comment puis-je vous accompagner ?
+                <h2 className="mt-4 font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#24140D]">
+                  Comment puis-je vous accompagner aujourd&apos;hui ?
                 </h2>
-                <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-[#7A583A]">
-                  Choisissez une posture, puis posez votre question ou partez d&apos;une suggestion.
+                <p className="mx-auto mt-2 max-w-lg text-xs sm:text-sm leading-relaxed text-[#6B5646]">
+                  {mode === "documents"
+                    ? "Posez vos questions sur la réglementation, les filières, l'éligibilité et le parcours d'incubation."
+                    : "Obtenez un appui à la rédaction pour formuler le problème, la solution et la proposition de valeur de votre projet."}
                 </p>
 
-                {/* Cartes de mode */}
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 text-left">
-                  {MODES.map(({ id, titre, description, Icon }) => {
-                    const active = mode === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setMode(id)}
-                        aria-pressed={active}
-                        className={`group rounded-2xl border p-4 transition-all cursor-pointer ${
-                          active
-                            ? "border-[#C99A68] bg-white shadow-sm ring-2 ring-[#C99A68]/25"
-                            : "border-[#EFE4D6] bg-white/70 hover:border-[#C99A68]/70 hover:bg-white"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                              active ? "bg-[#612D10] text-white" : "bg-[#F5EFE6] text-[#612D10]"
-                            }`}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <span className="font-[family-name:var(--font-title)] text-sm font-bold text-[#24140D]">
-                            {titre}
-                          </span>
-                        </div>
-                        <p className="mt-2.5 text-xs leading-relaxed text-[#7A583A]">{description}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Suggestions en pilules */}
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                {/* Suggestions directes en cartes interactives épurées */}
+                <div className="mt-8 grid gap-3 sm:grid-cols-3 text-left">
                   {currentSuggestions.map((item) => (
                     <button
                       key={item.titre}
                       type="button"
                       onClick={() => handleSuggestionClick(item.prompt)}
-                      className="rounded-full border border-[#E5D8C9] bg-white px-4 py-2 text-xs font-semibold text-[#612D10] transition-all hover:border-[#C99A68] hover:bg-[#FAF7F2] active:scale-[0.98] cursor-pointer"
+                      className="group flex flex-col justify-between rounded-2xl border border-[#EFE4D6] bg-[#FCFBF9] p-4 text-left transition-all hover:border-[#C99A68] hover:bg-white hover:shadow-xs active:scale-[0.99] cursor-pointer"
                     >
-                      {item.titre}
+                      <span className="text-xs font-bold text-[#24140D] group-hover:text-[#7A3E1D] transition-colors leading-snug">
+                        {item.titre}
+                      </span>
+                      <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#8C6D58] group-hover:text-[#7A3E1D]">
+                        <span>Poser cette question</span>
+                        <ArrowUp className="h-3 w-3 rotate-45 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -699,7 +673,7 @@ function AssistantApp() {
         </div>
 
         {/* Barre de saisie flottante */}
-        <footer className="shrink-0 px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2] to-transparent">
+        <footer className="shrink-0 px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-white via-white to-transparent">
           <form onSubmit={handleSend} className="mx-auto max-w-3xl">
             <div className="flex items-end gap-2 rounded-2xl border border-[#E5D8C9] bg-white p-2 shadow-lg shadow-[#24140D]/5 transition-all focus-within:border-[#C99A68] focus-within:ring-2 focus-within:ring-[#C99A68]/25">
               <textarea

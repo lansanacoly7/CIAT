@@ -165,7 +165,7 @@ export function DashboardSidebar() {
     const isHomeActive = pathname === "/";
 
     return (
-      <div className="relative z-10 flex h-full flex-col justify-between overflow-y-auto">
+      <div className="relative z-10 flex h-full flex-col justify-between overflow-y-auto scrollbar-none">
         <div>
           {/* 1. Logo CIAT officiel en haut */}
           <div className="px-5 pb-5 pt-6">
@@ -237,7 +237,7 @@ export function DashboardSidebar() {
                   onClick={onItemClick}
                   className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                     isActive
-                      ? "bg-[#523624] font-semibold text-white shadow-xs"
+                      ? "bg-[#7A3E1D] font-semibold text-white shadow-xs"
                       : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -258,7 +258,7 @@ export function DashboardSidebar() {
               onClick={onItemClick}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
                 isHomeActive
-                  ? "bg-[#523624] font-semibold text-white"
+                  ? "bg-[#7A3E1D] font-semibold text-white"
                   : "font-medium text-[#ebd9c0] hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -336,19 +336,8 @@ export function DashboardSidebar() {
       */}
       <aside
         aria-label="Navigation latérale principale"
-        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#21130d] lg:text-white lg:shadow-xl lg:overflow-hidden"
+        className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#26201C] lg:bg-[#181513] lg:text-white lg:shadow-xl lg:overflow-hidden scrollbar-none"
       >
-        {/* Filigrane emblème CIAT en arrière-plan en bas de la sidebar */}
-        <div className="pointer-events-none absolute -bottom-8 -left-6 z-0 select-none opacity-[0.06]">
-          <Image
-            src="/images/brand/symbole_blanc.png"
-            alt=""
-            width={280}
-            height={280}
-            priority
-          />
-        </div>
-
         {renderSidebarContent()}
       </aside>
 
@@ -398,7 +387,7 @@ export function DashboardSidebar() {
             className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={closeMobile}
           />
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-[#21130d] pb-4 pt-5 shadow-2xl">
+          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-[#181513] pb-4 pt-5 shadow-2xl scrollbar-none">
             <div className="absolute right-0 top-0 -mr-12 pt-2">
               <button
                 type="button"

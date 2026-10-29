@@ -9,9 +9,7 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  Flag,
   RotateCcw,
-  Target,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner, Badge, Button } from "@/components/ui";
@@ -307,40 +305,35 @@ function CalendrierVue() {
   }, [year, month]);
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#FAF7F2]">
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
-        {/* Fil d'Ariane harmonisé */}
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-white">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-6">
+        {/* Fil d'Ariane épuré */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
           <Link
             href="/incubateur/projets"
-            className="hover:text-[#612D10] hover:underline transition-colors"
+            className="hover:text-[#7A3E1D] hover:underline transition-colors"
           >
             Suivi des projets
           </Link>
           <span className="text-[#C99A68]/60">/</span>
-          <span className="text-[#612D10] font-bold">Calendrier</span>
+          <span className="text-[#7A3E1D] font-bold">Calendrier</span>
         </div>
 
-        {/* 1. EN-TÊTE STATUTAIRE & CLOCHE D'ALERTE */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* 1. EN-TÊTE ÉPURÉ SANS RÉPÉTITIONS */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-2 border-b border-[#EFE4D6]">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#8C6D58] uppercase tracking-wider">
-              <span>Incubateur CIAT</span>
-              <span className="text-[#C99A68]">·</span>
-              <span>Pilotage opérationnel</span>
-            </div>
-            <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold tracking-tight text-[#24140D] sm:text-3xl lg:text-4xl">
+            <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold tracking-tight text-[#24140D] sm:text-3xl">
               Calendrier des jalons & objectifs
             </h1>
-            <p className="text-xs sm:text-sm text-[#6b5646] max-w-2xl leading-relaxed">
-              Suivi chronologique des échéances d&apos;incubation, livrables techniques et revues du comité.
+            <p className="text-xs sm:text-sm text-[#6b5646] max-w-xl">
+              Consultez vos livrables, échéances de validation et rendez-vous du comité.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/incubateur/alertes"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-4 text-xs sm:text-sm font-bold text-[#612D10] hover:border-[#A35926] hover:bg-[#FAF7F2] shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#EFE4D6] bg-white px-3.5 text-xs font-bold text-[#7A3E1D] hover:border-[#A35926] hover:bg-[#FAF4ED] shadow-xs transition-all active:scale-[0.98] cursor-pointer"
               title="Consulter les alertes"
             >
               <Bell className="h-4 w-4 text-[#A35926]" aria-hidden="true" />
@@ -363,143 +356,20 @@ function CalendrierVue() {
           />
         )}
 
-        {/* 3. 4 CARTES D'INDICATEURS CLÉS (KPIS) - Interactives et filtres en un clic */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-          {/* TOTAL DU MOIS */}
-          <button
-            type="button"
-            onClick={() => setFiltre("tous")}
-            className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all cursor-pointer ${
-              filtre === "tous"
-                ? "border-[#612D10] bg-white shadow-md ring-2 ring-[#612D10]/15"
-                : "border-[#EFE4D6] bg-white hover:border-[#C99A68] hover:bg-[#FAF7F2] hover:shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6D58]">
-                Échéances du mois
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FAF4ED] text-[#612D10] group-hover:scale-105 transition-transform">
-                <CalendarIcon className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#24140D]">
-                {stats.total}
-              </span>
-              <span className="text-xs text-[#8C6D58]">au planning</span>
-            </div>
-            {filtre === "tous" && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#612D10]" />
-            )}
-          </button>
-
-          {/* JALONS CLÉS */}
-          <button
-            type="button"
-            onClick={() => setFiltre(filtre === "jalon" ? "tous" : "jalon")}
-            className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all cursor-pointer ${
-              filtre === "jalon"
-                ? "border-[#A35926] bg-[#FFF9F3] shadow-md ring-2 ring-[#A35926]/20"
-                : "border-[#EFE4D6] bg-white hover:border-[#A35926] hover:bg-[#FAF4ED] hover:shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#A35926]">
-                Jalons clés
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FAF4ED] text-[#A35926] group-hover:scale-105 transition-transform">
-                <Flag className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#78350F]">
-                {stats.jalons}
-              </span>
-              <span className="text-xs text-[#8C6D58]">étapes comité</span>
-            </div>
-            {filtre === "jalon" && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#A35926]" />
-            )}
-          </button>
-
-          {/* OBJECTIFS OPÉRATIONNELS */}
-          <button
-            type="button"
-            onClick={() => setFiltre(filtre === "objectif" ? "tous" : "objectif")}
-            className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all cursor-pointer ${
-              filtre === "objectif"
-                ? "border-[#2563EB] bg-[#EFF6FF] shadow-md ring-2 ring-[#2563EB]/20"
-                : "border-[#EFE4D6] bg-white hover:border-[#2563EB] hover:bg-[#F0F7FF] hover:shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#1E40AF]">
-                Objectifs
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB] group-hover:scale-105 transition-transform">
-                <Target className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold text-[#1E40AF]">
-                {stats.objectifs}
-              </span>
-              <span className="text-xs text-[#8C6D58]">livrables projet</span>
-            </div>
-            {filtre === "objectif" && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#2563EB]" />
-            )}
-          </button>
-
-          {/* ÉCHÉANCES EN RETARD */}
-          <button
-            type="button"
-            onClick={() => setFiltre(filtre === "retard" ? "tous" : "retard")}
-            className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all cursor-pointer ${
-              filtre === "retard"
-                ? "border-[#B91C1C] bg-[#FEF2F2] shadow-md ring-2 ring-[#B91C1C]/20"
-                : stats.enRetard > 0
-                ? "border-red-200 bg-red-50/60 hover:bg-red-50 hover:border-red-300"
-                : "border-[#EFE4D6] bg-white hover:border-[#A35926] hover:bg-[#FAF7F2]"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className={`text-[11px] font-bold uppercase tracking-wider ${stats.enRetard > 0 ? "text-[#B91C1C]" : "text-[#8C6D58]"}`}>
-                En retard
-              </span>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
-                stats.enRetard > 0 ? "bg-red-100 text-[#B91C1C]" : "bg-[#FAF7F2] text-[#8C6D58]"
-              }`}>
-                <AlertTriangle className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className={`font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-extrabold ${stats.enRetard > 0 ? "text-[#B91C1C]" : "text-[#8C6D58]"}`}>
-                {stats.enRetard}
-              </span>
-              <span className="text-xs text-[#8C6D58]">{stats.enRetard > 0 ? "à régulariser" : "aucun retard"}</span>
-            </div>
-            {filtre === "retard" && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#B91C1C]" />
-            )}
-          </button>
-        </div>
-
-        {/* 4. BARRE DE COMMANDE MENSUELLE & LÉGENDE STATUTAIRE */}
-        <div className="rounded-2xl border border-[#EFE4D6] bg-white p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] p-0.5 shadow-2xs">
+        {/* 3. BARRE DE COMMANDE MENSUELLE & FILTRES INTÉGRÉS */}
+        <div className="rounded-2xl border border-[#EFE4D6] bg-white p-3.5 sm:p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex items-center justify-between md:justify-start gap-3">
+            <div className="inline-flex items-center rounded-xl border border-[#EFE4D6] bg-[#FCFBF9] p-0.5">
               <button
                 type="button"
                 onClick={handlePrevMonth}
                 aria-label="Mois précédent"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#612D10] hover:bg-[#EFE4D6] hover:text-[#3F1D0A] transition-colors cursor-pointer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#7A3E1D] hover:bg-[#EFE4D6] transition-colors cursor-pointer"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="px-4 text-center min-w-[160px]">
-                <span className="font-[family-name:var(--font-title)] text-base font-bold text-[#4A2810]">
+              <div className="px-4 text-center min-w-[150px]">
+                <span className="font-[family-name:var(--font-title)] text-base font-bold text-[#24140D]">
                   {moisNom}
                 </span>
               </div>
@@ -507,7 +377,7 @@ function CalendrierVue() {
                 type="button"
                 onClick={handleNextMonth}
                 aria-label="Mois suivant"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#612D10] hover:bg-[#EFE4D6] hover:text-[#3F1D0A] transition-colors cursor-pointer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#7A3E1D] hover:bg-[#EFE4D6] transition-colors cursor-pointer"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -517,7 +387,7 @@ function CalendrierVue() {
               <button
                 type="button"
                 onClick={handleToday}
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-bold text-[#612D10] hover:border-[#A35926] hover:bg-[#FAF7F2] transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-white px-3 text-xs font-bold text-[#7A3E1D] hover:border-[#A35926] hover:bg-[#FAF4ED] transition-colors shadow-2xs cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5 text-[#A35926]" />
                 <span>Aujourd&apos;hui</span>
@@ -525,24 +395,84 @@ function CalendrierVue() {
             )}
           </div>
 
-          {/* Légende intégrée sobre et élégante */}
-          <div className="flex items-center gap-4 text-xs font-medium text-[#6b5646]">
-            <span className="inline-flex items-center gap-1.5 text-[#78350F]">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#A35926]" />
-              <span className="font-semibold">Jalon clé</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[#1E40AF]">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" />
-              <span className="font-semibold">Objectif</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[#B91C1C]">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#B91C1C]" />
-              <span className="font-semibold">En retard</span>
-            </span>
+          {/* Filtres par onglets compacts (remplace les 4 gros pavés répétitifs) */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setFiltre("tous")}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                filtre === "tous"
+                  ? "bg-[#7A3E1D] text-white shadow-xs"
+                  : "bg-white border border-[#EFE4D6] text-[#6B5646] hover:border-[#A35926] hover:text-[#24140D]"
+              }`}
+            >
+              <span>Tous</span>
+              <span className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
+                filtre === "tous" ? "bg-white/20 text-white" : "bg-[#FAF4ED] text-[#7A3E1D]"
+              }`}>
+                {stats.total}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFiltre(filtre === "jalon" ? "tous" : "jalon")}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                filtre === "jalon"
+                  ? "bg-[#9A3412] text-white shadow-xs"
+                  : "bg-white border border-[#EFE4D6] text-[#78350F] hover:border-[#A35926]"
+              }`}
+            >
+              <span className="h-2 w-2 rounded-full bg-[#A35926]" />
+              <span>Jalons</span>
+              <span className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
+                filtre === "jalon" ? "bg-white/20 text-white" : "bg-[#FAF4ED] text-[#78350F]"
+              }`}>
+                {stats.jalons}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFiltre(filtre === "objectif" ? "tous" : "objectif")}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                filtre === "objectif"
+                  ? "bg-[#1E40AF] text-white shadow-xs"
+                  : "bg-white border border-[#EFE4D6] text-[#1E40AF] hover:border-[#2563EB]"
+              }`}
+            >
+              <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
+              <span>Objectifs</span>
+              <span className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
+                filtre === "objectif" ? "bg-white/20 text-white" : "bg-[#EFF6FF] text-[#1E40AF]"
+              }`}>
+                {stats.objectifs}
+              </span>
+            </button>
+
+            {stats.enRetard > 0 && (
+              <button
+                type="button"
+                onClick={() => setFiltre(filtre === "retard" ? "tous" : "retard")}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  filtre === "retard"
+                    ? "bg-[#B91C1C] text-white shadow-xs"
+                    : "bg-red-50 border border-red-200 text-[#B91C1C] hover:bg-red-100"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-[#B91C1C]" />
+                <span>En retard</span>
+                <span className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
+                  filtre === "retard" ? "bg-white/20 text-white" : "bg-red-100 text-[#B91C1C]"
+                }`}>
+                  {stats.enRetard}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 5. CONTENU PRINCIPAL : ÉTAT CHARGEMENT OU VUES CALENDRIER */}
+        {/* 4. CONTENU PRINCIPAL : ÉTAT CHARGEMENT OU VUES CALENDRIER */}
         {loading ? (
           <div className="rounded-2xl border border-[#EFE4D6] bg-white p-12 text-center shadow-xs">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FAF7F2] text-[#A35926] mb-3 animate-pulse">

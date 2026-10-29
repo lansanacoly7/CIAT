@@ -139,7 +139,7 @@ function Suivi() {
   const etapeActuelle = projet ? getProjetEtapeIndex(projet.statut) : 0;
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#FAF7F2]">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-white">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
         
         {/* Navigation & fil d'Ariane */}

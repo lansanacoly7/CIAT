@@ -49,7 +49,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (showSidebar) {
     return (
-      <div id="admin-shell-root" className="relative min-h-screen w-full bg-[#fcfbf9]">
+      <div id="admin-shell-root" className="relative min-h-screen w-full bg-white">
         {/* Barre latérale officielle unique CIAT */}
         <DashboardSidebar />
 
