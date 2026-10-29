@@ -3,10 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
-  ShieldCheck,
   Landmark,
   CheckCircle2,
-  Clock,
   Handshake,
   Search,
   X,
@@ -14,7 +12,6 @@ import {
   ChevronRight,
   Building2,
   ArrowUpDown,
-  Coins,
 } from "lucide-react";
 import {
   BarChart,
@@ -64,6 +61,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
 
   // Vue tableau et filtres interactifs
   const [activeTab, setActiveTab] = useState<"financements" | "partenariats">("financements");
+  const [chartView, setChartView] = useState<"volume" | "nature">("volume");
   const [chartMode, setChartMode] = useState<"guichet" | "domaine">("guichet");
   const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -402,40 +400,23 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
   return (
     <div className="space-y-6">
       {/* =========================================================================
-          1. EN-TÊTE OFFICIEL DE LA SECTION (LOCATOR E2E PRESERVÉ)
+          1. EN-TÊTE ÉPURÉ DE LA SECTION
          ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-3">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-[16px] sm:text-[18px] font-bold text-[#21130D] tracking-tight">
-              Partenariats & Financements Mobilisés
-            </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 border border-emerald-200/60 shadow-2xs">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              Recoupé Base CIAT
-            </span>
-          </div>
-          <p className="text-[12px] sm:text-[13px] text-[#5A4B42] mt-0.5">
+          <h2 className="text-[16px] sm:text-[18px] font-bold text-[#21130D] tracking-tight">
+            Partenariats & Financements Mobilisés
+          </h2>
+          <p className="text-xs text-[#5A4B42] mt-0.5">
             Pilotage consolidé des conventions industrielles, académiques et guichets d&apos;amorçage
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] px-3 py-1.5 text-[11px] font-medium text-[#612D10]">
-            <Coins className="h-3.5 w-3.5 text-[#C99A68]" />
-            <strong className="font-semibold text-[#21130D]">
-              {formatCurrencyCompact(kpiData.totalMobilise)}
-            </strong>
-            <span className="text-[#8C6D4F]">•</span>
-            <span>{kpiData.partenariatsTotal} accords</span>
-          </span>
         </div>
       </div>
 
       {/* =========================================================================
-          2. BANNIÈRE KPI FINANCIERS HAUT IMPACT (4 CARTES ÉLÉGANTES)
+          2. BANNIÈRE 3 KPI DÉCISIONNELS (TOTAL MOBILISÉ, TOTAL DÉCAISSÉ, CONVENTIONS ACTIVES)
          ========================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Carte 1 : Total Mobilisé */}
         <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#C99A68]/50">
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -481,7 +462,6 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
               {formatPercent(kpiData.tauxDecaissement)}
             </span>
           </div>
-          {/* Mini barre de progression décaissement */}
           <div className="mt-2 w-full h-1.5 bg-[#FAF7F2] rounded-full overflow-hidden border border-[#EFE4D6]">
             <div
               className="h-full bg-[#5A7D65] rounded-full transition-all duration-500"
@@ -493,34 +473,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
           </p>
         </div>
 
-        {/* Carte 3 : Solde Restant à Décaisser */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#C99A68]/50">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8C5E2D]">
-              Solde en Déblocage
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FAF7F2] text-[#8C5E2D]">
-              <Clock className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-sans text-[22px] font-bold text-[#21130D] tabular-nums leading-none">
-              {formatCurrencyCompact(kpiData.soldeRestant)}
-            </span>
-            <span className="text-[10px] font-medium text-[#8C6D4F]">
-              ({formatPercent(100 - kpiData.tauxDecaissement)})
-            </span>
-          </div>
-          <p className="text-[11px] text-[#5A4B42] mt-1.5 truncate">
-            Tranches conditionnées aux jalons
-          </p>
-          <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-medium text-[#8C5E2D]">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
-            <span>Engagements fermes en cours</span>
-          </div>
-        </div>
-
-        {/* Carte 4 : Réseau de Partenariats Actifs */}
+        {/* Carte 3 : Réseau de Partenariats Actifs */}
         <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#612D10]/50">
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#612D10]">
@@ -554,50 +507,83 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
       </div>
 
       {/* =========================================================================
-          3. DEUX VISUALISATIONS COMPLÉMENTAIRES (VOLUME PAR GUICHET & TYPOLOGIE)
+          3. UN SEUL GRAPHIQUE AVEC COMMUTATEUR DE VUE (VOLUME MOBILISÉ / ACCORDS)
          ========================================================================= */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {/* Graphique 1 : Volume mobilisé (avec toggle Guichet vs Domaine) */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
-            <div>
-              <h3 className="text-[14px] font-bold text-[#21130D]">
-                {chartMode === "guichet"
+      <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs flex flex-col justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4 border-b border-[#EFE4D6] pb-3">
+          <div>
+            <h3 className="text-[14px] font-bold text-[#21130D]">
+              {chartView === "volume"
+                ? chartMode === "guichet"
                   ? "Volume mobilisé par guichet partenaire"
-                  : "Volume mobilisé par domaine prioritaire"}
-              </h3>
-              <p className="text-[11px] text-[#5A4B42] mt-0.5">
-                Total : {formatCurrencyCompact(kpiData.totalMobilise)} (montants en Millions FCFA)
-              </p>
-            </div>
-
-            {/* Commutateur Guichet / Domaine */}
-            <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setChartMode("guichet")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "guichet"
-                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
-                    : "text-[#5A4B42] hover:text-[#21130D]"
-                }`}
-              >
-                Par Guichet ({stats.par_source?.length || 9})
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartMode("domaine")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "domaine"
-                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
-                    : "text-[#5A4B42] hover:text-[#21130D]"
-                }`}
-              >
-                Par Domaine ({stats.par_domaine?.length || 7})
-              </button>
-            </div>
+                  : "Volume mobilisé par domaine prioritaire"
+                : "Répartition des partenariats par nature"}
+            </h3>
+            <p className="text-[11px] text-[#5A4B42] mt-0.5">
+              {chartView === "volume"
+                ? `Total : ${formatCurrencyCompact(kpiData.totalMobilise)} (montants en Millions FCFA)`
+                : `Ventilation des ${kpiData.partenariatsTotal} accords signés (${kpiData.partenariatsActifs} actifs en vigueur)`}
+            </p>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Commutateur principal : Volume vs Nature */}
+            <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setChartView("volume")}
+                className={`rounded-md px-2.5 py-1 transition-all cursor-pointer ${
+                  chartView === "volume"
+                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
+                    : "text-[#5A4B42] hover:text-[#21130D]"
+                }`}
+              >
+                Volume mobilisé
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartView("nature")}
+                className={`rounded-md px-2.5 py-1 transition-all cursor-pointer ${
+                  chartView === "nature"
+                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
+                    : "text-[#5A4B42] hover:text-[#21130D]"
+                }`}
+              >
+                Répartition des accords
+              </button>
+            </div>
+
+            {/* Commutateur Guichet / Domaine (visible si mode Volume) */}
+            {chartView === "volume" && (
+              <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setChartMode("guichet")}
+                  className={`rounded-md px-2 py-1 transition-all cursor-pointer ${
+                    chartMode === "guichet"
+                      ? "bg-[#612D10] text-white shadow-2xs font-bold"
+                      : "text-[#5A4B42] hover:text-[#21130D]"
+                  }`}
+                >
+                  Par Guichet ({stats.par_source?.length || 9})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartMode("domaine")}
+                  className={`rounded-md px-2 py-1 transition-all cursor-pointer ${
+                    chartMode === "domaine"
+                      ? "bg-[#612D10] text-white shadow-2xs font-bold"
+                      : "text-[#5A4B42] hover:text-[#21130D]"
+                  }`}
+                >
+                  Par Domaine ({stats.par_domaine?.length || 7})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {chartView === "volume" ? (
           <div className="h-[310px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -649,7 +635,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
                   fill="#C99A68"
                   radius={[0, 6, 6, 0]}
                   barSize={18}
-                  background={{ fill: "#FAF7F2", radius: [0, 6, 6, 0] }}
+                  background={{ fill: "#FAF7F2", radius: 6 }}
                 >
                   <LabelList
                     dataKey="displayLabel"
@@ -659,28 +645,9 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* Graphique 2 : Typologie des conventions (Donut interactif repositionné et harmonisé) */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
-            <div>
-              <h3 className="text-[14px] font-bold text-[#21130D]">
-                Répartition des partenariats par nature
-              </h3>
-              <p className="text-[11px] text-[#5A4B42] mt-0.5">
-                Ventilation des {kpiData.partenariatsTotal} accords signés ({kpiData.partenariatsActifs} actifs en vigueur)
-              </p>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAF7F2] px-2.5 py-1 border border-[#EFE4D6] text-[11px] font-semibold text-[#612D10] self-start sm:self-auto">
-              <Handshake className="h-3.5 w-3.5 text-[#C99A68]" />
-              <span>{kpiData.partenariatsActifs} actifs ({formatPercent(kpiData.tauxPartenariatsActifs)})</span>
-            </div>
-          </div>
-
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center min-h-[310px] my-auto">
-            {/* Colonne Anneau : Parfaitement centré avec badge central interactif */}
+            {/* Colonne Anneau */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center py-2">
               <div className="relative w-[215px] h-[215px] flex items-center justify-center">
                 <PieChart width={215} height={215}>
@@ -747,7 +714,6 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
                   </Pie>
                 </PieChart>
 
-                {/* Texte central dynamique et interactif */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center px-2">
                   {hoveredSlice !== null && chartDataTypes[hoveredSlice] ? (
                     <>
@@ -778,7 +744,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
               </div>
             </div>
 
-            {/* Colonne droite : Légende détaillée avec barres de progression et espacement garanti */}
+            {/* Colonne droite : Légende */}
             <div className="lg:col-span-7 flex flex-col justify-center gap-2">
               {chartDataTypes.map((item, idx) => {
                 const isHovered = hoveredSlice === idx;
@@ -823,7 +789,6 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
                       </div>
                     </div>
 
-                    {/* Mini barre de progression proportionnelle */}
                     <div className="h-1.5 w-full bg-[#EFE4D6]/50 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
@@ -838,7 +803,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
               })}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* =========================================================================

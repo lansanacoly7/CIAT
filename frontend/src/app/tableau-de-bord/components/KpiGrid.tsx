@@ -1,43 +1,21 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Users,
-  FileText,
   CheckCircle2,
-  Rocket,
   Award,
-  TrendingUp,
   Coins,
-  Handshake,
   ChevronRight,
   ArrowUpRight,
-  ArrowDownRight,
-  Info,
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
 import type { IndicateursGlobaux } from "../types";
-
-interface KpiItem {
-  id: string;
-  label: string;
-  value: string;
-  unit?: string;
-  subtext: string;
-  icon: React.ComponentType<{ className?: string }>;
-  delta?: { value: string; isPositive: boolean };
-  isSpecialTaux?: boolean;
-  tauxValue?: number;
-  borderBottomClass?: string;
-  onClick?: () => void;
-}
 
 interface KpiGridProps {
   indicateurs: IndicateursGlobaux;
   totalFinance?: number;
   partenariatsActifs?: number;
-  previousIndicateurs?: IndicateursGlobaux | null;
   onFilterStatut?: (statut: string) => void;
   onNavigateTab?: (tab: "projets" | "financements") => void;
 }
@@ -45,12 +23,10 @@ interface KpiGridProps {
 export function KpiGrid({
   indicateurs,
   totalFinance = 472000000,
-  partenariatsActifs = 33,
-  previousIndicateurs = null,
   onFilterStatut,
   onNavigateTab,
 }: KpiGridProps) {
-  // Formatage spécifique pour Fonds mobilisés : "472 M" + "FCFA"
+  // Formatage du montant financé en Millions FCFA
   const formattedFonds = useMemo(() => {
     const num = totalFinance || 472000000;
     if (num >= 1_000_000) {
@@ -60,163 +36,81 @@ export function KpiGrid({
     return { val: formatNumber(num), unit: "FCFA" };
   }, [totalFinance]);
 
-  const cards: KpiItem[] = useMemo(() => {
-    const calcDelta = (current: number, prev?: number, fallback = "+12 %") => {
-      if (!prev || prev <= 0) return { value: fallback, isPositive: true };
-      const diff = ((current - prev) / prev) * 100;
-      return {
-        value: `${diff >= 0 ? "+" : ""}${diff.toFixed(1).replace(".", ",")} %`,
-        isPositive: diff >= 0,
-      };
-    };
+  // Taux de conversion calculés
+  const tauxRetenus = useMemo(() => {
+    if (!indicateurs.idees_recues) return 0;
+    return (indicateurs.projets_selectionnes / indicateurs.idees_recues) * 100;
+  }, [indicateurs]);
 
-    const scrollToSection = (id: string) => {
-      if (typeof document !== "undefined") {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }
-    };
+  const tauxPrototypes = useMemo(() => {
+    if (!indicateurs.idees_recues) return 0;
+    return (indicateurs.prototypes / indicateurs.idees_recues) * 100;
+  }, [indicateurs]);
 
-    return [
-      {
-        id: "idees_recues",
-        label: "Idées reçues",
-        value: formatNumber(indicateurs.idees_recues),
-        subtext: "Total des soumissions initiales",
-        icon: Users,
-        delta: calcDelta(
-          indicateurs.idees_recues,
-          previousIndicateurs?.idees_recues,
-          "+12%"
-        ),
-        borderBottomClass: "border-b-[#8C5E2D]",
-        onClick: () => scrollToSection("charts-heading"),
+  const cards = [
+    {
+      id: "idees_recues",
+      label: "Idées reçues",
+      value: formatNumber(indicateurs.idees_recues),
+      subtext: "Soumissions initiales",
+      icon: Users,
+      delta: "+12 %",
+      accentColor: "#8C5E2D",
+      onClick: () => {
+        onNavigateTab?.("projets");
       },
-      {
-        id: "dossiers_deposes",
-        label: "Dossiers déposés",
-        value: formatNumber(indicateurs.dossiers_deposes),
-        subtext: "Candidatures complètes reçues",
-        icon: FileText,
-        delta: calcDelta(
-          indicateurs.dossiers_deposes,
-          previousIndicateurs?.dossiers_deposes,
-          "+8%"
-        ),
-        borderBottomClass: "border-b-[#612D10]",
-        onClick: () => {
-          if (onFilterStatut) onFilterStatut("depose");
-          scrollToSection("registre-table");
-        },
+    },
+    {
+      id: "projets_retenus",
+      label: "Projets retenus",
+      value: formatNumber(indicateurs.projets_selectionnes),
+      subtext: "Sélectionnés par le comité",
+      icon: CheckCircle2,
+      delta: `${formatPercent(tauxRetenus)} du flux`,
+      accentColor: "#612D10",
+      onClick: () => {
+        onFilterStatut?.("selectionne");
+        onNavigateTab?.("projets");
       },
-      {
-        id: "projets_selectionnes",
-        label: "Projets sélectionnés",
-        value: formatNumber(indicateurs.projets_selectionnes),
-        subtext: "Avis favorable du comité",
-        icon: CheckCircle2,
-        delta: calcDelta(
-          indicateurs.projets_selectionnes,
-          previousIndicateurs?.projets_selectionnes,
-          "+15%"
-        ),
-        borderBottomClass: "border-b-[#2E7D32]",
-        onClick: () => {
-          if (onFilterStatut) onFilterStatut("selectionne");
-          scrollToSection("registre-table");
-        },
+    },
+    {
+      id: "prototypes_valides",
+      label: "Prototypes validés",
+      value: formatNumber(indicateurs.prototypes),
+      subtext: "Maturation technique certifiée",
+      icon: Award,
+      delta: `${formatPercent(tauxPrototypes)} certifiés`,
+      accentColor: "#C99A68",
+      onClick: () => {
+        onFilterStatut?.("prototype");
+        onNavigateTab?.("projets");
       },
-      {
-        id: "projets_incubes",
-        label: "Projets incubés",
-        value: formatNumber(indicateurs.projets_incubes),
-        subtext: "Parcours actif au sein du CIAT",
-        icon: Rocket,
-        delta: calcDelta(
-          indicateurs.projets_incubes,
-          previousIndicateurs?.projets_incubes,
-          "+5%"
-        ),
-        borderBottomClass: "border-b-[#8C5E2D]",
-        onClick: () => {
-          if (onFilterStatut) onFilterStatut("incube");
-          scrollToSection("registre-table");
-        },
+    },
+    {
+      id: "montant_finance",
+      label: "Montant financé",
+      value: formattedFonds.val,
+      unit: formattedFonds.unit,
+      subtext: "Engagements & guichets",
+      icon: Coins,
+      delta: "+24 %",
+      accentColor: "#5A7D65",
+      onClick: () => {
+        onNavigateTab?.("financements");
       },
-      {
-        id: "prototypes",
-        label: "Prototypes validés",
-        value: formatNumber(indicateurs.prototypes),
-        subtext: "Maturation technique certifiée",
-        icon: Award,
-        delta: calcDelta(
-          indicateurs.prototypes,
-          previousIndicateurs?.prototypes,
-          "+10%"
-        ),
-        borderBottomClass: "border-b-[#C99A68]",
-        onClick: () => {
-          if (onFilterStatut) onFilterStatut("prototype");
-          scrollToSection("registre-table");
-        },
-      },
-      {
-        id: "taux_selection",
-        label: "Taux de sélection",
-        value: formatPercent(indicateurs.taux_selection),
-        subtext: "Ratio sélection / candidatures",
-        icon: TrendingUp,
-        isSpecialTaux: true,
-        tauxValue: indicateurs.taux_selection || 0,
-        delta: { value: "+3,2%", isPositive: true },
-        borderBottomClass: "border-b-[#B85D43]",
-        onClick: () => scrollToSection("charts-heading"),
-      },
-      {
-        id: "financements",
-        label: "Fonds mobilisés",
-        value: formattedFonds.val,
-        unit: formattedFonds.unit,
-        subtext: "Subventions & guichets partenaires",
-        icon: Coins,
-        delta: { value: "+24%", isPositive: true },
-        borderBottomClass: "border-b-[#8C5E2D]",
-        onClick: () => {
-          if (onNavigateTab) onNavigateTab("financements");
-        },
-      },
-      {
-        id: "partenariats",
-        label: "Partenariats actifs",
-        value: formatNumber(partenariatsActifs),
-        subtext: "Conventions & accords en cours",
-        icon: Handshake,
-        delta: { value: "+18%", isPositive: true },
-        borderBottomClass: "border-b-[#4A6B82]",
-        onClick: () => {
-          if (onNavigateTab) onNavigateTab("financements");
-        },
-      },
-    ];
-  }, [
-    indicateurs,
-    formattedFonds,
-    partenariatsActifs,
-    previousIndicateurs,
-    onFilterStatut,
-    onNavigateTab,
-  ]);
+    },
+  ];
 
   return (
-    <section aria-labelledby="kpi-grid-heading" data-testid="kpi-grid">
+    <section aria-labelledby="kpi-grid-heading" data-testid="kpi-grid" className="space-y-3">
       <h2 id="kpi-grid-heading" className="sr-only">
-        Indicateurs clés de performance CIAT
+        Indicateurs clés de performance
       </h2>
 
-      {/* Grille de 8 cartes individuelles selon le design officiel avec border-bottom */}
+      {/* Rangée unique de 4 KPI décisionnels */}
       <div
         data-testid="kpi-cards-container"
-        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
         {cards.map((card) => {
           const Icon = card.icon;
@@ -224,102 +118,63 @@ export function KpiGrid({
           return (
             <div
               key={card.id}
-              className={`relative flex flex-col justify-between rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-5 shadow-[0_2px_8px_rgba(60,35,20,0.04)] transition-all hover:shadow-[0_4px_16px_rgba(60,35,20,0.08)] border-b-[4px] ${
-                card.borderBottomClass || "border-b-[#8C5E2D]"
-              } overflow-hidden`}
+              onClick={card.onClick}
+              className="group flex flex-col justify-between rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-3.5 sm:p-4 shadow-2xs transition hover:border-[#C99A68] hover:shadow-xs cursor-pointer"
             >
-              {/* Ligne 1 : Icône circulaire beige + Titre (gauche) | Voir détails > (droite) */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F5ECE5] text-[#21130D]">
-                    <Icon className="h-5 w-5 text-[#21130D]" />
+              {/* Ligne 1 : Icône + Label + Voir détails */}
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF7F2] text-[#21130D]">
+                    <Icon className="h-4 w-4 text-[#8C5E2D]" />
                   </div>
-                  <span
-                    title={card.label}
-                    className="truncate text-[15px] font-semibold text-[#21130D]"
-                  >
+                  <span className="truncate text-xs font-semibold text-[#5A4B42]">
                     {card.label}
                   </span>
-                  <Link
-                    href={`/tableau-de-bord/methodologie#${card.id}`}
-                    className="text-[#8C6D58]/60 hover:text-[#612D10] transition-colors p-0.5 rounded-full hover:bg-[rgba(60,35,20,0.06)]"
-                    title={`Consulter la définition et formule de "${card.label}"`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Info className="h-3.5 w-3.5" />
-                  </Link>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={card.onClick}
-                  className="inline-flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-[#7A6B63] transition-colors hover:text-[#21130D] cursor-pointer group/btn"
-                >
-                  <span>Voir détails</span>
-                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5" />
-                </button>
+                <ChevronRight className="h-3.5 w-3.5 text-[#5A4B42] opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
               </div>
 
-              {/* Ligne 2 : Valeur 32px + Trend pill badge */}
-              <div className="mt-4 flex items-baseline gap-2.5 flex-wrap">
+              {/* Ligne 2 : Valeur + Unité + Delta */}
+              <div className="mt-3 flex items-baseline justify-between gap-2 flex-wrap">
                 <div className="flex items-baseline gap-1">
-                  <span
-                    className={`font-sans text-[32px] font-bold leading-none tracking-[-0.02em] tabular-nums ${
-                      card.isSpecialTaux ? "text-[#B85D43]" : "text-[#21130D]"
-                    }`}
-                  >
+                  <span className="font-sans text-2xl sm:text-[28px] font-bold text-[#21130D] tabular-nums leading-none">
                     {card.value}
                   </span>
                   {card.unit && (
-                    <span className="font-sans text-[14px] font-semibold text-[#7A6B63]">
+                    <span className="text-xs font-semibold text-[#5A4B42]">
                       {card.unit}
                     </span>
                   )}
                 </div>
 
-                {card.delta && (
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums ${
-                      card.delta.isPositive
-                        ? "bg-[#EAF5EE] text-[#2E7D47]"
-                        : "bg-rose-50 text-rose-700"
-                    }`}
-                  >
-                    {card.delta.isPositive ? (
-                      <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
-                    ) : (
-                      <ArrowDownRight className="h-3.5 w-3.5 stroke-[2.5]" />
-                    )}
-                    <span>{card.delta.value}</span>
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-[#FAF7F2] px-1.5 py-0.5 text-[10px] font-semibold text-[#8C5E2D] tabular-nums">
+                  <ArrowUpRight className="h-3 w-3" />
+                  <span>{card.delta}</span>
+                </span>
               </div>
 
-              {/* Barre de progression discrète pour le taux */}
-              {card.isSpecialTaux && (
-                <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-[rgba(60,35,20,0.08)]">
-                  <div
-                    className="h-full rounded-full bg-[#B85D43] transition-all duration-500"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.max(0, card.tauxValue || 0)
-                      )}%`,
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Ligne 3 : Ligne de contexte explicative */}
-              <div
-                title={card.subtext}
-                className="mt-2 truncate text-[13px] text-[#7A6B63]"
-              >
+              {/* Ligne 3 : Sous-texte court */}
+              <div className="mt-1 text-[11px] text-[#7A6B63] truncate">
                 {card.subtext}
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* Petite barre de conversion discrète sous les KPI */}
+      <div className="hidden sm:flex items-center justify-between gap-2 rounded-lg bg-[#FAF7F2]/80 border border-[rgba(60,35,20,0.06)] px-3 py-1.5 text-[11px] text-[#5A4B42]">
+        <div className="flex items-center gap-2 font-medium">
+          <span className="text-[#8C5E2D] font-semibold">Tunnel de conversion :</span>
+          <span>{formatNumber(indicateurs.idees_recues)} idées</span>
+          <span className="text-[#8C5E2D]">→</span>
+          <span>{formatNumber(indicateurs.projets_selectionnes)} retenus ({formatPercent(tauxRetenus)})</span>
+          <span className="text-[#8C5E2D]">→</span>
+          <span>{formatNumber(indicateurs.prototypes)} prototypes ({formatPercent(tauxPrototypes)})</span>
+        </div>
+        <span className="font-semibold text-[#21130D] tabular-nums">
+          {formattedFonds.val} {formattedFonds.unit} mobilisés
+        </span>
       </div>
     </section>
   );

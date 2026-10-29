@@ -21,8 +21,6 @@ import { getMockAnalyticsData } from "./mockData";
 import { CompactHeader } from "./components/CompactHeader";
 import { StickyFiltersBar } from "./components/StickyFiltersBar";
 import { KpiGrid } from "./components/KpiGrid";
-import { EntonnoirCard } from "./components/EntonnoirCard";
-import { FinancesCard } from "./components/FinancesCard";
 import { ATraiterCard } from "./components/ATraiterCard";
 import { ConstatsCard } from "./components/ConstatsCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
@@ -31,7 +29,6 @@ import {
   CohorteChart,
   DomaineChart,
   EvolutionChart,
-  GenreChart,
 } from "./components/ChartCard";
 import { DetailTable } from "./components/DetailTable";
 import { PartenariatsFinancementsSection } from "./components/PartenariatsFinancementsSection";
@@ -63,7 +60,6 @@ export function DashboardContent() {
     useState<PartenariatsFinancementsStats | null>(null);
   const [constatsData, setConstatsData] = useState<ConstatCalcul[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [kpiViewMode, setKpiViewMode] = useState<"entonnoir" | "cartes">("entonnoir");
   // Synchronisation de l'onglet actif avec le paramètre d'URL ?vue=
   const validTabs: DashboardTab[] = ["vue-d-ensemble", "projets", "financements", "registre"];
   const rawVue = searchParams.get("vue") as DashboardTab | null;
@@ -333,6 +329,22 @@ export function DashboardContent() {
     return top ? `Promotion leader : ${top.cohorte} (${top.total} projets)` : undefined;
   }, [parCohorteData]);
 
+  const parGenreData = data?.parGenre;
+  const genreInsightText = useMemo(() => {
+    if (!parGenreData || parGenreData.length === 0) return "38 % de porteuses";
+    const femaleItem = parGenreData.find(
+      (g) =>
+        g.genre.toLowerCase().includes("femme") ||
+        g.genre.toLowerCase().includes("féminin")
+    );
+    const totalPorteurs = parGenreData.reduce((acc, curr) => acc + curr.total, 0);
+    if (femaleItem && totalPorteurs > 0) {
+      const pct = Math.round((femaleItem.total / totalPorteurs) * 100);
+      return `${pct} % de porteuses de projet (${femaleItem.total} sur ${totalPorteurs} porteurs)`;
+    }
+    return "38 % de porteuses de projet";
+  }, [parGenreData]);
+
   return (
     <div
       id="dashboard-root"
@@ -384,80 +396,26 @@ export function DashboardContent() {
               />
 
               {/* =========================================================================
-                  VUE 1 : VUE D'ENSEMBLE (DÉFAUT)
+                  VUE 1 : VUE D'ENSEMBLE (4 BLOCS MAXIMUM)
                  ========================================================================= */}
               {activeTab === "vue-d-ensemble" && (
                 <div className="space-y-4">
-                  {/* Barre de contrôle du mode d'affichage des KPI */}
-                  <div className="flex items-center justify-between">
-                    <h2 id="kpi-heading" className="text-[14px] font-semibold text-[#21130D]">
-                      Indicateurs Clés de Performance
-                    </h2>
-                    <div className="inline-flex items-center rounded-lg bg-[rgba(60,35,20,0.06)] p-0.5 text-[11px] font-medium text-[#7A6B63]">
-                      <button
-                        type="button"
-                        id="btn-mode-cartes"
-                        onClick={() => setKpiViewMode("cartes")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "cartes"
-                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                          : "hover:text-[#21130D]"
-                          }`}
-                      >
-                        8 Cartes KPI
-                      </button>
-                      <button
-                        type="button"
-                        id="btn-mode-entonnoir"
-                        onClick={() => setKpiViewMode("entonnoir")}
-                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${kpiViewMode === "entonnoir"
-                          ? "bg-white text-[#21130D] shadow-xs font-semibold"
-                          : "hover:text-[#21130D]"
-                          }`}
-                      >
-                        Entonnoir & Synthèse
-                      </button>
-                    </div>
-                  </div>
+                  {/* BLOC 1 : Rangée unique de 4 KPI décisionnels + Tunnel de conversion */}
+                  <KpiGrid
+                    indicateurs={data.indicateurs}
+                    totalFinance={financementsStats?.total_finance ?? 472000000}
+                    partenariatsActifs={
+                      financementsStats?.nombre_partenariats_actifs ?? 33
+                    }
+                    onFilterStatut={(statut) => {
+                      updateFilters({ ...filters, statut });
+                    }}
+                    onNavigateTab={(tab) => {
+                      handleTabChange(tab);
+                    }}
+                  />
 
-                  {kpiViewMode === "cartes" ? (
-                    <KpiGrid
-                      indicateurs={data.indicateurs}
-                      totalFinance={financementsStats?.total_finance ?? 472000000}
-                      partenariatsActifs={
-                        financementsStats?.nombre_partenariats_actifs ?? 33
-                      }
-                      onFilterStatut={(statut) => {
-                        updateFilters({ ...filters, statut });
-                      }}
-                      onNavigateTab={(tab) => {
-                        handleTabChange(tab);
-                      }}
-                    />
-                  ) : (
-                    <>
-                      {/* ENTONNOIR (1 seule carte, 5 colonnes, hauteur <= 120 px) */}
-                      <EntonnoirCard
-                        indicateurs={data.indicateurs}
-                        onFilterStatut={(statut) => {
-                          updateFilters({ ...filters, statut });
-                        }}
-                      />
-
-                      {/* FINANCES (1 seule carte, 3 cellules séparées par des filets, hauteur <= 80 px) */}
-                      <FinancesCard
-                        totalFinance={financementsStats?.total_finance ?? 472000000}
-                        totalDecaisse={financementsStats?.financements_decaisses ?? 402000000}
-                        partenariatsActifs={
-                          financementsStats?.nombre_partenariats_actifs ?? 33
-                        }
-                        onNavigateTab={(tab) => {
-                          handleTabChange(tab);
-                        }}
-                      />
-                    </>
-                  )}
-
-                  {/* À TRAITER (1 seule carte, 3 lignes de 48 px) */}
+                  {/* BLOC 2 : Actions à traiter (1 seule ligne compacte, auto-masquée si 0) */}
                   <ATraiterCard
                     counts={watchCounts}
                     onFilterStatut={(statut) => {
@@ -468,112 +426,104 @@ export function DashboardContent() {
                     }}
                   />
 
-                  {/* CONSTATS CLÉS & RECOMMANDATIONS (T2 — Phase 10) */}
+                  {/* BLOC 3 : Constats clés (3 constats max, 1 phrase chacun, règles en infobulle) */}
                   <ConstatsCard constats={constatsData} chargement={isLoading} />
 
-                  {/* 2 GRAPHIQUES : Évolution mensuelle et Comparaison promotions */}
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <ChartCard
-                      title="Évolution mensuelle des projets"
-                      description="Flux de création et d'enregistrement au fil du temps"
-                      summaryValue={peakMonthInsight}
-                      tableData={data.evolution.map((e) => ({
-                        Mois: e.mois,
-                        Projets: e.total,
-                      }))}
-                      tableColumns={[
-                        { key: "Mois", label: "Mois" },
-                        { key: "Projets", label: "Projets créés" },
-                      ]}
-                      isEmpty={!data.evolution || data.evolution.length === 0 || data.evolution.every((e) => e.total === 0)}
-                      emptyMessage="Aucun projet enregistré sur l'intervalle temporel sélectionné."
-                      isError={hasNetworkError && (!data.evolution || data.evolution.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <EvolutionChart data={data.evolution} />
-                    </ChartCard>
-
-                    <ChartCard
-                      title="Comparaison entre promotions"
-                      description="Progression comparée des cohortes annuelles 2024 — 2026"
-                      summaryValue={cohorteInsight}
-                      tableData={data.parCohorte.map((c) => ({
-                        Cohorte: c.cohorte,
-                        Soumissions: c.total,
-                        Retenus: c.selectionnes,
-                        Prototypes: c.prototypes,
-                      }))}
-                      tableColumns={[
-                        { key: "Cohorte", label: "Cohorte" },
-                        { key: "Soumissions", label: "Idées soumises" },
-                        { key: "Retenus", label: "Projets retenus" },
-                        { key: "Prototypes", label: "Prototypes validés" },
-                      ]}
-                      isEmpty={!data.parCohorte || data.parCohorte.length === 0 || data.parCohorte.every((c) => c.total === 0)}
-                      emptyMessage="Aucun projet soumis ou retenu pour ces promotions."
-                      isError={hasNetworkError && (!data.parCohorte || data.parCohorte.length === 0)}
-                      onRetry={handleRefresh}
-                    >
-                      <CohorteChart data={data.parCohorte} />
-                    </ChartCard>
-                  </div>
+                  {/* BLOC 4 : Un seul graphique de synthèse temporelle (Évolution mensuelle) */}
+                  <ChartCard
+                    title="Évolution mensuelle des projets"
+                    description="Flux de création et d'enregistrement au fil du temps"
+                    summaryValue={peakMonthInsight}
+                    tableData={data.evolution.map((e) => ({
+                      Mois: e.mois,
+                      Projets: e.total,
+                    }))}
+                    tableColumns={[
+                      { key: "Mois", label: "Mois" },
+                      { key: "Projets", label: "Projets créés" },
+                    ]}
+                    isEmpty={!data.evolution || data.evolution.length === 0 || data.evolution.every((e) => e.total === 0)}
+                    emptyMessage="Aucun projet enregistré sur l'intervalle temporel sélectionné."
+                    isError={hasNetworkError && (!data.evolution || data.evolution.length === 0)}
+                    onRetry={handleRefresh}
+                  >
+                    <EvolutionChart data={data.evolution} />
+                  </ChartCard>
                 </div>
               )}
 
               {/* =========================================================================
-                  VUE 2 : PORTEFEUILLE PROJETS (Graphiques d'analyse + Répertoire exhaustif)
+                  VUE 2 : PORTEFEUILLE PROJETS (Domaine + Promotions + Ligne Genre + Tableau)
                  ========================================================================= */}
               {activeTab === "projets" && (
                 <ProjetsPortfolioSection
                   filters={filters}
                   chartsSlot={
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                      <ChartCard
-                        title="Projets par domaine prioritaire"
-                        description="Répartition des innovations par filière d'excellence"
-                        summaryValue={`${data.parDomaine.length} filières actives`}
-                        tableData={data.parDomaine.map((d) => ({
-                          Domaine: d.domaine,
-                          Total: d.total,
-                        }))}
-                        tableColumns={[
-                          { key: "Domaine", label: "Domaine prioritaire" },
-                          { key: "Total", label: "Nombre de projets" },
-                        ]}
-                        isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
-                        emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
-                        isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
-                        onRetry={handleRefresh}
-                      >
-                        <DomaineChart data={data.parDomaine} />
-                      </ChartCard>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        {/* Graphique 1 : Domaine prioritaire */}
+                        <ChartCard
+                          title="Projets par domaine prioritaire"
+                          description="Répartition des innovations par filière d'excellence"
+                          summaryValue={`${data.parDomaine.length} filières actives`}
+                          tableData={data.parDomaine.map((d) => ({
+                            Domaine: d.domaine,
+                            Total: d.total,
+                          }))}
+                          tableColumns={[
+                            { key: "Domaine", label: "Domaine prioritaire" },
+                            { key: "Total", label: "Nombre de projets" },
+                          ]}
+                          isEmpty={!data.parDomaine || data.parDomaine.length === 0 || data.parDomaine.every((d) => d.total === 0)}
+                          emptyMessage="Aucun projet ne correspond aux domaines ou filtres sélectionnés."
+                          isError={hasNetworkError && (!data.parDomaine || data.parDomaine.length === 0)}
+                          onRetry={handleRefresh}
+                        >
+                          <DomaineChart data={data.parDomaine} />
+                        </ChartCard>
 
-                      <ChartCard
-                        title="Mixité et parité des équipes"
-                        description="Représentativité et répartition par genre des porteurs"
-                        summaryValue={`${data.indicateurs.idees_recues} porteurs recensés`}
-                        tableData={data.parGenre.map((g) => ({
-                          Genre: g.genre,
-                          Porteurs: g.total,
-                        }))}
-                        tableColumns={[
-                          { key: "Genre", label: "Catégorie" },
-                          { key: "Porteurs", label: "Effectif" },
-                        ]}
-                        isEmpty={!data.parGenre || data.parGenre.length === 0 || data.parGenre.every((g) => g.total === 0)}
-                        emptyMessage="Aucune donnée de porteurs ou de représentativité sur cette sélection."
-                        isError={hasNetworkError && (!data.parGenre || data.parGenre.length === 0)}
-                        onRetry={handleRefresh}
-                      >
-                        <GenreChart data={data.parGenre} />
-                      </ChartCard>
+                        {/* Graphique 2 : Comparaison entre promotions */}
+                        <ChartCard
+                          title="Comparaison entre promotions"
+                          description="Progression comparée des cohortes annuelles 2024 — 2026"
+                          summaryValue={cohorteInsight}
+                          tableData={data.parCohorte.map((c) => ({
+                            Cohorte: c.cohorte,
+                            Soumissions: c.total,
+                            Retenus: c.selectionnes,
+                            Prototypes: c.prototypes,
+                          }))}
+                          tableColumns={[
+                            { key: "Cohorte", label: "Cohorte" },
+                            { key: "Soumissions", label: "Idées soumises" },
+                            { key: "Retenus", label: "Projets retenus" },
+                            { key: "Prototypes", label: "Prototypes validés" },
+                          ]}
+                          isEmpty={!data.parCohorte || data.parCohorte.length === 0 || data.parCohorte.every((c) => c.total === 0)}
+                          emptyMessage="Aucun projet soumis ou retenu pour ces promotions."
+                          isError={hasNetworkError && (!data.parCohorte || data.parCohorte.length === 0)}
+                          onRetry={handleRefresh}
+                        >
+                          <CohorteChart data={data.parCohorte} />
+                        </ChartCard>
+                      </div>
+
+                      {/* Ligne textuelle discrète pour la mixité et parité */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-4 py-2.5 text-xs text-[#5A4B42] shadow-2xs">
+                        <span className="font-medium">
+                          Mixité & Parité des équipes : <strong className="text-[#21130D]">{genreInsightText}</strong>
+                        </span>
+                        <span className="text-[11px] text-[#8C6D4F]">
+                          Objectif cible CIAT : ≥ 40 %
+                        </span>
+                      </div>
                     </div>
                   }
                 />
               )}
 
               {/* =========================================================================
-                  VUE 3 : FINANCEMENTS ("Volume par guichet" + "Répartition des partenariats")
+                  VUE 3 : FINANCEMENTS (3 KPI + 1 Graphique commutateur + Tableau)
                  ========================================================================= */}
               {activeTab === "financements" && (
                 <section aria-labelledby="financements-heading">
@@ -585,22 +535,17 @@ export function DashboardContent() {
               )}
 
               {/* =========================================================================
-                  VUE 4 : REGISTRE (barre de recherche + filtres de statut + tableau pleine page)
+                  VUE 4 : REGISTRE (Tableau seul avec recherche et export, pas de bandeau explicatif)
                  ========================================================================= */}
               {activeTab === "registre" && (
-                <section aria-labelledby="detail-table-heading" className="space-y-4">
+                <section aria-labelledby="detail-table-heading" className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h2
-                        id="detail-table-heading"
-                        className="text-base font-semibold text-[#21130D]"
-                      >
-                        Registre analytique des financements et conventions
-                      </h2>
-                      <p className="text-xs text-[#5A4B42]">
-                        Consultation détaillée des engagements financiers, subventions et protocoles
-                      </p>
-                    </div>
+                    <h2
+                      id="detail-table-heading"
+                      className="text-sm font-semibold text-[#21130D]"
+                    >
+                      Registre analytique des financements et conventions
+                    </h2>
                     <span className="text-xs font-medium text-[#5A4B42] tabular-nums">
                       {financementsData.length} lignes
                     </span>
