@@ -489,11 +489,7 @@ function AssistantApp() {
             {/* HERO D'ACCUEIL */}
             {isEmpty && (
               <section className="pt-4 sm:pt-8 pb-2 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C99A68] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1F130B]">
-                  <Sparkles className="h-3 w-3" />
-                  Référent méthodologique CIAT
-                </span>
-                <h2 className="mt-4 font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-bold text-[#24140D]">
+                <h2 className="font-[family-name:var(--font-title)] text-2xl sm:text-3xl font-bold text-[#24140D]">
                   Comment puis-je vous accompagner ?
                 </h2>
                 <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-[#7A583A]">

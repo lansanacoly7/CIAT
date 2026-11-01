@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useMemo, useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ApiErrorBanner } from "@/components/ui";
@@ -18,15 +17,11 @@ import {
   ChevronRight,
   FolderKanban,
   SlidersHorizontal,
-  RotateCcw,
   CheckCircle2,
-  ListFilter,
   AlertTriangle,
   AlertCircle,
   User,
   GraduationCap,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 
 function joursDeRetard(echeance: string): number {
@@ -166,42 +161,15 @@ function Alertes() {
   return (
     <div className="w-full bg-[#FAF7F2] min-h-screen text-[#24140D]">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-        {/* Fil d'Ariane */}
-        <nav
-          aria-label="Fil d'Ariane"
-          className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-[#8C6D58]"
-        >
-          <Link href="/" className="hover:text-[#612D10] transition-colors">
-            Accueil
-          </Link>
-          <span className="text-[#C99A68]/60">/</span>
-          <Link href="/incubateur" className="hover:text-[#612D10] transition-colors">
-            Incubateur
-          </Link>
-          <span className="text-[#C99A68]/60">/</span>
-          <Link
-            href="/incubateur/projets"
-            className="hover:text-[#612D10] transition-colors"
-          >
-            Suivi des projets
-          </Link>
-          <span className="text-[#C99A68]/60">/</span>
-          <span className="text-[#612D10] font-bold">Alertes de retard</span>
-        </nav>
 
         {/* En-tête éditorial */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#E5D7C6] pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#C99A68]/40 bg-[#612D10]/10 px-3 py-0.5 text-xs font-bold text-[#612D10] mb-2">
-              <Clock size={13} />
-              <span>Pilotage Opérationnel des Jalons</span>
-            </div>
             <h1 className="font-[family-name:var(--font-jakarta)] text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#24140D]">
-              Alertes de Retard & Échéances
+              Alertes de retard
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-[#655346] max-w-2xl">
-              Identifiez en quelques secondes les jalons nécessitant un déblocage
-              ou un arbitrage entre le porteur de projet et son mentor.
+              Les jalons en retard qui demandent une action.
             </p>
           </div>
 

@@ -352,17 +352,6 @@ export function DashboardSidebar() {
         aria-label="Navigation latérale principale"
         className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-[#382015] lg:bg-[#21130d] lg:text-white lg:shadow-xl lg:overflow-hidden"
       >
-        {/* Filigrane emblème CIAT en arrière-plan en bas de la sidebar */}
-        <div className="pointer-events-none absolute -bottom-8 -left-6 z-0 select-none opacity-[0.06]">
-          <Image
-            src="/images/brand/symbole_blanc.png"
-            alt=""
-            width={280}
-            height={280}
-            priority
-          />
-        </div>
-
         {renderSidebarContent()}
       </aside>
 

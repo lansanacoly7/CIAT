@@ -309,31 +309,15 @@ function CalendrierVue() {
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-8">
-        {/* Fil d'Ariane harmonisé */}
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
-          <Link
-            href="/incubateur/projets"
-            className="hover:text-[#612D10] hover:underline transition-colors"
-          >
-            Suivi des projets
-          </Link>
-          <span className="text-[#C99A68]/60">/</span>
-          <span className="text-[#612D10] font-bold">Calendrier</span>
-        </div>
 
         {/* 1. EN-TÊTE STATUTAIRE & CLOCHE D'ALERTE */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#8C6D58] uppercase tracking-wider">
-              <span>Incubateur CIAT</span>
-              <span className="text-[#C99A68]">·</span>
-              <span>Pilotage opérationnel</span>
-            </div>
             <h1 className="font-[family-name:var(--font-title)] text-2xl font-extrabold tracking-tight text-[#24140D] sm:text-3xl lg:text-4xl">
-              Calendrier des jalons & objectifs
+              Calendrier
             </h1>
             <p className="text-xs sm:text-sm text-[#6b5646] max-w-2xl leading-relaxed">
-              Suivi chronologique des échéances d&apos;incubation, livrables techniques et revues du comité.
+              Les échéances des jalons et objectifs.
             </p>
           </div>
 

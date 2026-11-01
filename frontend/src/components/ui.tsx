@@ -56,7 +56,7 @@ const BUTTON_BASE =
   "inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 font-[family-name:var(--font-title)] text-sm font-semibold transition-all duration-150 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99A68] cursor-pointer select-none";
 
 const VARIANTS = {
-  primary: "bg-brun text-white hover:bg-brun-fonce hover:shadow-md hover:scale-[1.01] shadow-sm",
+  primary: "bg-brun text-white hover:bg-brun-fonce",
   secondary: "border-[1.5px] border-brun bg-white text-brun hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs",
   outline: "border-[1.5px] border-brun bg-transparent text-brun hover:bg-[#F2E5D5] hover:border-[#A35926] hover:text-[#3F1D0A] hover:shadow-xs",
   ia: "bg-beige text-brun-fonce font-bold hover:bg-[#DDA76A] hover:text-[#24140D] hover:shadow-sm border border-[#b88755] shadow-sm",
@@ -107,10 +107,9 @@ export function Card({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-bordure bg-white shadow-xs transition-all duration-200 motion-reduce:transition-none hover:border-beige ${className}`}
+      className={`rounded-2xl border border-bordure bg-white p-6 transition-colors duration-200 motion-reduce:transition-none hover:border-beige ${className}`}
     >
-      <div className="h-1.5 w-full bg-beige" />
-      <div className="p-6">{children}</div>
+      {children}
     </div>
   );
 }
@@ -182,21 +181,14 @@ export function ProjectStatusBadge({ stage }: { stage: keyof typeof PROJECT_STAG
 export function PageTitle({
   title,
   subtitle,
-  tag,
 }: {
   title: string;
   subtitle?: string;
-  tag?: string;
 }) {
   return (
-    <div className="mb-8 border-b border-beige/60 pb-6">
-      {tag && (
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#5A4B42]">
-          {tag}
-        </p>
-      )}
-      <h1 className="text-3xl font-extrabold text-brun md:text-4xl">{title}</h1>
-      {subtitle && <p className="mt-3 max-w-3xl text-base text-texte-doux leading-relaxed">{subtitle}</p>}
+    <div className="mb-10">
+      <h1 className="text-3xl font-bold text-brun md:text-4xl">{title}</h1>
+      {subtitle && <p className="mt-3 max-w-2xl text-base text-texte-doux leading-relaxed">{subtitle}</p>}
     </div>
   );
 }
@@ -224,7 +216,7 @@ export function FormField({
 }) {
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label htmlFor={id} className="block text-xs font-bold uppercase tracking-wider text-texte-doux">
+      <label htmlFor={id} className="block text-sm font-medium text-texte">
         {label} {required && <span className="text-erreur">*</span>}
       </label>
       {children}
@@ -333,10 +325,9 @@ export function DemoBanner({ className = "" }: { className?: string }) {
   return (
     <div
       role="alert"
-      className={`mb-6 flex items-center gap-2.5 rounded-xl border border-amber-500/50 bg-[#FFFBEB] px-4 py-3 text-xs font-bold text-amber-900 shadow-xs ${className}`}
+      className={`mb-6 text-xs text-texte-doux ${className}`}
     >
-      <span className="flex h-2.5 w-2.5 rounded-full bg-amber-600 animate-pulse motion-reduce:animate-none" />
-      <span>MODE DÉMONSTRATION : données fictives</span>
+      Données de démonstration
     </div>
   );
 }
