@@ -79,7 +79,8 @@ test.describe("Parcours Coordonnateur — Tableau de bord et requêtes IA (E2E)"
     await page.goto("/tableau-de-bord/methodologie");
     await expect(page).toHaveTitle(/Méthodologie/i);
 
-    // Vérifie la présence des indicateurs documentés
+    // Ouvre le détail de l'indicateur « Taux de sélection »
+    await page.locator("#ind-taux_selection").click({ timeout: 15000 });
     const tauxSelection = page.locator("text=Taux de sélection global");
     await expect(tauxSelection).toBeVisible({ timeout: 15000 });
 

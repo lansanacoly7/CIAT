@@ -4,12 +4,7 @@ import { useMemo, useState } from "react";
 import {
   Search,
   X,
-  User,
-  Calendar,
   Clock,
-  Award,
-  Filter,
-  Tag,
   CheckCircle2,
   AlertCircle,
   XCircle,
@@ -54,11 +49,18 @@ export function StatutBadge({ statut }: { statut: DossierStatut }) {
   );
 }
 
+const DOT: Partial<Record<DossierStatut, string>> = {
+  soumis: "bg-amber-500",
+  en_evaluation: "bg-blue-500",
+  accepte: "bg-emerald-600",
+  refuse: "bg-red-500",
+};
+
 const FILTERS: { value: DossierStatut | "tous"; label: string }[] = [
   { value: "tous", label: "Tous" },
-  { value: "soumis", label: "1. À instruire" },
-  { value: "en_evaluation", label: "2. En jury" },
-  { value: "accepte", label: "3. Retenus" },
+  { value: "soumis", label: "À instruire" },
+  { value: "en_evaluation", label: "En jury" },
+  { value: "accepte", label: "Retenus" },
   { value: "refuse", label: "Non retenus" },
 ];
 
@@ -87,7 +89,6 @@ export default function EvaluationDossierList({
   const [internalFilter, setInternalFilter] = useState<DossierStatut | "tous">("tous");
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<string>("tous");
-  const [sortBy, setSortBy] = useState<"recent" | "ancien" | "score_desc" | "score_asc">("recent");
 
   const filter = activeFilter !== undefined ? activeFilter : internalFilter;
   const setFilter = (val: DossierStatut | "tous") => {
@@ -106,15 +107,6 @@ export default function EvaluationDossierList({
     };
   }, [dossiers]);
 
-  // Liste des domaines uniques
-  const domains = useMemo(() => {
-    const set = new Set<string>();
-    dossiers.forEach((d) => {
-      if (d.projet.domaine_nom) set.add(d.projet.domaine_nom);
-    });
-    return Array.from(set).sort();
-  }, [dossiers]);
-
   // Filtrage et tri
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -129,35 +121,15 @@ export default function EvaluationDossierList({
       return matchFilter && matchDomain && matchQuery;
     });
 
-    return filtered.sort((a, b) => {
-      if (sortBy === "recent") {
-        return (new Date(b.soumis_le || 0).getTime()) - (new Date(a.soumis_le || 0).getTime());
-      }
-      if (sortBy === "ancien") {
-        return (new Date(a.soumis_le || 0).getTime()) - (new Date(b.soumis_le || 0).getTime());
-      }
-      const scoreA = (a.id in scores ? scores[a.id] : a.score_moyen) ?? -1;
-      const scoreB = (b.id in scores ? scores[b.id] : b.score_moyen) ?? -1;
-      if (sortBy === "score_desc") return scoreB - scoreA;
-      if (sortBy === "score_asc") return scoreA - scoreB;
-      return 0;
-    });
-  }, [dossiers, filter, selectedDomain, query, sortBy, scores]);
+    return filtered.sort(
+      (a, b) => new Date(b.soumis_le || 0).getTime() - new Date(a.soumis_le || 0).getTime(),
+    );
+  }, [dossiers, filter, selectedDomain, query]);
 
   return (
     <div className="flex flex-col h-full rounded-2xl border border-[#EFE4D6] bg-white shadow-sm overflow-hidden">
       {/* En-tête des contrôles */}
-      <div className="p-4 border-b border-[#EFE4D6] bg-[#FAF7F2]/60 space-y-3 shrink-0">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D] flex items-center gap-1.5">
-            <Filter className="h-3.5 w-3.5 text-[#C99A68]" />
-            File des candidatures
-          </span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-[#EFE4D6] text-[#612D10]">
-            {shown.length} / {dossiers.length}
-          </span>
-        </div>
-
+      <div className="p-3 border-b border-[#EFE4D6] space-y-2.5 shrink-0">
         {/* Barre de recherche avec icône */}
         <div className="relative">
           <label htmlFor="recherche-dossier" className="sr-only">
@@ -169,7 +141,7 @@ export default function EvaluationDossierList({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher (projet, porteur, domaine)…"
+            placeholder="Rechercher"
             className="min-h-10 w-full rounded-xl border border-[#EFE4D6] bg-white pl-9.5 pr-8 text-sm text-[#24140D] outline-none transition-all placeholder:text-[#a08f80] focus:border-[#C99A68] focus:ring-2 focus:ring-[#C99A68]/30 shadow-xs"
           />
           {query && (
@@ -218,38 +190,6 @@ export default function EvaluationDossierList({
           })}
         </div>
 
-        {/* Filtre Domaine & Tri */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="relative">
-            <select
-              value={selectedDomain}
-              onChange={(e) => setSelectedDomain(e.target.value)}
-              aria-label="Filtrer par secteur"
-              className="w-full text-xs py-1.5 pl-2.5 pr-7 rounded-lg border border-[#EFE4D6] bg-white text-[#24140D] font-medium outline-none focus:border-[#C99A68]"
-            >
-              <option value="tous">Tous les secteurs</option>
-              {domains.map((dom) => (
-                <option key={dom} value={dom}>
-                  {dom}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              aria-label="Trier les candidatures"
-              className="w-full text-xs py-1.5 pl-2.5 pr-7 rounded-lg border border-[#EFE4D6] bg-white text-[#24140D] font-medium outline-none focus:border-[#C99A68]"
-            >
-              <option value="recent">Plus récents d&apos;abord</option>
-              <option value="ancien">Plus anciens d&apos;abord</option>
-              <option value="score_desc">Meilleur score</option>
-              <option value="score_asc">Score le plus bas</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {/* Liste défilante scrollable avec hauteur bornée */}
@@ -287,75 +227,32 @@ export default function EvaluationDossierList({
                     type="button"
                     onClick={() => onSelect(d.id)}
                     aria-current={active}
-                    className={`group relative block w-full rounded-xl border p-3.5 text-left transition-all ${
+                    className={`group relative block w-full rounded-xl border p-3 text-left transition-all ${
                       active
-                        ? "border-[#C99A68] bg-[#FAF7F2] ring-2 ring-[#C99A68]/40 shadow-xs border-l-4 border-l-[#612D10]"
-                        : "border-[#EFE4D6] bg-white hover:border-[#C99A68] hover:bg-[#FAF7F2]/40 hover:shadow-xs"
+                        ? "border-[#C99A68] bg-[#FBF8F3]"
+                        : "border-[#EFE4D6] bg-white hover:border-[#C99A68]"
                     }`}
                   >
-                    {/* Ligne 1 : Titre & Statut */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {d.statut === "soumis" ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                              Étape 1 • Instruction
-                            </span>
-                          ) : d.statut === "en_evaluation" ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                              Étape 2 • En jury
-                            </span>
-                          ) : d.statut === "accepte" ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                              Étape 3 • Admis
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-800 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
-                              Étape 3 • Refusé
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-[family-name:var(--font-title)] text-sm font-bold text-[#612D10] leading-snug group-hover:text-[#3F1D0A]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold text-[#21130D] leading-snug">
                           {d.projet.titre}
                         </h4>
+                        <p className="mt-0.5 truncate text-xs text-[#5A4B42]">
+                          {d.porteur_nom || "Porteur non renseigné"}
+                          {d.projet.domaine_nom ? ` · ${d.projet.domaine_nom}` : ""}
+                        </p>
                       </div>
-                      <div className="shrink-0">
-                        <StatutBadge statut={d.statut} />
-                      </div>
-                    </div>
-
-                    {/* Ligne 2 : Porteur & Domaine */}
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B5646]">
-                      <span className="inline-flex items-center gap-1 font-medium text-[#24140D]">
-                        <User className="h-3 w-3 text-[#C99A68]" />
-                        <span>{d.porteur_nom || "Porteur non renseigné"}</span>
-                      </span>
-
-                      {d.projet.domaine_nom && (
-                        <span className="inline-flex items-center gap-1 rounded bg-[#EFE4D6]/60 px-1.5 py-0.5 text-[11px] font-semibold text-[#612D10]">
-                          <Tag className="h-2.5 w-2.5" />
-                          <span>{d.projet.domaine_nom}</span>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-[#5A4B42]">
+                          <span className={`h-2 w-2 rounded-full ${DOT[d.statut] ?? "bg-zinc-300"}`} aria-hidden="true" />
+                          {STATUT_LABELS[d.statut]?.label ?? d.statut}
                         </span>
-                      )}
-                    </div>
-
-                    {/* Ligne 3 : Date de dépôt & Score / En attente */}
-                    <div className="mt-2.5 pt-2 border-t border-[#EFE4D6]/70 flex items-center justify-between text-xs">
-                      <span className="inline-flex items-center gap-1 text-[#8C5E2D]">
-                        <Calendar className="h-3 w-3" />
-                        <span>Soumis le {formatDate(d.soumis_le)}</span>
-                      </span>
-
-                      <div>
                         {score == null ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800">
-                            <Clock className="h-2.5 w-2.5" />
-                            <span>En attente</span>
-                          </span>
+                          <span className="text-[11px] text-amber-700">En attente</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#E3F1E9] border border-[#2E7D32]/30 px-2.5 py-0.5 text-[11px] font-extrabold text-[#2E7D32]">
-                            <Award className="h-3 w-3" />
-                            <span>Score : {score.toFixed(1)}</span>
+                          <span className="text-sm font-semibold text-[#2E7D32] tabular-nums">
+                            {score.toFixed(1)}
                           </span>
                         )}
                       </div>

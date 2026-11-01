@@ -6,8 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api, API_URL, saveTokens } from "@/lib/api";
 import type {
   AnalyticsData,
-  ConstatCalcul,
-  ConstatsResponse,
   DashboardFilters,
   EvolutionItem,
   FinancementItem,
@@ -22,7 +20,6 @@ import { CompactHeader } from "./components/CompactHeader";
 import { StickyFiltersBar } from "./components/StickyFiltersBar";
 import { KpiGrid } from "./components/KpiGrid";
 import { ATraiterCard } from "./components/ATraiterCard";
-import { ConstatsCard } from "./components/ConstatsCard";
 import { StickyTabs, type DashboardTab } from "./components/StickyTabs";
 import {
   ChartCard,
@@ -58,7 +55,6 @@ export function DashboardContent() {
   const [financementsData, setFinancementsData] = useState<FinancementItem[]>([]);
   const [financementsStats, setFinancementsStats] =
     useState<PartenariatsFinancementsStats | null>(null);
-  const [constatsData, setConstatsData] = useState<ConstatCalcul[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   // Synchronisation de l'onglet actif avec le paramètre d'URL ?vue=
   const validTabs: DashboardTab[] = ["vue-d-ensemble", "projets", "financements", "registre"];
@@ -161,7 +157,6 @@ export function DashboardContent() {
           alertesList,
           conventionsList,
           dossiersList,
-          constatsRes,
         ] = await Promise.all([
           api<IndicateursGlobaux>(`/analytics/indicateurs/${query}`),
           api<ParDomaineItem[]>(`/analytics/par-domaine/${query}`),
@@ -181,9 +176,6 @@ export function DashboardContent() {
           api<Array<{ statut: string }>>("/incubator/dossiers/").catch(
             () => []
           ),
-          api<ConstatsResponse>(`/analytics/constats/${query}`).catch(
-            () => ({ constats: [], total_constats: 0, seuils: {} })
-          ),
         ]);
 
         if (isSubscribed) {
@@ -196,7 +188,6 @@ export function DashboardContent() {
           });
           setFinancementsData(financementsList || []);
           setFinancementsStats(partStats);
-          setConstatsData(constatsRes?.constats ?? []);
           const retardsCount = Array.isArray(alertesList) ? alertesList.length : 8;
           const convCount = Array.isArray(conventionsList) ? conventionsList.length : 2;
           const dosCount = Array.isArray(dossiersList)
@@ -319,32 +310,6 @@ export function DashboardContent() {
     }
   }, [evolutionData]);
 
-  const parCohorteData = data?.parCohorte;
-  const cohorteInsight = useMemo(() => {
-    if (!parCohorteData || parCohorteData.length === 0) return undefined;
-    const top = parCohorteData.reduce(
-      (prev, curr) => (curr.total > prev.total ? curr : prev),
-      parCohorteData[0]
-    );
-    return top ? `Promotion leader : ${top.cohorte} (${top.total} projets)` : undefined;
-  }, [parCohorteData]);
-
-  const parGenreData = data?.parGenre;
-  const genreInsightText = useMemo(() => {
-    if (!parGenreData || parGenreData.length === 0) return "38 % de porteuses";
-    const femaleItem = parGenreData.find(
-      (g) =>
-        g.genre.toLowerCase().includes("femme") ||
-        g.genre.toLowerCase().includes("féminin")
-    );
-    const totalPorteurs = parGenreData.reduce((acc, curr) => acc + curr.total, 0);
-    if (femaleItem && totalPorteurs > 0) {
-      const pct = Math.round((femaleItem.total / totalPorteurs) * 100);
-      return `${pct} % de porteuses de projet (${femaleItem.total} sur ${totalPorteurs} porteurs)`;
-    }
-    return "38 % de porteuses de projet";
-  }, [parGenreData]);
-
   return (
     <div
       id="dashboard-root"
@@ -426,13 +391,9 @@ export function DashboardContent() {
                     }}
                   />
 
-                  {/* BLOC 3 : Constats clés (3 constats max, 1 phrase chacun, règles en infobulle) */}
-                  <ConstatsCard constats={constatsData} chargement={isLoading} />
-
-                  {/* BLOC 4 : Un seul graphique de synthèse temporelle (Évolution mensuelle) */}
+                  {/* BLOC 3 : Un seul graphique de synthèse temporelle */}
                   <ChartCard
                     title="Évolution mensuelle des projets"
-                    description="Flux de création et d'enregistrement au fil du temps"
                     summaryValue={peakMonthInsight}
                     tableData={data.evolution.map((e) => ({
                       Mois: e.mois,
@@ -459,13 +420,10 @@ export function DashboardContent() {
                 <ProjetsPortfolioSection
                   filters={filters}
                   chartsSlot={
-                    <div className="space-y-3">
                       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {/* Graphique 1 : Domaine prioritaire */}
                         <ChartCard
-                          title="Projets par domaine prioritaire"
-                          description="Répartition des innovations par filière d'excellence"
-                          summaryValue={`${data.parDomaine.length} filières actives`}
+                          title="Projets par domaine"
                           tableData={data.parDomaine.map((d) => ({
                             Domaine: d.domaine,
                             Total: d.total,
@@ -484,9 +442,7 @@ export function DashboardContent() {
 
                         {/* Graphique 2 : Comparaison entre promotions */}
                         <ChartCard
-                          title="Comparaison entre promotions"
-                          description="Progression comparée des cohortes annuelles 2024 — 2026"
-                          summaryValue={cohorteInsight}
+                          title="Projets par promotion"
                           tableData={data.parCohorte.map((c) => ({
                             Cohorte: c.cohorte,
                             Soumissions: c.total,
@@ -507,17 +463,6 @@ export function DashboardContent() {
                           <CohorteChart data={data.parCohorte} />
                         </ChartCard>
                       </div>
-
-                      {/* Ligne textuelle discrète pour la mixité et parité */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-4 py-2.5 text-xs text-[#5A4B42] shadow-2xs">
-                        <span className="font-medium">
-                          Mixité & Parité des équipes : <strong className="text-[#21130D]">{genreInsightText}</strong>
-                        </span>
-                        <span className="text-[11px] text-[#8C6D4F]">
-                          Objectif cible CIAT : ≥ 40 %
-                        </span>
-                      </div>
-                    </div>
                   }
                 />
               )}

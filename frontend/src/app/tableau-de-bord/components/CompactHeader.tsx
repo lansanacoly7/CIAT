@@ -243,10 +243,6 @@ export function CompactHeader({
 
           {isExportOpen && (
             <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-1.5 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up">
-              <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
-                Formats disponibles
-              </div>
-
               <button
                 type="button"
                 id="export-pdf-button"
@@ -260,8 +256,7 @@ export function CompactHeader({
                   <FileText className="h-4 w-4 text-[#B85D43]" />
                 )}
                 <div className="flex-1">
-                  <div>{isExporting === "pdf" ? "Génération PDF en cours..." : "Rapport PDF officiel"}</div>
-                  <div className="text-[11px] text-[#5A4B42]">Document certifié A4</div>
+                  <div>{isExporting === "pdf" ? "Génération PDF en cours..." : "PDF"}</div>
                 </div>
               </button>
 
@@ -278,8 +273,7 @@ export function CompactHeader({
                   <FileSpreadsheet className="h-4 w-4 text-[#5A7D65]" />
                 )}
                 <div className="flex-1">
-                  <div>{isExporting === "xlsx" ? "Génération Excel en cours..." : "Tableur Excel (.xlsx)"}</div>
-                  <div className="text-[11px] text-[#5A4B42]">Données brutes & agrégats</div>
+                  <div>{isExporting === "xlsx" ? "Génération Excel en cours..." : "Excel"}</div>
                 </div>
               </button>
 
@@ -296,8 +290,7 @@ export function CompactHeader({
                   <ImageIcon className="h-4 w-4 text-[#4A6B82]" />
                 )}
                 <div className="flex-1">
-                  <div>{isExporting === "png" ? "Capture image en cours..." : "Image haute résolution (PNG)"}</div>
-                  <div className="text-[11px] text-[#5A4B42]">Capture de la vue active</div>
+                  <div>{isExporting === "png" ? "Capture image en cours..." : "Image PNG"}</div>
                 </div>
               </button>
 
@@ -314,8 +307,7 @@ export function CompactHeader({
               >
                 <Printer className="h-4 w-4 text-[#C99A68]" />
                 <div className="flex-1">
-                  <div>Fiche imprimable de synthèse</div>
-                  <div className="text-[11px] text-[#5A4B42]">Aperçu avant impression</div>
+                  <div>Imprimer</div>
                 </div>
               </button>
             </div>
@@ -344,8 +336,7 @@ export function CompactHeader({
               >
                 <BookOpen className="h-4 w-4 text-[#8C5E2D]" />
                 <div>
-                  <div className="font-semibold">Méthodologie</div>
-                  <div className="text-[11px] text-[#5A4B42]">Définitions et calculs</div>
+                  <div>Méthodologie</div>
                 </div>
               </Link>
 
@@ -360,8 +351,7 @@ export function CompactHeader({
               >
                 <MessageSquare className="h-4 w-4 text-[#C99A68]" />
                 <div>
-                  <div className="font-semibold">Poser une question</div>
-                  <div className="text-[11px] text-[#5A4B42]">Interrogation analytique</div>
+                  <div>Poser une question</div>
                 </div>
               </button>
             </div>

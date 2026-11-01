@@ -4,20 +4,24 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
-  Calculator,
-  Clock,
-  Database,
-  Info,
-  Lightbulb,
-  Search,
-  ShieldAlert,
+  ArrowRight,
+  Award,
+  CalendarClock,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  LayoutGrid,
-  List,
-  Sliders,
+  Coins,
+  FileText,
+  Handshake,
+  Layers,
+  Lightbulb,
+  Percent,
+  PieChart,
+  Rocket,
+  Timer,
+  TrendingUp,
+  Users,
+  Wallet,
+  X,
+  type LucideIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -247,489 +251,218 @@ const FALLBACK_DEFINITIONS: IndicateurDefinition[] = [
   },
 ];
 
-const DEFAULT_CATEGORIES = [
-  "Tous",
-  "Entonnoir d'incubation",
-  "Typologie & Diversité",
-  "Financements & Ressources",
-  "Partenariats & Réseau",
-  "Gouvernance & Jalons",
+/** Nom court + icône par indicateur (affichage visuel). */
+const VISUEL: Record<string, { court: string; icon: LucideIcon }> = {
+  idees_recues: { court: "Idées reçues", icon: Lightbulb },
+  dossiers_deposes: { court: "Dossiers déposés", icon: FileText },
+  projets_selectionnes: { court: "Projets retenus", icon: CheckCircle2 },
+  projets_incubes: { court: "Projets incubés", icon: Rocket },
+  prototypes: { court: "Prototypes", icon: Award },
+  taux_selection: { court: "Taux de sélection", icon: Percent },
+  taux_conversion_prototype: { court: "Taux de prototypage", icon: TrendingUp },
+  par_domaine: { court: "Par domaine", icon: PieChart },
+  par_cohorte: { court: "Par promotion", icon: Layers },
+  par_genre: { court: "Parité", icon: Users },
+  evolution_mensuelle: { court: "Évolution mensuelle", icon: CalendarClock },
+  total_finance: { court: "Montant mobilisé", icon: Coins },
+  financements_decaisses: { court: "Montant décaissé", icon: Wallet },
+  partenariats_actifs: { court: "Partenariats actifs", icon: Handshake },
+  jalons_en_retard: { court: "Jalons en retard", icon: Timer },
+};
+
+/** Étapes du parcours d'un projet (schéma en entonnoir). */
+const PARCOURS = [
+  "idees_recues",
+  "dossiers_deposes",
+  "projets_selectionnes",
+  "projets_incubes",
+  "prototypes",
 ];
 
+const COULEURS_PARCOURS = ["#C99A68", "#B0804F", "#8C5E2D", "#6E4420", "#4A2A12"];
+
+const REGLES_CONSTATS = [
+  { nom: "Concentration sectorielle", seuil: "10", unite: "projets" },
+  { nom: "Représentation féminine", seuil: "10", unite: "porteurs" },
+  { nom: "Taux de sélection", seuil: "10", unite: "dossiers" },
+  { nom: "Jalons en retard", seuil: "5", unite: "jalons" },
+  { nom: "Décaissement", seuil: "5", unite: "financements" },
+];
+
+function visuel(ind: IndicateurDefinition) {
+  return VISUEL[ind.code] ?? { court: ind.nom, icon: PieChart };
+}
+
+function Tuile({
+  ind,
+  onOpen,
+}: {
+  ind: IndicateurDefinition;
+  onOpen: (ind: IndicateurDefinition) => void;
+}) {
+  const { court, icon: Icon } = visuel(ind);
+  return (
+    <button
+      type="button"
+      id={`ind-${ind.code}`}
+      onClick={() => onOpen(ind)}
+      className="group flex flex-col items-center gap-2 rounded-xl border border-[rgba(60,35,20,0.10)] bg-white p-4 text-center transition hover:border-[#C99A68] hover:shadow-sm"
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF3E9] text-[#8C5E2D] transition group-hover:bg-[#C99A68] group-hover:text-white">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="text-xs font-medium text-[#21130D]">{court}</span>
+    </button>
+  );
+}
+
 export function MethodologieContent() {
-  const [indicateurs, setIndicateurs] = useState<IndicateurDefinition[]>(FALLBACK_DEFINITIONS);
-  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [activeCategory, setActiveCategory] = useState<string>("Tous");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isFromApi, setIsFromApi] = useState<boolean>(false);
-  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
-  const [isGridLayout, setIsGridLayout] = useState<boolean>(true);
+  const [indicateurs, setIndicateurs] =
+    useState<IndicateurDefinition[]>(FALLBACK_DEFINITIONS);
+  const [selection, setSelection] = useState<IndicateurDefinition | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    async function loadDefinitions() {
-      try {
-        const res = await api<DefinitionsResponse>(
-          "/analytics/indicateurs/definitions/"
-        );
-        if (isMounted && res && Array.isArray(res.indicateurs)) {
+    api<DefinitionsResponse>("/analytics/indicateurs/definitions/")
+      .then((res) => {
+        if (isMounted && res && Array.isArray(res.indicateurs) && res.indicateurs.length) {
           setIndicateurs(res.indicateurs);
-          if (res.categories && res.categories.length > 0) {
-            setCategories(["Tous", ...res.categories]);
-          }
-          setIsFromApi(true);
         }
-      } catch {
-        if (isMounted) {
-          setIsFromApi(false);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-    loadDefinitions();
+      })
+      .catch(() => {
+        // On garde les définitions locales
+      });
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const toggleExpand = (code: string) => {
-    setExpandedCodes((prev) => ({ ...prev, [code]: !prev[code] }));
-  };
+  // Fermeture du détail avec Échap
+  useEffect(() => {
+    if (!selection) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelection(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selection]);
 
-  const expandAll = () => {
-    const next: Record<string, boolean> = {};
-    filteredIndicateurs.forEach((ind) => {
-      next[ind.code] = true;
-    });
-    setExpandedCodes(next);
-  };
-
-  const collapseAll = () => {
-    setExpandedCodes({});
-  };
-
-  const q = searchTerm.trim().toLowerCase();
-  const filteredIndicateurs = indicateurs.filter((ind) => {
-    const matchesCat =
-      activeCategory === "Tous" ||
-      ind.categorie.toLowerCase() === activeCategory.toLowerCase();
-    if (!matchesCat) return false;
-
-    if (!q) return true;
-    return (
-      ind.nom.toLowerCase().includes(q) ||
-      ind.code.toLowerCase().includes(q) ||
-      ind.definition.toLowerCase().includes(q) ||
-      ind.formule.toLowerCase().includes(q) ||
-      ind.source.toLowerCase().includes(q)
-    );
-  });
-
-  // Nombre d'indicateurs par catégorie pour les badges
-  const categoryCounts: Record<string, number> = { Tous: indicateurs.length };
-  indicateurs.forEach((ind) => {
-    categoryCounts[ind.categorie] = (categoryCounts[ind.categorie] || 0) + 1;
-  });
+  const parCode = new Map(indicateurs.map((i) => [i.code, i]));
+  const etapes = PARCOURS.map((c) => parCode.get(c)).filter(
+    (i): i is IndicateurDefinition => Boolean(i)
+  );
+  const autres = indicateurs.filter((i) => !PARCOURS.includes(i.code));
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2]/60 pb-16">
-      {/* 1. Header supérieur compact */}
-      <header className="border-b border-[#EFE4D6] bg-white sticky top-0 z-30 shadow-2xs">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">
-                <BookOpen className="h-4 w-4 text-[#C99A68]" />
-                <span>Référentiel Décisionnel CIAT</span>
-                {isFromApi && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
-                    <CheckCircle2 className="h-2.5 w-2.5" />
-                    Source API active
-                  </span>
-                )}
-              </div>
-              <h1 className="text-xl font-black text-[#612D10] sm:text-2xl font-[family-name:var(--font-title)] tracking-tight">
-                Méthodologie & Dictionnaire des Indicateurs
-              </h1>
-              <p className="text-xs text-[#6B5646]">
-                Formules exactes, sources vérifiées et limites d&apos;interprétation pour le pilotage stratégique.
-              </p>
-            </div>
+    <div className="min-h-screen bg-white pb-16">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 space-y-10">
+        <header className="flex items-center justify-between gap-3">
+          <h1 className="font-serif text-2xl text-[#21130D]">Méthodologie</h1>
+          <Link
+            href="/tableau-de-bord"
+            className="inline-flex items-center gap-1.5 text-sm text-[#5A4B42] hover:text-[#21130D]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Tableau de bord
+          </Link>
+        </header>
 
-            <div className="flex items-center gap-2 self-start md:self-center shrink-0">
-              <a
-                href="#constats"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2] px-3 py-2 text-xs font-bold text-[#612D10] hover:bg-[#EFE4D6]/60 transition-colors"
-              >
-                <Sliders className="h-3.5 w-3.5 text-[#C99A68]" />
-                <span>Règles des constats</span>
-              </a>
-
-              <Link
-                href="/tableau-de-bord"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#612D10] px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-[#3F1D0A]"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Tableau de bord</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. Filtres, Recherche et Contrôles d'affichage */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-4">
-        {/* Barre de contrôle compacte */}
-        <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 shadow-sm space-y-3.5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {/* Barre de recherche */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C5E2D]/60" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher par nom, formule, code ou mot-clé..."
-                className="w-full rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 py-2 pl-9.5 pr-4 text-xs sm:text-sm text-[#24140D] placeholder:text-[#a08f80] outline-none transition focus:border-[#C99A68] focus:bg-white focus:ring-2 focus:ring-[#C99A68]/30"
-              />
-            </div>
-
-            {/* Boutons d'actions et mode d'affichage */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={expandAll}
-                className="px-2.5 py-1.5 rounded-lg border border-[#EFE4D6] bg-white text-[11px] font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
-                title="Déplier tous les détails"
-              >
-                Tout déplier
-              </button>
-              <button
-                type="button"
-                onClick={collapseAll}
-                className="px-2.5 py-1.5 rounded-lg border border-[#EFE4D6] bg-white text-[11px] font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
-                title="Replier tous les détails"
-              >
-                Tout replier
-              </button>
-
-              <div className="h-5 w-px bg-[#EFE4D6] mx-1" />
-
-              <button
-                type="button"
-                onClick={() => setIsGridLayout(!isGridLayout)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] text-[11px] font-bold text-[#612D10] hover:bg-white transition-colors"
-                title={isGridLayout ? "Passer en vue liste 1 colonne" : "Passer en vue grille 2 colonnes"}
-              >
-                {isGridLayout ? (
-                  <>
-                    <List className="h-3.5 w-3.5 text-[#C99A68]" />
-                    <span className="hidden sm:inline">Vue liste</span>
-                  </>
-                ) : (
-                  <>
-                    <LayoutGrid className="h-3.5 w-3.5 text-[#C99A68]" />
-                    <span className="hidden sm:inline">Vue grille</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Onglets Catégories avec badges de comptage */}
-          <div className="flex flex-wrap gap-1.5 border-t border-[#EFE4D6]/70 pt-3">
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat;
-              const count = categoryCounts[cat] ?? 0;
+        {/* 1. Parcours d'un projet */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold text-[#21130D]">Parcours d&apos;un projet</h2>
+          <ol className="flex items-start sm:items-center">
+            {etapes.map((ind, i) => {
+              const { court, icon: Icon } = visuel(ind);
               return (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all ${
-                    isActive
-                      ? "bg-[#612D10] text-white shadow-2xs"
-                      : "bg-[#FAF7F2] text-[#612D10] border border-[#EFE4D6] hover:bg-white hover:border-[#C99A68]"
-                  }`}
+                <li
+                  key={ind.code}
+                  className="flex flex-1 items-center"
                 >
-                  <span>{cat}</span>
-                  <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                      isActive ? "bg-white/20 text-white" : "bg-[#EFE4D6] text-[#8C5E2D]"
-                    }`}
+                  <button
+                    type="button"
+                    id={`ind-${ind.code}`}
+                    onClick={() => setSelection(ind)}
+                    className="group flex w-full flex-col items-center gap-2 rounded-xl p-1 sm:p-3 transition hover:bg-[#FBF8F3]"
                   >
-                    {count}
-                  </span>
-                </button>
+                    <span
+                      className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full text-white transition group-hover:scale-105"
+                      style={{ backgroundColor: COULEURS_PARCOURS[i] }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="text-[11px] sm:text-xs font-medium leading-tight text-[#21130D]">{court}</span>
+                  </button>
+                  {i < etapes.length - 1 && (
+                    <ArrowRight className="hidden h-4 w-4 shrink-0 text-[#C99A68] sm:block" />
+                  )}
+                </li>
               );
             })}
+          </ol>
+        </section>
+
+        {/* 2. Autres indicateurs */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold text-[#21130D]">Indicateurs</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {autres.map((ind) => (
+              <Tuile key={ind.code} ind={ind} onOpen={setSelection} />
+            ))}
           </div>
-        </div>
+        </section>
 
-        {/* 3. Liste des indicateurs (Grille compacte 2 colonnes ou 1 colonne) */}
-        <div>
-          {isLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((n) => (
-                <div
-                  key={n}
-                  className="h-36 animate-pulse rounded-2xl bg-white p-5 border border-[#EFE4D6]"
-                />
-              ))}
-            </div>
-          ) : filteredIndicateurs.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#EFE4D6] bg-white py-12 text-center shadow-xs">
-              <Info className="mx-auto h-8 w-8 text-[#C99A68]" />
-              <h3 className="mt-2 text-sm font-bold text-[#612D10]">
-                Aucun indicateur trouvé
-              </h3>
-              <p className="mt-1 text-xs text-[#8C5E2D]">
-                Modifiez vos termes de recherche ou réinitialisez la catégorie.
-              </p>
-            </div>
-          ) : (
-            <div
-              className={`grid gap-4 ${
-                isGridLayout ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
-              }`}
-            >
-              {filteredIndicateurs.map((ind) => {
-                const isExpanded = Boolean(expandedCodes[ind.code]);
-
-                return (
-                  <div
-                    key={ind.code}
-                    id={ind.code}
-                    className="overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white shadow-xs transition-all hover:border-[#C99A68] hover:shadow-sm flex flex-col justify-between"
-                  >
-                    {/* En-tête de la carte */}
-                    <div className="p-4 sm:p-5 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2.5 min-w-0">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
-                            <Calculator className="h-4 w-4 text-[#8C5E2D]" />
-                          </div>
-                          <div className="min-w-0">
-                            <h2 className="font-[family-name:var(--font-title)] text-sm sm:text-base font-bold text-[#612D10] leading-snug">
-                              {ind.nom}
-                            </h2>
-                            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-[#6B5646]">
-                              <code className="rounded bg-[#FAF7F2] border border-[#EFE4D6] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#612D10]">
-                                {ind.code}
-                              </code>
-                              <span>•</span>
-                              <span className="font-medium text-[#8C5E2D]">
-                                {ind.categorie}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <span className="shrink-0 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-2 py-0.5 text-[10px] font-bold text-[#8C5E2D]">
-                          {ind.categorie.split(" ")[0]}
-                        </span>
-                      </div>
-
-                      {/* Définition synthétique */}
-                      <p className="text-xs text-[#24140D] leading-relaxed line-clamp-3">
-                        {ind.definition}
-                      </p>
-
-                      {/* Formule directement visible et compacte (requis pour tests E2E) */}
-                      <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/80 p-2.5 flex items-start gap-2">
-                        <Calculator className="h-3.5 w-3.5 text-[#8C5E2D] shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                            Formule de calcul
-                          </span>
-                          <span className="font-mono text-xs font-bold text-[#612D10] break-words">
-                            {ind.formule}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Section dépliable pour les détails méthodologiques et limites */}
-                      {isExpanded && (
-                        <div className="pt-3 border-t border-[#EFE4D6] space-y-3 animate-in fade-in duration-150">
-                          {/* Grille Source & Période */}
-                          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs">
-                            <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5">
-                              <span className="flex items-center gap-1 text-[11px] font-bold text-[#612D10]">
-                                <Database className="h-3 w-3 text-[#C99A68]" />
-                                Source de données
-                              </span>
-                              <p className="mt-1 font-mono text-[11px] text-[#6B5646] break-words">
-                                {ind.source}
-                              </p>
-                            </div>
-
-                            <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5">
-                              <span className="flex items-center gap-1 text-[11px] font-bold text-[#612D10]">
-                                <Clock className="h-3 w-3 text-[#C99A68]" />
-                                Période & temporalité
-                              </span>
-                              <p className="mt-1 text-[11px] text-[#6B5646]">
-                                {ind.periode}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Limites méthodologiques (Encart sobre ambre) */}
-                          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
-                            <div className="flex items-start gap-2">
-                              <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
-                              <div>
-                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
-                                  Limites méthodologiques & nuances
-                                </h4>
-                                <p className="mt-0.5 text-xs text-amber-950 leading-relaxed">
-                                  {ind.limites}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Guide d'interprétation pour le comité */}
-                          <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/60 p-3">
-                            <div className="flex items-start gap-2">
-                              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8C5E2D]" />
-                              <div>
-                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
-                                  Guide de pilotage & décision
-                                </h4>
-                                <p className="mt-0.5 text-xs text-[#24140D] leading-relaxed">
-                                  {ind.interpretation}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Pied de carte : bouton d'accordéon pour déplier/replier */}
-                    <button
-                      type="button"
-                      onClick={() => toggleExpand(ind.code)}
-                      className="flex items-center justify-between border-t border-[#EFE4D6] bg-[#FAF7F2]/40 px-4 py-2 text-xs font-bold text-[#612D10] hover:bg-[#FAF7F2] transition-colors"
-                    >
-                      <span>
-                        {isExpanded
-                          ? "Masquer les détails & limites"
-                          : "Voir source, limites & pilotage"}
-                      </span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-[#8C5E2D]" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-[#8C5E2D]" />
-                      )}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* 4. Section Règles des Constats et Recommandations Déterministes (Condensée en grille) */}
-        <div
-          id="constats"
-          className="mt-10 rounded-2xl border border-[#EFE4D6] bg-white p-5 sm:p-6 shadow-sm scroll-mt-20 space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
-                <Sliders className="h-4 w-4 text-[#8C5E2D]" />
+        {/* 3. Seuils des constats */}
+        <section id="constats" className="space-y-4 scroll-mt-20">
+          <h2 className="text-sm font-semibold text-[#21130D]">Seuils minimum des constats</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {REGLES_CONSTATS.map((r) => (
+              <div key={r.nom} className="rounded-xl bg-[#FBF8F3] p-4 text-center">
+                <div className="text-2xl font-semibold text-[#8C5E2D] tabular-nums">{r.seuil}</div>
+                <div className="text-[11px] text-[#5A4B42]">{r.unite}</div>
+                <div className="mt-2 text-xs font-medium text-[#21130D]">{r.nom}</div>
               </div>
-              <div>
-                <h2 className="font-[family-name:var(--font-title)] text-base sm:text-lg font-bold text-[#612D10]">
-                  Règles de Calcul des Constats Déterministes
-                </h2>
-                <p className="text-xs text-[#6B5646]">
-                  5 algorithmes vérifiables, calculés sans IA, avec seuils minimaux de significativité statistique.
-                </p>
-              </div>
-            </div>
-
-            <span className="self-start sm:self-center text-xs font-bold px-2.5 py-1 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
-              5 règles auditées
-            </span>
+            ))}
           </div>
-
-          {/* Grille compacte des 5 règles de constats */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                1. Concentration sectorielle
-              </span>
-              <p className="text-xs text-[#24140D] leading-snug">
-                Identifie le secteur prédominant et mesure son poids relatif. Alerte si un domaine concentre plus de 35 % des dossiers.
-              </p>
-              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
-                Seuil : minimum 10 projets
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                2. Représentation féminine
-              </span>
-              <p className="text-xs text-[#24140D] leading-snug">
-                Proportion de femmes entrepreneures principales par rapport à l&apos;objectif charte CIAT (40 %).
-              </p>
-              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
-                Seuil : minimum 10 porteurs
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                3. Taux de sélection
-              </span>
-              <p className="text-xs text-[#24140D] leading-snug">
-                Ratio exact entre les projets admis et l&apos;ensemble des dossiers formellement soumis.
-              </p>
-              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
-                Seuil : minimum 10 dossiers soumis
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                4. Retard critique de jalons
-              </span>
-              <p className="text-xs text-[#24140D] leading-snug">
-                Dénombre les jalons non achevés dont l&apos;échéance est dépassée de plus de 30 jours calendaires.
-              </p>
-              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
-                Seuil : minimum 5 jalons suivis · retard &gt; 30j
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-3.5 space-y-2 sm:col-span-2 lg:col-span-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D] block">
-                5. Décaissement effectif
-              </span>
-              <p className="text-xs text-[#24140D] leading-snug">
-                Ratio entre les montants financiers décaissés et les financements globaux engagés par les partenaires.
-              </p>
-              <div className="text-[10px] font-bold text-[#612D10] bg-white rounded-md px-2 py-1 border border-[#EFE4D6]">
-                Seuil : minimum 5 financements enregistrés
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-start gap-2.5">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-            <div className="text-xs text-amber-950 leading-relaxed">
-              <strong className="font-bold">Garde-fou contre les petits échantillons :</strong> Si les filtres actifs restreignent les effectifs en dessous de ces seuils (ex : 2 projets sélectionnés), le moteur <strong>n&apos;affiche aucun constat ni pourcentage trompeur</strong> pour garantir la rigueur scientifique des conclusions.
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
+
+      {/* Détail d'un indicateur */}
+      {selection && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center sm:p-4"
+          onClick={() => setSelection(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="detail-titre"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md space-y-4 rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h3 id="detail-titre" className="text-base font-semibold text-[#21130D]">
+                {selection.nom}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSelection(null)}
+                aria-label="Fermer"
+                className="rounded-lg p-1 text-[#5A4B42] hover:bg-[#FBF8F3]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-sm text-[#5A4B42]">{selection.definition}</p>
+            <div className="rounded-lg bg-[#FBF8F3] px-3 py-2 font-mono text-xs text-[#612D10] break-words">
+              {selection.formule}
+            </div>
+            <p className="text-xs text-[#5A4B42]">
+              <span className="font-semibold text-[#21130D]">Limite : </span>
+              {selection.limites}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
