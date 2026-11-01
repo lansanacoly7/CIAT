@@ -10,7 +10,7 @@ import { type ReactNode } from "react";
  */
 export function AppSidebarLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#FAF7F2]">
+    <div className="min-h-screen bg-white">
       {children}
     </div>
   );

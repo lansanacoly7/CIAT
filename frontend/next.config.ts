@@ -4,6 +4,7 @@ const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/ap
 
 const nextConfig: NextConfig = {
   /* config options here */
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
