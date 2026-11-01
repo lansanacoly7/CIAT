@@ -3,10 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
-  ShieldCheck,
   Landmark,
   CheckCircle2,
-  Clock,
   Handshake,
   Search,
   X,
@@ -14,7 +12,6 @@ import {
   ChevronRight,
   Building2,
   ArrowUpDown,
-  Coins,
 } from "lucide-react";
 import {
   BarChart,
@@ -64,7 +61,9 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
 
   // Vue tableau et filtres interactifs
   const [activeTab, setActiveTab] = useState<"financements" | "partenariats">("financements");
+  const [chartView, setChartView] = useState<"volume" | "nature">("volume");
   const [chartMode, setChartMode] = useState<"guichet" | "domaine">("guichet");
+  const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatut, setSelectedStatut] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
@@ -350,6 +349,36 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
     return filteredFinancements.reduce((acc, curr) => acc + (Number(curr.montant) || 0), 0);
   }, [filteredFinancements]);
 
+  // Fonction de rendu personnalisé pour les étiquettes du BarChart
+  // Empêche strictement le retour à la ligne (ex: "15 \n M") pour les barres courtes
+  const renderCustomBarLabel = (props: {
+    x?: number | string;
+    y?: number | string;
+    width?: number | string;
+    height?: number | string;
+    value?: number | string;
+  }) => {
+    const { x, y, width, height, value } = props;
+    if (value === undefined || value === null || value === "") return null;
+    const numX = Number(x) || 0;
+    const numY = Number(y) || 0;
+    const numWidth = Number(width) || 0;
+    const numHeight = Number(height) || 0;
+    return (
+      <text
+        x={numX + numWidth + 8}
+        y={numY + numHeight / 2}
+        fill="#612D10"
+        textAnchor="start"
+        dominantBaseline="central"
+        fontSize={11}
+        fontWeight={700}
+      >
+        {value}
+      </text>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-6 shadow-xs">
@@ -371,40 +400,23 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
   return (
     <div className="space-y-6">
       {/* =========================================================================
-          1. EN-TÊTE OFFICIEL DE LA SECTION (LOCATOR E2E PRESERVÉ)
+          1. EN-TÊTE ÉPURÉ DE LA SECTION
          ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#EFE4D6] pb-3">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-[16px] sm:text-[18px] font-bold text-[#21130D] tracking-tight">
-              Partenariats & Financements Mobilisés
-            </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 border border-emerald-200/60 shadow-2xs">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              Recoupé Base CIAT
-            </span>
-          </div>
-          <p className="text-[12px] sm:text-[13px] text-[#5A4B42] mt-0.5">
+          <h2 className="text-[16px] sm:text-[18px] font-bold text-[#21130D] tracking-tight">
+            Partenariats & Financements Mobilisés
+          </h2>
+          <p className="text-xs text-[#5A4B42] mt-0.5">
             Pilotage consolidé des conventions industrielles, académiques et guichets d&apos;amorçage
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] px-3 py-1.5 text-[11px] font-medium text-[#612D10]">
-            <Coins className="h-3.5 w-3.5 text-[#C99A68]" />
-            <strong className="font-semibold text-[#21130D]">
-              {formatCurrencyCompact(kpiData.totalMobilise)}
-            </strong>
-            <span className="text-[#8C6D4F]">•</span>
-            <span>{kpiData.partenariatsTotal} accords</span>
-          </span>
         </div>
       </div>
 
       {/* =========================================================================
-          2. BANNIÈRE KPI FINANCIERS HAUT IMPACT (4 CARTES ÉLÉGANTES)
+          2. BANNIÈRE 3 KPI DÉCISIONNELS (TOTAL MOBILISÉ, TOTAL DÉCAISSÉ, CONVENTIONS ACTIVES)
          ========================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Carte 1 : Total Mobilisé */}
         <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#C99A68]/50">
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -450,7 +462,6 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
               {formatPercent(kpiData.tauxDecaissement)}
             </span>
           </div>
-          {/* Mini barre de progression décaissement */}
           <div className="mt-2 w-full h-1.5 bg-[#FAF7F2] rounded-full overflow-hidden border border-[#EFE4D6]">
             <div
               className="h-full bg-[#5A7D65] rounded-full transition-all duration-500"
@@ -462,34 +473,7 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
           </p>
         </div>
 
-        {/* Carte 3 : Solde Restant à Décaisser */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#C99A68]/50">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8C5E2D]">
-              Solde en Déblocage
-            </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FAF7F2] text-[#8C5E2D]">
-              <Clock className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-sans text-[22px] font-bold text-[#21130D] tabular-nums leading-none">
-              {formatCurrencyCompact(kpiData.soldeRestant)}
-            </span>
-            <span className="text-[10px] font-medium text-[#8C6D4F]">
-              ({formatPercent(100 - kpiData.tauxDecaissement)})
-            </span>
-          </div>
-          <p className="text-[11px] text-[#5A4B42] mt-1.5 truncate">
-            Tranches conditionnées aux jalons
-          </p>
-          <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-medium text-[#8C5E2D]">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#C99A68]" />
-            <span>Engagements fermes en cours</span>
-          </div>
-        </div>
-
-        {/* Carte 4 : Réseau de Partenariats Actifs */}
+        {/* Carte 3 : Réseau de Partenariats Actifs */}
         <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 shadow-2xs transition hover:shadow-xs hover:border-[#612D10]/50">
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#612D10]">
@@ -523,198 +507,303 @@ export function PartenariatsFinancementsSection({ filters }: Props) {
       </div>
 
       {/* =========================================================================
-          3. DEUX VISUALISATIONS COMPLÉMENTAIRES (VOLUME PAR GUICHET & TYPOLOGIE)
+          3. UN SEUL GRAPHIQUE AVEC COMMUTATEUR DE VUE (VOLUME MOBILISÉ / ACCORDS)
          ========================================================================= */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {/* Graphique 1 : Volume mobilisé (avec toggle Guichet vs Domaine) */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4">
-            <div>
-              <h3 className="text-[14px] font-bold text-[#21130D]">
-                {chartMode === "guichet"
+      <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs flex flex-col justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-4 border-b border-[#EFE4D6] pb-3">
+          <div>
+            <h3 className="text-[14px] font-bold text-[#21130D]">
+              {chartView === "volume"
+                ? chartMode === "guichet"
                   ? "Volume mobilisé par guichet partenaire"
-                  : "Volume mobilisé par domaine prioritaire"}
-              </h3>
-              <p className="text-[11px] text-[#5A4B42] mt-0.5">
-                Total : {formatCurrencyCompact(kpiData.totalMobilise)} (montants en Millions FCFA)
-              </p>
-            </div>
-
-            {/* Commutateur Guichet / Domaine */}
-            <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setChartMode("guichet")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "guichet"
-                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
-                    : "text-[#5A4B42] hover:text-[#21130D]"
-                }`}
-              >
-                Par Guichet ({stats.par_source?.length || 9})
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartMode("domaine")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "domaine"
-                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
-                    : "text-[#5A4B42] hover:text-[#21130D]"
-                }`}
-              >
-                Par Domaine ({stats.par_domaine?.length || 7})
-              </button>
-            </div>
+                  : "Volume mobilisé par domaine prioritaire"
+                : "Répartition des partenariats par nature"}
+            </h3>
+            <p className="text-[11px] text-[#5A4B42] mt-0.5">
+              {chartView === "volume"
+                ? `Total : ${formatCurrencyCompact(kpiData.totalMobilise)} (montants en Millions FCFA)`
+                : `Ventilation des ${kpiData.partenariatsTotal} accords signés (${kpiData.partenariatsActifs} actifs en vigueur)`}
+            </p>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Commutateur principal : Volume vs Nature */}
+            <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setChartView("volume")}
+                className={`rounded-md px-2.5 py-1 transition-all cursor-pointer ${
+                  chartView === "volume"
+                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
+                    : "text-[#5A4B42] hover:text-[#21130D]"
+                }`}
+              >
+                Volume mobilisé
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartView("nature")}
+                className={`rounded-md px-2.5 py-1 transition-all cursor-pointer ${
+                  chartView === "nature"
+                    ? "bg-white text-[#21130D] shadow-2xs font-bold"
+                    : "text-[#5A4B42] hover:text-[#21130D]"
+                }`}
+              >
+                Répartition des accords
+              </button>
+            </div>
+
+            {/* Commutateur Guichet / Domaine (visible si mode Volume) */}
+            {chartView === "volume" && (
+              <div className="inline-flex rounded-lg bg-[#FAF7F2] p-0.5 border border-[#EFE4D6] text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setChartMode("guichet")}
+                  className={`rounded-md px-2 py-1 transition-all cursor-pointer ${
+                    chartMode === "guichet"
+                      ? "bg-[#612D10] text-white shadow-2xs font-bold"
+                      : "text-[#5A4B42] hover:text-[#21130D]"
+                  }`}
+                >
+                  Par Guichet ({stats.par_source?.length || 9})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartMode("domaine")}
+                  className={`rounded-md px-2 py-1 transition-all cursor-pointer ${
+                    chartMode === "domaine"
+                      ? "bg-[#612D10] text-white shadow-2xs font-bold"
+                      : "text-[#5A4B42] hover:text-[#21130D]"
+                  }`}
+                >
+                  Par Domaine ({stats.par_domaine?.length || 7})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {chartView === "volume" ? (
           <div className="h-[310px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
                 layout="vertical"
-                margin={{ top: 5, right: 65, left: 10, bottom: 5 }}
+                margin={{ top: 8, right: 80, left: 10, bottom: 8 }}
               >
                 <XAxis
                   type="number"
                   tickLine={false}
-                  axisLine={false}
+                  axisLine={{ stroke: "#EFE4D6" }}
                   tick={{ fontSize: 11, fill: "#5A4B42" }}
                 />
                 <YAxis
                   dataKey="name"
                   type="category"
-                  width={160}
+                  width={165}
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11, fill: "#21130D", fontWeight: 500 }}
                   interval={0}
                 />
                 <Tooltip
-                  formatter={(val: number) => [`${val} M FCFA`, "Volume mobilisé"]}
-                  labelFormatter={(name: string) => {
-                    const item = chartData.find((d) => d.name === name);
-                    return item?.fullName || name;
-                  }}
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderColor: "#EFE4D6",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(60,35,20,0.06)",
-                    fontSize: "12px",
+                  cursor={{ fill: "rgba(201, 154, 104, 0.08)" }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const item = payload[0].payload;
+                      return (
+                        <div className="rounded-xl border border-[#EFE4D6] bg-white p-3 text-xs shadow-md space-y-1">
+                          <div className="font-bold text-[#21130D]">{item.fullName}</div>
+                          <div className="flex items-center justify-between gap-4 text-[#5A4B42]">
+                            <span>Volume mobilisé :</span>
+                            <strong className="text-[#612D10] font-bold">
+                              {formatCurrencyFull(item.total)}
+                            </strong>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 text-[#8C6D4F]">
+                            <span>Projets accompagnés :</span>
+                            <span className="font-semibold text-[#21130D]">{item.count}</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
                 />
                 <Bar
                   dataKey="montantM"
                   fill="#C99A68"
                   radius={[0, 6, 6, 0]}
-                  barSize={15}
+                  barSize={18}
+                  background={{ fill: "#FAF7F2", radius: 6 }}
                 >
                   <LabelList
                     dataKey="displayLabel"
-                    position="right"
-                    style={{
-                      fill: "#612D10",
-                      fontSize: 11,
-                      fontWeight: 600,
-                    }}
+                    content={renderCustomBarLabel}
                   />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center min-h-[310px] my-auto">
+            {/* Colonne Anneau */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center py-2">
+              <div className="relative w-[215px] h-[215px] flex items-center justify-center">
+                <PieChart width={215} height={215}>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const d = payload[0].payload;
+                        return (
+                          <div className="rounded-xl border border-[#EFE4D6] bg-white p-2.5 text-xs shadow-md">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    PIE_COLORS[
+                                      chartDataTypes.findIndex((t) => t.name === d.name) %
+                                        PIE_COLORS.length
+                                    ],
+                                }}
+                              />
+                              <span className="font-bold text-[#21130D]">{d.name}</span>
+                            </div>
+                            <div className="mt-1 text-[#6B5646]">
+                              <strong className="font-bold text-[#21130D]">{d.value}</strong> accords ({d.pct} %)
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Pie
+                    data={chartDataTypes}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={96}
+                    innerRadius={68}
+                    paddingAngle={3}
+                    cornerRadius={5}
+                    isAnimationActive={true}
+                    animationDuration={600}
+                    onMouseEnter={(_, idx) => setHoveredSlice(idx)}
+                    onMouseLeave={() => setHoveredSlice(null)}
+                  >
+                    {chartDataTypes.map((_, index) => {
+                      const isHovered = hoveredSlice === index;
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                          stroke={isHovered ? "#FAF7F2" : "transparent"}
+                          strokeWidth={isHovered ? 3 : 1}
+                          className="transition-all duration-200 cursor-pointer hover:opacity-95"
+                          style={{
+                            filter: isHovered
+                              ? "drop-shadow(0 2px 6px rgba(60,35,20,0.25))"
+                              : "none",
+                          }}
+                        />
+                      );
+                    })}
+                  </Pie>
+                </PieChart>
 
-        {/* Graphique 2 : Typologie des conventions (Donut interactif) */}
-        <div className="rounded-xl border border-[#EFE4D6] bg-white p-4 sm:p-5 transition hover:shadow-xs">
-          <div className="mb-4">
-            <h3 className="text-[14px] font-bold text-[#21130D]">
-              Répartition des partenariats par nature
-            </h3>
-            <p className="text-[11px] text-[#5A4B42] mt-0.5">
-              Ventilation des {kpiData.partenariatsTotal} accords signés ({kpiData.partenariatsActifs} actifs en vigueur)
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-6 min-h-[310px] justify-center">
-            {/* Donut Recharts avec centre absolu sans chevauchement */}
-            <div className="relative w-[210px] h-[210px] shrink-0">
-              <PieChart width={210} height={210}>
-                <Pie
-                  data={chartDataTypes}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius="92%"
-                  innerRadius="68%"
-                  paddingAngle={3}
-                  cornerRadius={4}
-                >
-                  {chartDataTypes.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={PIE_COLORS[index % PIE_COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(val: number) => [`${val} accord(s)`, "Nombre"]}
-                  contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    borderColor: "#EFE4D6",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(60,35,20,0.06)",
-                    fontSize: "12px",
-                  }}
-                />
-              </PieChart>
-
-              {/* Texte central positionné en absolu */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="font-sans text-[26px] font-bold text-[#21130D] tabular-nums leading-none">
-                  {kpiData.partenariatsTotal}
-                </span>
-                <span className="text-[11px] font-semibold text-[#8C6D4F] mt-0.5">
-                  conventions
-                </span>
-                <span className="text-[10px] font-medium text-[#5A7D65]">
-                  {kpiData.partenariatsActifs} actives
-                </span>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+                  {hoveredSlice !== null && chartDataTypes[hoveredSlice] ? (
+                    <>
+                      <span className="font-sans text-[26px] font-black text-[#21130D] tabular-nums leading-none">
+                        {chartDataTypes[hoveredSlice].value}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#8C5E2D] mt-1 max-w-[120px] truncate leading-tight">
+                        {chartDataTypes[hoveredSlice].name}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#612D10] bg-[#FAF7F2] border border-[#EFE4D6] px-2 py-0.5 rounded-full mt-1 tabular-nums">
+                        {chartDataTypes[hoveredSlice].pct} % des accords
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-sans text-[28px] font-bold text-[#21130D] tabular-nums leading-none">
+                        {kpiData.partenariatsTotal}
+                      </span>
+                      <span className="text-[11px] font-semibold text-[#8C6D4F] mt-0.5">
+                        conventions
+                      </span>
+                      <span className="text-[10px] font-medium text-[#5A7D65] bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full mt-1.5">
+                        {kpiData.partenariatsActifs} actives
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Légende détaillée alignée avec pourcentages */}
-            <div className="flex-1 flex flex-col justify-center space-y-2.5 w-full">
-              {chartDataTypes.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between text-xs p-1.5 rounded-lg hover:bg-[#FAF7F2] transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span
-                      className="h-3 w-3 rounded-md shrink-0 shadow-2xs"
-                      style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
-                    />
-                    <span
-                      className="font-medium text-[#21130D] truncate"
-                      title={item.name}
-                    >
-                      {item.name}
-                    </span>
+            {/* Colonne droite : Légende */}
+            <div className="lg:col-span-7 flex flex-col justify-center gap-2">
+              {chartDataTypes.map((item, idx) => {
+                const isHovered = hoveredSlice === idx;
+                const isAnyHovered = hoveredSlice !== null;
+                const isDimmed = isAnyHovered && !isHovered;
+                const color = PIE_COLORS[idx % PIE_COLORS.length];
+                const percentNum = Number(item.pct.replace(",", ".")) || 0;
+
+                return (
+                  <div
+                    key={idx}
+                    onMouseEnter={() => setHoveredSlice(idx)}
+                    onMouseLeave={() => setHoveredSlice(null)}
+                    className={`group flex flex-col gap-1.5 rounded-xl p-2 sm:px-3 sm:py-2 border transition-all cursor-pointer ${
+                      isHovered
+                        ? "bg-[#FAF7F2] border-[#C99A68] shadow-2xs scale-[1.01]"
+                        : isDimmed
+                        ? "border-transparent opacity-50 hover:opacity-100"
+                        : "border-[#EFE4D6]/60 bg-[#FAF7F2]/40 hover:bg-[#FAF7F2] hover:border-[#EFE4D6]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full shrink-0 shadow-2xs transition-transform group-hover:scale-125"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span
+                          className="font-medium text-[#21130D] truncate text-[12px]"
+                          title={item.name}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-sans font-bold text-[#21130D] tabular-nums text-[12px]">
+                          {item.value}
+                        </span>
+                        <span className="rounded-md bg-white border border-[#EFE4D6] px-1.5 py-0.5 text-[10px] font-bold text-[#612D10] tabular-nums shadow-2xs">
+                          {item.pct} %
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="h-1.5 w-full bg-[#EFE4D6]/50 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${percentNum}%`,
+                          backgroundColor: color,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-sans font-bold text-[#21130D] tabular-nums">
-                      {item.value}
-                    </span>
-                    <span className="text-[11px] font-normal text-[#8C6D4F] tabular-nums w-12 text-right">
-                      ({item.pct} %)
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* =========================================================================

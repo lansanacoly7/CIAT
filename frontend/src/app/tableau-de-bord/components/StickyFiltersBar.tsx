@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { BookOpen, Calendar, ChevronDown, Filter, HelpCircle, RotateCcw } from "lucide-react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { Calendar, ChevronDown, Filter, RotateCcw, SlidersHorizontal } from "lucide-react";
 import type { DashboardFilters } from "../types";
 
 interface StickyFiltersBarProps {
@@ -182,7 +181,30 @@ export function StickyFiltersBar({
   isFiltered,
 }: StickyFiltersBarProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const moreFiltersRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setIsCalendarOpen(false);
+      }
+      if (
+        moreFiltersRef.current &&
+        !moreFiltersRef.current.contains(event.target as Node)
+      ) {
+        setIsMoreFiltersOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const [draftDebut, setDraftDebut] = useState<string | undefined>(filters.debut);
   const [draftFin, setDraftFin] = useState<string | undefined>(filters.fin);
   const [prevDebut, setPrevDebut] = useState(filters.debut);
@@ -202,6 +224,13 @@ export function StickyFiltersBar({
     if (filters.domaine) count++;
     if (filters.statut) count++;
     if (filters.debut || filters.fin) count++;
+    return count;
+  }, [filters]);
+
+  const secondaryCount = useMemo(() => {
+    let count = 0;
+    if (filters.domaine) count++;
+    if (filters.statut) count++;
     return count;
   }, [filters]);
 
@@ -397,15 +426,7 @@ export function StickyFiltersBar({
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-[rgba(60,35,20,0.06)]">
-              <Link
-                href="/tableau-de-bord/methodologie"
-                onClick={() => setIsMobilePanelOpen(false)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-white px-3 py-2 text-xs font-medium text-[#612D10]"
-              >
-                <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
-                <span>Guide méthodologique</span>
-              </Link>
+            <div className="pt-2 flex items-center justify-end border-t border-[rgba(60,35,20,0.06)]">
               <button
                 type="button"
                 onClick={() => setIsMobilePanelOpen(false)}
@@ -419,81 +440,20 @@ export function StickyFiltersBar({
 
         {/* ── BARRE DESKTOP (sm:flex) ── */}
         <div className="hidden sm:flex flex-wrap items-center justify-between gap-2.5">
-          {/* Groupe des sélecteurs en pilule */}
+          {/* Groupe des filtres visibles (Période et Cohorte) + Bouton Plus de filtres */}
           <div className="flex flex-wrap items-center gap-2">
-
             <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
               <Filter className="h-3.5 w-3.5 text-[#C99A68]" />
               <span className="hidden sm:inline">Filtres :</span>
             </span>
 
-            {/* Cohorte */}
-            <select
-              value={filters.cohorte || ""}
-              onChange={(e) =>
-                onChange({
-                  ...filters,
-                  cohorte: e.target.value || undefined,
-                })
-              }
-              aria-label="Filtrer par cohorte"
-              className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2.5 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
-            >
-              <option value="">Toutes les cohortes</option>
-              {COHORTES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Domaine */}
-            <select
-              value={filters.domaine || ""}
-              onChange={(e) =>
-                onChange({
-                  ...filters,
-                  domaine: e.target.value || undefined,
-                })
-              }
-              aria-label="Filtrer par domaine"
-              className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2.5 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
-            >
-              <option value="">Tous les domaines</option>
-              {DOMAINES.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Statut */}
-            <select
-              value={filters.statut || ""}
-              onChange={(e) =>
-                onChange({
-                  ...filters,
-                  statut: e.target.value || undefined,
-                })
-              }
-              aria-label="Filtrer par statut"
-              className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2.5 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
-            >
-              <option value="">Tous les statuts</option>
-              {STATUTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Période / DateRange dropdown */}
-            <div className="relative">
+            {/* 1. Période temporelle */}
+            <div className="relative" ref={calendarRef}>
               <button
                 type="button"
                 id="period-filter-button"
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition ${
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition cursor-pointer ${
                   filters.debut || filters.fin
                     ? "border-[#C99A68] bg-[#FBF8F3] text-[#21130D]"
                     : "border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#21130D] hover:border-[#C99A68]"
@@ -559,7 +519,7 @@ export function StickyFiltersBar({
                         });
                         setIsCalendarOpen(false);
                       }}
-                      className="text-[11px] font-medium text-[#5A4B42] hover:text-[#B85D43] transition"
+                      className="text-[11px] font-medium text-[#5A4B42] hover:text-[#B85D43] transition cursor-pointer"
                     >
                       Effacer la période
                     </button>
@@ -574,7 +534,7 @@ export function StickyFiltersBar({
                         });
                         setIsCalendarOpen(false);
                       }}
-                      className="rounded-lg bg-[#21130D] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#3D2314] active:scale-95"
+                      className="rounded-lg bg-[#21130D] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#3D2314] active:scale-95 cursor-pointer"
                     >
                       Appliquer
                     </button>
@@ -582,9 +542,125 @@ export function StickyFiltersBar({
                 </div>
               )}
             </div>
+
+            {/* 2. Cohorte */}
+            <select
+              value={filters.cohorte || ""}
+              onChange={(e) =>
+                onChange({
+                  ...filters,
+                  cohorte: e.target.value || undefined,
+                })
+              }
+              aria-label="Filtrer par cohorte"
+              className="h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2.5 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden cursor-pointer"
+            >
+              <option value="">Toutes les cohortes</option>
+              {COHORTES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+
+            {/* 3. Bouton Popover « Plus de filtres » (Domaine, Statut...) */}
+            <div className="relative" ref={moreFiltersRef}>
+              <button
+                type="button"
+                id="more-filters-button"
+                onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition cursor-pointer ${
+                  secondaryCount > 0
+                    ? "border-[#C99A68] bg-[#C99A68]/10 text-[#21130D] font-semibold"
+                    : "border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] text-[#5A4B42] hover:border-[#C99A68] hover:text-[#21130D]"
+                }`}
+              >
+                <SlidersHorizontal className="h-3 w-3 text-[#C99A68]" />
+                <span>Plus de filtres</span>
+                {secondaryCount > 0 && (
+                  <span className="rounded-full bg-[#8C5E2D] px-1.5 py-0.2 text-[10px] font-bold text-white">
+                    {secondaryCount}
+                  </span>
+                )}
+                <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${isMoreFiltersOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isMoreFiltersOpen && (
+                <div className="absolute left-0 mt-2 w-64 origin-top-left rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-3.5 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up space-y-3">
+                  <div className="flex items-center justify-between border-b border-[rgba(60,35,20,0.06)] pb-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
+                      Filtres complémentaires
+                    </span>
+                    {secondaryCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange({
+                            ...filters,
+                            domaine: undefined,
+                            statut: undefined,
+                          });
+                        }}
+                        className="text-[10px] text-[#B85D43] hover:underline cursor-pointer"
+                      >
+                        Effacer
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#5A4B42] mb-1">
+                      Domaine prioritaire
+                    </label>
+                    <select
+                      value={filters.domaine || ""}
+                      onChange={(e) =>
+                        onChange({
+                          ...filters,
+                          domaine: e.target.value || undefined,
+                        })
+                      }
+                      aria-label="Filtrer par domaine"
+                      className="w-full h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                    >
+                      <option value="">Tous les domaines</option>
+                      {DOMAINES.map((d) => (
+                        <option key={d.value} value={d.value}>
+                          {d.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#5A4B42] mb-1">
+                      Statut d&apos;avancement
+                    </label>
+                    <select
+                      value={filters.statut || ""}
+                      onChange={(e) =>
+                        onChange({
+                          ...filters,
+                          statut: e.target.value || undefined,
+                        })
+                      }
+                      aria-label="Filtrer par statut"
+                      className="w-full h-8 rounded-lg border border-[rgba(60,35,20,0.12)] bg-[#FBF8F3] px-2 text-xs font-medium text-[#21130D] transition hover:border-[#C99A68] focus:border-[#C99A68] focus:bg-white focus:outline-hidden"
+                    >
+                      <option value="">Tous les statuts</option>
+                      {STATUTS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Compteur & Réinitialiser & Mention de périmètre */}
+          {/* Compteur & Réinitialiser */}
           <div className="flex items-center gap-3">
             {isFiltered && (
               <div className="flex items-center gap-1.5">
@@ -595,38 +671,13 @@ export function StickyFiltersBar({
                   type="button"
                   onClick={onReset}
                   title="Réinitialiser tous les filtres"
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-[#B85D43] transition hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-[#B85D43] transition hover:underline cursor-pointer"
                 >
                   <RotateCcw className="h-3 w-3" />
                   <span>Effacer</span>
                 </button>
               </div>
             )}
-
-            <Link
-              href="/tableau-de-bord/methodologie"
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#8C5E2D] hover:bg-[#FAF7F2] hover:text-[#612D10] transition"
-              title="Consulter le référentiel méthodologique et les formules de calcul"
-            >
-              <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
-              <span className="hidden lg:inline">Méthodologie</span>
-            </Link>
-
-            <div className="relative group flex items-center">
-              <button
-                type="button"
-                aria-label="Périmètre d'application des filtres"
-                className="p-1 text-[#5A4B42] hover:text-[#21130D] rounded-full transition focus:outline-hidden"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-              <div
-                role="tooltip"
-                className="absolute right-0 top-full mt-1.5 hidden w-64 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white p-2.5 text-[11px] leading-relaxed text-[#5A4B42] shadow-[0_4px_16px_rgba(60,35,20,0.08)] group-hover:block group-focus-within:block z-50 pointer-events-none"
-              >
-                Ces filtres s&apos;appliquent à l&apos;ensemble des 4 onglets : Vue d&apos;ensemble, Projets, Financements et Registre.
-              </div>
-            </div>
           </div>
         </div>
       </div>

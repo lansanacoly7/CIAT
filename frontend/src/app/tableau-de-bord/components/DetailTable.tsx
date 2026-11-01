@@ -10,9 +10,7 @@ import {
   X,
   CheckCircle2,
   FileText,
-  Building2,
   History,
-  ArrowUpRight,
   Clock,
   Calendar,
   TrendingUp,
@@ -129,38 +127,6 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   }, [isHistoryModalOpen]);
 
 
-  // Statistiques synthétiques au sommet du Registre
-  const stats = useMemo(() => {
-    const totalEngage = data.reduce(
-      (acc, item) => acc + (Number(item.montant) || 0),
-      0
-    );
-    const totalDecaisse = data
-      .filter((item) => {
-        const s = (item.statut || "").toLowerCase();
-        return s.includes("decaisse") || s.includes("paye");
-      })
-      .reduce((acc, item) => acc + (Number(item.montant) || 0), 0);
-    const totalAccorde = data
-      .filter((item) => {
-        const s = (item.statut || "").toLowerCase();
-        return s.includes("accorde") || s.includes("valide");
-      })
-      .reduce((acc, item) => acc + (Number(item.montant) || 0), 0);
-
-    const distinctSources = new Set(data.map((d) => d.source).filter(Boolean)).size;
-    const pctDecaisse =
-      totalEngage > 0 ? Math.round((totalDecaisse / totalEngage) * 100) : 0;
-
-    return {
-      totalEngage,
-      totalDecaisse,
-      totalAccorde,
-      distinctSources,
-      pctDecaisse,
-      count: data.length,
-    };
-  }, [data]);
 
   // Décompte par statut pour les puces de filtrage
   const statusCounts = useMemo(() => {
@@ -382,124 +348,8 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
   };
 
   return (
-    <div className="space-y-5">
-      {/* 1. Bandeau de 4 KPI décisionnels cliquables ouvrant l'historique des fonds (1 colonne sur mobile) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* KPI 1 : Engagements totaux -> Ouvre l'historique global */}
-        <button
-          type="button"
-          onClick={() => handleOpenHistory("all")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20 min-h-[44px]"
-          title="Cliquer pour consulter l'historique chronologique de tous les engagements"
-        >
-          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
-              Engagements totaux
-            </span>
-            <div className="flex items-center gap-1 text-[#8C5E2D] opacity-80 group-hover:opacity-100">
-              <History className="h-4 w-4" aria-hidden="true" />
-            </div>
-          </div>
-          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
-            {formatNumber(stats.totalEngage)}{" "}
-            <span className="text-xs font-normal text-[#8C6D4F]">FCFA</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
-            <span>Volume cumulé des conventions</span>
-            <span className="inline-flex items-center gap-0.5 font-semibold text-[#8C5E2D] group-hover:underline">
-              Historique <ArrowUpRight className="h-3 w-3" />
-            </span>
-          </div>
-        </button>
-
-        {/* KPI 2 : Fonds décaissés -> Ouvre l'historique des décaissements */}
-        <button
-          type="button"
-          onClick={() => handleOpenHistory("decaisse")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#2E7D32] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#2E7D32]/20 min-h-[44px]"
-          title="Cliquer pour consulter l'historique des décaissements effectifs"
-        >
-          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
-              Fonds décaissés
-            </span>
-            <div className="flex items-center gap-1 text-[#2E7D32] opacity-80 group-hover:opacity-100">
-              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            </div>
-          </div>
-          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#1E5222] tabular-nums">
-            {formatNumber(stats.totalDecaisse)}{" "}
-            <span className="text-xs font-normal text-[#6B5646]">FCFA</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
-            <span>
-              <strong className="font-semibold text-[#21130D]">
-                {stats.pctDecaisse} %
-              </strong>{" "}
-              du volume versé
-            </span>
-            <span className="inline-flex items-center gap-0.5 font-semibold text-[#2E7D32] group-hover:underline">
-              Versements <ArrowUpRight className="h-3 w-3" />
-            </span>
-          </div>
-        </button>
-
-        {/* KPI 3 : Dossiers répertoriés -> Ouvre l'historique des conventions */}
-        <button
-          type="button"
-          onClick={() => handleOpenHistory("all")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#8C5E2D] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#8C5E2D]/20 min-h-[44px]"
-          title="Cliquer pour consulter l'historique complet des dossiers"
-        >
-          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
-              Dossiers au registre
-            </span>
-            <div className="flex items-center gap-1 text-[#8C5E2D] opacity-80 group-hover:opacity-100">
-              <FileText className="h-4 w-4" aria-hidden="true" />
-            </div>
-          </div>
-          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
-            {stats.count}{" "}
-            <span className="text-xs font-normal text-[#8C6D4F]">dossiers</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
-            <span>Conventions répertoriées</span>
-            <span className="inline-flex items-center gap-0.5 font-semibold text-[#8C5E2D] group-hover:underline">
-              Traçabilité <ArrowUpRight className="h-3 w-3" />
-            </span>
-          </div>
-        </button>
-
-        {/* KPI 4 : Sources partenaires -> Ouvre l'historique par source */}
-        <button
-          type="button"
-          onClick={() => handleOpenHistory("accorde")}
-          className="group relative flex flex-col justify-between rounded-xl border border-[#EFE4D6] bg-white p-4 text-left shadow-2xs transition-all hover:border-[#4A6B82] hover:shadow-xs hover:-translate-y-0.5 focus:outline-hidden focus:ring-2 focus:ring-[#4A6B82]/20 min-h-[44px]"
-          title="Cliquer pour consulter l'historique des accords et guichets"
-        >
-          <div className="flex items-center justify-between text-[#8C6D4F] w-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#612D10]">
-              Sources partenaires
-            </span>
-            <div className="flex items-center gap-1 text-[#4A6B82] opacity-80 group-hover:opacity-100">
-              <Building2 className="h-4 w-4" aria-hidden="true" />
-            </div>
-          </div>
-          <div className="mt-2 font-sans text-xl sm:text-2xl font-black text-[#21130D] tabular-nums">
-            {stats.distinctSources}{" "}
-            <span className="text-xs font-normal text-[#8C6D4F]">guichets</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-[#6B5646]">
-            <span>Diversification des appuis</span>
-            <span className="inline-flex items-center gap-0.5 font-semibold text-[#4A6B82] group-hover:underline">
-              Accords <ArrowUpRight className="h-3 w-3" />
-            </span>
-          </div>
-        </button>
-      </div>
-
-      {/* 2. Cadre principal du Registre : Barre d'outils + Tableau + Pagination */}
+    <div className="space-y-4">
+      {/* Cadre principal du Registre : Barre d'outils + Tableau + Pagination */}
       <div className="rounded-2xl border border-[#EFE4D6] bg-white p-3.5 sm:p-5 shadow-2xs space-y-4">
         {/* Barre d'outils du tableau : Recherche + Filtres Statut Rapides + PageSize */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE4D6] pb-4">
@@ -571,22 +421,34 @@ export function DetailTable({ data, isLoading = false }: DetailTableProps) {
             })}
           </div>
 
-          {/* Sélecteur de pagination (10 / 25 / 50) */}
-          <div className="flex items-center gap-2 text-xs text-[#6B5646]">
-            <span>Lignes par page :</span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              aria-label="Nombre de lignes par page"
-              className="h-9 sm:h-8 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 text-xs font-semibold text-[#21130D] focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden"
+          {/* Outils secondaires : Pagination & Accès Historique */}
+          <div className="flex items-center gap-2.5 text-xs text-[#6B5646]">
+            <button
+              type="button"
+              onClick={() => handleOpenHistory("all")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2.5 py-1.5 text-xs font-semibold text-[#612D10] hover:bg-white hover:border-[#8C5E2D] transition cursor-pointer"
+              title="Consulter l'historique chronologique des versements et conventions"
             >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
+              <History className="h-3.5 w-3.5 text-[#8C5E2D]" />
+              <span className="hidden md:inline">Historique</span>
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              <span>Lignes :</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                aria-label="Nombre de lignes par page"
+                className="h-8 rounded-lg border border-[#EFE4D6] bg-[#FAF7F2] px-2 text-xs font-semibold text-[#21130D] focus:border-[#8C5E2D] focus:bg-white focus:outline-hidden"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
           </div>
         </div>
 

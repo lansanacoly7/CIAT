@@ -11,6 +11,7 @@ import {
   RefreshCw,
   MessageSquare,
   BookOpen,
+  MoreHorizontal,
 } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { DashboardFilters } from "../types";
@@ -35,10 +36,12 @@ export function CompactHeader({
   targetCaptureId = "dashboard-main-content",
 }: CompactHeaderProps) {
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fermeture du menu au clic extérieur
+  // Fermeture des menus au clic extérieur
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -46,6 +49,12 @@ export function CompactHeader({
         !exportMenuRef.current.contains(event.target as Node)
       ) {
         setIsExportOpen(false);
+      }
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMoreOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -196,19 +205,16 @@ export function CompactHeader({
 
   return (
     <header className="sticky top-0 z-40 h-16 flex items-center justify-between border-b border-[rgba(60,35,20,0.08)] bg-white/95 px-4 sm:px-6 backdrop-blur-md">
-      {/* Titre éditorial en serif */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Titre éditorial épuré */}
+      <div className="flex items-center min-w-0">
         <h1 className="font-serif text-xl sm:text-[28px] font-normal font-[500] text-[#21130D] tracking-tight whitespace-nowrap">
           Tableau de bord
         </h1>
-        <span className="hidden md:inline-block text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42] bg-[#FBF8F3] px-2.5 py-1 rounded-full border border-[rgba(60,35,20,0.06)]">
-          Décisionnel CIAT
-        </span>
       </div>
 
-      {/* Actions et contrôles à droite */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Bouton Actualiser */}
+      {/* 3 actions visibles au plus : Actualiser, Exporter, Menu ⋯ */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Action 1 : Actualiser */}
         <button
           type="button"
           onClick={onRefresh}
@@ -222,30 +228,7 @@ export function CompactHeader({
           />
         </button>
 
-        {/* Accès direct au guide méthodologique */}
-        <Link
-          href="/tableau-de-bord/methodologie"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(60,35,20,0.08)] bg-white px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-[#5A4B42] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:text-[#21130D] active:scale-95"
-          title="Consulter le référentiel méthodologique et les formules de calcul"
-        >
-          <BookOpen className="h-3.5 w-3.5 text-[#8C5E2D]" />
-          <span className="hidden md:inline">Méthodologie</span>
-        </Link>
-
-        {/* Bouton Poser une question (Tiroir IA) */}
-        <button
-          type="button"
-          id="open-ai-drawer"
-          onClick={onOpenAiDrawer}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#C99A68]/30 bg-white px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-[#21130D] shadow-[0_1px_2px_rgba(60,35,20,0.04)] transition hover:bg-[#FBF8F3] hover:border-[#C99A68] active:scale-95"
-          title="Poser une question en langage naturel"
-        >
-          <MessageSquare className="h-3.5 w-3.5 text-[#C99A68]" />
-          <span className="hidden sm:inline">Poser une question</span>
-          <span className="sm:hidden font-medium">Question</span>
-        </button>
-
-        {/* Menu Exporter Unique */}
+        {/* Action 2 : Menu Exporter */}
         <div className="relative" ref={exportMenuRef}>
           <button
             type="button"
@@ -333,6 +316,52 @@ export function CompactHeader({
                 <div className="flex-1">
                   <div>Fiche imprimable de synthèse</div>
                   <div className="text-[11px] text-[#5A4B42]">Aperçu avant impression</div>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Action 3 : Menu « ⋯ » (Méthodologie & Poser une question) */}
+        <div className="relative" ref={moreMenuRef}>
+          <button
+            type="button"
+            id="more-menu-button"
+            onClick={() => setIsMoreOpen(!isMoreOpen)}
+            aria-label="Plus d'actions"
+            title="Options et outils complémentaires"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(60,35,20,0.08)] bg-white text-[#3D2314] transition hover:bg-[#FBF8F3] hover:border-[rgba(60,35,20,0.16)] active:scale-95"
+          >
+            <MoreHorizontal className="h-4 w-4 text-[#5A4B42]" />
+          </button>
+
+          {isMoreOpen && (
+            <div className="absolute right-0 mt-2 w-52 origin-top-right rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white p-1.5 shadow-[0_8px_24px_rgba(60,35,20,0.12)] z-50 animate-fade-in-up">
+              <Link
+                href="/tableau-de-bord/methodologie"
+                onClick={() => setIsMoreOpen(false)}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3]"
+              >
+                <BookOpen className="h-4 w-4 text-[#8C5E2D]" />
+                <div>
+                  <div className="font-semibold">Méthodologie</div>
+                  <div className="text-[11px] text-[#5A4B42]">Définitions et calculs</div>
+                </div>
+              </Link>
+
+              <button
+                type="button"
+                id="open-ai-drawer"
+                onClick={() => {
+                  setIsMoreOpen(false);
+                  onOpenAiDrawer();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#21130D] transition hover:bg-[#FBF8F3]"
+              >
+                <MessageSquare className="h-4 w-4 text-[#C99A68]" />
+                <div>
+                  <div className="font-semibold">Poser une question</div>
+                  <div className="text-[11px] text-[#5A4B42]">Interrogation analytique</div>
                 </div>
               </button>
             </div>
