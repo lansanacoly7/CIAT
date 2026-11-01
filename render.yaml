@@ -1,0 +1,43 @@
+# Configuration Render (Infrastructure-as-Code) pour la plateforme CIAT
+services:
+  # Service Web Backend Django REST Framework
+  - type: web
+    name: ciat-backend
+    runtime: python
+    buildCommand: "cd backend && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate"
+    startCommand: "cd backend && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+    plan: free
+    region: frankfurt # ou oregon
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ciat-postgres
+          property: connectionString
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false # À renseigner avec l'URL attribuée par Render (ex. ciat-backend.onrender.com)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false # À renseigner avec l'URL frontend Vercel (ex. https://ciat-frontend.vercel.app)
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false # À renseigner avec https://ciat-backend.onrender.com et l'URL Vercel
+      - key: AI_PROVIDERS
+        value: "groq,gemini"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+databases:
+  # Base de données PostgreSQL gérée
+  - name: ciat-postgres
+    plan: free
+    region: frankfurt
+    databaseName: ciat
+    user: ciat
