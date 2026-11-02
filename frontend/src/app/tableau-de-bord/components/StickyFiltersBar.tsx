@@ -273,8 +273,8 @@ export function StickyFiltersBar({
   };
 
   return (
-    <div className="sticky top-2 z-30 mx-auto max-w-7xl transition-all">
-      <div className="rounded-2xl border border-[rgba(60,35,20,0.08)] bg-white/95 px-3 py-2 sm:px-4 sm:py-2.5 shadow-[0_4px_20px_rgba(60,35,20,0.06)] backdrop-blur-md">
+    <div className="mx-auto max-w-7xl">
+      <div>
         
         {/* ── BARRE MOBILE (390 px) AVEC PANNEAU REPLIABLE ── */}
         <div className="flex sm:hidden items-center justify-between gap-2">
@@ -442,11 +442,6 @@ export function StickyFiltersBar({
         <div className="hidden sm:flex flex-wrap items-center justify-between gap-2.5">
           {/* Groupe des filtres visibles (Période et Cohorte) + Bouton Plus de filtres */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-[#5A4B42]">
-              <Filter className="h-3.5 w-3.5 text-[#C99A68]" />
-              <span className="hidden sm:inline">Filtres :</span>
-            </span>
-
             {/* 1. Période temporelle */}
             <div className="relative" ref={calendarRef}>
               <button
@@ -576,7 +571,7 @@ export function StickyFiltersBar({
                 }`}
               >
                 <SlidersHorizontal className="h-3 w-3 text-[#C99A68]" />
-                <span>Plus de filtres</span>
+                <span>Plus</span>
                 {secondaryCount > 0 && (
                   <span className="rounded-full bg-[#8C5E2D] px-1.5 py-0.2 text-[10px] font-bold text-white">
                     {secondaryCount}
@@ -664,9 +659,6 @@ export function StickyFiltersBar({
           <div className="flex items-center gap-3">
             {isFiltered && (
               <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-[#C99A68]/15 px-2 py-0.5 text-[11px] font-semibold text-[#8C5E2D]">
-                  {activeCount} {activeCount > 1 ? "filtres" : "filtre"}
-                </span>
                 <button
                   type="button"
                   onClick={onReset}
