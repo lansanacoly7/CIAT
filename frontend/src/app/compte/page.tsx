@@ -13,7 +13,6 @@ import {
   Mail,
   Pencil,
   Save,
-  ShieldCheck,
   Trash2,
   User as UserIcon,
 } from "lucide-react";
@@ -170,18 +169,6 @@ function ProfilSection({ user }: { user: User }) {
 
   return (
     <div className="space-y-6">
-      {/* Fil d'Ariane harmonisé */}
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6D58]">
-        <Link
-          href="/incubateur/projets"
-          className="hover:text-[#612D10] hover:underline transition-colors"
-        >
-          Suivi des projets
-        </Link>
-        <span className="text-[#C99A68]/60">/</span>
-        <span className="text-[#612D10] font-bold">Mon profil & Compte</span>
-      </div>
-      
       {/* 1. BANNIÈRE RÉSUMÉ DU PROFIL (Fidèle au design sans la lampe) */}
       <div className="relative overflow-hidden rounded-2xl border border-[#EFE4D6] bg-white p-6 sm:p-7 shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -285,13 +272,6 @@ function ProfilSection({ user }: { user: User }) {
           </div>
         </div>
 
-        {/* Arcs décoratifs organiques en arrière-plan à droite (sans la lampe, selon vos consignes) */}
-        <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-80 pointer-events-none overflow-hidden">
-          <svg viewBox="0 0 300 120" preserveAspectRatio="none" className="h-full w-full opacity-60" aria-hidden="true">
-            <path d="M 120,120 C 180,90 220,50 300,10 L 300,120 Z" fill="#EADBCE" />
-            <path d="M 180,120 C 230,100 260,70 300,40 L 300,120 Z" fill="#F0E3D3" />
-          </svg>
-        </div>
       </div>
 
       {/* 2. FORMULAIRE ET SÉCURITÉ EN DOUBLE COLONNE */}
@@ -466,18 +446,7 @@ function ProfilSection({ user }: { user: User }) {
                 </div>
               </div>
 
-              {/* Emblème central Bouclier & Protection CIAT */}
-              <div className="py-8 flex flex-col items-center justify-center text-center">
-                <div className="relative h-24 w-24 rounded-2xl bg-[#FAF4ED] border border-[#EFE4D6] flex items-center justify-center text-[#612D10] shadow-xs">
-                  <ShieldCheck className="h-12 w-12 text-[#612D10]" aria-hidden="true" />
-                  <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-[#612D10] text-white flex items-center justify-center border-2 border-white shadow-xs">
-                    <Lock className="h-4 w-4" aria-hidden="true" />
-                  </div>
-                </div>
-                <p className="text-xs text-[#6b5646] mt-4 max-w-[200px] leading-relaxed">
-                  Votre compte est protégé par mot de passe sécurisé.
-                </p>
-              </div>
+              <p className="py-6 text-sm text-[#6b5646]">Votre compte est protégé par un mot de passe.</p>
             </div>
 
             <div>
@@ -521,10 +490,7 @@ function ProfilSection({ user }: { user: User }) {
 
         {/* 3. BANDEAU ACTIONS INFÉRIEUR */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-          <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-white border border-[#EFE4D6] shadow-xs text-xs text-[#6b5646]">
-            <Info className="h-4 w-4 text-[#A35926] shrink-0" aria-hidden="true" />
-            <span>Vos informations servent au suivi de votre candidature au CIAT.</span>
-          </div>
+          <div />
 
           <div className="flex items-center gap-3 shrink-0">
             <button

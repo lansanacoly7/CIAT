@@ -258,21 +258,12 @@ function EspaceGestionContent() {
   return (
     <div className="bg-[#FAF8F5] min-h-screen py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Fil d'ariane */}
-        <nav aria-label="Fil d'ariane" className="mb-6 flex items-center gap-2 text-xs text-texte-doux">
-          <Link href="/" className="hover:text-brun transition">Accueil</Link>
-          <span>/</span>
-          <Link href="/galerie" className="hover:text-brun transition">Galerie des innovations</Link>
-          <span>/</span>
-          <span className="font-semibold text-brun">Espace Gestion & Workflow</span>
-        </nav>
 
         {isDemo && <DemoBanner className="mb-6" />}
 
         <PageTitle
-          tag="Espace Professionnel CIAT"
-          title="Gestion & Validation de la Galerie"
-          subtitle="Gérez le cycle de vie de vos fiches d'innovation : création par les porteurs, instruction par le comité et publication officielle sur la vitrine technologique."
+          title="Gestion de la galerie"
+          subtitle="Création des fiches par les porteurs, validation par l'équipe, puis publication."
         />
 
         {/* Notifications & Alertes */}
@@ -417,7 +408,7 @@ function EspaceGestionContent() {
                           {fiche.avancement}
                         </Badge>
                         <span className="text-xs text-texte-doux font-mono">
-                          Projet #{fiche.projet} · {fiche.vues} vues
+                          {fiche.vues} vues
                         </span>
                       </div>
 
@@ -697,9 +688,6 @@ function EspaceGestionContent() {
                         <Badge tone={getAvancementBadgeTone(fiche.avancement)}>
                           {fiche.avancement}
                         </Badge>
-                        <span className="text-xs font-mono text-texte-doux">
-                          Réf. #{fiche.id} · Projet #{fiche.projet}
-                        </span>
                       </div>
                     </div>
 
@@ -747,10 +735,8 @@ function EspaceGestionContent() {
         {activeTab === "stats" && isCoordonnateurOrAdmin && (
           <section aria-label="Statistiques de la galerie" className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-brun">Indicateurs de Consultation de la Galerie</h2>
-              <p className="text-xs text-texte-doux">
-                Données certifiées issues de l&apos;API <code className="font-mono text-brun">/api/gallery/statistiques/</code>.
-              </p>
+              <h2 className="text-xl font-bold text-brun">Consultations</h2>
+              <p className="text-xs text-texte-doux">Nombre de consultations des fiches publiées.</p>
             </div>
 
             {loadingStats && (

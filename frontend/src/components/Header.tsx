@@ -9,17 +9,12 @@ import { Button, ButtonLink } from "@/components/ui";
 
 const emptySubscribe = () => () => {};
 
-/**
- * Liens principaux institutionnels épurés (5 liens au lieu des 7 initiaux pour éviter la surcharge)
- * Typographie : Plus Jakarta Sans (titres/boutons) & Inter (textes/navigation)
- * Conforme à la Charte Graphique Officielle CIAT (v1.0) & Master.md
- */
+// Les domaines sont accessibles depuis l'accueil et le pied de page.
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
   { href: "/portail/ciat", label: "Le CIAT" },
-  { href: "/portail/incubateur", label: "L'Incubateur" },
+  { href: "/portail/incubateur", label: "L'incubateur" },
   { href: "/galerie", label: "Galerie" },
-  { href: "/portail/domaines", label: "7 Domaines" },
   { href: "/portail/appels", label: "Appels" },
   { href: "/portail/contact", label: "Contact" },
 ];
@@ -82,7 +77,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation principale Desktop — Sobre, épurée, sans gadget */}
-        <nav aria-label="Navigation principale" className="hidden items-center gap-4 xl:gap-6 lg:flex">
+        <nav aria-label="Navigation principale" className="hidden items-center gap-8 lg:flex">
           {NAV_LINKS.map((link) => {
             const active = isActiveRoute(link.href, pathname);
 
@@ -90,10 +85,10 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`font-[family-name:var(--font-title)] text-xs xl:text-sm transition-colors py-1 whitespace-nowrap ${
+                className={`font-[family-name:var(--font-title)] text-sm transition-colors py-1 whitespace-nowrap ${
                   active
-                    ? "font-bold text-[#612D10] border-b-2 border-[#C99A68] pb-1"
-                    : "font-semibold text-[#24140D] hover:text-[#612D10]"
+                    ? "font-semibold text-[#612D10] border-b-2 border-[#C99A68] pb-1"
+                    : "font-medium text-[#24140D] hover:text-[#612D10]"
                 }`}
               >
                 {link.label}

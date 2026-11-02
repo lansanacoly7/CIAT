@@ -1,26 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Clock,
-  Building2,
   Users,
   CheckCircle2,
   XCircle,
-  Award,
   RefreshCw,
   Sliders,
   UserCheck,
-  ChevronRight,
   ArrowLeft,
   ShieldCheck,
-  Info,
   AlertCircle,
   LogIn,
-  FileCheck,
   ArrowDown,
-  Scale,
   Send,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -155,41 +148,6 @@ function EvaluationBoard() {
     if (selectedId !== null) loadEvaluations(selectedId);
   };
 
-  // Statistiques du pipeline de sélection
-  const stats = useMemo(() => {
-    const total = dossiers.length;
-    const enAttente = dossiers.filter((d) => d.statut === "soumis").length;
-    const enEvaluation = dossiers.filter((d) => d.statut === "en_evaluation").length;
-    const acceptes = dossiers.filter((d) => d.statut === "accepte").length;
-    const refuses = dossiers.filter((d) => d.statut === "refuse").length;
-
-    const knownScores = dossiers
-      .map((d) => (d.id in scores ? scores[d.id] : d.score_moyen))
-      .filter((s): s is number => typeof s === "number" && !isNaN(s));
-    const scoreMoyenGlobal =
-      knownScores.length > 0
-        ? knownScores.reduce((acc, v) => acc + v, 0) / knownScores.length
-        : null;
-
-    return {
-      total,
-      enAttente,
-      enEvaluation,
-      acceptes,
-      refuses,
-      scoreMoyenGlobal,
-      tauxSucces: total > 0 ? Math.round((acceptes / total) * 100) : 0,
-      tauxTraite: total > 0 ? Math.round(((acceptes + refuses) / total) * 100) : 0,
-    };
-  }, [dossiers, scores]);
-
-  // Dossiers prioritaires à évaluer
-  const dossiersPrioritaires = useMemo(() => {
-    return dossiers
-      .filter((d) => d.statut === "soumis" || (d.id in scores ? scores[d.id] == null : d.score_moyen == null))
-      .slice(0, 3);
-  }, [dossiers, scores]);
-
   // Défilement fluide vers une étape du dossier
   const scrollToStep = (stepId: string) => {
     const el = document.getElementById(stepId);
@@ -235,27 +193,11 @@ function EvaluationBoard() {
          ========================================================================= */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#EFE4D6] pb-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF7F2] border border-[#EFE4D6] px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-[#8C5E2D]">
-              <Building2 className="h-3.5 w-3.5 text-[#C99A68]" />
-              Incubateur CIAT • Comité de Sélection 2026
-            </span>
-            {user?.role && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#612D10] bg-[#EFE4D6]/60 px-3 py-0.5 rounded-full border border-[#EFE4D6]">
-                <UserCheck className="h-3.5 w-3.5 text-[#C99A68]" />
-                {user.role === "coordonnateur"
-                  ? "Rôle : Coordonnateur de l'Incubateur"
-                  : user.role === "administrateur"
-                  ? "Rôle : Administrateur Général"
-                  : "Rôle : Membre du Comité de Sélection"}
-              </span>
-            )}
-          </div>
           <h1 className="text-2xl font-black text-[#612D10] sm:text-3xl font-[family-name:var(--font-title)] tracking-tight">
             Évaluation des dossiers
           </h1>
           <p className="text-xs sm:text-sm text-[#6B5646]">
-            Processus structuré en 3 étapes : instruction des pièces, notation multicritères par le jury et arbitrage final d&apos;incubation.
+            Instruction, notation par le jury, puis décision.
           </p>
         </div>
 
@@ -304,138 +246,6 @@ function EvaluationBoard() {
         </div>
       )}
 
-      {/* =========================================================================
-          2. BANNIÈRE PIPELINE : LE WORKFLOW EN 3 ÉTAPES CLAIRES & INTUITIVES
-         ========================================================================= */}
-      <div className="rounded-2xl border border-[#EFE4D6] bg-white p-4 sm:p-5 shadow-2xs space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EFE4D6]/70 pb-3">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D] flex items-center gap-1.5">
-              <Scale className="h-4 w-4 text-[#C99A68]" />
-              Parcours d&apos;Évaluation & Sélection CIAT (Pipeline en 3 étapes)
-            </h2>
-            <p className="text-[11px] text-[#5A4B42] mt-0.5">
-              Cliquez sur une étape pour filtrer instantanément la file de traitement ci-dessous.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActiveFilter("tous")}
-            className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-              activeFilter === "tous"
-                ? "bg-[#612D10] text-white shadow-2xs"
-                : "bg-[#FAF7F2] text-[#612D10] border border-[#EFE4D6] hover:bg-[#EFE4D6]/60"
-            }`}
-          >
-            Tous les dossiers ({stats.total})
-          </button>
-        </div>
-
-        {/* 3 Cartes Étape du Pipeline */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Étape 1 : Instruction & Pièces */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter("soumis")}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeFilter === "soumis"
-                ? "border-[#D97706] bg-amber-50/70 ring-2 ring-[#D97706]/30 shadow-xs"
-                : "border-[#EFE4D6] bg-[#FAF7F2]/40 hover:bg-white hover:border-[#D97706]/60"
-            }`}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[#D97706] font-bold text-sm">
-              1
-            </div>
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-[#21130D]">
-                  Instruction & Pièces
-                </span>
-                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
-                  {stats.enAttente} à noter
-                </span>
-              </div>
-              <p className="text-[11px] text-[#5A4B42] leading-snug">
-                Vérification du dossier déposé, du pitch et des pièces justificatives.
-              </p>
-            </div>
-          </button>
-
-          {/* Étape 2 : Notation Multicritères Jury */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter("en_evaluation")}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeFilter === "en_evaluation"
-                ? "border-[#1D4ED8] bg-blue-50/70 ring-2 ring-[#1D4ED8]/30 shadow-xs"
-                : "border-[#EFE4D6] bg-[#FAF7F2]/40 hover:bg-white hover:border-[#1D4ED8]/60"
-            }`}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-[#1D4ED8] font-bold text-sm">
-              2
-            </div>
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-[#21130D]">
-                  Notation par le Jury
-                </span>
-                <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">
-                  {stats.enEvaluation} en jury
-                </span>
-              </div>
-              <p className="text-[11px] text-[#5A4B42] leading-snug">
-                5 critères officiels pondérés sur 100 points & avis argumenté.
-              </p>
-            </div>
-          </button>
-
-          {/* Étape 3 : Arbitrage & Décision Coordonnateur */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter("accepte")}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeFilter === "accepte"
-                ? "border-[#2E7D32] bg-emerald-50/70 ring-2 ring-[#2E7D32]/30 shadow-xs"
-                : "border-[#EFE4D6] bg-[#FAF7F2]/40 hover:bg-white hover:border-[#2E7D32]/60"
-            }`}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-[#2E7D32] font-bold text-sm">
-              3
-            </div>
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-[#21130D]">
-                  Décision d&apos;Incubation
-                </span>
-                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                  {stats.acceptes} admis ({stats.tauxSucces}%)
-                </span>
-              </div>
-              <p className="text-[11px] text-[#5A4B42] leading-snug">
-                Validation finale de l&apos;admission ou notification de rejet motivé.
-              </p>
-            </div>
-          </button>
-        </div>
-
-        {/* Message d'orientation selon le rôle connecté */}
-        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EFE4D6] text-xs text-[#612D10]">
-          <Info className="h-4 w-4 shrink-0 text-[#C99A68]" />
-          <span>
-            {user?.role === "membre_comite" ? (
-              <>
-                <strong>Votre mission en tant que membre du jury :</strong> Cliquez sur un dossier à gauche, examinez les pièces (Étape 1), puis saisissez vos notes dans la grille multicritères (Étape 2). Le Coordonnateur validera ensuite la décision finale (Étape 3).
-              </>
-            ) : user?.role === "coordonnateur" || user?.role === "administrateur" ? (
-              <>
-                <strong>Votre mission en tant que coordonnateur :</strong> Supervisez l&apos;instruction (Étape 1), suivez les avis du jury (Étape 2), et prononcez l&apos;admission ou le rejet officiel (Étape 3).
-              </>
-            ) : (
-              <>Sélectionnez une candidature pour consulter son état d&apos;instruction et la grille de notation.</>
-            )}
-          </span>
-        </div>
-      </div>
 
       {/* =========================================================================
           3. MASTER-DETAIL : COLONNE GAUCHE (FILE) & COLONNE DROITE (COCKPIT DÉTAILLÉ)
@@ -900,136 +710,10 @@ function EvaluationBoard() {
               /* =================================================================
                  ACCUEIL DU COCKPIT QUAND AUCUN DOSSIER N'EST SÉLECTIONNÉ
                  ================================================================= */
-              <div className="rounded-2xl border border-[#EFE4D6] bg-white p-6 sm:p-8 shadow-xs space-y-6">
-                <div className="flex items-start gap-4 border-b border-[#EFE4D6] pb-6">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FAF7F2] border border-[#EFE4D6] text-[#612D10]">
-                    <Sliders className="h-6 w-6 text-[#C99A68]" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C5E2D]">
-                      Espace délibération & évaluation
-                    </span>
-                    <h2 className="font-[family-name:var(--font-title)] text-xl font-bold text-[#612D10] sm:text-2xl">
-                      Cockpit d&apos;évaluation du comité
-                    </h2>
-                    <p className="mt-1 text-xs sm:text-sm text-[#6B5646] leading-relaxed">
-                      👈 <strong>Étape 1 :</strong> Sélectionnez une candidature dans la liste de gauche pour afficher sa fiche complète, ses pièces justificatives et démarrer la notation.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Explication pas à pas du workflow */}
-                <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/50 p-4 space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10] flex items-center gap-1.5">
-                    <FileCheck className="h-4 w-4 text-[#C99A68]" />
-                    <span>Comment fonctionne l&apos;évaluation ? (Workflow en 3 étapes)</span>
-                  </h3>
-                  <div className="grid gap-2.5 sm:grid-cols-3 text-xs">
-                    <div className="p-3 rounded-lg bg-white border border-[#EFE4D6] space-y-1">
-                      <strong className="text-[#612D10] font-bold flex items-center gap-1">
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-amber-800 text-[10px]">1</span>
-                        <span>Instruction</span>
-                      </strong>
-                      <p className="text-[11px] text-[#5A4B42]">
-                        Vérification du pitch, du modèle économique et des pièces justificatives téléchargeables.
-                      </p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-white border border-[#EFE4D6] space-y-1">
-                      <strong className="text-[#612D10] font-bold flex items-center gap-1">
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-[10px]">2</span>
-                        <span>Notation Jury</span>
-                      </strong>
-                      <p className="text-[11px] text-[#5A4B42]">
-                        Évaluation individuelle sur 5 critères officiels (/100) avec avis motivé argumenté.
-                      </p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-white border border-[#EFE4D6] space-y-1">
-                      <strong className="text-[#612D10] font-bold flex items-center gap-1">
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 text-[10px]">3</span>
-                        <span>Arbitrage</span>
-                      </strong>
-                      <p className="text-[11px] text-[#5A4B42]">
-                        Le Coordonnateur statue sur l&apos;admission officielle ou notifie un refus motivé.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dossiers prioritaires à évaluer */}
-                {dossiersPrioritaires.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#8C5E2D] flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-amber-600" />
-                        <span>Candidatures prioritaires en attente de notation</span>
-                      </h3>
-                      <span className="text-[11px] text-[#6B5646]">
-                        {stats.enAttente} dossiers restants
-                      </span>
-                    </div>
-
-                    <div className="grid gap-2.5 sm:grid-cols-3">
-                      {dossiersPrioritaires.map((d) => (
-                        <div
-                          key={d.id}
-                          className="flex flex-col justify-between p-3.5 rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/60 hover:bg-white hover:border-[#C99A68] hover:shadow-xs transition-all"
-                        >
-                          <div>
-                            <span className="text-[10px] font-semibold text-[#8C5E2D] block">
-                              {d.projet.domaine_nom || "Général"}
-                            </span>
-                            <h4 className="font-bold text-xs text-[#612D10] line-clamp-2 mt-0.5">
-                              {d.projet.titre}
-                            </h4>
-                            <p className="text-[11px] text-[#6B5646] mt-1 truncate">
-                              {d.porteur_nom}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectDossier(d.id)}
-                            className="mt-3 inline-flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#EFE4D6] text-[11px] font-bold text-[#612D10] hover:bg-[#612D10] hover:text-white transition-colors cursor-pointer"
-                          >
-                            <span>Noter ce projet</span>
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Rappel du barème officiel */}
-                <div className="rounded-xl border border-[#EFE4D6] bg-[#FAF7F2]/40 p-5 space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#612D10] flex items-center gap-1.5">
-                    <Award className="h-4 w-4 text-[#C99A68]" />
-                    <span>Barème multicritères officiel CIAT (Pondération sur 100)</span>
-                  </h3>
-                  <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-white border border-[#EFE4D6]">
-                      <strong className="text-[#612D10] font-bold block">1. Pertinence du problème & solution</strong>
-                      <span className="text-[#6B5646] text-[11px]">Coeff. 3 · Adéquation au marché et besoin réel</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-[#EFE4D6]">
-                      <strong className="text-[#612D10] font-bold block">2. Caractère innovant & faisabilité</strong>
-                      <span className="text-[#6B5646] text-[11px]">Coeff. 3 · Faisabilité technique au FabLab CIAT</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-[#EFE4D6]">
-                      <strong className="text-[#612D10] font-bold block">3. Modèle économique & viabilité</strong>
-                      <span className="text-[#6B5646] text-[11px]">Coeff. 2 · Capacité de génération de revenus</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-[#EFE4D6]">
-                      <strong className="text-[#612D10] font-bold block">4. Équipe, compétences & complémentarité</strong>
-                      <span className="text-[#6B5646] text-[11px]">Coeff. 2 · Leadership et motivation des porteurs</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-[#EFE4D6] sm:col-span-2">
-                      <strong className="text-[#612D10] font-bold block">5. Impact socio-économique & durabilité</strong>
-                      <span className="text-[#6B5646] text-[11px]">Coeff. 2 · Création d&apos;emplois, ancrage local Diamniadio et RSE</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex h-full min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-[#EFE4D6] p-8 text-center">
+                <p className="max-w-sm text-sm leading-relaxed text-[#6B5646]">
+                  Sélectionnez un dossier dans la liste pour l&apos;examiner et le noter.
+                </p>
               </div>
             )}
           </section>

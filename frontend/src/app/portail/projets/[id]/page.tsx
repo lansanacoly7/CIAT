@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, use, useEffect, useState } from "react";
-import { ApiErrorBanner, Badge, ButtonLink, DemoBanner, PageTitle } from "@/components/ui";
+import Link from "next/link";
+import { ApiErrorBanner, ButtonLink, DemoBanner } from "@/components/ui";
 import { getProjetIncubeById, type ProjetIncube } from "@/lib/portal-api";
 
 function formatDate(dateStr: string) {
@@ -17,18 +18,11 @@ function formatDate(dateStr: string) {
   }
 }
 
-function getStatusBadge(statut: ProjetIncube["statut"]) {
-  switch (statut) {
-    case "prototype":
-      return { label: "Prototype validé", tone: "info" as const };
-    case "incube":
-      return { label: "En incubation", tone: "alerte" as const };
-    case "termine":
-      return { label: "Incubation terminée", tone: "succes" as const };
-    default:
-      return { label: statut, tone: "neutre" as const };
-  }
-}
+const STATUT_LABELS: Record<ProjetIncube["statut"], string> = {
+  prototype: "Prototype validé",
+  incube: "En incubation",
+  termine: "Incubation terminée",
+};
 
 function ProjetDetailContent({
   params,
@@ -87,7 +81,7 @@ function ProjetDetailContent({
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-sm font-semibold text-brun animate-pulse">Chargement de la fiche projet...</p>
+        <p className="text-sm font-semibold text-brun animate-pulse">Chargement…</p>
       </div>
     );
   }
@@ -98,7 +92,7 @@ function ProjetDetailContent({
         <ApiErrorBanner message={error} onRetry={loadProjet} className="mb-6" />
         <div className="text-center">
           <ButtonLink href="/portail/projets" variant="secondary">
-            ← Revenir à l&apos;annuaire des projets
+            ← Projets incubés
           </ButtonLink>
         </div>
       </div>
@@ -114,144 +108,63 @@ function ProjetDetailContent({
         </p>
         <div className="mt-6">
           <ButtonLink href="/portail/projets" variant="secondary">
-            ← Revenir à l&apos;annuaire des projets
+            ← Projets incubés
           </ButtonLink>
         </div>
       </div>
     );
   }
 
-  const statusBadge = getStatusBadge(projet.statut);
-
   return (
-    <article className="mx-auto max-w-4xl px-4 py-10 md:py-16">
-      {/* Mode Démonstration si activé explicitement */}
-      {isDemo && <DemoBanner className="mb-6" />}
+    <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6 md:py-24">
+      {isDemo && <DemoBanner />}
 
-      {/* Fil d'ariane & métadonnées */}
-      <div className="mb-6 flex flex-wrap items-center gap-3 text-xs text-texte-doux">
-        <ButtonLink href="/portail/projets" variant="secondary" className="!min-h-[36px] px-3 py-1 text-xs">
-          ← Revenir à l&apos;annuaire des projets
-        </ButtonLink>
-        <span>·</span>
-        <Badge tone={statusBadge.tone}>{statusBadge.label}</Badge>
-        <span>·</span>
-        <span className="font-semibold text-brun">{projet.cohorte.nom}</span>
-      </div>
+      <Link href="/portail/projets" className="text-sm text-texte-doux hover:text-brun">
+        ← Projets incubés
+      </Link>
 
-      <PageTitle
-        tag={projet.domaine.nom}
-        title={projet.titre}
-        subtitle={projet.resume}
-      />
+      <p className="mt-10 text-sm text-texte-doux">
+        {projet.domaine.nom} · {STATUT_LABELS[projet.statut] ?? projet.statut}
+      </p>
+      <h1 className="mt-2 text-3xl font-bold leading-tight md:text-4xl">{projet.titre}</h1>
+      <p className="mt-5 text-lg leading-relaxed text-texte-doux">{projet.resume}</p>
 
-      {/* Cartouche d'informations clés */}
-      <div className="mt-8 rounded-2xl border border-bordure bg-white p-6 shadow-sm md:p-8">
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 border-b border-bordure pb-6">
-          <div>
-            <span className="block text-xs font-bold uppercase tracking-wider text-texte-doux">
-              Filière officielle
-            </span>
-            <span className="mt-1 block text-sm font-bold text-brun">
-              {projet.domaine.nom}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-xs font-bold uppercase tracking-wider text-texte-doux">
-              Équipe porteuse
-            </span>
-            <span className="mt-1 block text-sm font-bold text-brun">
-              {projet.porteur_nom}
-            </span>
-          </div>
-
-          <div>
-            <span className="block text-xs font-bold uppercase tracking-wider text-texte-doux">
-              Date d&apos;entrée en incubation
-            </span>
-            <span className="mt-1 block text-sm font-bold text-brun">
-              {formatDate(projet.cree_le)}
-            </span>
-          </div>
+      <dl className="mt-10 grid gap-6 border-y border-bordure py-6 text-sm sm:grid-cols-3">
+        <div>
+          <dt className="text-texte-doux">Équipe</dt>
+          <dd className="mt-1 font-medium">{projet.porteur_nom}</dd>
         </div>
-
-        {/* Sections descriptives complètes */}
-        <div className="mt-8 space-y-8 text-base leading-relaxed text-texte">
-          {/* Problème */}
-          <div>
-            <h2 className="flex items-center gap-2 text-lg font-bold text-brun">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce">
-                1
-              </span>
-              Le Défi & la Problématique Identifiée
-            </h2>
-            <div className="mt-3 rounded-xl bg-ivoire p-5 text-sm leading-relaxed text-texte-doux">
-              {projet.probleme}
-            </div>
-          </div>
-
-          {/* Solution */}
-          <div>
-            <h2 className="flex items-center gap-2 text-lg font-bold text-brun">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce">
-                2
-              </span>
-              La Solution Technologique Développée
-            </h2>
-            <div className="mt-3 rounded-xl bg-ivoire p-5 text-sm leading-relaxed text-texte-doux">
-              {projet.solution}
-            </div>
-          </div>
-
-          {/* Impact attendu */}
-          {projet.impact_attendu && (
-            <div>
-              <h2 className="flex items-center gap-2 text-lg font-bold text-brun">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-beige text-xs font-bold text-brun-fonce">
-                  3
-                </span>
-                Impact Territorial & Environnemental Attendu
-              </h2>
-              <div className="mt-3 rounded-xl border border-beige/40 bg-[#FAF7F2] p-5 text-sm leading-relaxed text-brun font-medium">
-                {projet.impact_attendu}
-              </div>
-            </div>
-          )}
-
-          {/* Technologies mobilisées */}
-          {projet.technologies && projet.technologies.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-texte-doux">
-                Technologies & Spécifications Clés
-              </h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {projet.technologies.map((tech) => (
-                  <span
-                    key={tech}
-                    className="rounded-lg border border-bordure bg-white px-3 py-1.5 text-xs font-semibold text-brun shadow-2xs"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+        <div>
+          <dt className="text-texte-doux">Cohorte</dt>
+          <dd className="mt-1 font-medium">{projet.cohorte.nom}</dd>
         </div>
-
-        {/* Pied de fiche institutionnelle */}
-        <div className="mt-12 border-t border-bordure pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-xs text-texte-doux">
-            Projet certifié par le <strong>Comité de Sélection & d&apos;Incubation du CIAT</strong><br />
-            Institut Supérieur d&apos;Enseignement Professionnel (ISEP) Amadou Trawaré de Diamniadio
-          </div>
-
-          <div className="flex gap-2">
-            <ButtonLink href="/portail/appels" variant="accent" className="text-xs">
-              Rejoindre l&apos;Incubateur
-            </ButtonLink>
-          </div>
+        <div>
+          <dt className="text-texte-doux">Entrée en incubation</dt>
+          <dd className="mt-1 font-medium">{formatDate(projet.cree_le)}</dd>
         </div>
+      </dl>
+
+      <div className="mt-12 space-y-10 leading-relaxed">
+        <section>
+          <h2 className="text-xl font-semibold">Le problème</h2>
+          <p className="mt-3 text-texte-doux">{projet.probleme}</p>
+        </section>
+        <section>
+          <h2 className="text-xl font-semibold">La solution</h2>
+          <p className="mt-3 text-texte-doux">{projet.solution}</p>
+        </section>
+        {projet.impact_attendu && (
+          <section>
+            <h2 className="text-xl font-semibold">L&apos;impact attendu</h2>
+            <p className="mt-3 text-texte-doux">{projet.impact_attendu}</p>
+          </section>
+        )}
+        {projet.technologies && projet.technologies.length > 0 && (
+          <section>
+            <h2 className="text-xl font-semibold">Technologies</h2>
+            <p className="mt-3 text-texte-doux">{projet.technologies.join(", ")}</p>
+          </section>
+        )}
       </div>
     </article>
   );
@@ -266,7 +179,7 @@ export default function ProjetDetailPage({
     <Suspense
       fallback={
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-          <p className="text-sm font-semibold text-brun animate-pulse">Chargement de la fiche projet...</p>
+          <p className="text-sm font-semibold text-brun animate-pulse">Chargement…</p>
         </div>
       }
     >

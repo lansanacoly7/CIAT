@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiErrorBanner, Badge, ButtonLink, Card, DemoBanner, PageTitle } from "@/components/ui";
+import { ApiErrorBanner, DemoBanner } from "@/components/ui";
+import PageHero from "@/components/PageHero";
 import { getEvenements, type Evenement } from "@/lib/portal-api";
 
 function formatEventDate(debutStr: string, finStr: string) {
@@ -45,7 +46,6 @@ function formatEventDate(debutStr: string, finStr: string) {
 export default function EvenementsPage() {
   const [items, setItems] = useState<Evenement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fromApi, setFromApi] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +55,6 @@ export default function EvenementsPage() {
     getEvenements()
       .then((res) => {
         setItems(res.items);
-        setFromApi(res.fromApi);
         setIsDemo(Boolean(res.isDemo));
         setError(res.error);
         setLoading(false);
@@ -74,7 +73,6 @@ export default function EvenementsPage() {
       .then((res) => {
         if (!ignore) {
           setItems(res.items);
-          setFromApi(res.fromApi);
           setIsDemo(Boolean(res.isDemo));
           setError(res.error);
           setLoading(false);
@@ -94,122 +92,53 @@ export default function EvenementsPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-      <PageTitle
-        tag="Module 1 · Portail Public"
-        title="Agenda des Événements & Ateliers"
-        subtitle="Participez aux journées de démonstration, aux masterclasses technologiques et aux réunions d'évaluation du CIAT."
-      />
+    <>
+      <PageHero image="/images/galerie_moments/projets-robotique.jpg" title="Agenda" subtitle="Journées de démonstration, ateliers et rencontres au CIAT." />
+    <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+      <div className="max-w-4xl">
 
-      {/* Bandeau Mode Démonstration si activé explicitement */}
       {isDemo && <DemoBanner />}
-
-      {/* État d'erreur réseau / serveur indisponible */}
       {error && <ApiErrorBanner message={error} onRetry={fetchEvenements} />}
 
-      {/* Barre d'état */}
-      {!error && (
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-xs text-texte-doux">
-            {items.length} {items.length > 1 ? "événements programmés" : "événement programmé"}
-          </p>
-          <Badge tone={fromApi ? "succes" : isDemo ? "alerte" : "neutre"}>
-            {fromApi ? "Flux API en direct" : isDemo ? "Données de démo" : "Hors-ligne"}
-          </Badge>
-        </div>
-      )}
-
       {loading ? (
-        <div className="rounded-2xl border border-bordure bg-ivoire p-12 text-center">
-          <p className="text-sm font-semibold text-brun animate-pulse">Chargement du calendrier des événements...</p>
-        </div>
+        <p className="py-12 text-center text-sm text-texte-doux">Chargement…</p>
       ) : error && items.length === 0 ? null : items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-bordure bg-ivoire p-12 text-center">
-          <p className="text-base font-bold text-brun">Aucun événement à venir pour le moment.</p>
-          <p className="mt-2 text-sm text-texte-doux">
-            Le calendrier des prochains jurys et séminaires techniques sera publié prochainement.
-          </p>
-          <div className="mt-6">
-            <ButtonLink href="/portail" variant="secondary">
-              Retour au portail
-            </ButtonLink>
-          </div>
-        </div>
+        <p className="py-12 text-center text-texte-doux">Aucun événement à venir pour le moment.</p>
       ) : (
-
-        /* Liste des Événements */
-        <div className="space-y-6">
+        <ul className="border-t border-bordure">
           {items.map((evt) => {
             const dateFmt = formatEventDate(evt.debut, evt.fin);
             return (
-              <Card key={evt.id} className="transition-all hover:border-beige hover:shadow-md">
-                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                  {/* Vignette calendrier */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-xl bg-brun text-white shadow-sm">
-                      <span className="text-xs font-bold tracking-wider text-beige">
-                        {dateFmt.moisCourt}
-                      </span>
-                      <span className="text-2xl font-extrabold leading-none">
-                        {dateFmt.jourNumero}
-                      </span>
-                    </div>
-
-                    {/* Informations principales */}
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge tone="alerte">Événement CIAT</Badge>
-                        <span className="font-semibold text-brun">
-                          {dateFmt.dateJour}
-                        </span>
-                        {dateFmt.horaires && (
-                          <span className="text-texte-doux">({dateFmt.horaires})</span>
-                        )}
-                      </div>
-
-                      <h2 className="text-xl font-bold text-brun leading-snug">
-                        {evt.titre}
-                      </h2>
-
-                      <p className="max-w-3xl text-sm leading-relaxed text-texte-doux">
-                        {evt.description}
-                      </p>
-
-                      <div className="flex items-center gap-2 pt-1 text-xs text-texte-doux">
-                        <span className="font-bold text-brun">Lieu :</span>
-                        <span>{evt.lieu}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action d'inscription */}
-                  <div className="shrink-0 pt-2 md:pt-0">
-                    {evt.lien_inscription ? (
-                      <ButtonLink href={evt.lien_inscription} variant="accent" className="w-full text-xs md:w-auto">
-                        S&apos;inscrire / Participer
-                      </ButtonLink>
-                    ) : (
-                      <ButtonLink href="/portail" variant="secondary" className="w-full text-xs md:w-auto">
-                        Accès libre
-                      </ButtonLink>
-                    )}
-                  </div>
+              <li key={evt.id} className="flex gap-6 border-b border-bordure py-8 sm:gap-10">
+                <div className="w-14 shrink-0 text-center">
+                  <span className="block text-xs font-medium text-beige">{dateFmt.moisCourt}</span>
+                  <span className="block font-[family-name:var(--font-title)] text-3xl font-bold text-brun">
+                    {dateFmt.jourNumero}
+                  </span>
                 </div>
-              </Card>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-semibold leading-snug">{evt.titre}</h2>
+                  <p className="mt-1 text-sm text-texte-doux">
+                    {dateFmt.horaires && `${dateFmt.horaires} · `}
+                    {evt.lieu}
+                  </p>
+                  <p className="mt-3 leading-relaxed text-texte-doux">{evt.description}</p>
+                  {evt.lien_inscription && (
+                    <a
+                      href={evt.lien_inscription}
+                      className="mt-4 inline-block text-sm font-semibold text-brun hover:underline"
+                    >
+                      S&apos;inscrire →
+                    </a>
+                  )}
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
-
-      {/* Navigation de bas de page */}
-      <div className="mt-12 flex items-center justify-between border-t border-bordure pt-6">
-        <ButtonLink href="/portail/actualites" variant="secondary" className="text-xs">
-          ← Voir les actualités
-        </ButtonLink>
-        <ButtonLink href="/portail/appels" variant="secondary" className="text-xs">
-          Consulter les appels à projets →
-        </ButtonLink>
-      </div>
     </div>
+    </div>
+    </>
   );
 }

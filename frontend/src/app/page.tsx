@@ -1,401 +1,179 @@
 /* eslint-disable @next/next/no-img-element */
-"use client";
-
-import React from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Landmark,
-  Sprout,
-  ChartNoAxesColumnIncreasing,
-  BrainCircuit,
-  FileText,
-  Images,
-  HandHelping,
-  Network,
-  HeartPulse,
-} from "lucide-react";
+import { ArrowRight, Images, Sprout, Wrench } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
+import PageHero, { HERO_GHOST } from "@/components/PageHero";
 
-const modules = [
-  {
-    icon: Landmark,
-    title: "Portail Institutionnel",
-    description: "Vitrine officielle, filières prioritaires, actualités et gouvernance.",
-    href: "/portail/ciat",
-  },
+const piliers = [
   {
     icon: Sprout,
-    title: "Gestion Incubateur",
-    description: "Parcours en 5 jalons, suivi des cohortes et mentorat sur-mesure.",
-    href: "/incubateur",
+    titre: "Incuber",
+    texte: "Un parcours en cinq étapes, de l'idée au projet prêt à être lancé, avec un mentor.",
+    href: "/portail/incubateur",
+    lien: "Découvrir l'incubateur",
   },
   {
-    icon: ChartNoAxesColumnIncreasing,
-    title: "Tableau Décisionnel",
-    description: "Indicateurs d'impact, taux de maturité et pilotage stratégique.",
-    href: "/tableau-de-bord",
-  },
-  {
-    icon: BrainCircuit,
-    title: "Assistant IA",
-    description: "Orientation méthodologique, analyse de dossiers et support personnalisé.",
-    href: "/assistant",
-  },
-  {
-    icon: FileText,
-    title: "Générateur de Documents",
-    description: "Attestations officielles, fiches projets et livrables normés.",
-    href: "/documents",
+    icon: Wrench,
+    titre: "Prototyper",
+    texte: "Des ateliers équipés pour fabriquer et tester vos prototypes sur le campus.",
+    href: "/portail/ciat#ateliers",
+    lien: "Voir les ateliers",
   },
   {
     icon: Images,
-    title: "Galerie Innovations",
-    description: "Showroom des prototypes, bancs d'essai et innovations valorisées.",
+    titre: "Valoriser",
+    texte: "Les innovations issues du CIAT, présentées aux entreprises et aux partenaires.",
     href: "/galerie",
+    lien: "Parcourir la galerie",
   },
 ];
 
-const news = [
+const realisations = [
   {
-    category: "Agriculture IoT",
-    title: "AgriSol : Station agrométéorologique et irrigation raisonnée pour le Sahel",
+    domaine: "Agriculture",
+    titre: "AgriSol, station météo et irrigation raisonnée pour le Sahel",
     image: "/images/innovations/agrisol-iot.jpg",
-    href: "/galerie",
   },
   {
-    category: "Fabrication 4.0",
-    title: "Fraiseuse CNC 4.0 : Usinage de précision pour pièces mécaniques locales",
-    image: "/images/innovations/cnc-4-0.jpg",
-    href: "/galerie",
-  },
-  {
-    category: "Santé & Biomédical",
-    title: "Moniteur Médical Connecté : Télésurveillance des constantes physiologiques",
+    domaine: "Santé",
+    titre: "Moniteur médical connecté pour le suivi des patients",
     image: "/images/innovations/telemedical-device.jpg",
-    href: "/galerie",
   },
   {
-    category: "Énergies Propres",
-    title: "Éco-Séchoir Hybride : Optimisation thermique et séchage agroalimentaire",
+    domaine: "Énergie",
+    titre: "Éco-séchoir hybride pour les produits agroalimentaires",
     image: "/images/innovations/eco-sechoir-solaire.jpg",
-    href: "/galerie",
   },
 ];
-
-const benefits = [
-  { icon: HandHelping, label: "Accompagnement personnalisé en 5 jalons" },
-  { icon: Network, label: "Accès aux ateliers & équipements de pointe" },
-  { icon: HeartPulse, label: "Réseau de mentors et partenaires industriels" },
-  { icon: Sprout, label: "Impact socio-économique durable au Sénégal" },
-];
-
-
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <span className="eyebrow">{children}</span>;
-}
 
 export default function Home() {
   return (
     <main>
-      {/* 1. HERO PLEIN ÉCRAN CINÉMATIQUE */}
-      <section className="hero">
-        <div className="hero-overlay-gradient" aria-hidden="true" />
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <h1>
-              Innover aujourd’hui pour
-              <br />
-              <span className="hero-highlight-gold">transformer demain</span>
-            </h1>
+      <PageHero
+        image="/images/campus-isep.png"
+        title={
+          <>
+            Innover aujourd&apos;hui pour
+            <br />
+            <span className="text-[#F4C494]">transformer demain</span>
+          </>
+        }
+        subtitle="Le CIAT accompagne les porteurs de projets de l'ISEP de Diamniadio, de l'idée au prototype."
+      >
+        <ButtonLink href="/portail/ciat">Découvrir le CIAT</ButtonLink>
+        <ButtonLink href="/galerie" variant="secondary" className={HERO_GHOST}>
+          Voir les projets
+        </ButtonLink>
+      </PageHero>
 
-            <p>
-              Le CIAT et son incubateur accompagnent les porteurs de projets et
-              favorisent l’innovation au service du développement de l’ISEP et
-              de son environnement à Diamniadio.
-            </p>
-
-            <div className="hero-buttons">
-              <ButtonLink href="/portail/ciat" variant="primary">
-                Découvrir le CIAT
-                <ArrowRight size={16} className="ml-2" />
-              </ButtonLink>
-              <ButtonLink
-                href="/galerie"
-                variant="secondary"
-                className="!text-white !border-white/40 !bg-white/10 hover:!bg-white/20 backdrop-blur-sm"
-              >
-                Nos projets incubés
-                <ArrowRight size={16} className="ml-2" />
-              </ButtonLink>
-            </div>
-          </div>
-
-          {/* Barre flottante de métriques & ancrage territorial */}
-          <div className="hero-glass-kpi">
-            <div className="hero-kpi-item">
-              <strong>+50</strong>
-              <span className="kpi-label">Projets Accompagnés</span>
-              <span className="kpi-sub">Idéation, prototypage et maturation</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>+20</strong>
-              <span className="kpi-label">Startups &amp; Prototypes</span>
-              <span className="kpi-sub">Solutions technologiques viables</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>7 <span>Filières</span></strong>
-              <span className="kpi-label">Domaines Stratégiques</span>
-              <span className="kpi-sub">Numérique, Agro, Énergie, Santé</span>
-            </div>
-            <div className="hero-kpi-item">
-              <strong>Diamniadio</strong>
-              <span className="kpi-label">Campus ISEP Amadou Trawaré</span>
-              <span className="kpi-sub">Ateliers technologiques &amp; FabLab</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. CIAT 360 — RONDEL CENTRAL ET SIX MODULES */}
-      <section className="ecosystem section-padding" id="ciat-360">
-        <div className="ecosystem-intro">
-          <SectionLabel>NOTRE ÉCOSYSTÈME</SectionLabel>
-          <h2>
-            CIAT <span>360</span>
-          </h2>
-          <div className="short-line" />
-          <p>
-            Une plateforme intégrée qui réunit six modules complémentaires
-            pour accompagner chaque étape d’un projet, de l’éclosion de l’idée
-            jusqu’au prototypage et au transfert vers l’industrie.
-          </p>
-          <ButtonLink href="/portail/ciat#modules" variant="secondary">
-            Découvrir tous les modules
-            <ArrowRight size={15} className="ml-2" />
-          </ButtonLink>
-        </div>
-
-        <div className="ciat360-layout">
-          {/* Modules de gauche (01 à 03) */}
-          <div className="ciat360-modules ciat360-modules-left">
-            {modules.slice(0, 3).map((module, index) => {
-              const Icon = module.icon;
-              return (
-                <Link className="ciat360-module" href={module.href} key={module.title}>
-                  <span className="ciat360-module-icon">
-                    <Icon size={22} strokeWidth={1.8} />
-                  </span>
-                  <span className="ciat360-module-copy">
-                    <span className="ciat360-number">0{index + 1}</span>
-                    <strong>{module.title}</strong>
-                    <span className="ciat360-description">{module.description}</span>
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Rondel central avec symbole officiel CIAT */}
-          <div className="ciat360-wheel" aria-label="Rondel CIAT 360">
-            <div className="ciat360-wheel-outer">
-              <div className="ciat360-wheel-dashes" />
-              <span className="ciat360-orbit-dot dot-one" />
-              <span className="ciat360-orbit-dot dot-two" />
-              <span className="ciat360-orbit-dot dot-three" />
-              <span className="ciat360-orbit-dot dot-four" />
-              <div className="ciat360-wheel-inner">
-                <div className="ciat360-wheel-center">
-                  <div className="ciat360-center-emblem">
-                    <svg
-                      viewBox="0 0 365 415"
-                      fill="currentColor"
-                      width="30"
-                      height="34"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M 307 197 L 280 211 L 259 225 L 246 237 L 239 247 L 239 334 L 249 333 L 258 330 L 282 319 L 300 307 L 303 304 L 307 297 Z"
-                        fillRule="evenodd"
-                      />
-                      <path
-                        d="M 155 157 L 155 323 L 157 325 L 170 330 L 199 336 L 213 337 L 219 336 L 219 202 L 214 195 L 204 186 L 159 158 Z"
-                        fillRule="evenodd"
-                      />
-                      <path
-                        d="M 216 93 L 208 95 L 204 97 L 196 103 L 192 108 L 188 115 L 186 122 L 186 134 L 187 139 L 190 146 L 192 149 L 200 157 L 209 162 L 216 164 L 226 164 L 231 163 L 239 160 L 246 155 L 252 148 L 255 142 L 257 136 L 257 121 L 256 117 L 250 106 L 244 100 L 232 94 L 228 93 Z"
-                        fillRule="evenodd"
-                      />
-                      <path
-                        d="M 250 16 L 176 16 L 136 28 L 102 46 L 71 71 L 45 101 L 28 129 L 12 172 L 7 208 L 10 252 L 33 311 L 54 339 L 86 367 L 150 396 L 216 401 L 265 390 L 316 362 L 349 329 L 319 307 L 291 330 L 251 348 L 223 353 L 176 349 L 142 336 L 112 315 L 86 282 L 74 253 L 69 198 L 79 158 L 100 123 L 127 96 L 162 76 L 200 67 L 249 70 L 295 89 L 326 49 L 304 35 Z"
-                        fillRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <span className="ciat360-center-name">CIAT</span>
-                  <span className="ciat360-center-degree">360°</span>
-                  <span className="ciat360-center-caption">UNE VISION GLOBALE</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Modules de droite (04 à 06) */}
-          <div className="ciat360-modules ciat360-modules-right">
-            {modules.slice(3, 6).map((module, index) => {
-              const Icon = module.icon;
-              return (
-                <Link className="ciat360-module" href={module.href} key={module.title}>
-                  <span className="ciat360-module-icon">
-                    <Icon size={22} strokeWidth={1.8} />
-                  </span>
-                  <span className="ciat360-module-copy">
-                    <span className="ciat360-number">0{index + 4}</span>
-                    <strong>{module.title}</strong>
-                    <span className="ciat360-description">{module.description}</span>
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. À PROPOS DU CIAT */}
-      <section className="about">
-        <div className="about-visual">
-          <div className="relative w-full max-w-[500px] aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-[#EBE4DC] bg-[#FAF7F2]">
-            <img
-              src="/images/about-lab-students.png"
-              alt="Des idées d’aujourd’hui aux solutions de demain — Prototypage et projets au CIAT"
-              className="w-full h-full object-cover block"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-5 left-5 z-10 rounded-2xl bg-[#612D10]/95 px-5 py-3 border border-[#C99A68]/40 shadow-lg backdrop-blur-xs">
-              <p className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug">
-                Des idées d&apos;aujourd&apos;hui
-              </p>
-              <p className="text-[11px] sm:text-xs font-medium text-[#C99A68] mt-0.5">
-                aux solutions de demain
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="about-copy">
-          <SectionLabel>À PROPOS DU CIAT</SectionLabel>
-          <h2>
-            Un centre d’excellence pour l’innovation et le transfert
-            technologique
-          </h2>
-          <p>
-            Implanté au cœur de l’ISEP Amadou Trawaré à Diamniadio, le CIAT
-            constitue un environnement dédié à l’innovation, à l’entrepreneuriat
-            et à la transformation des idées en solutions concrètes, au service du
-            développement économique et social du Sénégal.
-          </p>
-          <ButtonLink href="/portail/ciat" variant="secondary">
-            En savoir plus
-            <ArrowRight size={15} className="ml-2" />
-          </ButtonLink>
-        </div>
-
-        <div className="benefits">
-          {benefits.map((benefit) => {
-            const Icon = benefit.icon;
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <h2 className="max-w-xl text-3xl font-bold">Ce que fait le CIAT</h2>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {piliers.map((p) => {
+            const Icon = p.icon;
             return (
-              <div className="benefit" key={benefit.label}>
-                <span className="benefit-icon">
+              <Link
+                key={p.titre}
+                href={p.href}
+                className="group flex flex-col rounded-2xl border border-bordure bg-white p-7 transition-all hover:-translate-y-0.5 hover:border-beige hover:shadow-md motion-reduce:transition-none"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ivoire text-brun">
                   <Icon size={20} strokeWidth={1.8} />
                 </span>
-                <span>{benefit.label}</span>
-              </div>
+                <h3 className="mt-5 text-lg font-semibold">{p.titre}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-texte-doux">{p.texte}</p>
+                <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-semibold text-brun group-hover:underline">
+                  {p.lien} <ArrowRight size={15} />
+                </span>
+              </Link>
             );
           })}
         </div>
+
+        <dl className="mt-20 grid grid-cols-2 gap-8 border-t border-bordure pt-10 md:grid-cols-4">
+          {[
+            ["+50", "projets accompagnés"],
+            ["+20", "prototypes réalisés"],
+            ["7", "domaines d'innovation"],
+            ["+10", "partenaires"],
+          ].map(([chiffre, label]) => (
+            <div key={label}>
+              <dt className="sr-only">{label}</dt>
+              <dd className="font-[family-name:var(--font-title)] text-4xl font-bold text-brun">{chiffre}</dd>
+              <dd className="mt-1 text-sm text-texte-doux">{label}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
-      {/* 5. BANDEAU D'IMPACT (LE CIAT EN CHIFFRES) */}
-      <section className="impact-band">
-        <div className="impact-intro">
-          <h2>Le CIAT en chiffres</h2>
-          <p>Une dynamique au service de l’innovation et de l’entrepreneuriat.</p>
-        </div>
-
-        {[
-          ["+50", "Projets accompagnés"],
-          ["+20", "Startups incubées"],
-          ["+10", "Partenaires industriels"],
-          ["01", "Objectif : impact durable"],
-        ].map(([number, label]) => (
-          <div className="impact-item" key={label}>
-            <strong>{number}</strong>
-            <span>{label}</span>
-          </div>
-        ))}
-      </section>
-
-      {/* 6. ACTUALITÉS & RÉALISATIONS PHARES */}
-      <section className="news section-padding">
-        <div className="section-heading">
-          <div>
-            <SectionLabel>ACTUALITÉS & ÉVÉNEMENTS</SectionLabel>
-            <h2>Les réalisations phares issues de nos filières</h2>
-          </div>
-          <Link href="/galerie" className="text-link">
-            Voir toutes les innovations <ArrowRight size={16} />
+      <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-24 sm:px-6 md:grid-cols-2 lg:px-8">
+        <img
+          src="/images/about-lab-students.png"
+          alt="Porteurs de projets au travail dans l'espace incubateur du CIAT"
+          className="aspect-[4/3] w-full rounded-2xl object-cover"
+        />
+        <div>
+          <h2 className="text-3xl font-bold">Un centre au cœur de l&apos;ISEP</h2>
+          <p className="mt-5 leading-relaxed text-texte-doux">
+            Implanté à l&apos;ISEP Amadou Trawaré de Diamniadio, le CIAT aide les apprenants, les
+            diplômés et les entreprises à transformer leurs idées en solutions concrètes, utiles au
+            développement du Sénégal.
+          </p>
+          <p className="mt-4 leading-relaxed text-texte-doux">
+            Chaque projet est suivi par un mentor et peut s&apos;appuyer sur les ateliers et le réseau
+            de partenaires du centre.
+          </p>
+          <Link
+            href="/portail/ciat"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-brun hover:underline"
+          >
+            En savoir plus <ArrowRight size={15} />
           </Link>
         </div>
+      </section>
 
-        <div className="news-grid">
-          {news.map((item, index) => (
-            <Link href={item.href} className="news-card" key={item.title}>
-              <div className="news-image">
-                <img src={item.image} alt={item.title} />
-              </div>
-              <div className="news-content">
-                <span className="category-pill">{item.category}</span>
-                <time>0{index + 1} AVR. 2026</time>
-                <h3>{item.title}</h3>
-                <ArrowRight className="news-arrow" size={16} />
-              </div>
+      <section className="bg-ivoire">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between gap-6">
+            <h2 className="text-3xl font-bold">Réalisations</h2>
+            <Link
+              href="/galerie"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brun hover:underline"
+            >
+              Tout voir <ArrowRight size={15} />
             </Link>
-          ))}
+          </div>
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {realisations.map((r) => (
+              <Link href="/galerie" key={r.titre} className="group">
+                <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-bordure">
+                  <img
+                    src={r.image}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none"
+                  />
+                </div>
+                <p className="mt-3 text-xs text-texte-doux">{r.domaine}</p>
+                <h3 className="mt-1 text-[15px] font-semibold leading-snug group-hover:underline">
+                  {r.titre}
+                </h3>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 7. BANDEAU D'APPEL À L'ACTION & CANDIDATURE (Section officielle plébiscitée) */}
-      <section className="border-t border-[#3d2315] bg-gradient-to-r from-[#24140D] via-[#3D1D10] to-[#24140D] text-white py-16 md:py-20 shadow-inner">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-            <div className="max-w-2xl space-y-3">
-              <h2 className="text-2xl font-extrabold !text-white sm:text-4xl tracking-tight leading-tight">
-                Vous avez un projet innovant ou un besoin de prototypage ?
-              </h2>
-              <p className="text-sm sm:text-base leading-relaxed text-[#EAE0D5]">
-                Que vous soyez apprenant de l&apos;ISEP, diplômé en insertion ou entreprise partenaire, 
-                le CIAT met à votre disposition ses ateliers technologiques, ses bancs de test et son réseau de mentors à Diamniadio.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3.5 shrink-0">
-              <ButtonLink
-                href="/connexion?next=/incubateur"
-                variant="accent"
-                className="font-bold text-sm px-6 py-3.5 shadow-xl"
-              >
-                Déposer une Candidature
-              </ButtonLink>
-              <ButtonLink
-                href="/portail/contact"
-                variant="secondary"
-                className="!text-white !border-white/50 !bg-white/10 hover:!bg-white/20 text-sm px-5 py-3.5 backdrop-blur-sm"
-              >
-                Contacter le Secrétariat
-              </ButtonLink>
-            </div>
-          </div>
+      <section className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold">Vous avez un projet ?</h2>
+        <p className="mx-auto mt-4 max-w-xl leading-relaxed text-texte-doux">
+          Apprenants, diplômés et entreprises partenaires peuvent candidater à
+          l&apos;incubateur.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <ButtonLink href="/portail/appels">Candidater</ButtonLink>
+          <ButtonLink href="/portail/contact" variant="secondary">
+            Nous contacter
+          </ButtonLink>
         </div>
       </section>
     </main>
